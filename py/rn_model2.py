@@ -16,7 +16,7 @@ __all__ = ['analysis_power', 'analysis_frequencies', 'power_law_index',
 
 def main():
 
-    def rednoise_test(n, alpha):
+    def rednoise_test(n, dt, alpha):
         wn = np.random.normal(size=(n,))
     
         # FFT of the white noise
@@ -42,11 +42,11 @@ def main():
         return fftfreq, data
 
     
-    #n = 300
-    #dt = 12.0
-    #test_data = rednoise_test(n+2, 1.0)
+    n = 300
+    dt = 12.0
+    test_data = rednoise_test(n+2, dt, 1.0)
     
-    fftfreq, test_data = read_idl('/home/ireland/Data/oscillations/mcateer/outgoing3/AR_B.sav')
+    #fftfreq, test_data = read_idl('/home/ireland/Data/oscillations/mcateer/outgoing3/AR_B.sav')
     
     input_power_spectrum = abs(np.fft.fft(test_data)) ** 2
     
@@ -66,7 +66,7 @@ def main():
     adjusting the prior, rather than normalizing the data.
     """
     
-    #fftfreq = np.fft.fftfreq(n, dt)
+    fftfreq = np.fft.fftfreq(n, dt)
     analysis_frequencies = fftfreq[fftfreq >= 0][1:-1]
     analysis_power = input_power_spectrum[fftfreq >= 0][1:-1]
     
