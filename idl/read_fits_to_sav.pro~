@@ -1,0 +1,3 @@
+;
+; Read in a bunch of FITS files and save them as an IDL Save file
+;

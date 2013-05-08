@@ -1,0 +1,11 @@
+;
+; Analyze some data cubes for the presence of RN
+;
+directory = '~/Data/oscillations/mcateer/outgoing3/'
+filename = 'AR_C.sav'
+
+restore,directory + filename
+
+
+
+END
