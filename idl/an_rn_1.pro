@@ -114,194 +114,297 @@ FUNCTION MASK_MAP,data,level,comparison
 END
 
 
-FUNCTION FIND_LEVEL,data, top_percentage
+FUNCTION FIND_LEVEL,data, top_fraction
   lev = 0
   sz = size(data,/dim)
   repeat begin
      lev = lev + 0.001*( max(data) - min(data) )
-  endrep until n_elements(where(data gt lev)) lt 0.1*double(sz[0])*double(sz[1])
+  endrep until n_elements(where(data gt lev)) lt top_fraction*double(sz[0])*double(sz[1])
   return,lev
 END
 
+
+PRO show_image,im,base_range,title, charsize
+  im[0,0:1] = base_range[0:1]
+  plot_image,im,title=title,charsize=charsize
+  return
+END
+
+
+
+
+;
+;
+;
 PRO do_rn, root, directory, filename, eps, img_directory, function_name
 
-restorefull = root + directory + filename
-
-restore,restorefull
+; get the data
+  restorefull = root + directory + filename
+  restore,restorefull
 
 ;
 ; which model
 ;
-if function_name eq 'linear_with_knee' then begin
-   n_parameters = 3
-endif
-if function_name eq 'linear_with_constant' then begin
-   n_parameters = 3
-endif
-if function_name eq 'simple_linear' then begin
-   n_parameters = 2
-endif
+  if function_name eq 'linear_with_knee' then begin
+     n_parameters = 3
+  endif
+  if function_name eq 'linear_with_constant' then begin
+     n_parameters = 3
+  endif
+  if function_name eq 'simple_linear' then begin
+     n_parameters = 2
+  endif
 
 
 ;
 ; De-rotate the data
 ;
-displacements = get_correl_offsets(region_window)
-data = image_translate(region_window, displacements, /interp)
+  displacements = get_correl_offsets(region_window)
+  data = image_translate(region_window, displacements, /interp)
 
 ;
 ; Calculate positive non-zero frequencies
 ;
-sz = size(data,/dim)
-sz[1] = sz[1] - (4+ceil(max(displacements[0])))
-n = sz[2]
-nx = sz[0]
-ny = sz[1]
-dt = 12.0
-X = (FINDGEN((N - 1)/2) + 1)
-freq = [0.0, X, N/2, -N/2 + X]/(N*DT)
-posnonzero = where(freq > 0.0)
-pfreq = freq(posnonzero)
+  sz = size(data,/dim)
+  sz[1] = sz[1] - (4+ceil(max(displacements[0])))
+  n = sz[2]
+  nx = sz[0]
+  ny = sz[1]
+  dt = 12.0
+  X = (FINDGEN((N - 1)/2) + 1)
+  freq = [0.0, X, N/2, -N/2 + X]/(N*DT)
+  posnonzero = where(freq > 0.0)
+  pfreq = freq(posnonzero)
 
 ;
 ; storage arrays
 ;
-lf = fltarr(nx,ny,n_parameters)
-lf_sig = fltarr(nx,ny,n_parameters)
-chisqr = fltarr(nx,ny)
-ts_tot = fltarr(nx,ny)
-ts_av = fltarr(nx,ny)
-ts_max = fltarr(nx,ny)
-index_map = fltarr(nx,ny)
-chisq_map = fltarr(nx,ny)
-chisq_mask = fltarr(nx,ny)
-tot_map = fltarr(nx,ny)
-max_map = fltarr(nx,ny)
-status_map = fltarr(nx,ny)
+  lf = fltarr(nx,ny,n_parameters)
+  lf_sig = fltarr(nx,ny,n_parameters)
+  chisqr = fltarr(nx,ny)
+  ts_tot = fltarr(nx,ny)
+  ts_av = fltarr(nx,ny)
+  ts_max = fltarr(nx,ny)
+  index_map = fltarr(nx,ny)
+  chisq_map = fltarr(nx,ny)
+  chisq_mask = fltarr(nx,ny)
+  tot_map = fltarr(nx,ny)
+  max_map = fltarr(nx,ny)
+  status_map = fltarr(nx,ny)
 
 ;
 ; Go through each pixel and do a fit
 ;
-for i = 0,nx-1 do begin
-   for j = 0,ny-1 do begin
-      ts = reform(data[i,j,*])
-      ppower = ((abs(fft(ts)))^2)[posnonzero]
-      x = alog(pfreq)
-      y = alog(ppower)
+  for i = 0,nx-1 do begin
+     for j = 0,ny-1 do begin
+        ts = reform(data[i,j,*])
+        ppower = ((abs(fft(ts)))^2)[posnonzero]
+        x = alog(pfreq)
+        y = alog(ppower)
 
-      if function_name eq 'simple_linear' then begin
-         a = linfit(x,y,$
-                    sigma=sigma,$
-                    chisqr=chisqr_fit)
-         convert_to_reduced_chisqr = (n_elements(ppower)-2)
-         status = 0
-      endif
-      
+        if function_name eq 'simple_linear' then begin
+           a = linfit(x,y,$
+                      sigma=sigma,$
+                      chisqr=chisqr_fit)
+           convert_to_reduced_chisqr = (n_elements(ppower)-2)
+           status = 0
+        endif
 
-
-      if function_name eq 'linear_with_knee' then begin
+        if function_name eq 'linear_with_knee' then begin
          ;
          ; Get an estimate of the broken power law
          ;
-         pwrlaw_estimate = linfit(x[0:n_elements(x)/5.0],y[0:n_elements(x)/5.0])
-         A = [pwrlaw_estimate[0], pwrlaw_estimate[1], x[n_elements(x)/2.0]]
-         weights = abs(y-poly(x,pwrlaw_estimate))^2
-         yfit = CURVEFIT(x, y, 1.0/weights, A, SIGMA, FUNCTION_NAME=function_name, chisq=chisqr_fit, status = status)
-         convert_to_reduced_chisqr = 1.0
-      endif
+           pwrlaw_estimate = linfit(x[0:n_elements(x)/5.0],y[0:n_elements(x)/5.0])
+           A = [pwrlaw_estimate[0], pwrlaw_estimate[1], x[n_elements(x)/2.0]]
+           weights = abs(y-poly(x,pwrlaw_estimate))^2
+           yfit = CURVEFIT(x, y, 1.0/weights, A, SIGMA, FUNCTION_NAME=function_name, chisq=chisqr_fit, status = status)
+           convert_to_reduced_chisqr = 1.0
+        endif
 
-      status_map[i,j] = status
+        status_map[i,j] = status
 
-      if status eq 0 then begin
-         lf[i,j,*] = a[*]
-         lf_sig[i,j,*] = sigma[*]
-         chisqr[i,j] = chisqr_fit/convert_to_reduced_chisqr
-         ts_tot[i,j] = total(ts)
-         ts_av[i,j] = average(ts)
-         ts_max[i,j] = max(ts)
+        if status eq 0 then begin
+           lf[i,j,*] = a[*]
+           lf_sig[i,j,*] = sigma[*]
+           chisqr[i,j] = chisqr_fit/convert_to_reduced_chisqr
+           ts_tot[i,j] = total(ts)
+           ts_av[i,j] = average(ts)
+           ts_max[i,j] = max(ts)
 
-         if (chisqr[i,j] le 1.2) and (chisqr[i,j] ge 0.8) then begin
-            chisq_mask[i,j] = 1
-            ;chisq_map[i,j] = chisqr[i,j]
-            ;index_map[i,j] = -lf[i,j,1]
-            ;tot_map[i,j] = ts_tot[i,j]
-            ;max_map[i,j] = ts_max[i,j]
-         endif
-      endif
+           if (chisqr[i,j] le 1.2) and (chisqr[i,j] ge 0.8) then begin
+              chisq_mask[i,j] = 1
+           endif
+        endif
       
-   endfor
-endfor
+     endfor
+  endfor
 
 ;
 ; Power law index
 ;
-power_law_raw = -reform(lf[*,*,1])
-power_law_finite_index = where( finite(power_law_raw) eq 1b)
-power_law_map = fltarr(nx, ny)
-power_law_map(power_law_finite_index) = power_law_raw(power_law_finite_index)
+  power_law_raw = -reform(lf[*,*,1])
+  power_law_finite_index = where( finite(power_law_raw) eq 1b)
+  power_law_map = fltarr(nx, ny)
+  power_law_map(power_law_finite_index) = power_law_raw(power_law_finite_index)
 ;
 ; Mask and index of where the brightest pixels are
 ;
-top_percentage = 0.1
+  top_fraction = 0.05
 
-tma = total(data,3,/double)
-tma_level = FIND_LEVEL(tma, top_percentage)
-tma_index = where(tma ge tma_level)
-tma_mask = MASK_MAP(tma, tma_level, 'ge')
-
+  tma = total(data,3,/double)
+  tma_level = FIND_LEVEL(tma, top_fraction)
+  tma_index = where(tma ge tma_level)
+  tma_mask = MASK_MAP(tma, tma_level, 'ge')
+;
+; Mask and index of the non-brightest pixels
+; 
+  low_index = where(tma lt tma_level)
+  low_mask = 1-tma_mask
+;
+; Where the bright good fits 
+;
+  good_fits_tma_mask = chisq_mask*tma_mask
+  good_fits_tma_index = where(good_fits_tma_mask eq 1b)
+;
+; Where the non-bright good fits are
+;
+  good_fits_low_mask = chisq_mask*low_mask
+  good_fits_low_index = where(good_fits_low_mask eq 1b)
 
 
 ;
 ; Plots
 ;
-charsize = 1.0
+  charsize = 1.0
+  !p.multi=0
+;
+; Histograms of power law indices
+;
+  if eps eq 1 then ps,img_directory + filename+'_'+function_name + '_powerlawindex_pdf.eps', /encapsulated else window,0
 
-good_fits_tma_mask = chisq_mask*tma_mask
-good_fits_tma_index = where(good_fits_tma_mask eq 1)
+  ; Good fits, bright
+  hgb = histogram(power_law_map(good_fits_tma_index),bins=0.05, min = 0.001,loc=hgbloc)
+  hgb = hgb/total(hgb)
 
-!p.multi=0
-if eps eq 1 then ps,img_directory + filename+'_'+function_name + '_powerlawindex_pdf.eps', /encapsulated else window,0
+  ; Good fits, not bright
+  hgn = histogram(power_law_map*good_fits_low_mask,bins=0.05, min = 0.001,loc=hgnloc)
+  hgn = hgn/total(hgn)
 
+  ; Good fits, all of them
+  hga = histogram(power_law_map*chisq_mask,bins=0.05, min = 0.001,loc=hgaloc)
+  hga = hga/total(hga)
 
-h = histogram(power_law_map(good_fits_tma_index),bins=0.05, min = 0.001,loc=hloc)
-h = h/total(h)
-plot,hloc,h,psym=10,xtitle = 'power law index', ytitle = 'PDF',title = filename+': '+function_name,charsize=charsize
-xyouts,0.0,0.1*max(h),'solid = good fit + bright',charsize=charsize
-xyouts,0.0,0.2*max(h),'dotted = good fit',charsize=charsize
-xyouts,0.0,0.3*max(h),'dashed = bright',charsize=charsize
+  yrange = minmax([hgb,hgn,hga])
+  xrange = minmax([hgbloc,hgnloc,hgaloc])
 
-h = histogram(power_law_map*chisq_mask,bins=0.05, min = 0.001,loc=hloc)
-oplot,hloc,h/total(h),psym=10, linestyle=1
+  plot,hgbloc,hgb,psym=10,xtitle = 'power law index', ytitle = 'PDF',title = filename+': '+function_name,charsize=charsize, xrange=xrange, yrange=yrange
+  xyouts,0.0,0.1*yrange[1],'solid = good fit + bright',charsize=charsize
 
-h = histogram(power_law_map*tma_mask,bins=0.05, min = 0.001,loc=hloc)
-oplot,hloc,h/total(h),psym=10, linestyle=2
+  oplot,hgnloc,hgn,psym=10, linestyle=1
+  xyouts,0.0,0.2*yrange[1],'dotted = good fit + not bright',charsize=charsize
 
-if eps eq 1 then psclose
+  oplot,hgaloc,hga,psym=10, linestyle=2
+  xyouts,0.0,0.3*yrange[1],'dashed = all good fits',charsize=charsize
 
-if eps eq 1 then ps,img_directory + filename+'_'+function_name + '_image_maps.eps', /encapsulated else window,1
-!p.multi=[0,3,1]
-plot_image,reform(data[*,*,0])*tma_mask,title='bright emission: '+function_name,charsize=charsize
+  xyouts,0.0,0.4*yrange[1],'brightness fraction = '+trim(top_fraction)
+  xyouts,0.0,0.5*yrange[1],'brightness level = '+trim(tma_level)
 
-plot_image,reform(data[*,*,0])*chisq_mask,title='good fit emission: '+function_name,charsize=charsize
+  if eps eq 1 then psclose
 
-plot_image,reform(data[*,*,0])*good_fits_tma_mask,title='bright + good fit emission: '+function_name,charsize=charsize
-!p.multi=0
-if eps eq 1 then psclose
+;
+; Maps of data
+;
+  if eps eq 1 then ps,img_directory + filename+'_'+function_name + '_image_maps.eps', /encapsulated,/color else window,1
+  !p.multi=[0,3,2]
+  loadct,3
+;
+; base image
+;
+  base_image = tma
+  base_range = minmax(base_image)
 
+  ; all emission
+  show_image,tma,base_range,'all emission',charsize
 
+  ; bright emission
+  im = tma*tma_mask
+  show_image,im,base_range,'bright emission',charsize
 
-if (strpos(function_name,'knee'))[0] ne -1 then begin
-   window,2
-   knee_map = reform(lf[*,*,2])
-   h = histogram(knee_map(good_fits_tma_index),bins=0.05,loc=hloc,max=max(x))
-   plot,hloc,h/total(h),psym=10,xtitle = 'alog(knee frequency)', ytitle = 'PDF',title = filename +': bright + good fit',charsize=charsize
+  ; non bright emission
+  im = tma*low_mask  
+  show_image,im,base_range,'non bright emission',charsize
 
-   h = histogram(knee_map*chisq_mask,bins=0.05,loc=hloc,max=max(x))
-   oplot,hloc,h/total(h),psym=10, linestyle=1
+  ; good fit emission
+  im = tma*chisq_mask
+  show_image,im,base_range,'good fit emission: '+function_name,charsize
 
-   h = histogram(knee_map*tma_mask,bins=0.05,loc=hloc,max=max(x))
-   oplot,hloc,h/total(h),psym=10, linestyle=2
-endif
+  ; bright + good fit emission
+  im = tma*good_fits_tma_mask
+  show_image,im,base_range,'bright + good fit emission: '+function_name,charsize
+
+  ; non-bright + good fit emission
+  im = tma*good_fits_low_mask
+  show_image,im,base_range,'non-bright + good fit emission: '+function_name,charsize
+
+  if eps eq 1 then psclose
+
+;
+; Maps of the power law index
+;
+  if eps eq 1 then ps,img_directory + filename+'_'+function_name + '_powerlawindex_maps.eps', /encapsulated,/color else window,1
+  !p.multi=[0,3,1]
+  loadct,39
+
+  base_image = power_law_map*chisq_mask
+  base_range = minmax(base_image)
+
+  im = power_law_map*chisq_mask
+  show_image,im,base_range,'Power law index, good fit: '+function_name,charsize
+
+  im = power_law_map*good_fits_tma_mask
+  show_image,im,base_range,'Power law index, bright + good fit: '+function_name,charsize
+
+  im = power_law_map*good_fits_low_mask
+  show_image,im,base_range,'Power law index, non-bright + good fit: '+function_name,charsize
+
+  !p.multi=0
+  if eps eq 1 then psclose
+
+  loadct,0
+
+  if (strpos(function_name,'knee'))[0] ne -1 then begin
+     window,2
+     knee_map = reform(lf[*,*,2])
+     h = histogram(knee_map(good_fits_tma_index),bins=0.05,loc=hloc,max=max(x))
+     plot,hloc,h/total(h),psym=10,xtitle = 'alog(knee frequency)', ytitle = 'PDF',title = filename +': bright + good fit',charsize=charsize
+
+     h = histogram(knee_map*chisq_mask,bins=0.05,loc=hloc,max=max(x))
+     oplot,hloc,h/total(h),psym=10, linestyle=1
+
+     h = histogram(knee_map*tma_mask,bins=0.05,loc=hloc,max=max(x))
+     oplot,hloc,h/total(h),psym=10, linestyle=2
+  endif
+
+  if eps eq 1 then ps,img_directory + filename+'_'+function_name + '_powerlawindex_brightness_histogram.eps', /encapsulated,/color else window,1
+  !p.multi=0
+  loadct,39
+
+  brightness = tma*chisq_mask
+  brightness = brightness(where(brightness gt 0.0))
+  brightness = alog10(brightness)
+
+  bin1 = 0.05
+  bin2 = 0.025
+  min1 = 0.001
+  min2 = min(brightness)
+  h2d = hist_2d(power_law_map*chisq_mask, brightness, min1=min1, min2=min2, bin1=bin1, bin2=bin2)
+  sz = size(h2d,/dim)
+  plot_image,h2d,scale=[bin1,bin2],origin=[min1,min2],xtitle='power law index',ytitle='alog10(brightness)',/nosquare
+  plots,[min1,min1+bin1*sz[0]],[alog10(tma_level),alog10(tma_level)],color = 255
+  xyouts,min1,alog10(tma_level),'brightness level, top '+trim(top_fraction),color = 255
+  psclose
+
+  loadct,0
 
 
 ;; window,0
