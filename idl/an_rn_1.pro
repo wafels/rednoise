@@ -2,89 +2,6 @@
 ; Analyze some data cubes for the presence of RN
 ;
 ; Model to be fit is simple red noise
-;
-; Another good model to fit is a broken power law.  Higher frequencies
-; look more like white noise.
-;
-PRO linear_with_knee,x,a,f,pder
-  m = a[1]
-  c = a[0]
-  knee = a[2]
-  f = 0.0*x
-  pder = fltarr(n_elements(x),3)
-  lessthan = where( x le knee, complement=morethan )
-  if lessthan[0] ne -1 then begin
-     ;
-     ; the function itself
-     ;
-     f[lessthan] = m*x[lessthan] + c
-     if morethan[0] ne -1 then begin
-        f[morethan] = m*x[lessthan[n_elements(lessthan)-1]] + c
-     endif
-     ; 
-     ; partial derivatives
-     ;
-     pder_c = 1.0 + 0.0*x
-
-     pder_m = 0.0*x
-     pder_m[lessthan]=x[lessthan]
-     if morethan[0] ne -1 then begin
-        pder_m[morethan]=knee
-     endif
-
-     pder_knee = 0.0*x
-     if morethan[0] ne -1 then begin
-        pder_knee[morethan]=m
-     endif
-     ;
-     ; Compile them together
-     ;
-     pder[*,0] = pder_c[*]
-     pder[*,1] = pder_m[*]
-     pder[*,2] = pder_knee[*]
-  endif else begin
-     f[*] = m*x[0] + c
-     pder_c = 1.0 + 0.0*x
-     pder_m = knee + 0.0*x
-     pder_knee = m + 0.0*x
-     pder[*,0] = pder_c[*]
-     pder[*,1] = pder_m[*]
-     pder[*,2] = pder_knee[*]
-  endelse
-END
-
-PRO broken_linear,x,a,f,pder
-;
-; Implements the log-log version of the broken power law
-; End points and start points are fixed
-;
-  m_lower = a[1]
-  c = a[0]
-  breakpoint = a[2]
-  m_upper = a[3]
-;
-  nx = n_elements(x)
-  f = fltarr(nx)
-  ;
-  ; Portions of the spectrum before and after the break
-  ;
-  lessthan = where( x le breakpoint, complement=morethan )
-
-  return
-END
-
-PRO linear_with_constant,x,a,f,pder
-  m = a[1]
-  c = a[0]
-  const = a[2]
-  f = alog( a[2] + exp(m*x+c) )
-END
-
-PRO linear,x,a,f,pder
-  m = a[1]
-  c = a[0]
-  f = m*x+c
-END
 
 
 FUNCTION MASK_MAP,data,level,comparison
@@ -136,7 +53,7 @@ END
 ;
 ;
 ;
-PRO do_rn, root, directory, filename, eps, img_directory, function_name
+PRO do_rn, root, directory, filename, eps, img_directory, function_name, final_good_power_law_index, final_good_brightness
 
 ; get the data
   restorefull = root + directory + filename
@@ -232,44 +149,55 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
            ts_max[i,j] = max(ts)
 
            if (chisqr[i,j] le 1.2) and (chisqr[i,j] ge 0.8) then begin
-              chisq_mask[i,j] = 1
+              good_chisq_mask[i,j] = 1
            endif
         endif
       
      endfor
   endfor
-
 ;
-; Power law index
+; Find where the finite power law indices are
 ;
   power_law_raw = -reform(lf[*,*,1])
   power_law_finite_index = where( finite(power_law_raw) eq 1b)
-  power_law_map = fltarr(nx, ny)
-  power_law_map(power_law_finite_index) = power_law_raw(power_law_finite_index)
+  finite_power_law_mask = intarr(nx,ny)
+  finite_power_law_mask(power_law_finite_index) = 1
+;
+; Where the good fits are.  Use this mask and index to determine
+; where the data that needs to analyzed is in the maps
+;
+  good_mask = good_chisq_mask * finite_power_law_mask
+  good_index = where(good_mask eq 1)
+;
+; Find where the good power power law indices are
+;
+  good_power_law_map = fltarr(nx,ny)
+  good_power_law_map(good_index) = power_law_raw(good_index)
+
 ;
 ; Mask and index of where the brightest pixels are
 ;
   top_fraction = 0.05
 
-  tma = total(data,3,/double)
-  tma_level = FIND_LEVEL(tma, top_fraction)
-  tma_index = where(tma ge tma_level)
-  tma_mask = MASK_MAP(tma, tma_level, 'ge')
+  top = total(data,3,/double)
+  top_level = FIND_LEVEL(top, top_fraction)
+  top_index = where(top ge top_level)
+  top_mask = MASK_MAP(top, top_level, 'ge')
 ;
 ; Mask and index of the non-brightest pixels
 ; 
-  low_index = where(tma lt tma_level)
-  low_mask = 1-tma_mask
+  low_mask = 1-top_mask
+  low_index = where(low_mask eq 1)
 ;
 ; Where the bright good fits 
 ;
-  good_fits_tma_mask = chisq_mask*tma_mask
-  good_fits_tma_index = where(good_fits_tma_mask eq 1b)
+  good_top_mask = good_mask*top_mask
+  good_top_index = where(good_top_mask eq 1b)
 ;
 ; Where the non-bright good fits are
 ;
-  good_fits_low_mask = chisq_mask*low_mask
-  good_fits_low_index = where(good_fits_low_mask eq 1b)
+  good_low_mask = good_mask*low_mask
+  good_low_index = where(good_low_mask eq 1b)
 
 
 ;
@@ -283,7 +211,7 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
   if eps eq 1 then ps,img_directory + filename+'_'+function_name + '_powerlawindex_pdf.eps', /encapsulated else window,0
 
   ; Good fits, bright
-  hgb = histogram(power_law_map(good_fits_tma_index),bins=0.05, min = 0.001,loc=hgbloc)
+  hgb = histogram(power_law_map(good_fits_top_index),bins=0.05, min = 0.001,loc=hgbloc)
   hgb = hgb/total(hgb)
 
   ; Good fits, not bright
@@ -307,7 +235,9 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
   xyouts,0.0,0.3*yrange[1],'dashed = all good fits',charsize=charsize
 
   xyouts,0.0,0.4*yrange[1],'brightness fraction = '+trim(top_fraction)
-  xyouts,0.0,0.5*yrange[1],'brightness level = '+trim(tma_level)
+  xyouts,0.0,0.5*yrange[1],'brightness level = '+trim(top_level)
+
+  xyouts,0.0,0.6*yrange[1],'fraction pixels with good fits ='+trim(total(chisq_mask)/double(n_elements(chisq_mask)))
 
   if eps eq 1 then psclose
 
@@ -320,30 +250,30 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
 ;
 ; base image
 ;
-  base_image = tma
+  base_image = top
   base_range = minmax(base_image)
 
   ; all emission
-  show_image,tma,base_range,'all emission',charsize
+  show_image,top,base_range,'all emission',charsize
 
   ; bright emission
-  im = tma*tma_mask
+  im = top*top_mask
   show_image,im,base_range,'bright emission',charsize
 
   ; non bright emission
-  im = tma*low_mask  
+  im = top*low_mask  
   show_image,im,base_range,'non bright emission',charsize
 
   ; good fit emission
-  im = tma*chisq_mask
+  im = top*chisq_mask
   show_image,im,base_range,'good fit emission: '+function_name,charsize
 
   ; bright + good fit emission
-  im = tma*good_fits_tma_mask
+  im = top*good_fits_top_mask
   show_image,im,base_range,'bright + good fit emission: '+function_name,charsize
 
   ; non-bright + good fit emission
-  im = tma*good_fits_low_mask
+  im = top*good_fits_low_mask
   show_image,im,base_range,'non-bright + good fit emission: '+function_name,charsize
 
   if eps eq 1 then psclose
@@ -361,7 +291,7 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
   im = power_law_map*chisq_mask
   show_image,im,base_range,'Power law index, good fit: '+function_name,charsize
 
-  im = power_law_map*good_fits_tma_mask
+  im = power_law_map*good_fits_top_mask
   show_image,im,base_range,'Power law index, bright + good fit: '+function_name,charsize
 
   im = power_law_map*good_fits_low_mask
@@ -375,13 +305,13 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
   if (strpos(function_name,'knee'))[0] ne -1 then begin
      window,2
      knee_map = reform(lf[*,*,2])
-     h = histogram(knee_map(good_fits_tma_index),bins=0.05,loc=hloc,max=max(x))
+     h = histogram(knee_map(good_fits_top_index),bins=0.05,loc=hloc,max=max(x))
      plot,hloc,h/total(h),psym=10,xtitle = 'alog(knee frequency)', ytitle = 'PDF',title = filename +': bright + good fit',charsize=charsize
 
      h = histogram(knee_map*chisq_mask,bins=0.05,loc=hloc,max=max(x))
      oplot,hloc,h/total(h),psym=10, linestyle=1
 
-     h = histogram(knee_map*tma_mask,bins=0.05,loc=hloc,max=max(x))
+     h = histogram(knee_map*top_mask,bins=0.05,loc=hloc,max=max(x))
      oplot,hloc,h/total(h),psym=10, linestyle=2
   endif
 
@@ -389,9 +319,16 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
   !p.multi=0
   loadct,39
 
-  brightness = tma*chisq_mask
-  brightness = brightness(where(brightness gt 0.0))
+  brightness = top*chisq_mask
+  brightness_index = where(brightness gt 0.0)
+  brightness_mask = intarr(nx,ny)
+  brightness_mask(brightness_index) = 1
+  brightness = brightness(brightness_index)
   brightness = alog10(brightness)
+
+  final_good_brightness = brightness
+  final_good_power_law_index_index = where(chisq_mask*brightness_mask eq 1)
+  final_good_power_law_index = power_law_map(final_good_power_law_index_index)
 
   bin1 = 0.05
   bin2 = 0.025
@@ -400,8 +337,8 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
   h2d = hist_2d(power_law_map*chisq_mask, brightness, min1=min1, min2=min2, bin1=bin1, bin2=bin2)
   sz = size(h2d,/dim)
   plot_image,h2d,scale=[bin1,bin2],origin=[min1,min2],xtitle='power law index',ytitle='alog10(brightness)',/nosquare
-  plots,[min1,min1+bin1*sz[0]],[alog10(tma_level),alog10(tma_level)],color = 255
-  xyouts,min1,alog10(tma_level),'brightness level, top '+trim(top_fraction),color = 255
+  plots,[min1,min1+bin1*sz[0]],[alog10(top_level),alog10(top_level)],color = 255
+  xyouts,min1,alog10(top_level),'brightness level, top '+trim(top_fraction),color = 255
   psclose
 
   loadct,0
@@ -427,6 +364,8 @@ PRO do_rn, root, directory, filename, eps, img_directory, function_name
 return
 end
 
+all_power_law = [0]
+all_brightness = [0]
 root = '/home/ireland/'
 directory = 'Data/oscillations/mcateer/outgoing3/'
 eps = 1
@@ -437,8 +376,14 @@ fulllist = file_list(root + directory, files=files)
 nfiles = n_elements(files)
 for i = 0, nfiles-1 do begin
    filename = files[i]
-   do_rn,root, directory, filename, eps, img_directory, function_name
+   do_rn,root, directory, filename, eps, img_directory, function_name, power_law, brightness
+   all_power_law = [all_power_law, power_law]
+   all_brightness = [all_brightness, brightness]
 endfor
+all_power_law = all_power_law[1:*]
+all_brightness = all_brightness[1:*]
+
+
 
 
 END
