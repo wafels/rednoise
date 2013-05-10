@@ -32,21 +32,14 @@ FUNCTION rn_do_analysis, data, function_name,$
 ;
 ; which model
 ;
-  if function_name eq 'linear_with_knee' then begin
+  if function_name eq 'rn_linear_with_knee' then begin
      n_parameters = 3
-  endif
-  if function_name eq 'linear_with_constant' then begin
-     n_parameters = 3
-  endif
-  if function_name eq 'simple_linear' then begin
-     n_parameters = 2
   endif
 
 ;
 ; Calculate positive non-zero frequencies
 ;
   sz = size(data,/dim)
-  sz[1] = sz[1] - (4+ceil(max(displacements[0])))
   n = sz[2]
   nx = sz[0]
   ny = sz[1]
@@ -85,7 +78,7 @@ FUNCTION rn_do_analysis, data, function_name,$
            status = 0
         endif
 
-        if function_name eq 'linear_with_knee' then begin
+        if function_name eq 'rn_linear_with_knee' then begin
          ;
          ; Get an estimate of the broken power law
          ;
@@ -193,15 +186,15 @@ FUNCTION rn_do_analysis, data, function_name,$
   if eps eq 1 then ps,img_directory + dataname+ '_powerlawindex_pdf.eps', /encapsulated else window,0
 
   ; Good fits, bright
-  hgb = histogram(power_law_map(good_top_index),bins=0.05, min = 0.001,loc=hgbloc)
+  hgb = histogram(good_power_law_map(good_top_index),bins=0.05, min = 0.001,loc=hgbloc)
   hgb = hgb/total(hgb)
 
   ; Good fits, not bright
-  hgn = histogram(power_law_map(good_low_index),bins=0.05, min = 0.001,loc=hgnloc)
+  hgn = histogram(good_power_law_map(good_low_index),bins=0.05, min = 0.001,loc=hgnloc)
   hgn = hgn/total(hgn)
 
   ; Good fits, all of them
-  hga = histogram(power_law_map(good_index),bins=0.05, min = 0.001,loc=hgaloc)
+  hga = histogram(good_power_law_map(good_index),bins=0.05, min = 0.001,loc=hgaloc)
   hga = hga/total(hga)
 
   yrange = minmax([hgb,hgn,hga])
@@ -219,7 +212,7 @@ FUNCTION rn_do_analysis, data, function_name,$
   xyouts,0.0,0.4*yrange[1],'brightness fraction = '+trim(top_fraction)
   xyouts,0.0,0.5*yrange[1],'brightness level = '+trim(top_level)
 
-  xyouts,0.0,0.6*yrange[1],'fraction pixels with good fits ='+trim(total(chisq_mask)/double(n_elements(chisq_mask)))
+  xyouts,0.0,0.6*yrange[1],'fraction pixels with good fits ='+trim(total(good_chisq_mask)/double(n_elements(good_chisq_mask)))
 
   if eps eq 1 then psclose
 
@@ -236,22 +229,22 @@ FUNCTION rn_do_analysis, data, function_name,$
   base_range = minmax(base_image)
 
   ; all emission
-  show_image, top, base_range,'all emission',charsize
+  rn_show_image, top, base_range,'all emission',charsize
 
   ; bright emission
-  show_image, top*top_mask, base_range,'bright emission',charsize
+  rn_show_image, top*top_mask, base_range,'bright emission',charsize
 
   ; non bright emission
-  show_image, top*low_mask, base_range,'non bright emission',charsize
+  rn_show_image, top*low_mask, base_range,'non bright emission',charsize
 
   ; good fit emission
-  show_image, top*good_mask, base_range,'good fit emission: '+function_name,charsize
+  rn_show_image, top*good_mask, base_range,'good fit emission: '+function_name,charsize
 
   ; bright + good fit emission
-  show_image, top*good_top_mask, base_range,'bright + good fit emission: '+function_name,charsize
+  rn_show_image, top*good_top_mask, base_range,'bright + good fit emission: '+function_name,charsize
 
   ; non-bright + good fit emission
-  show_image, top*good_low_mask ,base_range,'non-bright + good fit emission: '+function_name,charsize
+  rn_show_image, top*good_low_mask ,base_range,'non-bright + good fit emission: '+function_name,charsize
 
   if eps eq 1 then psclose
 
@@ -265,11 +258,11 @@ FUNCTION rn_do_analysis, data, function_name,$
   base_image = good_power_law_map
   base_range = minmax(base_image)
 
-  show_image, good_power_law_map, base_range,'Power law index, good fit: '+function_name,charsize
+  rn_show_image, good_power_law_map, base_range,'Power law index, good fit: '+function_name,charsize
 
-  show_image, good_power_law_map*top_mask, base_range,'Power law index, bright + good fit: '+function_name,charsize
+  rn_show_image, good_power_law_map*top_mask, base_range,'Power law index, bright + good fit: '+function_name,charsize
 
-  show_image, good_power_law_map*low_mask, base_range,'Power law index, non-bright + good fit: '+function_name,charsize
+  rn_show_image, good_power_law_map*low_mask, base_range,'Power law index, non-bright + good fit: '+function_name,charsize
 
   !p.multi=0
   if eps eq 1 then psclose
