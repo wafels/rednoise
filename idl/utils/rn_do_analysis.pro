@@ -288,7 +288,7 @@ FUNCTION rn_do_analysis, data, function_name,$
   correlation_index = where(correlation_mask eq 1)
 
   brightness = alog10(top(correlation_index))
-  power_law_index_at_brightness = good_power_law_map(correlation_index)
+  power_law_index_at_brightness = power_law_raw(correlation_index)
 
   bin1 = 0.05
   bin2 = 0.025
