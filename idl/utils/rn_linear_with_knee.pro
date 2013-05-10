@@ -2,7 +2,7 @@
 ; Higher frequencies look more like white noise. The power
 ; law breaks at frequency = 10^knee
 ;
-PRO linear_with_knee,x,a,f,pder
+PRO rn_linear_with_knee,x,a,f,pder
   m = a[1]
   c = a[0]
   knee = a[2]

@@ -1,0 +1,31 @@
+;
+; Analyze some data cubes for the presence of RN
+;
+; Model to be fit is simple red noise
+
+
+FUNCTION rn_mask_map,data,level,comparison
+  sz = size(data,/dim)
+  answer = intarr(sz[0],sz[1])
+  if comparison eq 'ge' then begin
+     for i = 0,sz[0]-1 do begin
+        for j = 0,sz[1]-1 do begin
+           if data[i,j] ge level then begin
+              answer[i,j] = 1
+           endif
+        endfor
+     endfor
+  endif
+
+  if comparison eq 'le' then begin
+     for i = 0,sz[0]-1 do begin
+        for j = 0,sz[1]-1 do begin
+           if data[i,j] le level then begin
+              answer[i,j] = 1
+           endif
+        endfor
+     endfor
+  endif
+
+  return,answer
+END
