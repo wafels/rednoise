@@ -251,7 +251,7 @@ FUNCTION rn_do_analysis, data, function_name,$
 ;
 ; Maps of the power law index
 ;
-  if eps eq 1 then ps,img_directory + dataname+ '_powerlawindex_maps.eps', /encapsulated,/color else window,1
+  if eps eq 1 then ps,img_directory + dataname+ '_powerlawindex_maps.eps', /encapsulated,/color else window,2
   !p.multi=[0,3,1]
   loadct,39
 
@@ -272,7 +272,7 @@ FUNCTION rn_do_analysis, data, function_name,$
 ;
   loadct,0
 
-  if eps eq 1 then ps,img_directory + dataname + '_powerlawindex_brightness_histogram.eps', /encapsulated,/color else window,1
+  if eps eq 1 then ps,img_directory + dataname + '_powerlawindex_brightness_histogram.eps', /encapsulated,/color else window,3
   !p.multi=0
   loadct,39
 
@@ -303,39 +303,73 @@ FUNCTION rn_do_analysis, data, function_name,$
 
   loadct,0
 
+;
+; Knee location
+;
+
+  if (strpos(function_name,'knee'))[0] ne -1 then begin
+     if eps eq 1 then ps,img_directory + dataname + '_knee_histogram.eps', /encapsulated,/color else window,4
+
+     knee_map = exp(reform(lf[*,*,2]))
+  ; Good fits, bright
+     hgb = histogram(knee_map(good_top_index),bins=0.0005, max=max(pfreq), min=min(pfreq), loc=hgbloc)
+     hgb = hgb/total(hgb)
+
+  ; Good fits, not bright
+     hgn = histogram(knee_map(good_low_index),bins=0.0005, max=max(pfreq), min=min(pfreq),  loc=hgnloc)
+     hgn = hgn/total(hgn)
+
+  ; Good fits, all of them
+     hga = histogram(knee_map(good_index),bins=0.0005, max=max(pfreq), min=min(pfreq),  loc=hgaloc)
+     hga = hga/total(hga)
+
+     yrange = minmax([hgb,hgn,hga])
+     xrange = minmax([hgbloc,hgnloc,hgaloc])
+
+     plot,hgbloc,hgb,psym=10,xtitle = 'knee frequency (Hz)', ytitle = 'PDF',title = dataname,charsize=charsize, xrange=xrange, yrange=yrange, ystyle=1, xstyle=1
+     xyouts,0.0,0.1*yrange[1],'solid = good fit + bright',charsize=charsize
+     
+     oplot,hgnloc,hgn,psym=10, linestyle=1
+     xyouts,0.0,0.2*yrange[1],'dotted = good fit + not bright',charsize=charsize
+
+     oplot,hgaloc,hga,psym=10, linestyle=2
+     xyouts,0.0,0.3*yrange[1],'dashed = all good fits',charsize=charsize
+
+     xyouts,0.0,0.4*yrange[1],'brightness fraction = '+trim(top_fraction)
+     xyouts,0.0,0.5*yrange[1],'brightness level = '+trim(top_level)
+     
+     xyouts,0.0,0.6*yrange[1],'fraction pixels with good fits ='+trim(total(good_chisq_mask)/double(n_elements(good_chisq_mask)))
+
+     plots,[1.0/300.0,1.0/300.0],yrange
+     xyouts,1.0/300.0,0.9*yrange[1],'5 min'
+
+     plots,[1.0/180.0,1.0/180.0],yrange
+     xyouts,1.0/180.0,0.8*yrange[1],'3 min'
+
+
+  endif
+
+
+
+
   return,{power_law:power_law_index_at_brightness, brightness:brightness}
 
 end
 
 
 
-  ;; if (strpos(function_name,'knee'))[0] ne -1 then begin
-  ;;    window,2
-  ;;    knee_map = reform(lf[*,*,2])
-  ;;    h = histogram(knee_map(good_fits_top_index),bins=0.05,loc=hloc,max=max(x))
-  ;;    plot,hloc,h/total(h),psym=10,xtitle = 'alog(knee frequency)', ytitle = 'PDF',title = filename +': bright + good fit',charsize=charsize
 
-  ;;    h = histogram(knee_map*chisq_mask,bins=0.05,loc=hloc,max=max(x))
-  ;;    oplot,hloc,h/total(h),psym=10, linestyle=1
 
-  ;;    h = histogram(knee_map*top_mask,bins=0.05,loc=hloc,max=max(x))
-  ;;    oplot,hloc,h/total(h),psym=10, linestyle=2
-  ;; endif
+;; Sum all the bright pixels
 
-;; window,0
-;; plot,chisqr,power_law_index,psym=3,xtitle='reduced chi-squared',ytitle = 'index', title = filename +': all pixels',charsize=charsize
-
-;; window,1
-;; plot_image,index_map,xtitle='x position', ytitle='y position', title = filename +': Location of "good" fits',charsize=charsize
-
-;; window,2
-;; h = histogram(index_map,bins=0.025, min = 0.001,loc=hloc)
-;; plot,hloc,h,psym=10,xtitle = 'power law index', ytitle = 'PDF',title = filename +': Good fit indices distribution',charsize=charsize
-
-;; window,3
-;; plot,index_map, tot_map, psym= 3,ytitle = 'total emission (DN)', xtitle = 'good fit index', title = filename +': Total emission per good index',charsize=charsize
-
-;; window,4
-;; h2 = histogram(index_brightest, bins=0.025, min = 0.001, max= 3.0, loc=h2loc)
-;; plot,h2loc,h2,psym=10,xtitle = 'power law index', ytitle = 'PDF',title = filename +': Good fit indices for pixels with total emission in top 10%',charsize=charsize
+;;   top_summed = dblarr(n)
+;;   for i = 0, nx-1 do begin
+;;      for j = 0, ny-1 do begin
+;;         if top_mask[i,j] eq 1 then begin
+;;            top_summed[*] = top_summed[*] + reform(data[i,j,*])
+;;         endif
+;;      endfor
+;;   endfor
+;;   top_summed = top_summed/double(n_elements(top_index))
+;; stop
 
