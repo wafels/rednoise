@@ -14,26 +14,26 @@ __all__ = ['analysis_power', 'analysis_frequencies', 'power_law_index',
 # data goes here
 #input_power_spectrum = read in from file???
 
+
 def main():
 
     def rednoise_test(n, dt, alpha):
         wn = np.random.normal(size=(n,))
-    
+
         # FFT of the white noise
         wn_fft = np.fft.rfft(wn)
-    
+
         # frequencies
         f = np.fft.fftfreq(n, dt)[:len(wn_fft)]
-        f[-1]=np.abs(f[-1])
-    
-        fft_sim = wn_fft[1:] * f[1:]**-alpha
+        f[-1] = np.abs(f[-1])
+
+        fft_sim = wn_fft[1:] * f[1:] ** (alpha /2.0)
         T_sim = np.fft.irfft(fft_sim)
         return T_sim
-    
+
     def testdata(n):
         return np.random.normal(size=(n))
-    
-    
+
     def read_idl(fullpath):
         s = readsav(fullpath)
         data = np.sum(np.sum(s.region_window, axis=1, dtype=np.float64), axis=1, dtype=np.float64)
@@ -41,10 +41,9 @@ def main():
         fftfreq = np.fft.fftfreq(len(data), dt)
         return fftfreq, data
 
-    
     n = 300
     dt = 12.0
-    test_data = rednoise_test(n+2, dt, 1.0)
+    test_data = rednoise_test(n+2, dt, -1.0)
     
     #fftfreq, test_data = read_idl('/home/ireland/Data/oscillations/mcateer/outgoing3/AR_B.sav')
     

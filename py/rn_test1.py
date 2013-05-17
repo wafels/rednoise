@@ -9,10 +9,10 @@ import rn_utils
 # Get some power law noise.  Make sure it is
 # highly oversampled
 nsample = 10000
-desired_length = 300
-power_law_index = 0.0
+desired_length = 1000
+power_law_index = 2.0
 data = rn_utils.power_law_noise1(nsample, 1, power_law_index)
-test_data = data[nsample/2-desired_length/2:nsample/2+desired_length/2]
+test_data = data[nsample / 2 - desired_length / 2:nsample / 2 + desired_length / 2]
 test_data = test_data - np.mean(test_data)
 
 # plot the data itself
