@@ -19,10 +19,7 @@ n = 300
 dt = 12.0
 alpha = 2.0
 
-test_data = rn_utils.simulated_power_law(n, dt, alpha)
-
-plt.plot(test_data)
-plt.show()
+test_data = rn_utils.simulated_power_law(n, dt, alpha, seed = 1)
 
 # Power spectrum
 observed_power_spectrum = (np.absolute(np.fft.fft(test_data))) ** 2
@@ -52,11 +49,11 @@ analysis_power = observed_power_spectrum[fftfreq >= 0][1:-1]
 # get a quick estimate assuming the data is a power law only.
 # the [0] entry from lstsq is the gradient, the [1] entry is the
 # value at np.log(observed_power_spectrum) = 0.0
-coefficients = np.polyfit(np.log(analysis_frequencies),
-                           np.log(analysis_power),
-                           1)
-m_estimate = -coefficients[0]
-c_estimate = np.exp(coefficients[1])
+
+estimate = rn_utils.do_simple_fit(analysis_frequencies, analysis_power, show=True)
+
+c_estimate = estimate[0]
+m_estimate = estimate[1]
 
 # Define data and stochastics
 power_law_index = pymc.Uniform('power_law_index',
