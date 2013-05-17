@@ -28,3 +28,22 @@ def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10):
     data = power_law_noise(n_oversample * n, dt / dt_oversample, alpha)
     data = data - np.mean(data)
     return data[0.5 * len(data) - n / 2: 0.5 * len(data) + n / 2]
+
+
+def credible_interval(data, ci=0.68):
+    """find the limits where the upper 100*(1-ci/2)% of the data, and the lower
+    100*ci/2 % of the data are"""
+    s = np.sort(data)
+    ns = s.size
+    for i in range(0, ns):
+        fraction = np.count_nonzero(s[i] > s) / (1.0 * ns)
+        if fraction >= (1.0 - ci) / 2.0:
+            break
+    lower_limit = s[i]
+
+    for i in range(ns - 1, 0, -1):
+        fraction = np.count_nonzero(s[i] > s) / (1.0 * ns)
+        if fraction <= 1.0 - (1.0 - ci) / 2.0:
+            break
+    upper_limit = s[i]
+    return np.asarray([lower_limit, upper_limit])

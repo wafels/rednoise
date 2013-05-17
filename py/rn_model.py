@@ -100,8 +100,6 @@ def power_law_spectrum(p=power_law_index,
 #    out[f > bf] = a * (f[f >= bf] ** (-p2)) * bf ** (p2 - p1)
 #    return out
 
-
-
 # This is the PyMC model we will use: fits the model defined in
 # beta=1.0 / model to the power law spectrum we are analyzing
 # value=analysis_power
