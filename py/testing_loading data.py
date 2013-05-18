@@ -10,7 +10,10 @@ import pymc
 # Set up the simulated data
 n = 300
 dt = 12.0
-alpha = 2.0
+alpha = 3.0
+
+directory = '/Users/ireland/ts/img/rednoise/simulated/alpha='+str(alpha)
+format = 'png'
 
 for seed in range(1,5):
     print seed
@@ -22,8 +25,8 @@ for seed in range(1,5):
     plt.plot(test_data)
     plt.xlabel('sample number')
     plt.ylabel('emission')
-    plt.title('simulated data')
-    plt.savefig(str(seed)+'_test_time_series')
+    plt.title('simulated data alpha='+str(alpha))
+    plt.savefig(directory+'_'+str(seed)+'_test_time_series.'+format, format=format)
     
     # get the power spectrum and frequencies we will analyze at
     observed_power_spectrum = (np.absolute(np.fft.fft(test_data))) ** 2
@@ -41,19 +44,19 @@ for seed in range(1,5):
 
     # plot the power spectrum and the quick fit
     plt.figure(seed + 30)
-    plt.loglog(analysis_frequencies, analysis_power, label='observed power')
+    plt.loglog(analysis_frequencies, analysis_power, label='observed power; true index: '+str(alpha))
     plt.loglog(analysis_frequencies, power_fit, label='fit, power law index: ' + str(m_estimate))
     plt.xlabel('frequency')
     plt.ylabel('power')
     plt.title('Data fit with simple single power law')
     plt.legend()
-    plt.savefig(str(seed)+'_power_spectrum')
+    plt.savefig(directory+'_'+str(seed)+'_power_spectrum.'+format, format=format)
     
     # PyMC definitions
     # Define data and stochastics
     power_law_index = pymc.Uniform('power_law_index',
                                    value=m_estimate,
-                                   lower=0.0,
+                                   lower=-1.0,
                                    upper=m_estimate + 2,
                                    doc='power law index')
     
@@ -87,9 +90,9 @@ for seed in range(1,5):
     pli = M1.trace("power_law_index")[:]
     plt.figure(seed)
     plt.hist(pli, bins=40)
-    plt.xlabel('power law index')
+    plt.xlabel('power law index (true value='+str(alpha)+')')
     plt.ylabel('number found')
     plt.title('Probability distribution of power law index')
-    plt.savefig(str(seed)+'_test_power_law_index_')
+    plt.savefig(directory+'_'+str(seed)+'_test_power_law_index.'+format, format=format)
 
 
