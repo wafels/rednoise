@@ -21,6 +21,8 @@ alpha = 2.0
 
 test_data = rn_utils.simulated_power_law(n, dt, alpha, seed = 1)
 
+plt.plot(test_data)
+
 # Power spectrum
 observed_power_spectrum = (np.absolute(np.fft.fft(test_data))) ** 2
 

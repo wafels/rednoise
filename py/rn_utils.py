@@ -25,9 +25,11 @@ def power_law_noise(n, dt, alpha, seed=None):
     return T_sim
 
 
-def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10, seed=None):
+def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10,
+                        seed=None):
     """Create a time series of length n and sample size dt"""
-    data = power_law_noise(n_oversample * n, dt / dt_oversample, alpha, seed=seed)
+    data = power_law_noise(n_oversample * n, dt / dt_oversample, alpha,
+                           seed=seed)
     data = data - np.mean(data)
     return data[0.5 * len(data) - n / 2: 0.5 * len(data) + n / 2]
 
