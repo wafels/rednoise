@@ -17,6 +17,7 @@ import pymc
 import pickle
 from matplotlib import rc
 
+# Use LaTeX in matplotlib - very nice.
 rc('text', usetex=True)
 
 # Dump plots?
