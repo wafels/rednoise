@@ -15,12 +15,12 @@ import matplotlib.pyplot as plt
 import rn_utils
 import pymc
 import pickle
-from matplotlib import rc,rcParams
+from matplotlib import rc
 
 rc('text', usetex=True)
 
 # Dump plots?
-show_plot = True
+show_plot = False
 
 # Where to dump the data
 pickle_directory = '/home/ireland/ts/pickle/'
@@ -36,7 +36,7 @@ n_initial = 300
 dt = 12.0
 
 # power law index
-alpha = 0.0
+alpha = 1.0
 
 # Alpha range - this is the half width of a range.  Three measures of
 # how close we are getting to the true value are calculated
@@ -55,7 +55,7 @@ n_increment = np.sqrt(2.0)
 max_increment = 9
 
 # Number of trial data runs at each time-series length
-ntrial = 10
+ntrial = 100
 
 # PyMC variables
 iterations = 50000
@@ -170,7 +170,7 @@ for i in range(0, max_increment):
         # and save them
         ci_keep68[i, j, :] = rn_utils.credible_interval(pli, ci=0.68)
 
-        for k in range(0,100):
+        for k in range(0, 100):
             h, bin_edges = np.histogram(pli, bins=bins * 2 ** k)
             if bin_edges[1] - bin_edges[0] <= 0.5 * alpha_range:
                 break
@@ -202,7 +202,6 @@ for i in range(0, max_increment):
             plt.subplot(2, 2, 3)
             plt.hist(pli, bins=bins, color='gray')
             plt.title('power law index PDF')
-            print bayes_mean[i, j, 1], 
             plt.axvline(x=bayes_mean[i, j, 1], color='red', label=r'$\overline{\alpha}=%4.2f$' %(bayes_mean[i, j, 1]))
             plt.axvline(x=bayes_mode[i, j], color='blue', label=r'mode$(\alpha)=%4.2f$' %(bayes_mode[i, j]))
             plt.axvline(x=ci_keep68[i, j, 0], color='green', label=r'$\alpha_{68}^{L}=%4.2f$' %(ci_keep68[i, j, 0]))
@@ -244,7 +243,7 @@ filename = "ts_duration_and_power_law_index_" + alpha_S
 
 # Save a plot to file
 plt.semilogx(nkeep, fraction_found_ci,
-             label=r'$[\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f] \in [\alpha_{68}^{L},\alpha_{68}^{H}]$' % (alpha_range, alpha_range))
+             label=r'$[\alpha_{68}^{L},\alpha_{68}^{H}] \in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
 plt.semilogx(nkeep, fraction_found_mean,
              label=r'$\overline{\alpha}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
 plt.semilogx(nkeep, fraction_found_mean,
