@@ -15,9 +15,12 @@ import matplotlib.pyplot as plt
 import rn_utils
 import pymc
 import pickle
+from matplotlib import rc,rcParams
+
+rc('text', usetex=True)
 
 # Dump plots?
-show_plot = False
+show_plot = True
 
 # Where to dump the data
 pickle_directory = '/home/ireland/ts/pickle/'
@@ -33,7 +36,7 @@ n_initial = 300
 dt = 12.0
 
 # power law index
-alpha = 1.0
+alpha = 0.0
 
 # Alpha range - this is the half width of a range.  Three measures of
 # how close we are getting to the true value are calculated
@@ -52,12 +55,12 @@ n_increment = np.sqrt(2.0)
 max_increment = 9
 
 # Number of trial data runs at each time-series length
-ntrial = 100
+ntrial = 10
 
 # PyMC variables
 iterations = 50000
 burn = iterations / 4
-thin = 5
+thin = 10
 
 # storage array for the credible interval
 ci_keep68 = np.zeros((max_increment, ntrial, 2))
@@ -67,6 +70,9 @@ lstsqr_fit = np.zeros((max_increment, ntrial, 2))
 
 # Bayesian posterior means
 bayes_mean = np.zeros((max_increment, ntrial, 2))
+
+# Bayesian posterior modes
+bayes_mode = np.zeros((max_increment, ntrial))
 
 # Storage array for the fraction found
 fraction_found_ci = np.zeros((max_increment))
@@ -79,6 +85,9 @@ nkeep = np.zeros((max_increment))
 # Strings required to save data
 alpha_S = str(np.around(alpha, decimals=2))
 ar_S = str(np.around(alpha_range, decimals=2))
+
+# Histogram bin size
+bins = 40
 
 # Main loop
 for i in range(0, max_increment):
@@ -161,6 +170,12 @@ for i in range(0, max_increment):
         # and save them
         ci_keep68[i, j, :] = rn_utils.credible_interval(pli, ci=0.68)
 
+        for k in range(0,100):
+            h, bin_edges = np.histogram(pli, bins=bins * 2 ** k)
+            if bin_edges[1] - bin_edges[0] <= 0.5 * alpha_range:
+                break
+        bayes_mode[i, j] = bin_edges[h.argmax()]
+
         if show_plot:
             # Plots
             # Calculate the actual fit
@@ -170,32 +185,34 @@ for i in range(0, max_increment):
             plt.figure(1)
             plt.subplot(2, 2, 1)
 
-            m_estimate_S = str(np.around(m_estimate, decimals=2))
-            m_posterior_mean_S = str(np.around(m_estimate, decimals=2))
-            alpha_CI_S = str(np.around(ci_keep68[i, j, 0], decimals=2)) + '-' + \
-            str(np.around(ci_keep68[i, j, 1], decimals=2))
-
             plt.plot(test_data)
             plt.xlabel('sample number (n=' + str(n) + ')')
             plt.ylabel('simulated emission')
-            plt.title(r'Simulated data $\alpha_{true}$=' + alpha_S + ' , seed=' + str(seed))
+            plt.title(r'Simulated data $\alpha_{true}$=%4.2f , seed=%8i ' % (alpha, seed))
 
             plt.subplot(2, 2, 2)
-            plt.loglog(analysis_frequencies, analysis_power, label=r'observed power: $\alpha_{true}=$' + alpha_S)
-            plt.loglog(analysis_frequencies, power_fit, label=r'$\alpha_{lstsqr}=$' + m_estimate_S)
-            plt.loglog(analysis_frequencies, bayes_fit, label=r'$\alpha_{bayes}=$' + m_posterior_mean_S)
+            plt.loglog(analysis_frequencies, analysis_power, label=r'observed power: $\alpha_{true}= %4.2f$' % (alpha))
+            plt.loglog(analysis_frequencies, power_fit, label=r'$\alpha_{lstsqr}=%4.2f$' % (m_estimate))
+            plt.loglog(analysis_frequencies, bayes_fit, label=r'$\overline{\alpha}=%4.2f$' % (bayes_mean[i, j, 1]))
             plt.xlabel('frequency')
             plt.ylabel('power')
             plt.title('Data fit with simple single power law')
-            plt.legend()
+            plt.legend(loc=3)
 
             plt.subplot(2, 2, 3)
-            plt.hist(pli, bins=40, label=r'$\alpha_{bayes}$ 68% CI=' + alpha_CI_S)
+            plt.hist(pli, bins=bins, color='gray')
             plt.title('power law index PDF')
+            print bayes_mean[i, j, 1], 
+            plt.axvline(x=bayes_mean[i, j, 1], color='red', label=r'$\overline{\alpha}=%4.2f$' %(bayes_mean[i, j, 1]))
+            plt.axvline(x=bayes_mode[i, j], color='blue', label=r'mode$(\alpha)=%4.2f$' %(bayes_mode[i, j]))
+            plt.axvline(x=ci_keep68[i, j, 0], color='green', label=r'$\alpha_{68}^{L}=%4.2f$' %(ci_keep68[i, j, 0]))
+            plt.axvline(x=ci_keep68[i, j, 1], color='green', label=r'$\alpha_{68}^{H}=%4.2f$' %(ci_keep68[i, j, 1]))
+            plt.axvline(x=alpha, color='black', label=r'$\alpha_{true}=%4.2f$' %(alpha))
+            plt.axvline(x=m_estimate, color='black', linestyle='--', label=r'$\alpha_{lstsqr}=%4.2f$' %(m_estimate))
             plt.legend()
 
             plt.subplot(2, 2, 4)
-            plt.hist(cli, bins=40)
+            plt.hist(cli, bins=bins)
             plt.title('power law normalization PDF')
 
             plt.show()
@@ -207,19 +224,31 @@ for i in range(0, max_increment):
     high = np.squeeze(ci_keep68[i, :, 1]) <= alpha + alpha_range
     fraction_found_ci[i] = np.sum(low * high) / (1.0 * ntrial)
     print fraction_found_ci
+
     # (2) The mean value of alpha found lies within
     #     alpha-alpha_range -> alpha+alpha_range
+    high = np.squeeze(bayes_mean[i, :, 1]) <= alpha + alpha_range
+    low = np.squeeze(bayes_mean[i, :, 1]) >= alpha - alpha_range
+    fraction_found_mean[i] = np.sum(low * high) / (1.0 * ntrial)
+    print fraction_found_mean
 
     # (3) The mode value of alpha found lies within
     #     alpha-alpha_range -> alpha+alpha_range
+    high = bayes_mode[i, :] <= alpha + alpha_range
+    low = bayes_mode[i, :] >= alpha - alpha_range
+    fraction_found_mode[i] = np.sum(low * high) / (1.0 * ntrial)
+    print fraction_found_mode
 
 # Calculate a filename
 filename = "ts_duration_and_power_law_index_" + alpha_S
 
 # Save a plot to file
 plt.semilogx(nkeep, fraction_found_ci,
-             label=r'$\alpha-$' + ar_S + r"$\le \alpha_{68}$, " + \
-                   r"$\le \alpha_{68}\le\alpha+$" + ar_S)
+             label=r'$[\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f] \in [\alpha_{68}^{L},\alpha_{68}^{H}]$' % (alpha_range, alpha_range))
+plt.semilogx(nkeep, fraction_found_mean,
+             label=r'$\overline{\alpha}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
+plt.semilogx(nkeep, fraction_found_mean,
+             label=r'$\alpha_{mode}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
 
 plt.xlabel("length of time series (samples)")
 plt.ylabel("fraction found")
@@ -228,7 +257,8 @@ plt.savefig(img_directory + filename, format='png')
 
 # Save the data to a pickle file
 # Saving the 68% credible intervals, fraction found and length of time series
-results = {"low": low, "high": high,
+results = {"bayes_mean": bayes_mean,
+           "bayes_mode": bayes_mode,
            "fraction_found_ci": fraction_found_ci,
            "fraction_found_mean": fraction_found_mean,
            "fraction_found_mode": fraction_found_mode,
