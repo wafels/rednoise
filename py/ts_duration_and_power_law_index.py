@@ -35,6 +35,16 @@ dt = 12.0
 # power law index
 alpha = 1.0
 
+# Alpha range - this is the half width of a range.  Three measures of
+# how close we are getting to the true value are calculated
+# (1) The 68% CI lies within alpha-alpha_range -> alpha+alpha_range
+# (2) The mean value of alpha found lies within
+#     alpha-alpha_range -> alpha+alpha_range
+# (3) The mode value of alpha found lies within
+#     alpha-alpha_range -> alpha+alpha_range
+
+alpha_range = 0.1
+
 # The time-series is multiplied by this factor
 n_increment = np.sqrt(2.0)
 
@@ -59,13 +69,16 @@ lstsqr_fit = np.zeros((max_increment, ntrial, 2))
 bayes_mean = np.zeros((max_increment, ntrial, 2))
 
 # Storage array for the fraction found
-fraction_found = np.zeros((max_increment))
+fraction_found_ci = np.zeros((max_increment))
+fraction_found_mean = np.zeros((max_increment))
+fraction_found_mode = np.zeros((max_increment))
 
 # Storage array for the length of the time-series
 nkeep = np.zeros((max_increment))
 
-# String required to save data
+# Strings required to save data
 alpha_S = str(np.around(alpha, decimals=2))
+ar_S = str(np.around(alpha_range, decimals=2))
 
 # Main loop
 for i in range(0, max_increment):
@@ -187,25 +200,38 @@ for i in range(0, max_increment):
 
             plt.show()
 
-    # Calculate how often the credible interval includes the true value of the
-    # power law index.
-    low = np.squeeze(ci_keep68[i, :, 0]) <= alpha
-    high = np.squeeze(ci_keep68[i, :, 1]) >= alpha
-    fraction_found[i] = np.sum(low * high) / (1.0 * ntrial)
-    print fraction_found
+    # Calculate how often the credible interval is within a certain fixed range
+    # of the true  value
+    # (1) The 68% CI lies within alpha-alpha_range -> alpha+alpha_range
+    low = np.squeeze(ci_keep68[i, :, 0]) >= alpha - alpha_range
+    high = np.squeeze(ci_keep68[i, :, 1]) <= alpha + alpha_range
+    fraction_found_ci[i] = np.sum(low * high) / (1.0 * ntrial)
+    print fraction_found_ci
+    # (2) The mean value of alpha found lies within
+    #     alpha-alpha_range -> alpha+alpha_range
+
+    # (3) The mode value of alpha found lies within
+    #     alpha-alpha_range -> alpha+alpha_range
 
 # Calculate a filename
 filename = "ts_duration_and_power_law_index_" + alpha_S
 
 # Save a plot to file
-plt.semilogx(nkeep, fraction_found)
+plt.semilogx(nkeep, fraction_found_ci,
+             label=r'$\alpha-$' + ar_S + r"$\le \alpha_{68}$, " + \
+                   r"$\le \alpha_{68}\le\alpha+$" + ar_S)
+
 plt.xlabel("length of time series (samples)")
 plt.ylabel("fraction found")
+plt.legend()
 plt.savefig(img_directory + filename, format='png')
 
 # Save the data to a pickle file
 # Saving the 68% credible intervals, fraction found and length of time series
-results = {"low": low, "high": high, "fraction_found": fraction_found,
+results = {"low": low, "high": high,
+           "fraction_found_ci": fraction_found_ci,
+           "fraction_found_mean": fraction_found_mean,
+           "fraction_found_mode": fraction_found_mode,
            "nkeep": nkeep, "alpha": alpha}
 
 pickle.dump(results, open(pickle_directory + filename + '.pickle', "wb"))
