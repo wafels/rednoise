@@ -4,14 +4,17 @@ Utility functions for the 1/f study
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle, csv
+
 
 def power_law_power_spectrum_time_series(f, alpha, norm):
     """Create a time series with a power law power spectrum"""
 
-    fft_sim =  np.append(np.zeros((1)), f ** (-alpha / 2.0))
-    
+    fft_sim = np.append(np.zeros((1)), f ** (-alpha / 2.0))
+
     T_sim = norm * np.fft.irfft(fft_sim)
     return T_sim
+
 
 def power_law_noise(n, dt, alpha, seed=None):
     """Create a time series with power law noise"""
@@ -82,3 +85,55 @@ def do_simple_fit(freq, power, show=False):
         plt.legend()
         plt.show()
     return [c_estimate, m_estimate]
+
+
+def plot_ts_duration_and_power_law_index_results(pickle_directory, filename, img_directory, format):
+    # Load in the data
+    pkl_file = open(pickle_directory + filename + '.pickle', 'rb')
+    results = pickle.load(pkl_file)
+    nkeep = results["nkeep"]
+    fraction_found_ci = results["fraction_found_ci"]
+    fraction_found_mean = results["fraction_found_mean"]
+    fraction_found_mode = results["fraction_found_mode"]
+    ntrial = results["bayes_mode"].shape[1]
+
+    alpha = results["alpha"]
+    if "alpha_range" in results:
+        alpha_range = results["alpha_range"]
+    else:
+        alpha_range = 0.1
+
+    plt.semilogx(nkeep, fraction_found_ci,
+                 label=r'$[\alpha_{68}^{L},\alpha_{68}^{H}] \in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
+    plt.semilogx(nkeep, fraction_found_mean,
+                 label=r'$\overline{\alpha}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
+    plt.semilogx(nkeep, fraction_found_mode,
+                 label=r'$\alpha_{mode}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
+
+    plt.xlabel("length of time series (# samples)")
+    plt.ylabel("fraction found (# trials=%8i)" % (ntrial))
+    plt.title(r"Fraction found with $\alpha=%3.1f$" % (alpha))
+    plt.legend(loc=4)
+    plt.savefig(img_directory + filename, format=format)
+    return
+
+
+def write_ts_as_csv(csv_directory, filename, t, data):
+    """Write the time-series data out as a CSV file"""
+    # open output file
+    outfile = open(csv_directory + filename + '.csv', "wb")
+
+    # get a csv writer
+    writer = csv.writer(outfile)
+
+    # write header
+    writer.writerow(['sample time', 'data'])
+
+    # write data
+    for i in range(0, len(data)):
+        writer.writerow([t[i], data[i]])
+
+    # close file
+    outfile.close()
+    return
+

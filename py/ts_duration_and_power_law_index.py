@@ -24,11 +24,17 @@ plt.ioff()
 # Dump plots?
 show_plot = True
 
-# Where to dump the data
+# Save to CSV?
+save_to_csv = True
+
+# Where to dump the pickle data
 pickle_directory = '/home/ireland/ts/pickle/'
 
 # Where to put the images
 img_directory = '/home/ireland/ts/img/'
+
+# Where to dump the CSV files
+csv_directory = '/home/ireland/ts/csv/'
 
 # Set up the simulated data
 # Initial length of the time series
@@ -38,7 +44,7 @@ n_initial = 300
 dt = 12.0
 
 # power law index
-alpha = 1.0
+alpha = 2.0
 
 # Alpha range - this is the half width of a range.  Three measures of
 # how close we are getting to the true value are calculated
@@ -88,6 +94,9 @@ nkeep = np.zeros((max_increment))
 alpha_S = str(np.around(alpha, decimals=2))
 ar_S = str(np.around(alpha_range, decimals=2))
 
+# Calculate a filename
+filename = "ts_duration_and_power_law_index_" + alpha_S
+
 # Histogram bin size
 bins = 40
 
@@ -104,6 +113,13 @@ for i in range(0, max_increment):
         # come to analyze the same data in different ways
         seed = j + i * ntrial
         test_data = rn_utils.simulated_power_law(n, dt, alpha, seed=seed)
+
+        # Save to CSV file if required
+        if save_to_csv:
+            rn_utils.write_ts_as_csv(csv_directory,
+                                     filename + '_seed=' + str(seed),
+                                     dt * np.arange(0, len(test_data)),
+                                     test_data)
 
         # get the power spectrum and frequencies we will analyze at
         observed_power_spectrum = (np.absolute(np.fft.fft(test_data))) ** 2
@@ -161,12 +177,9 @@ for i in range(0, max_increment):
 
         # Get the power law index and the normalization
         pli = M1.trace("power_law_index")[:]
-        m_posterior_mean = np.mean(pli)
+        bayes_mean[i, j, 1] = np.mean(pli)
         cli = M1.trace("power_law_norm")[:]
-        c_posterior_mean = np.mean(cli)
-
-        bayes_mean[i, j, 0] = c_posterior_mean
-        bayes_mean[i, j, 1] = m_posterior_mean
+        bayes_mean[i, j, 0] = np.mean(cli)
 
         # Get various properties of the power law index marginal distribution
         # and save them
@@ -177,13 +190,12 @@ for i in range(0, max_increment):
             if bin_edges[1] - bin_edges[0] <= 0.5 * alpha_range:
                 break
         bayes_mode[i, j, 1] = bin_edges[h.argmax()]
-        
+
         for k in range(0, 100):
             h, bin_edges = np.histogram(cli, bins=bins * 2 ** k)
             if bin_edges[1] - bin_edges[0] <= 0.5 * alpha_range:
                 break
         bayes_mode[i, j, 0] = bin_edges[h.argmax()]
-
 
         if show_plot:
             # Plots
@@ -252,29 +264,17 @@ for i in range(0, max_increment):
     fraction_found_mode[i] = np.sum(low * high) / (1.0 * ntrial)
     print fraction_found_mode
 
-# Calculate a filename
-filename = "ts_duration_and_power_law_index_" + alpha_S
-
-# Save a plot to file
-plt.semilogx(nkeep, fraction_found_ci,
-             label=r'$[\alpha_{68}^{L},\alpha_{68}^{H}] \in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
-plt.semilogx(nkeep, fraction_found_mean,
-             label=r'$\overline{\alpha}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
-plt.semilogx(nkeep, fraction_found_mean,
-             label=r'$\alpha_{mode}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
-
-plt.xlabel("length of time series (samples)")
-plt.ylabel("fraction found")
-plt.legend()
-plt.savefig(img_directory + filename, format='png')
-
 # Save the data to a pickle file
 # Saving the 68% credible intervals, fraction found and length of time series
 results = {"bayes_mean": bayes_mean,
            "bayes_mode": bayes_mode,
+           "ci_keep68": ci_keep68,
            "fraction_found_ci": fraction_found_ci,
            "fraction_found_mean": fraction_found_mean,
            "fraction_found_mode": fraction_found_mode,
-           "nkeep": nkeep, "alpha": alpha}
-
+           "nkeep": nkeep, "alpha": alpha, "alpha_range": alpha_range}
 pickle.dump(results, open(pickle_directory + filename + '.pickle', "wb"))
+
+# Save a summary plot to file
+rn_utils.plot_ts_duration_and_power_law_index_results(pickle_directory, filename, img_directory, 'png')
+
