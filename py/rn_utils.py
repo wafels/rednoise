@@ -5,6 +5,13 @@ Utility functions for the 1/f study
 import numpy as np
 import matplotlib.pyplot as plt
 
+def power_law_power_spectrum_time_series(f, alpha, norm):
+    """Create a time series with a power law power spectrum"""
+
+    fft_sim =  np.append(np.zeros((1)), f ** (-alpha / 2.0))
+    
+    T_sim = norm * np.fft.irfft(fft_sim)
+    return T_sim
 
 def power_law_noise(n, dt, alpha, seed=None):
     """Create a time series with power law noise"""

@@ -19,9 +19,10 @@ from matplotlib import rc
 
 # Use LaTeX in matplotlib - very nice.
 rc('text', usetex=True)
+plt.ioff()
 
 # Dump plots?
-show_plot = False
+show_plot = True
 
 # Where to dump the data
 pickle_directory = '/home/ireland/ts/pickle/'
@@ -73,7 +74,7 @@ lstsqr_fit = np.zeros((max_increment, ntrial, 2))
 bayes_mean = np.zeros((max_increment, ntrial, 2))
 
 # Bayesian posterior modes
-bayes_mode = np.zeros((max_increment, ntrial))
+bayes_mode = np.zeros((max_increment, ntrial, 2))
 
 # Storage array for the fraction found
 fraction_found_ci = np.zeros((max_increment))
@@ -175,12 +176,22 @@ for i in range(0, max_increment):
             h, bin_edges = np.histogram(pli, bins=bins * 2 ** k)
             if bin_edges[1] - bin_edges[0] <= 0.5 * alpha_range:
                 break
-        bayes_mode[i, j] = bin_edges[h.argmax()]
+        bayes_mode[i, j, 1] = bin_edges[h.argmax()]
+        
+        for k in range(0, 100):
+            h, bin_edges = np.histogram(cli, bins=bins * 2 ** k)
+            if bin_edges[1] - bin_edges[0] <= 0.5 * alpha_range:
+                break
+        bayes_mode[i, j, 0] = bin_edges[h.argmax()]
+
 
         if show_plot:
             # Plots
-            # Calculate the actual fit
-            bayes_fit = c_posterior_mean * analysis_frequencies ** (-m_posterior_mean)
+            # Calculate the fit arising from the Bayes' mean
+            bayes_mean_fit = bayes_mean[i, j, 0] * analysis_frequencies ** (-bayes_mean[i, j, 1])
+
+            # Calculate the fit arising from the Bayes' mode
+            bayes_mode_fit = bayes_mode[i, j, 0] * analysis_frequencies ** (-bayes_mode[i, j, 1])
 
             # plot the power spectrum, the quick fit, and the Bayesian fit
             plt.figure(1)
@@ -190,11 +201,13 @@ for i in range(0, max_increment):
             plt.xlabel('sample number (n=' + str(n) + ')')
             plt.ylabel('simulated emission')
             plt.title(r'Simulated data $\alpha_{true}$=%4.2f , seed=%8i ' % (alpha, seed))
+            plt.legend()
 
             plt.subplot(2, 2, 2)
             plt.loglog(analysis_frequencies, analysis_power, label=r'observed power: $\alpha_{true}= %4.2f$' % (alpha))
             plt.loglog(analysis_frequencies, power_fit, label=r'$\alpha_{lstsqr}=%4.2f$' % (m_estimate))
-            plt.loglog(analysis_frequencies, bayes_fit, label=r'$\overline{\alpha}=%4.2f$' % (bayes_mean[i, j, 1]))
+            plt.loglog(analysis_frequencies, bayes_mean_fit, label=r'$\overline{\alpha}=%4.2f$' % (bayes_mean[i, j, 1]))
+            plt.loglog(analysis_frequencies, bayes_mode_fit, label=r'$\alpha_{mode}=%4.2f$' % (bayes_mode[i, j, 1]))
             plt.xlabel('frequency')
             plt.ylabel('power')
             plt.title('Data fit with simple single power law')
@@ -204,7 +217,7 @@ for i in range(0, max_increment):
             plt.hist(pli, bins=bins, color='gray')
             plt.title('power law index PDF')
             plt.axvline(x=bayes_mean[i, j, 1], color='red', label=r'$\overline{\alpha}=%4.2f$' %(bayes_mean[i, j, 1]))
-            plt.axvline(x=bayes_mode[i, j], color='blue', label=r'mode$(\alpha)=%4.2f$' %(bayes_mode[i, j]))
+            plt.axvline(x=bayes_mode[i, j, 1], color='blue', label=r'$\alpha_{mode}=%4.2f$' %(bayes_mode[i, j, 1]))
             plt.axvline(x=ci_keep68[i, j, 0], color='green', label=r'$\alpha_{68}^{L}=%4.2f$' %(ci_keep68[i, j, 0]))
             plt.axvline(x=ci_keep68[i, j, 1], color='green', label=r'$\alpha_{68}^{H}=%4.2f$' %(ci_keep68[i, j, 1]))
             plt.axvline(x=alpha, color='black', label=r'$\alpha_{true}=%4.2f$' %(alpha))
