@@ -1,0 +1,11 @@
+# Ignore python bytecode, etc
+*.py[cod]
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Apple
+.DS_Store
+.DS_Store?
