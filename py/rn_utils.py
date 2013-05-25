@@ -137,40 +137,8 @@ def write_ts_as_csv(csv_directory, filename, t, data):
     outfile.close()
     return
 
-# Set up PyMC models for analyzing data
-def PyMC_model_simple_power_law():
-    """Set up a PyMC model: power law for the power spectrun"""
+
+def summary_stats(data):
+    """Summary statistics for an input array"""
     pass
     return
-
-
-def PyMC_model_broken_power_law():
-    """Set up a PyMC model: broken power law for the power spectrun"""
-    pass
-    return
-
-
-def PyMC_model_broken_power_law_delta_oscillation():
-    """Set up a PyMC model: broken power law for the power spectrun with
-    a single monochromatic sinusoidal oscillation present"""
-    pass
-    return
-
-
-def PyMC_model_broken_power_law_boxcar_oscillation():
-    """Set up a PyMC model: broken power law for the power spectrun with
-    oscillations present.  In the power spectrum, these oscillations appear
-    as a boxcar of power"""
-    pass
-    return
-
-
-def PyMC_model_broken_power_law_gaussian_oscillation():
-    """Set up a PyMC model: broken power law for the power spectrun with
-    oscillations present.  In the power spectrum, these oscillations appear
-    with a Gaussian-shaped profile of power"""
-    pass
-    return
-
-
-    

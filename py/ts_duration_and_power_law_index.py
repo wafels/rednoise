@@ -12,9 +12,10 @@ should be approximately the same, and in the limit, identical. I think.
  
 import numpy as np
 import matplotlib.pyplot as plt
-import rn_utils
+import rn_utils, pymcmodels
+
 import pymc
-import pickle
+import pickle, os
 from matplotlib import rc
 
 # Use LaTeX in matplotlib - very nice.
@@ -28,13 +29,13 @@ show_plot = True
 save_to_csv = True
 
 # Where to dump the pickle data
-pickle_directory = '/home/ireland/ts/pickle/'
+pickle_directory = os.path.expanduser('~/ts/pickle/')
 
 # Where to put the images
-img_directory = '/home/ireland/ts/img/'
+img_directory = os.path.expanduser('~/ts/img/')
 
 # Where to dump the CSV files
-csv_directory = '/home/ireland/ts/csv/'
+csv_directory = os.path.expanduser('~/ts/csv/')
 
 # Set up the simulated data
 # Initial length of the time series
@@ -139,38 +140,13 @@ for i in range(0, max_increment):
 
         # plot the power law spectrum
         power_fit = c_estimate * analysis_frequencies ** (-m_estimate)
-
-        # PyMC definitions
-        # Define data and stochastics
-        power_law_index = pymc.Uniform('power_law_index',
-                                       lower=-1.0,
-                                       upper=m_estimate + 2,
-                                       doc='power law index')
-
-        power_law_norm = pymc.Uniform('power_law_norm',
-                                      lower=c_estimate * 0.01,
-                                      upper=c_estimate * 100.0,
-                                      doc='power law normalization')
-
-        # Model for the power law spectrum
-        @pymc.deterministic(plot=False)
-        def power_law_spectrum(p=power_law_index,
-                               a=power_law_norm,
-                               f=analysis_frequencies):
-            """A pure and simple power law model"""
-            out = a * (f ** (-p))
-            return out
-
-        spectrum = pymc.Exponential('spectrum',
-                               beta=1.0 / power_law_spectrum,
-                               value=analysis_power,
-                               observed=True)
-
-        # MCMC model as a list
-        MCMC_list = [power_law_index, power_law_norm, power_law_spectrum, spectrum]
+        
+        # Define the model we are going to use
+        single_power_law_model = pymcmodels.single_power_law(analysis_frequencies, analysis_power,
+                                c_estimate, m_estimate)
 
         # Set up the MCMC model
-        M1 = pymc.MCMC(MCMC_list)
+        M1 = pymc.MCMC(single_power_law_model)
 
         # Run the sampler
         M1.sample(iter=iterations, burn=burn, thin=thin, progress_bar=False)
