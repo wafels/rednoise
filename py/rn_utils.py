@@ -47,7 +47,7 @@ def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10,
         pass
     
     if poisson:
-        
+        pass
     return 
 
 
