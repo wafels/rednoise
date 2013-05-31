@@ -145,6 +145,14 @@ def write_ts_as_csv(csv_directory, filename, t, data):
     return
 
 
+def bayes_mode(data, bins, precision):
+    for k in range(0, 100):
+        h, bin_edges = np.histogram(data, bins=bins * 2 ** k)
+        if bin_edges[1] - bin_edges[0] <= 0.5 * precision:
+            break
+    return bin_edges[h.argmax()]
+
+
 def summary_stats(data):
     """Summary statistics for an input array"""
     pass
