@@ -46,9 +46,47 @@ def single_power_law(analysis_frequencies, analysis_power,
     return [power_law_index, power_law_norm, fourier_power_spectrum, spectrum]
 
 
-def broken_power_law():
+def broken_power_law(analysis_frequencies, analysis_power,
+                                a_est, d1_est, d2_est, f_break):
     """Set up a PyMC model: broken power law for the power spectrun"""
-    pass
+        
+    # PyMC definitions
+    # Define data and stochastics
+    power_law_norm = pymc.Uniform('power_law_norm',
+                                  lower=a_est * 0.01,
+                                  upper=a_est * 100.0,
+                                  doc='power law normalization')
+    
+    delta1 = pymc.Uniform('delta1',
+                          lower=-1.0,
+                          upper=d1_est + 2,
+                          doc='delta1')
+
+    delta2 = pymc.Uniform('delta2',
+                          lower=-1.0,
+                          upper=d2_est + 2,
+                          doc='delta2')
+
+    breakf = pymc.Uniform('delta2',
+                          lower=analysis_frequencies[0],
+                          upper=analysis_frequencies[-1],
+                          doc='break frequency')
+
+    # Model for the power law spectrum
+    @pymc.deterministic(plot=False)
+    def fourier_power_spectrum(d1=delta1, d2=delta2, f0=breakf,
+                           a=power_law_norm,
+                           f=analysis_frequencies):
+        """A pure and simple power law model"""
+        out = np.zeros(shape=f.shape)
+        out[f<f0] = a * (f ** (-d1))
+        out[f>=f0] = a * (f ** (-d2)) * (f0 ** (d2 - d1))
+        return out
+
+    spectrum = pymc.Exponential('spectrum',
+                           beta=1.0 / fourier_power_spectrum,
+                           value=analysis_power,
+                           observed=True)
     return
 
 
