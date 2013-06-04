@@ -39,10 +39,10 @@ csv_directory = os.path.expanduser('~/ts/csv/')
 
 # Set up the simulated data
 # Initial length of the time series
-n_initial = 300
+n_initial = 600
 
 # Sampling (SDO AIA sample rate is once every 12 seconds)
-dt = 12.0
+dt = 1.0
 
 # power law index
 alpha = 2.0

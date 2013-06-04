@@ -4,7 +4,8 @@ Utility functions for the 1/f study
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle, csv
+import pickle
+import csv
 
 
 def power_law_power_spectrum_time_series(f, alpha, norm):
@@ -41,14 +42,8 @@ def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10,
     data = power_law_noise(n_oversample * n, dt / dt_oversample, alpha,
                            seed=seed)
     data = data[0.5 * len(data) - n / 2: 0.5 * len(data) + n / 2]
-    if minimum is not None:
-        pass
-    else:
-        pass
-    
-    if poisson:
-        pass
-    return 
+
+    return data
 
 
 def credible_interval(data, ci=0.68):

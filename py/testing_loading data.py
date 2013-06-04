@@ -8,11 +8,11 @@ import rn_utils
 import pymc
 
 # Set up the simulated data
-n = 300
-dt = 12.0
-alpha = 3.0
+n = 600
+dt = 1.0
+alpha = 2.0
 
-directory = '/Users/ireland/ts/img/rednoise/simulated/alpha='+str(alpha)
+directory = '/home/ireland/ts/img/rednoise/simulated/alpha='+str(alpha)
 format = 'png'
 
 for seed in range(1,5):
