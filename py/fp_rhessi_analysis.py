@@ -33,7 +33,7 @@ ci_keep68 = np.zeros((nenergy, 3, 2))
 for seed in range(0, 9):
 
     # get some test data
-    data = z['obs_data'][:, seed]
+    data = z['obs_data'][:, seed][0:700]
     
     # get the length of the data
     n = len(data)
@@ -45,10 +45,10 @@ for seed in range(0, 9):
     analysis_power = observed_power_spectrum[fftfreq >= 0][1:-1]
 
     # get a simple estimate of the power law index
-    estimate = rn_utils.do_simple_fit(analysis_frequencies, analysis_power)
+    estimate = rn_utils.do_simple_fit(analysis_frequencies[0:n/5], analysis_power[0:n/5])
     c_estimate = estimate[0]
     m_estimate = estimate[1]
-    b_estimate = np.mean(analysis_power[-n/1.5:-1])
+    b_estimate = np.log(np.mean(analysis_power[-n/1.5:-1]))
 
     # Define the model we are going to use
     single_power_law_model = \
@@ -57,9 +57,10 @@ for seed in range(0, 9):
                                               c_estimate,
                                               m_estimate,
                                               b_estimate)
+    
     # Set up the MCMC model
     M1 = pymc.MCMC(single_power_law_model)
-    
+   
     # Run the sampler
     M1.sample(iter=50000, burn=10000, thin=10)
 
@@ -86,14 +87,14 @@ for seed in range(0, 9):
     # and probability distributions for the normalization, delta1, f0, delta2
     plt.figure(seed, figsize=(16, 12))
 
-    plt.subplot(2, 2, 1)
+    plt.subplot(2, 3, 1)
     plt.plot(data)
     plt.xlabel('sample number')
     plt.ylabel('counts')
     plt.title(str(z['obs_energies'][seed][0]) + ' - ' + str(z['obs_energies'][seed][1]) + ' keV')
 
-    plt.subplot(2, 2, 2)
-    fit = bayes_mean[seed, 0] * (analysis_frequencies ** -bayes_mean[seed, 1]) + bayes_mean[seed, 2]
+    plt.subplot(2, 3, 2)
+    fit = np.exp(bayes_mode[seed, 0]) * (analysis_frequencies ** -bayes_mode[seed, 1]) + np.exp(bayes_mode[seed, 2])
     plt.loglog(analysis_frequencies, analysis_power, label=r'observed power')
     plt.loglog(analysis_frequencies, fit, label=r'Bayes mode fit')
     plt.xlabel('frequency')
@@ -102,19 +103,25 @@ for seed in range(0, 9):
     plt.legend(loc=3)
 
     # Get the power law index and save the results
-    plt.subplot(2, 2, 3)
-    pli = M1.trace("power_law_index")[:]
+    plt.subplot(2, 3, 3)
     plt.hist(pli, bins=40)
     plt.xlabel('Power law index')
     plt.ylabel('number found')
     plt.title('Probability distribution of the delta1 power law index')
 
     # Get the power law index and save the results
-    plt.subplot(2, 2, 4)
-    pli = M1.trace("background")[:]
+    plt.subplot(2, 3, 4)
     plt.hist(bli, bins=40)
     plt.xlabel('background')
     plt.ylabel('number found')
     plt.title('Probability distribution of the background value')
+    plt.savefig(directory + str(seed) +'.png')
+
+    # Get the power law index and save the results
+    plt.subplot(2, 3, 5)
+    plt.hist(cli, bins=40)
+    plt.xlabel('normalization')
+    plt.ylabel('number found')
+    plt.title('Probability distribution of the normalization value')
     plt.savefig(directory + str(seed) +'.png')
 
