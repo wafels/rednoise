@@ -75,3 +75,13 @@ for seed in range(0,5):
     plt.savefig(directory + '_fourier_loglog.'+ str(seed) +'.png', format=format)
     plt.close()
 
+    plt.figure(3)
+    plt.loglog(analysis_frequencies, analysis_power/bayes_mean_fit, label=r'observed power / mean fit')
+    plt.loglog(analysis_frequencies, analysis_power/bayes_mode_fit, label=r'observed power / mode fit')
+    plt.axhline(y=1.0, color='black')
+    plt.xlabel('frequency')
+    plt.ylabel('power')
+    plt.title('data / fit')
+    plt.legend(loc=3)
+    plt.savefig(directory + '_data_divided_by_fit.'+ str(seed) +'.png', format=format)
+    plt.close()
