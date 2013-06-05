@@ -12,8 +12,7 @@ All the models have two objects in common:
 import numpy as np
 import pymc
 
-def single_power_law(analysis_frequencies, analysis_power,
-                                c_estimate, m_estimate):
+def single_power_law(analysis_frequencies, analysis_power, m_estimate):
     """Set up a PyMC model: power law for the power spectrun"""
     
     # PyMC definitions
@@ -24,8 +23,8 @@ def single_power_law(analysis_frequencies, analysis_power,
                                    doc='power law index')
 
     power_law_norm = pymc.Uniform('power_law_norm',
-                                  lower=c_estimate * 0.01,
-                                  upper=c_estimate * 100.0,
+                                  lower=-100.0,
+                                  upper=100.0,
                                   doc='power law normalization')
 
     # Model for the power law spectrum
@@ -34,7 +33,7 @@ def single_power_law(analysis_frequencies, analysis_power,
                            a=power_law_norm,
                            f=analysis_frequencies):
         """A pure and simple power law model"""
-        out = a * (f ** (-p))
+        out = np.exp(a) * (f ** (-p))
         return out
 
     spectrum = pymc.Exponential('spectrum',
@@ -44,7 +43,6 @@ def single_power_law(analysis_frequencies, analysis_power,
 
     # MCMC model as a list
     return [power_law_index, power_law_norm, fourier_power_spectrum, spectrum]
-
 
 
 def single_power_law_with_constant(analysis_frequencies, analysis_power,

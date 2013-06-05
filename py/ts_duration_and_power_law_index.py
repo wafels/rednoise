@@ -142,8 +142,7 @@ for i in range(0, max_increment):
         power_fit = c_estimate * analysis_frequencies ** (-m_estimate)
         
         # Define the model we are going to use
-        single_power_law_model = pymcmodels.single_power_law(analysis_frequencies, analysis_power,
-                                c_estimate, m_estimate)
+        single_power_law_model = pymcmodels.single_power_law(analysis_frequencies, analysis_power, m_estimate)
 
         # Set up the MCMC model
         M1 = pymc.MCMC(single_power_law_model)

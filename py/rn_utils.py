@@ -37,11 +37,17 @@ def power_law_noise(n, dt, alpha, seed=None):
 
 
 def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10,
-                        seed=None, minimum=None, poisson=False):
+                        seed=None, minimum=None, poisson=False, amplitude=1.0):
     """Create a time series of length n and sample size dt"""
     data = power_law_noise(n_oversample * n, dt / dt_oversample, alpha,
                            seed=seed)
     data = data[0.5 * len(data) - n / 2: 0.5 * len(data) + n / 2]
+
+    if minimum is not None:
+        data = amplitude*(data - np.min(data)) + minimum
+
+    if poisson:
+        data = np.random.poisson(lam=data)
 
     return data
 
@@ -148,7 +154,9 @@ def bayes_mode(data, bins, precision):
     return bin_edges[h.argmax()]
 
 
-def summary_stats(data):
+def summary_stats(data, precision, bins=40):
     """Summary statistics for an input array"""
-    pass
-    return
+    mean = np.mean(data)
+    mode = bayes_mode(data, bins, precision)
+    ci68 = credible_interval(data, ci=0.68)
+    return {"mean": mean, "mode": mode, "ci68": ci68}
