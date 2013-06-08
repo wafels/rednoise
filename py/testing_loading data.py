@@ -36,9 +36,11 @@ for seed in range(0,5):
     # plot the power law spectrum
     power_fit = c_estimate * analysis_frequencies ** (-m_estimate)
 
-    
+    # Define the MCMC model
+    this_model = pymcmodels.single_power_law(analysis_frequencies, analysis_power, m_estimate)
+
     # Set up the MCMC model
-    M1 = pymc.MCMC(pymcmodels.single_power_law(analysis_frequencies, analysis_power, m_estimate))
+    M1 = pymc.MCMC(this_model)
     
     # Run the sampler
     M1.sample(iter=50000, burn=1000, thin=10)
