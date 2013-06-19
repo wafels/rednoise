@@ -36,6 +36,25 @@ def power_law_noise(n, dt, alpha, seed=None):
     return T_sim
 
 
+def power_law_noise_random_phases(n, dt, alpha, seed=None):
+    """Create a time series with power law noise where all the Fourier"""
+
+    # White noise
+    np.random.seed(seed=seed)
+    wn = np.random.normal(size=(n))
+
+    # FFT of the white noise - chi2(2) distribution
+    wn_fft = np.fft.rfft(wn)
+
+    # frequencies
+    f = np.fft.fftfreq(n, dt)[:len(wn_fft)]
+    f[-1] = np.abs(f[-1])
+
+    fft_sim = wn_fft[1:] * f[1:] ** (-alpha / 2.0)
+    T_sim = np.fft.irfft(fft_sim)
+    return T_sim
+
+
 def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10,
                         seed=None, minimum=None, poisson=False, amplitude=1.0):
     """Create a time series of length n and sample size dt"""
