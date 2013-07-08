@@ -23,7 +23,7 @@ rc('text', usetex=True)
 plt.ioff()
 
 # Dump plots?
-show_plot = True
+show_plot = False
 
 # Save to CSV?
 save_to_csv = True
@@ -39,7 +39,7 @@ csv_directory = os.path.expanduser('~/ts/csv/')
 
 # Set up the simulated data
 # Initial length of the time series
-n_initial = 600
+n_initial = 300
 
 # Sampling (SDO AIA sample rate is once every 12 seconds)
 dt = 1.0
@@ -61,10 +61,10 @@ alpha_range = 0.1
 n_increment = np.sqrt(2.0)
 
 # Maximum number of increments
-max_increment = 9
+max_increment = 10
 
 # Number of trial data runs at each time-series length
-ntrial = 100
+ntrial = 500
 
 # PyMC variables
 iterations = 50000
@@ -106,7 +106,7 @@ for i in range(0, max_increment):
     # increase the length of the time series
     n = np.int(np.rint(n_initial * (n_increment ** i)))
     nkeep[i] = n
-    print 'Increment counter ', i, max_increment, n
+    print alpha_S + ': Increment counter ', i, max_increment, n
 
     for j in range(0, ntrial):
         print 'Trial counter ', j, ntrial

@@ -197,7 +197,7 @@ def plot_ts_duration_and_power_law_index_results(pickle_directory, filename, img
                  label=r'$\alpha_{mode}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
 
     plt.xlabel("length of time series (# samples)")
-    plt.ylabel("fraction found (# trials=%8i)" % (ntrial))
+    plt.ylabel("fraction found (no. trials=%8i)" % (ntrial))
     plt.title(r"Fraction found with $\alpha=%3.1f$" % (alpha))
     plt.legend(loc=4)
     plt.savefig(img_directory + filename, format=format)
