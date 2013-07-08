@@ -6,6 +6,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import csv
+from scipy.stats import chi2, uniform
+
+class PowerLawPowerSpectrum():
+    def __init__(self, frequencies=None, power=None, parameters=None):
+        self.frequencies = frequencies
+        self.power = power
+        self.parameters = parameters
+        self.logpower = np.log(self.power)
+
+class SimplePowerLawSpectrum(PowerLawPowerSpectrum):
+    def __init__(self):
+        self.power = self.parameters[0] * self.frequencies ** self.parameters[1]
+
+class SimplePowerLawSpectrumWithConstantBackground(PowerLawPowerSpectrum):
+    def __init__(self):
+        self.power = self.parameters[0] * self.frequencies ** self.parameters[1] + self.parameters[2]
 
 
 def power_law_power_spectrum_time_series(f, alpha, norm):
@@ -35,24 +51,67 @@ def power_law_noise(n, dt, alpha, seed=None):
     T_sim = np.fft.irfft(fft_sim)
     return T_sim
 
+def power_law_time_series(V, W, N, dt):
+    """
+    Create a time series following the recipe of Vaughan (2010), MNRAS, 402,
+    307, appendix B
+    
+    Parameters
+    ----------
+    
+    """
 
-def power_law_noise_random_phases(n, dt, alpha, seed=None):
-    """Create a time series with power law noise where all the Fourier"""
 
-    # White noise
-    np.random.seed(seed=seed)
-    wn = np.random.normal(size=(n))
+def power_law_noise_random_phases(S, fft_zero=0.0, seed=None):
+    """Create a time series with power law noise where Following the recipe
+    of Vaughan (2010), MNRAS, 402, 307, appendix B
+    
+    Parameters
+    ----------
+    S : numpy array
+        Theoretical fourier power spectrum, from the first non-zero frequency
+        up to the Nyquist frequency.
+ 
+    fft_zero : scalar number
+        The value at the zero Fourier frequency.
 
-    # FFT of the white noise - chi2(2) distribution
-    wn_fft = np.fft.rfft(wn)
+    seed : scalar number
+        A seed value for the random number generator
+     
+    """
+    
+    # Number of frequencies to calculate
+    K = len(S)
 
-    # frequencies
-    f = np.fft.fftfreq(n, dt)[:len(wn_fft)]
-    f[-1] = np.abs(f[-1])
-
-    fft_sim = wn_fft[1:] * f[1:] ** (-alpha / 2.0)
-    T_sim = np.fft.irfft(fft_sim)
-    return T_sim
+    # chi-squared(2) random numbers for all frequencies except the nyquist
+    # frequency
+    X = np.concatenate((chi2.rvs(2, size=K-1, seed=seed),
+                        chi2.rvs(1, size=1, seed=seed)))
+    
+    # random phases, except for the nyquist frequency.
+    ph = uniform.rvs(loc=-np.pi/2.0, scale=np.pi, size=K, seed=seed)
+    ph[-1] = 0.0
+    
+    # power spectrum
+    I = S*X/2.0
+    
+    # Amplitudes
+    A = np.sqrt(I/2.0)
+    
+    # Complex vector
+    F = A*np.exp(-np.complex(0,1)*ph)
+    
+    # Form the negative frequency part
+    F_negative = np.conjugate(F)[::-1]
+    
+    # Form the fourier transform
+    F_complete = np.concatenate((np.asarray([fft_zero]), F, F_negative))
+    
+    # create the time-series.  The complex part should be tiny.
+    T_sim = np.fft.ifft(F_complete)
+    
+    # The time series is formally complex.  Return the real part only.
+    return np.real(T_sim)
 
 
 def simulated_power_law(n, dt, alpha, n_oversample=10, dt_oversample=10,
