@@ -11,6 +11,8 @@ All the models have two objects in common:
 
 import numpy as np
 import pymc
+import rnspectra
+
 
 def single_power_law(analysis_frequencies, analysis_power, m_estimate):
     """Set up a PyMC model: power law for the power spectrun"""
@@ -33,7 +35,7 @@ def single_power_law(analysis_frequencies, analysis_power, m_estimate):
                            a=power_law_norm,
                            f=analysis_frequencies):
         """A pure and simple power law model"""
-        out = np.exp(a) * (f ** (-p))
+        out = rnspectra.power_law(f, [a, p])
         return out
 
     spectrum = pymc.Exponential('spectrum',
@@ -73,7 +75,7 @@ def single_power_law_with_constant(analysis_frequencies, analysis_power,
                                b=background,
                                f=analysis_frequencies):
         """A pure and simple power law model"""
-        out = np.exp(a) * (f ** (-p)) + np.exp(b)
+        out = rnspectra.power_law_with_constant(f, [a, p, b])
         return out
 
     spectrum = pymc.Exponential('spectrum',
@@ -117,11 +119,7 @@ def broken_power_law(analysis_frequencies, analysis_power,
                            a=power_law_norm,
                            f=analysis_frequencies):
         """A pure and simple broken power law model"""
-        f0 = 10.0**lnf0
-        out = np.zeros(shape=f.shape)
-        out[f<f0] = np.exp(a) * (f[f<f0] ** (-d1))
-        out[f>=f0] = np.exp(a) * (f[f>=f0] ** (-d2)) * (f0 ** (d2 - d1))
-        return out
+        return rnspectra.broken_power_law(f, [a, d1, d2, lnf0])
 
     spectrum = pymc.Exponential('spectrum',
                            beta=1.0 / fourier_power_spectrum,
