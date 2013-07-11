@@ -38,9 +38,10 @@ class TimeSeriesFromPowerSpectrum():
     """
     Create a time series with a given type of power spectrum
     """
-    def __init__(self, powerspectrum, V=10, W=10, seed=None):
+    def __init__(self, powerspectrum, V=10, W=10, seed=None, fft_zero=0.0):
         self.powerspectrum = powerspectrum
         self.nt = self.powerspectrum.nt
+        self.fft_zero = fft_zero
 
         # Vaughan (2010)
         self.V = V
@@ -60,7 +61,7 @@ class TimeSeriesFromPowerSpectrum():
 
         # the fully over-sampled timeseries, with a sampling cadence of dt/W, with a
         # duration of V*N*dt
-        self.oversampled = power_law_noise_random_phases(self.power, seed=self.seed)
+        self.oversampled = power_law_noise_random_phases(self.power, fft_zero=self.fft_zero, seed=self.seed)
 
         # Subsample the time-series back down to the requested cadence of dt
         self.longtimeseries = self.oversampled[np.arange(0, len(self.oversampled), self.W)]

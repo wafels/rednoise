@@ -13,6 +13,36 @@ import numpy as np
 import pymc
 import rnspectralmodels
 
+class spl:
+    def __init__(self, analysis_frequencies=None, analysis_power=None):
+        # PyMC definitions
+        # Define data and stochastics
+        power_law_index = pymc.Uniform('power_law_index',
+                                       lower=-1.0,
+                                       upper=m_estimate + 2,
+                                       doc='power law index')
+    
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      lower=-100.0,
+                                      upper=100.0,
+                                      doc='power law normalization')
+    
+        # Model for the power law spectrum
+        @pymc.deterministic(plot=False)
+        def fourier_power_spectrum(p=power_law_index,
+                               a=power_law_norm,
+                               f=analysis_frequencies):
+            """A pure and simple power law model"""
+            out = rnspectralmodels.power_law(f, [a, p])
+            return out
+    
+        spectrum = pymc.Exponential('spectrum',
+                               beta=1.0 / fourier_power_spectrum,
+                               value=analysis_power,
+                               observed=True)
+    
+        # MCMC model as a list
+        self.model = [power_law_index, power_law_norm, fourier_power_spectrum, spectrum]
 
 def single_power_law(analysis_frequencies, analysis_power, m_estimate):
     """Set up a PyMC model: power law for the power spectrun"""
