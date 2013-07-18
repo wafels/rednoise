@@ -80,7 +80,7 @@ class TimeSeriesFromPowerSpectrum():
             defines the properties of the power spectrum
         V : scalar >= 1
             oversampling parameter mimicing increasing the time series duration
-            from nt*dt to V*nt*dt
+            from N*dt to V*N*dt
         W : scalar >= 1
             oversampling parameter mimicing increasing the cadence from dt to
             dt/W

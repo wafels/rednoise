@@ -3,6 +3,21 @@ Given a time series, fit the given PyMC model to it
 """
 import numpy as np
 import pymc
+import matplotlib.pyplot as plt
+
+def simple_fit(data, dt):
+    power = (np.absolute(np.fft.fft(data))) ** 2
+    n = len(data)
+    fftfreq = np.fft.fftfreq(n, dt)
+    these_frequencies = fftfreq > 0
+    obs_freq = fftfreq[these_frequencies[:-1]]
+    obs_pwr = power[these_frequencies[:-1]]
+    plt.loglog(obs_freq, obs_pwr)
+    plt.show()
+    c = np.polyfit(np.log(obs_freq), np.log(obs_pwr), 1)
+    plt.loglog(obs_freq, np.exp(np.polyval(c, np.log(obs_freq))))
+
+    return c
 
 
 class tobefit:
