@@ -17,7 +17,7 @@ class spl:
     """
     Single power law model.
     """
-    def __init__(self, observed_frequencies=None, observed_power=None):
+    def __init__(self, observed_frequencies=1.0, observed_power=1.0):
         self.observed_frequencies = observed_frequencies
         self.observed_power = observed_power
 
@@ -48,7 +48,7 @@ class spl:
                                observed=True)
     
         # MCMC model as a list
-        self.model = [self.power_law_index,
-                      self.power_law_norm,
-                      fourier_power_spectrum,
-                      self.spectrum]
+        self.pymc_model = [self.power_law_index,
+                           self.power_law_norm,
+                           fourier_power_spectrum,
+                           self.spectrum]

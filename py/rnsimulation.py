@@ -7,7 +7,18 @@ import rnspectralmodels
 from scipy.stats import chi2, uniform
 
 
+
 class PowerLawPowerSpectrum:
+    """
+    Parent class of power law spectra
+    
+    Parameters
+    ----------
+    parameters : ndarray
+        The parameters of the power law spectrum
+
+    frequencies : ndarray
+    """
     def __init__(self, parameters, frequencies=None, nt=300, dt=12.0):
         # Positive frequencies at which the power spectrum is calculated
         if frequencies is None:
