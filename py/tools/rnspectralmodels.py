@@ -10,6 +10,20 @@ def fnorm(f, fnorm):
     return f / fnorm
 
 
+def constant(f, a):
+    """Constant power at all frequencies
+
+    Parameters
+    ----------
+    f : ndarray
+        frequencies
+
+    a : scalar number
+        the constant value of the power
+    """
+    return a * np.ones(f.shape)
+
+
 def power_law(f, a):
     """Simple power law.  This model assumes that the power
     spectrum is made up of a power law at all frequencies.

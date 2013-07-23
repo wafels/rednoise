@@ -44,6 +44,11 @@ class PowerLawPowerSpectrum:
         return noisy_power_spectrum(self.power(), seed=seed)
 
 
+class ConstantSpectrum(PowerLawPowerSpectrum):
+    def power(self):
+        return rnspectralmodels.constant(self.frequencies, self.parameters)
+
+
 class SimplePowerLawSpectrum(PowerLawPowerSpectrum):
     def power(self):
         return rnspectralmodels.power_law(self.frequencies, self.parameters)
