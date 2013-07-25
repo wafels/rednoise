@@ -77,10 +77,9 @@ def single_power_law(analysis_frequencies, analysis_power, m_estimate):
     return [power_law_index, power_law_norm, fourier_power_spectrum, spectrum]
 
 
-def single_power_law_with_constant(analysis_frequencies, analysis_power,
-                                c_estimate, m_estimate, b_estimate):
-    """Set up a PyMC model: power law for the power spectrun"""
-    
+def single_power_law_with_constant(analysis_frequencies, analysis_power):
+    """Set up a PyMC model: power law for the power spectrum"""
+
     # PyMC definitions
     # Define data and stochastics
     power_law_index = pymc.Uniform('power_law_index',
