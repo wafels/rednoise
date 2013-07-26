@@ -13,45 +13,15 @@ import numpy as np
 import pymc
 import rnspectralmodels
 
-class spl:
-    def __init__(self, analysis_frequencies=None, analysis_power=None):
-        # PyMC definitions
-        # Define data and stochastics
-        power_law_index = pymc.Uniform('power_law_index',
-                                       lower=-1.0,
-                                       upper=m_estimate + 2,
-                                       doc='power law index')
-    
-        power_law_norm = pymc.Uniform('power_law_norm',
-                                      lower=-100.0,
-                                      upper=100.0,
-                                      doc='power law normalization')
-    
-        # Model for the power law spectrum
-        @pymc.deterministic(plot=False)
-        def fourier_power_spectrum(p=power_law_index,
-                               a=power_law_norm,
-                               f=analysis_frequencies):
-            """A pure and simple power law model"""
-            out = rnspectralmodels.power_law(f, [a, p])
-            return out
-    
-        spectrum = pymc.Exponential('spectrum',
-                               beta=1.0 / fourier_power_spectrum,
-                               value=analysis_power,
-                               observed=True)
-    
-        # MCMC model as a list
-        self.model = [power_law_index, power_law_norm, fourier_power_spectrum, spectrum]
 
-def single_power_law(analysis_frequencies, analysis_power, m_estimate):
+def single_power_law(analysis_frequencies, analysis_power):
     """Set up a PyMC model: power law for the power spectrun"""
-    
+
     # PyMC definitions
     # Define data and stochastics
     power_law_index = pymc.Uniform('power_law_index',
                                    lower=-1.0,
-                                   upper=m_estimate + 2,
+                                   upper=6.0,
                                    doc='power law index')
 
     power_law_norm = pymc.Uniform('power_law_norm',
@@ -74,7 +44,7 @@ def single_power_law(analysis_frequencies, analysis_power, m_estimate):
                            observed=True)
 
     # MCMC model as a list
-    return [power_law_index, power_law_norm, fourier_power_spectrum, spectrum]
+    return locals()
 
 
 def single_power_law_with_constant(analysis_frequencies, analysis_power):
@@ -112,21 +82,21 @@ def single_power_law_with_constant(analysis_frequencies, analysis_power):
                            value=analysis_power,
                            observed=True)
 
-    # MCMC model as a list
-    return locals() #[power_law_index, power_law_norm, background, fourier_power_spectrum, spectrum]
+    # MCMC model
+    return locals()
 
 
 def broken_power_law(analysis_frequencies, analysis_power,
                                 a_est, d1_est, d2_est, f_break):
     """Set up a PyMC model: broken power law for the power spectrun"""
-        
+
     # PyMC definitions
     # Define data and stochastics
     power_law_norm = pymc.Uniform('power_law_norm',
                                   lower=-100,
                                   upper=100.0,
                                   doc='power law normalization')
-    
+
     delta1 = pymc.Uniform('delta1',
                           lower=0.0,
                           upper=6.0,
@@ -155,30 +125,4 @@ def broken_power_law(analysis_frequencies, analysis_power,
                            value=analysis_power,
                            observed=True)
 
-    return [delta1, delta2, breakf, power_law_norm, fourier_power_spectrum, spectrum]
-
-
-def broken_power_law_delta_oscillation():
-    """Set up a PyMC model: broken power law for the power spectrun with
-    a single monochromatic sinusoidal oscillation present"""
-    pass
-    return
-
-
-def broken_power_law_boxcar_oscillation():
-    """Set up a PyMC model: broken power law for the power spectrun with
-    oscillations present.  In the power spectrum, these oscillations appear
-    as a boxcar of power"""
-    pass
-    return
-
-
-def broken_power_law_gaussian_oscillation():
-    """Set up a PyMC model: broken power law for the power spectrun with
-    oscillations present.  In the power spectrum, these oscillations appear
-    with a Gaussian-shaped profile of power"""
-    pass
-    return
-
-
-    
+    return locals()

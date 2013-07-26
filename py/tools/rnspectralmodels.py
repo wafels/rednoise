@@ -58,7 +58,7 @@ def power_law_with_constant(f, a):
     return power_law(f, a[0:2]) + np.exp(a[2])
 
 
-def broken_power_law_log_break_frequency(f, a):
+def broken_power_law(f, a):
     """Broken power law.  This model assumes that the power
     spectrum is made up of a power law with a given index below a frequency f0,
     and a power law with another index above the frequency f0.
@@ -72,12 +72,12 @@ def broken_power_law_log_break_frequency(f, a):
         a[0] : the natural logarithm of the normalization constant
         a[1] : the power law index below the value of f0
         a[2] : the power law index below the value of f0
-        a[3] : the natural logarithm of the break frequency.
+        a[3] : the break frequency.
     """
     # Normalize the frequencies
     fn = fnorm(f, f[0])
     # Calculate the break frequency
-    fbreak = np.exp(a[3])
+    fbreak = a[3]
     # Calculate the power normalization constant
     A = np.exp(a[0])
     # Create the output power array
