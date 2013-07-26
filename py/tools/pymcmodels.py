@@ -113,7 +113,7 @@ def single_power_law_with_constant(analysis_frequencies, analysis_power):
                            observed=True)
 
     # MCMC model as a list
-    return [power_law_index, power_law_norm, background, fourier_power_spectrum, spectrum]
+    return locals() #[power_law_index, power_law_norm, background, fourier_power_spectrum, spectrum]
 
 
 def broken_power_law(analysis_frequencies, analysis_power,
