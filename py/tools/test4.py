@@ -16,14 +16,14 @@ import pickle
 import os
 
 # Directory where the data is
-wave = '171'
+wave = '193'
 dir = os.path.expanduser('~/Data/AIA_Data/')
 sol = 'SOL2011-04-30T21-45-49L061C108/'
 directory = dir + sol + wave + '/'
 
 print('Loading ' + directory)
 # Save location for pickle files
-rootdir = os.path.expanduser('~/ts/pickle/jul29/') + sol + wave + '/'
+rootdir = os.path.expanduser('~/ts/pickle/jul30/') + sol + wave + '/'
 # make the directory
 if not os.path.exists(rootdir):
     os.makedirs(rootdir)
@@ -44,7 +44,7 @@ Do_MCMC(full_ts, 12.0).okgo(iter=50000, burn=10000, thin=5, progress_bar=False).
 # Number of samples
 nsample = nx * ny / 100
 # Seed to ensure repeatability
-np.random.seed(seed=1)
+np.random.seed(seed=2)
 # Unique random locations
 isunique = False
 while isunique is False:
