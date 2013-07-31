@@ -18,7 +18,8 @@ import os
 # Directory where the data is
 wave = '193'
 dir = os.path.expanduser('~/Data/AIA_Data/')
-sol = 'SOL2011-04-30T21-45-49L061C108/'
+#sol = 'SOL2011-04-30T21-45-49L061C108/'
+sol = 'SOL2011-05-09T22-28-13L001C055/'
 directory = dir + sol + wave + '/'
 
 print('Loading ' + directory)

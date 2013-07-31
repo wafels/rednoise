@@ -48,9 +48,8 @@ class Do_MCMC:
                 ts = self.data
 
             if len(self.data.shape) == 2:
-                y = loc[0]
-                ts = self.data[y, :]
-                print('Pixel Location (y) = %i' % (y))
+                ts = self.data[k, :]
+                print('Entry number %i of %i' % (k + 1, self.nsample))
 
             if len(self.data.shape) == 3:
                 y = loc[0]
