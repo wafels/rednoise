@@ -37,6 +37,7 @@ class Do_MCMC:
         # Define the number of results we are looking at
         self.nsample = len(self.locations)
         self.results = np.zeros(shape=(3, self.nsample, self.bins))
+        self.map_fit = np.zeros(shape=(3, self.nsample))
 
         for k, loc in enumerate(self.locations):
             # Progress
@@ -68,6 +69,11 @@ class Do_MCMC:
             M = pymc.MCMC(pwr_law_with_constant)
             # Do the MAP calculation
             M.sample(**kwargs)
+            # MAP values
+            M2 = pymc.MAP(pwr_law_with_constant)
+            self.map_fit[0, k] = M2.power_law_index.value
+            self.map_fit[1, k] = M2.power_law_norm.value
+            self.map_fit[2, k] = M2.background.value
 
             q1 = M.trace("power_law_index")[:]
             self.results[0, k, :] = np.histogram(q1, bins=self.bins, range=self.pli_range)[0]
@@ -94,4 +100,5 @@ class Do_MCMC:
         pickle.dump(self.epli, output)
         pickle.dump(self.epln, output)
         pickle.dump(self.ebac, output)
+        pickle.dump(self.map_fit, output)
         output.close()

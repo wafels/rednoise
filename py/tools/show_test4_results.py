@@ -19,6 +19,7 @@ def loadresults(filename):
     x1 = pickle.load(loadfile)
     x2 = pickle.load(loadfile)
     x3 = pickle.load(loadfile)
+    map_fit = pickle.load(loadfile)
     loadfile.close()
 
     return results, x1, x2, x3
@@ -29,7 +30,7 @@ def create_hist_plot(hist, bins, width=0.7, facecolor='blue'):
     center = (bins[:-1] + bins[1:]) / 2
     plt.bar(center, hist, align='center', width=width, facecolor=facecolor)
 
-files = [os.path.expanduser('~/ts/pickle/test4_traditional_model/test4_traditional_model.all_samples.pickle')]
+files = [os.path.expanduser('~/ts/pickle/test4_traditional_model/test4_traditional_model.all_samples.12.pickle')]
 filelabel = ['simulated']
 """
 files = [os.path.expanduser('~/ts/pickle/jul29_keep/SOL2011-04-30T21-45-49L061C108/171/test4.rand_locations.pickle'),

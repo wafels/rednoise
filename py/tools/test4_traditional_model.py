@@ -22,6 +22,8 @@ nt = 300
 dt = 12.0
 ampmax = 2.0
 
+n_poly_high = 4
+
 # Create the array of fake data
 dc = np.zeros(shape=(nsample, nt))
 for i in range(0, nsample):
@@ -32,7 +34,7 @@ for i in range(0, nsample):
     # Random frequency in the range of observations
     frequency = 1.0 / np.random.uniform(low=140, high=360)
     # pick a random polynomial order
-    n_polynomial = np.random.randint(low=0, high=6)
+    n_polynomial = np.random.randint(low=0, high=n_poly_high)
     # pick some random polynomial coefficients.  Note that we have to be
     # careful to ensure that the highest order polynomials do not dominate
     # the emission
@@ -45,11 +47,11 @@ for i in range(0, nsample):
     dc[i, :] = tssimulation.time_series(nt, dt, A_osc, B_osc, frequency, polynomial)
 
 # Result # 1 - do each fake time series individually
-filename = rootdir + 'test4_traditional_model.all_samples.pickle'
+filename = rootdir + 'test4_traditional_model.all_samples.' + str(n_poly_high) + '.pickle'
 print('Saving output to ' + filename)
 Do_MCMC(dc, dt).okgo(iter=50000, burn=10000, thin=5, progress_bar=False, locations=np.arange(0,nsample)).save(filename=filename)
 
 # Result # 2 - add up all the emission and do the analysis on the full FOV
 full_ts = np.sum(dc, axis=0)
-filename = rootdir + 'test4.full_ts.pickle'
+filename = rootdir + 'test4.full_ts.' + str(n_poly_high) + '.pickle'
 Do_MCMC(full_ts, dt).okgo(iter=50000, burn=10000, thin=5, progress_bar=False).save(filename=filename)

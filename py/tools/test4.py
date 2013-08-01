@@ -16,10 +16,10 @@ import pickle
 import os
 
 # Directory where the data is
-wave = '193'
+wave = '171'
 dir = os.path.expanduser('~/Data/AIA_Data/')
-#sol = 'SOL2011-04-30T21-45-49L061C108/'
-sol = 'SOL2011-05-09T22-28-13L001C055/'
+sol = 'SOL2011-04-30T21-45-49L061C108/'
+#sol = 'SOL2011-05-09T22-28-13L001C055/'
 directory = dir + sol + wave + '/'
 
 print('Loading ' + directory)
@@ -32,6 +32,7 @@ if not os.path.exists(rootdir):
 # Get a mapcube
 maps = sunpy.Map(directory, cube=True)
 # Get the datacube
+maps[0].peek()
 dc = derotated_datacube_from_mapcube(maps)
 ny = dc.shape[0]
 nx = dc.shape[1]
