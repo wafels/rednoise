@@ -5,6 +5,7 @@ import numpy as np
 import pymc
 import pickle
 import pymcmodels
+import matplotlib.pyplot as plt
 
 class Do_MCMC:
     def __init__(self, data, dt, bins=100, nsample=1):
@@ -20,15 +21,12 @@ class Do_MCMC:
         self.bins = bins
         self.nsample = nsample
 
-    def okgo(self, locations=None, bins=100,
-             pli_range=[-1.0, 6.0],
-             nor_range=[-10, 10],
-             bac_range=[-20, 20], **kwargs):
+    def okgo(self, pymcmodel, locations=None, **kwargs):
 
-        self.pli_range = pli_range
-        self.nor_range = nor_range
-        self.bac_range = bac_range
+        # stats results
+        self.results = []
 
+        # locations in the input array
         if locations is None or len(self.data) == 1:
             self.locations = [1]
         else:
@@ -36,9 +34,6 @@ class Do_MCMC:
 
         # Define the number of results we are looking at
         self.nsample = len(self.locations)
-        self.results = np.zeros(shape=(3, self.nsample, self.bins))
-        self.map_fit = np.zeros(shape=(3, self.nsample))
-
         for k, loc in enumerate(self.locations):
             # Progress
             print(' ')
@@ -60,17 +55,23 @@ class Do_MCMC:
 
             # Do the MCMC
             # Calculate the power at the positive frequencies
-            pwr = ((np.abs(np.fft.fft(ts))) ** 2)[self.fpos_index]
+            self.pwr = ((np.abs(np.fft.fft(ts))) ** 2)[self.fpos_index]
             # Normalize the power
-            pwr = pwr / pwr[0]
-            # Get the PyMC model
-            pwr_law_with_constant = pymcmodels.single_power_law_with_constant(self.fpos, pwr)
+            self.pwr = self.pwr / self.pwr[0]
             # Set up the MCMC model
-            M = pymc.MCMC(pwr_law_with_constant)
+            self.pymcmodel = pymcmodel(self.fpos, self.pwr)
+            self.M = pymc.MCMC(self.pymcmodel)
             # Do the MAP calculation
-            M.sample(**kwargs)
+            self.M.sample(**kwargs)
+            # Append the stats results
+            self.results.append({"timeseries": ts,
+                               "power": self.pwr,
+                               "frequencies": self.fpos,
+                               "location": loc,
+                               "stats": self.M.stats()})
+            """
             # MAP values
-            M2 = pymc.MAP(pwr_law_with_constant)
+            M2 = pymc.MAP(self.pymcmodel)
             self.map_fit[0, k] = M2.power_law_index.value
             self.map_fit[1, k] = M2.power_law_norm.value
             self.map_fit[2, k] = M2.background.value
@@ -87,7 +88,7 @@ class Do_MCMC:
         self.epli = np.histogram(q1, bins=self.bins, range=self.pli_range)[1]
         self.epln = np.histogram(q2, bins=self.bins, range=self.nor_range)[1]
         self.ebac = np.histogram(q3, bins=self.bins, range=self.bac_range)[1]
-
+        """
         return self
 
     def save(self, filename='Do_MCMC_output.pickle'):
@@ -102,3 +103,57 @@ class Do_MCMC:
         pickle.dump(self.ebac, output)
         pickle.dump(self.map_fit, output)
         output.close()
+
+    def showfit(self, loc=0, figure=1):
+        """ Show a spectral fit summary plot"""
+        # Construct a summary for each variab;e
+        k = self.results[0]['stats'].keys()
+        description = []
+        for key in k:
+            if key is not 'fourier_power_spectrum':
+                mean = self.results[loc]['stats'][key]['mean']
+                median = self.results[loc]['stats'][key]['quantiles'][50]
+                hpd95 = self.results[loc]['stats'][key]['95% HPD interval']
+                description.append(key + ': mean=%8.4f, median=%8.4f, 95%% HPD= %8.4f, %8.4f' % (mean, median, hpd95[0], hpd95[1]))
+        
+        x = self.results[loc]["frequencies"]
+        
+        plt.figure(figure)
+        plt.loglog(x,
+                   self.results[loc]["power"],
+                   label = 'norm. obs.power')
+        plt.loglog(x,
+                   self.results[loc]['stats']['fourier_power_spectrum']['mean'],
+                   label = 'mean')
+        plt.loglog(x,
+                   self.results[loc]['stats']['fourier_power_spectrum']['quantiles'][50],
+                   label = 'median')
+        plt.loglog(x,
+                   self.results[loc]['stats']['fourier_power_spectrum']['95% HPD interval'][:, 0],
+                   label = 'low, 95% HPD')
+        plt.loglog(x,
+                   self.results[loc]['stats']['fourier_power_spectrum']['95% HPD interval'][:, 1],
+                   label = 'high, 95% HPD')
+        
+        
+        plt.xlabel('frequencies (Hz)')
+        plt.ylabel('normalized power')
+        plt.title('model fit')
+        nd = len(description)
+        ymax = np.log(np.max(self.results[loc]["power"]))
+        ymin = np.log(np.min(self.results[loc]["power"]))
+        ymax = ymin + 0.5 * (ymax - ymin)
+        ystep = (ymax - ymin)/(1.0 * nd)
+        for i, d in enumerate(description):
+            ypos = np.exp(ymin + i * ystep)
+            plt.text(x[0], ypos, d, fontsize=8)
+        plt.legend()
+        plt.show()
+        
+        def showts(self, loc=0, figure=2):
+            """ Show the original time series"""
+            pass
+        
+        def showall(self, loc=0):
+            self.showfit(loc=loc)
+            self.showts(loc=loc)
