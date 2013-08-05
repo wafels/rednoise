@@ -7,16 +7,16 @@ Co-align a set of maps and make sure the
 import scipy 
 import numpy as np
 from matplotlib import pyplot as plt
-import pymcmodels
 import pymc
 from cubetools import derotated_datacube_from_mapcube
 from rnfit import Do_MCMC
 import sunpy
 import pickle
 import os
+from pymcmodels import single_power_law_with_constant
 
 # Directory where the data is
-wave = '171'
+wave = '193'
 dir = os.path.expanduser('~/Data/AIA_Data/')
 sol = 'SOL2011-04-30T21-45-49L061C108/'
 #sol = 'SOL2011-05-09T22-28-13L001C055/'
@@ -40,7 +40,7 @@ nt = dc.shape[2]
 # Result # 1 - add up all the emission and do the analysis on the full FOV
 full_ts = np.sum(dc, axis=(0, 1))
 filename = rootdir + 'test4.full_ts.pickle'
-Do_MCMC(full_ts, 12.0).okgo(iter=50000, burn=10000, thin=5, progress_bar=False).save(filename=filename)
+full_ts = Do_MCMC(full_ts, 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
 
 # Random subsamples
 # Number of samples
@@ -62,26 +62,9 @@ filename = rootdir + 'test4.rand_ts.pickle'
 rand_ts = np.zeros(shape=nt)
 for loc in locations:
     rand_ts = rand_ts + dc[loc[0], loc[1], :].flatten()
-Do_MCMC(rand_ts, 12.0).okgo(iter=50000, burn=10000, thin=5, progress_bar=False).save(filename=filename)
+rand_ts = Do_MCMC(rand_ts, 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
 
 # Result 3 - do all the randomly selected pixels one by one
-filename = rootdir + 'test4.rand_locations.pickle'
-Do_MCMC(dc, 12.0).okgo(iter=50000, burn=10000, thin=5, progress_bar=False, locations=locations).save(filename=filename)
+#filename = rootdir + 'test4.rand_locations.pickle'
+#zall = Do_MCMC(dc, 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False, locations=locations).save(filename=filename)
 
-
-
-#plt.figure(1)
-#plt.loglog(fpos, rnspectralmodels.power_law_with_constant(fpos, [np.mean(M1.trace("power_law_norm")[:]),
-#                                                                 np.mean(M1.trace("power_law_index")[:]),
-#                                                                 np.mean(M1.trace("background")[:])]))
-
-# Save the results
-
-
-# Plot some histograms of the results for the entire data cube
-
-# Probability histogram of the measured power law index
-
-# Probability histogram of the measured constant background
-
-# Probability histogram of the normalization

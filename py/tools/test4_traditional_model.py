@@ -10,6 +10,7 @@ import pymc
 import tssimulation
 from rnfit import Do_MCMC
 import os
+from pymcmodels import single_power_law_with_constant
 
 # where the output data will be stored
 rootdir = os.path.expanduser('~/ts/pickle/test4_traditional_model/')
@@ -49,9 +50,9 @@ for i in range(0, nsample):
 # Result # 1 - do each fake time series individually
 filename = rootdir + 'test4_traditional_model.all_samples.' + str(n_poly_high) + '.pickle'
 print('Saving output to ' + filename)
-Do_MCMC(dc, dt).okgo(iter=50000, burn=10000, thin=5, progress_bar=False, locations=np.arange(0,nsample)).save(filename=filename)
+zall = Do_MCMC(dc, dt).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False, locations=np.arange(0,nsample)).save(filename=filename)
 
 # Result # 2 - add up all the emission and do the analysis on the full FOV
 full_ts = np.sum(dc, axis=0)
 filename = rootdir + 'test4.full_ts.' + str(n_poly_high) + '.pickle'
-Do_MCMC(full_ts, dt).okgo(iter=50000, burn=10000, thin=5, progress_bar=False).save(filename=filename)
+z = Do_MCMC(full_ts, dt).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)

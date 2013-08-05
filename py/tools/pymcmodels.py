@@ -42,6 +42,10 @@ def single_power_law(analysis_frequencies, analysis_power):
                            beta=1.0 / fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
+    # Simulated spectrum
+    spectrum_sim = pymc.Exponential('spectrum_sim',
+                           beta=1.0 / fourier_power_spectrum)
+
 
     # MCMC model as a list
     return locals()
@@ -63,6 +67,7 @@ def single_power_law_with_constant(analysis_frequencies, analysis_power):
                                   doc='power law normalization')
 
     background = pymc.Uniform('background',
+                                  value=np.mean(np.log(analysis_power[-10:-1])),
                                   lower=-100.0,
                                   upper=100.0,
                                   doc='background')
