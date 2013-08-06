@@ -17,8 +17,8 @@ from cubetools import get_datacube
 
 
 # Directory where the data is
-if False:
-    wave = '193'
+if True:
+    wave = '171'
     dir = os.path.expanduser('~/Data/AIA_Data/')
     sol = 'SOL2011-04-30T21-45-49L061C108/'
     #sol = 'SOL2011-05-09T22-28-13L001C055/'
@@ -58,7 +58,7 @@ while isunique is False:
 full_ts = np.sum(dc, axis=(0, 1))
 filename = rootdir + 'test4.full_ts.pickle'
 full_ts = Do_MCMC([full_ts], 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
-"""
+
 # Result 2 - add up the time series from all the randomly selected locations
 # and do a fit
 filename = rootdir + 'test4.rand_ts.pickle'
@@ -73,4 +73,4 @@ data = []
 for loc in locations:
     data.append(dc[loc[0], loc[1], :])
 zall = Do_MCMC(data, 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False).save(filename=filename)
-"""
+
