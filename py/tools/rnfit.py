@@ -8,40 +8,62 @@ import matplotlib.pyplot as plt
 
 
 class Do_MCMC:
-    def __init__(self, data, dt, bins=100, nsample=1):
+    def __init__(self, data, dt):
+        """"
+        Handles the MCMC fit of data.
+
+        Parameters
+        ----------
+        data : a list of 1-d ndarrays, each of which is a time series to be
+               analyzed
+        dt : the cadence of the time-seris
+        """
         self.data = data
         self.dt = dt
-        self.shape = data.shape
-        self.nt = self.shape[-1]
+
+        # Number of time series
+        self.ndata = len(self.data)
+
+        # Length of all time-series
+        self.nt = np.size(self.data[0])
+
+        # Sample times
         self.t = self.dt * np.arange(0, self.nt)
+
         # FFT frequencies
         self.f = np.fft.fftfreq(self.nt, self.dt)
+
         # positive frequencies
         self.fpos_index = self.f > 0
         self.fpos = self.f[self.fpos_index]
-        self.bins = bins
-        self.nsample = nsample
 
     # Do the PyMC fit
     def okgo(self, pymcmodel, locations=None, **kwargs):
-        """Controls the PyMC fit of the input data"""
+        """Controls the PyMC fit of the input data
+
+        Parameters
+        ----------
+        pymcmodel : the PyMC model we are using
+        locations : which elements of the input data we are analyzing
+        **kwargs : PyMC control keywords
+        """
 
         # stats results
         self.results = []
 
         # locations in the input array
-        if locations is None or len(self.data) == 1:
-            self.locations = [1]
+        if locations is None:
+            self.locations = range(0, self.ndata)
         else:
             self.locations = locations
-
         # Define the number of results we are looking at
-        self.nsample = len(self.locations)
-        for k, loc in enumerate(self.locations):
+        self.nts = len(self.locations)
+
+        for k in self.locations:
             # Progress
             print(' ')
-            print('Location number %i of %i' % (k + 1, self.nsample))
-            ts = self._get_ts(k, loc)
+            print('Location number %i of %i' % (k + 1, self.nts))
+            ts = self.data[k]
             # Do the MCMC
             # Calculate the power at the positive frequencies
             self.pwr = ((np.abs(np.fft.fft(ts))) ** 2)[self.fpos_index]
@@ -56,7 +78,7 @@ class Do_MCMC:
             self.results.append({"timeseries": ts,
                                "power": self.pwr,
                                "frequencies": self.fpos,
-                               "location": loc,
+                               "location": k,
                                "stats": self.M.stats()})
         return self
 
@@ -64,11 +86,14 @@ class Do_MCMC:
         """Save the results to a pickle file"""
         self.filename = filename
         print 'Saving to ' + self.filename
+        self._calculate_mss()
         output = open(self.filename, 'wb')
         pickle.dump(self.data, output)
         pickle.dump(self.locations, output)
         pickle.dump(self.results, output)
+        pickle.dump(self.mss, output)
         output.close()
+        return self
 
     def showfit(self, loc=0, figure=2):
         """ Show a spectral fit summary plot"""
@@ -133,7 +158,7 @@ class Do_MCMC:
     def showts(self, loc=0, figure=1):
         """ Show the time-series """
         plt.figure(figure)
-        plt.plot(self.t, self._get_ts(loc, loc), label='time series')
+        plt.plot(self.t, self.data[loc], label='time series')
         plt.xlabel('time (seconds)')
         plt.ylabel('emission')
         plt.legend(fontsize=10)
@@ -145,24 +170,6 @@ class Do_MCMC:
         self.showfit(loc=loc, figure=2)
         self.showdeviation(loc=loc, figure=3)
 
-    #Get a time series from the input data
-    def _get_ts(self, k, loc):
-        """ Get a time series from the input data"""
-        if len(self.data.shape) == 1:
-            ts = self.data
-
-        if len(self.data.shape) == 2:
-            ts = self.data[k, :]
-            print('Entry number %i of %i' % (k + 1, self.nsample))
-
-        if len(self.data.shape) == 3:
-            y = loc[0]
-            x = loc[1]
-            ts = self.data[y, x, :]
-            print('Pixel Location x,y = %i, %i' % (x, y))
-
-        return ts
-
     def _calculate_mss(self):
         """ Calculate the mean of the sum of square scaled deviations"""
         self.mss = []
@@ -170,4 +177,5 @@ class Do_MCMC:
             pwr = r["power"]
             mean = r['stats']['fourier_power_spectrum']['mean']
             self.mss.append(np.sum(((pwr - mean) / mean) ** 2) / (1.0 * (np.size(pwr))))
+
 
