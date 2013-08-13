@@ -7,6 +7,45 @@ import rnspectralmodels
 from scipy.stats import chi2, uniform
 
 
+class SampleTimes:
+    def __init__(self, time, label='time', units='seconds'):
+        """A class holding time series sample times."""
+        self.time = time - time[0]
+        self.nt = self.time.size
+        self.dt = self.time[-1] / (self.nt - 1)
+        self.label = label
+        self.units = units
+
+
+class Frequencies:
+    def __init__(self, frequencies, label='frequency', units='Hz'):
+        self.frequencies = frequencies
+        self.posindex = self.frequencies > 0
+        self.positive = self.frequencies[self.posindex]
+        self.label = label
+        self.units = units
+
+
+class PowerSpectrum:
+    def __init__(self, frequencies, power, label='Fourier power'):
+        self.frequencies = Frequencies(frequencies)
+        self.power = power
+        self.ppower = self.power[self.frequencies.posindex]
+        self.label = 'Fourier power'
+
+
+class TimeSeries:
+    def __init__(self, time, data, label='data', units=''):
+        self.SampleTimes = SampleTimes(time)
+        if self.SampleTimes.nt != data.size:
+            raise ValueError('length of sample times not the same as the data')
+        self.data = data
+        self.PowerSpectrum = PowerSpectrum(np.fft.fftfreq(self.SampleTimes.nt, self.SampleTimes.dt),
+                                           np.abs(np.fft.fft(self.data)) ** 2)
+        self.label = 'data'
+        self.units = units
+
+
 class PowerLawPowerSpectrum:
     def __init__(self, parameters, frequencies=None, nt=300, dt=12.0):
         """

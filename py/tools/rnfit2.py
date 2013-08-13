@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 class Do_MCMC:
-    def __init__(self, data, dt):
+    def __init__(self, data):
         """"
         Handles the MCMC fit of data.
 
@@ -19,23 +19,9 @@ class Do_MCMC:
         dt : the cadence of the time-seris
         """
         self.data = data
-        self.dt = dt
 
         # Number of time series
         self.ndata = len(self.data)
-
-        # Length of all time-series
-        self.nt = np.size(self.data[0])
-
-        # Sample times
-        self.t = self.dt * np.arange(0, self.nt)
-
-        # FFT frequencies
-        self.f = np.fft.fftfreq(self.nt, self.dt)
-
-        # positive frequencies
-        self.fpos_index = self.f > 0
-        self.fpos = self.f[self.fpos_index]
 
     # Do the PyMC fit
     def okgo(self, pymcmodel, locations=None, **kwargs):
@@ -66,20 +52,31 @@ class Do_MCMC:
             ts = self.data[k]
             # Do the MCMC
             # Calculate the power at the positive frequencies
-            self.pwr = ((np.abs(np.fft.fft(ts))) ** 2)[self.fpos_index]
+            self.pwr = ts.PowerSpectrum.ppower
+            self.fpos = ts.PowerSpectrum.frequencies.positive
             # Normalize the power
             self.pwr = self.pwr / self.pwr[0]
             # Set up the MCMC model
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
             self.M = pymc.MCMC(self.pymcmodel)
-            # Do the MAP calculation
+            # Do the MCMC calculation
             self.M.sample(**kwargs)
-            # Append the stats results
+            # Get the samples
+            k = self.M.stats().keys()
+            samples = {}
+            for key in k:
+                if key is not 'fourier_power_spectrum':
+                    samples[key] = self.M.trace(key)[:]
+            # Append the stats results and the samples
             self.results.append({"timeseries": ts,
                                "power": self.pwr,
                                "frequencies": self.fpos,
                                "location": k,
-                               "stats": self.M.stats()})
+                               "stats": self.M.stats(),
+                               "samples": samples})
+            # Get the MAP results
+            mp = pymc.MAP(self.pymcmodel)
+            mp.fit()
         return self
 
     def save(self, filename='Do_MCMC_output.pickle'):
@@ -102,28 +99,25 @@ class Do_MCMC:
         description = []
         for key in k:
             if key is not 'fourier_power_spectrum':
-                mean = self.results[loc]['stats'][key]['mean']
-                median = self.results[loc]['stats'][key]['quantiles'][50]
-                hpd95 = self.results[loc]['stats'][key]['95% HPD interval']
+                stats = self.results[loc]['stats']
+                mean = stats[key]['mean']
+                median = stats[key]['quantiles'][50]
+                hpd95 = stats[key]['95% HPD interval']
                 description.append(key + ': mean=%8.4f, median=%8.4f, 95%% HPD= %8.4f, %8.4f' % (mean, median, hpd95[0], hpd95[1]))
 
         x = self.results[loc]["frequencies"]
+        y = self.results[loc]["stats"]
 
         plt.figure(figure)
         plt.loglog(x,
                    self.results[loc]["power"],
                    label='norm. obs. power')
-        plt.loglog(x,
-                   self.results[loc]['stats']['fourier_power_spectrum']['mean'],
-                   label='mean')
-        plt.loglog(x,
-                   self.results[loc]['stats']['fourier_power_spectrum']['quantiles'][50],
+        plt.loglog(x, y['fourier_power_spectrum']['mean'], label='mean')
+        plt.loglog(x, y['fourier_power_spectrum']['quantiles'][50],
                    label='median')
-        plt.loglog(x,
-                   self.results[loc]['stats']['fourier_power_spectrum']['95% HPD interval'][:, 0],
+        plt.loglog(x, y['fourier_power_spectrum']['95% HPD interval'][:, 0],
                    label='low, 95% HPD')
-        plt.loglog(x,
-                   self.results[loc]['stats']['fourier_power_spectrum']['95% HPD interval'][:, 1],
+        plt.loglog(x, y['fourier_power_spectrum']['95% HPD interval'][:, 1],
                    label='high, 95% HPD')
         plt.xlabel('frequencies (Hz)')
         plt.ylabel('normalized power')
@@ -157,15 +151,16 @@ class Do_MCMC:
 
     def showts(self, loc=0, figure=1):
         """ Show the time-series """
+        ts = self.data[loc]
         plt.figure(figure)
-        plt.plot(self.t, self.data[loc], label='time series')
+        plt.plot(ts.SampleTimes.time, ts.data, label='time series')
         plt.xlabel('time (seconds)')
         plt.ylabel('emission')
         plt.legend(fontsize=10)
         plt.show()
 
     def showall(self, loc=0):
-        """Shows all the sumamry plots"""
+        """Shows all the summary plots"""
         self.showts(loc=loc, figure=1)
         self.showfit(loc=loc, figure=2)
         self.showdeviation(loc=loc, figure=3)
