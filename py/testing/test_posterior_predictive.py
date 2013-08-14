@@ -15,8 +15,8 @@ from pymcmodels import single_power_law_with_constant
 # Create some fake data
 dt = 12.0
 nt = 300
-pls = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0], nt=nt, dt=dt)
-data = TimeSeriesFromPowerSpectrum(pls).sample
+pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0], nt=nt, dt=dt)
+data = TimeSeriesFromPowerSpectrum(pls1).sample
 
 ts = TimeSeries(dt * np.arange(0, nt), data)
 
@@ -84,3 +84,5 @@ def posterior_predictive_distribution(iobs, fit_results,
 fit_results = result.results[0]["samples"]
 
 x = posterior_predictive_distribution(ts.PowerSpectrum.ppower, fit_results)
+
+value = vaughan_2010_T_R(ts.PowerSpectrum.ppower/ts.PowerSpectrum.ppower[0], pls1.power()/pls1.power()[0])

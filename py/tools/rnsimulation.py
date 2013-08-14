@@ -4,6 +4,7 @@ Red noise simulation functions
 
 import numpy as np
 import rnspectralmodels
+import copy
 from scipy.stats import chi2, uniform
 
 
@@ -135,7 +136,7 @@ class TimeSeriesFromPowerSpectrum():
         seed : scalar number
             A seed value for the random number generator
         """
-        self.powerspectrum = powerspectrum
+        self.powerspectrum = copy.deepcopy(powerspectrum)
         self.nt = self.powerspectrum.nt
         self.fft_zero = fft_zero
 

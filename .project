@@ -3,6 +3,7 @@
 	<name>Red Noise and Oscillations</name>
 	<comment></comment>
 	<projects>
+		<project>SunPy</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
