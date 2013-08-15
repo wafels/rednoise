@@ -234,6 +234,9 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
     # Amplitudes
     A = np.sqrt(I / 2.0)
 
+    # WARNING - POWERS APPEAR TO BE OUT BY A FACTOR 2
+    A = A * np.sqrt(2.0)
+
     # Complex vector
     F = A * np.exp(-np.complex(0, 1) * ph)
 

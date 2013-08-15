@@ -12,6 +12,6 @@ import sys
 # Create some fake data
 dt = 12.0
 nt = 300
-pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0], nt=nt, dt=dt)
-data = TimeSeriesFromPowerSpectrum(pls1).sample
+pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 3.0, -5.0], nt=nt, dt=dt)
+data = TimeSeriesFromPowerSpectrum(pls1, V=1, W=1).sample
 ts = TimeSeries(dt * np.arange(0, nt), data)

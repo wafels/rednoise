@@ -55,7 +55,8 @@ class Do_MCMC:
             self.pwr = ts.PowerSpectrum.ppower
             self.fpos = ts.PowerSpectrum.frequencies.positive
             # Normalize the power
-            self.pwr = self.pwr / self.pwr[0]
+            power_norm = self.pwr[0]
+            self.pwr = self.pwr / power_norm
             # Set up the MCMC model
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
             self.M = pymc.MCMC(self.pymcmodel)
@@ -68,15 +69,18 @@ class Do_MCMC:
                 if key is not 'fourier_power_spectrum':
                     samples[key] = self.M.trace(key)[:]
             # Append the stats results and the samples
-            self.results.append({"timeseries": ts,
-                               "power": self.pwr,
-                               "frequencies": self.fpos,
-                               "location": k,
-                               "stats": self.M.stats(),
-                               "samples": samples})
             # Get the MAP results
             mp = pymc.MAP(self.pymcmodel)
             mp.fit()
+            self.results.append({"timeseries": ts,
+                                 "norm": power_norm,
+                                 "power": self.pwr,
+                                 "frequencies": self.fpos,
+                                 "location": k,
+                                 "stats": self.M.stats(),
+                                 "samples": samples,
+                                 "mp": mp,
+                                 "M": self.M})
         return self
 
     def save(self, filename='Do_MCMC_output.pickle'):
