@@ -161,12 +161,11 @@ class TimeSeriesFromPowerSpectrum():
         self.oversampled = time_series_from_power_spectrum(self.inputpower, fft_zero=self.fft_zero, seed=self.seed)
 
         # Subsample the time-series back down to the requested cadence of dt
-        self.longtimeseries = self.oversampled[np.arange(0, len(self.oversampled), self.W)]
+        self.longtimeseries = self.oversampled[0:len(self.oversampled):self.W]
         nlts = len(self.longtimeseries)
 
         # get a sample of the desired length nt from the middle of the long time series
         self.sample = self.longtimeseries[nlts / 2 - self.nt / 2: nlts / 2 - self.nt / 2 + self.nt]
-
 
 def equally_spaced_nonzero_frequencies(n, dt):
     """
@@ -225,16 +224,18 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
     K = len(S)
 
     # noisy power spectrum
-    I = noisy_power_spectrum(S, seed=seed)
+    I = S#noisy_power_spectrum(S, seed=seed)
 
     # random phases, except for the nyquist frequency.
     ph = uniform.rvs(loc=-np.pi / 2.0, scale=np.pi, size=K, seed=seed)
+    ph[:] = 0.0
     ph[-1] = 0.0
 
     # Amplitudes
     A = np.sqrt(I / 2.0)
 
-    # WARNING - POWERS APPEAR TO BE OUT BY A FACTOR 2
+    # WARNING - SPECTRAL POWER APPEARs TO BE OUT BY A FACTOR 2 WITHOUT THIS
+    # MULTIPLICATION FACTOR BELOW
     A = A * np.sqrt(2.0)
 
     # Complex vector
@@ -248,6 +249,7 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
 
     # create the time-series.  The complex part should be tiny.
     T_sim = np.fft.ifft(F_complete)
+    T_sim = np.fft.irfft(np.concatenate((np.asarray([fft_zero]), F)))
 
     # The time series is formally complex.  Return the real part only.
     return np.real(T_sim)
