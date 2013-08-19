@@ -2,6 +2,8 @@ import numpy as np
 import scipy
 import sunpy
 import matplotlib.pyplot as plt
+from scipy.io import readsav
+import os
 
 
 def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
@@ -81,7 +83,7 @@ def visualize(datacube, delay=0.1):
     #extent = wave_maps[0].xrange + wave_maps[0].yrange
     #axes.set_title("%s %s" % (wave_maps[0].name, wave_maps[0].date))
 
-    img = axes.imshow(dc[:, :, 0], origin='lower')
+    img = axes.imshow(datacube[:, :, 0], origin='lower')
     #fig.colorbar(img)
     fig.show()
 
@@ -91,3 +93,17 @@ def visualize(datacube, delay=0.1):
         img.set_data(m)
         plt.pause(delay)
     return None
+
+
+def get_datacube(path):
+    """
+    Function that goes to a directory and returns a datacube
+    """
+    if os.path.isfile(path):
+        idl = readsav(path)
+        return np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
+    else:
+        # Get a mapcube
+        maps = sunpy.Map(path, cube=True)
+        dc = derotated_datacube_from_mapcube(maps)
+        return dc

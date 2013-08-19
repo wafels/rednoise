@@ -43,7 +43,7 @@ def single_power_law(analysis_frequencies, analysis_power):
                            value=analysis_power,
                            observed=True)
     # Simulated spectrum
-    spectrum_sim = pymc.Exponential('spectrum_sim',
+    predictive = pymc.Exponential('predictive',
                            beta=1.0 / fourier_power_spectrum)
 
 

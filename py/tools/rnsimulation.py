@@ -4,7 +4,47 @@ Red noise simulation functions
 
 import numpy as np
 import rnspectralmodels
+import copy
 from scipy.stats import chi2, uniform
+
+
+class SampleTimes:
+    def __init__(self, time, label='time', units='seconds'):
+        """A class holding time series sample times."""
+        self.time = time - time[0]
+        self.nt = self.time.size
+        self.dt = self.time[-1] / (self.nt - 1)
+        self.label = label
+        self.units = units
+
+
+class Frequencies:
+    def __init__(self, frequencies, label='frequency', units='Hz'):
+        self.frequencies = frequencies
+        self.posindex = self.frequencies > 0
+        self.positive = self.frequencies[self.posindex]
+        self.label = label
+        self.units = units
+
+
+class PowerSpectrum:
+    def __init__(self, frequencies, power, label='Fourier power'):
+        self.frequencies = Frequencies(frequencies)
+        self.power = power
+        self.ppower = self.power[self.frequencies.posindex]
+        self.label = 'Fourier power'
+
+
+class TimeSeries:
+    def __init__(self, time, data, label='data', units=''):
+        self.SampleTimes = SampleTimes(time)
+        if self.SampleTimes.nt != data.size:
+            raise ValueError('length of sample times not the same as the data')
+        self.data = data
+        self.PowerSpectrum = PowerSpectrum(np.fft.fftfreq(self.SampleTimes.nt, self.SampleTimes.dt),
+                                           np.abs(np.fft.fft(self.data)) ** 2)
+        self.label = 'data'
+        self.units = units
 
 
 class PowerLawPowerSpectrum:
@@ -96,7 +136,7 @@ class TimeSeriesFromPowerSpectrum():
         seed : scalar number
             A seed value for the random number generator
         """
-        self.powerspectrum = powerspectrum
+        self.powerspectrum = copy.deepcopy(powerspectrum)
         self.nt = self.powerspectrum.nt
         self.fft_zero = fft_zero
 
@@ -121,12 +161,11 @@ class TimeSeriesFromPowerSpectrum():
         self.oversampled = time_series_from_power_spectrum(self.inputpower, fft_zero=self.fft_zero, seed=self.seed)
 
         # Subsample the time-series back down to the requested cadence of dt
-        self.longtimeseries = self.oversampled[np.arange(0, len(self.oversampled), self.W)]
+        self.longtimeseries = self.oversampled[0:len(self.oversampled):self.W]
         nlts = len(self.longtimeseries)
 
         # get a sample of the desired length nt from the middle of the long time series
         self.sample = self.longtimeseries[nlts / 2 - self.nt / 2: nlts / 2 - self.nt / 2 + self.nt]
-
 
 def equally_spaced_nonzero_frequencies(n, dt):
     """
@@ -185,14 +224,19 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
     K = len(S)
 
     # noisy power spectrum
-    I = noisy_power_spectrum(S, seed=seed)
+    I = S#noisy_power_spectrum(S, seed=seed)
 
     # random phases, except for the nyquist frequency.
     ph = uniform.rvs(loc=-np.pi / 2.0, scale=np.pi, size=K, seed=seed)
+    ph[:] = 0.0
     ph[-1] = 0.0
 
     # Amplitudes
     A = np.sqrt(I / 2.0)
+
+    # WARNING - SPECTRAL POWER APPEARs TO BE OUT BY A FACTOR 2 WITHOUT THIS
+    # MULTIPLICATION FACTOR BELOW
+    A = A * np.sqrt(2.0)
 
     # Complex vector
     F = A * np.exp(-np.complex(0, 1) * ph)
@@ -205,6 +249,7 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
 
     # create the time-series.  The complex part should be tiny.
     T_sim = np.fft.ifft(F_complete)
+    T_sim = np.fft.irfft(np.concatenate((np.asarray([fft_zero]), F)))
 
     # The time series is formally complex.  Return the real part only.
     return np.real(T_sim)

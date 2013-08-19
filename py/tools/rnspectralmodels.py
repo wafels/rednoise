@@ -7,7 +7,7 @@ import numpy as np
 
 def fnorm(f, fnorm):
     """ Normalize the frequency spectrum"""
-    return f / fnorm
+    return f / 1.0
 
 
 def constant(f, a):
