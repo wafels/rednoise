@@ -22,8 +22,7 @@ data = TimeSeriesFromPowerSpectrum(pls1).sample
 ts = TimeSeries(dt * np.arange(0, nt), data)
 
 # Analyze using MCMC
-analysis = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
-
+analysis = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=10000, burn=1000, thin=5, progress_bar=False)
 
 # Do the posterior predictive statistics to measure GOF
 def vaughan_2010_T_R(iobs, S):
@@ -85,11 +84,20 @@ def posterior_predictive_distribution(iobs, fit_results,
 # Get the MCMC results from the analysis
 fit_results = analysis.results[0]["samples"]
 
-str(list(mp.variables)[0].__name__)
+# Get the MAP values
+mp = analysis.results[0]["mp"]
 
+# Get the list of variable names
+l = str(list(mp.variables)[0].__name__)
+
+# Best fit spectrum
+best_fit_power_spectrum = False
+
+# Observed power spectrum
+iobs = ts.PowerSpectrum.Npower
 
 # Calculate the posterior predictive distribution
-x = posterior_predictive_distribution(ts.PowerSpectrum.ppower, fit_results)
+x = posterior_predictive_distribution(iobs, fit_results)
 
 # Calculate the discrepancy statistic
-value = vaughan_2010_T_R(ts.PowerSpectrum.Npower, )
+value = vaughan_2010_T_R(iobs, best_fit_power_spectrum)
