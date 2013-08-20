@@ -54,26 +54,35 @@ class Do_MCMC:
             # Calculate the power at the positive frequencies
             self.pwr = ts.PowerSpectrum.ppower
             self.fpos = ts.PowerSpectrum.frequencies.positive
-            # Normalize the power
-            power_norm = self.pwr[0]
-            self.pwr = self.pwr / power_norm
+
+            # Following Vaughan (2010): normalize to the mean power
+            power_mean = np.mean(self.pwr)
+            self.pwr = self.pwr / power_mean
+            # Normalize now to the standard deviation
+            power_std = np.std(self.pwr)
+            self.pwr = self.pwr / power_std
+
             # Set up the MCMC model
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
             self.M = pymc.MCMC(self.pymcmodel)
+
             # Do the MCMC calculation
             self.M.sample(**kwargs)
+
             # Get the samples
             k = self.M.stats().keys()
             samples = {}
             for key in k:
                 if key is not 'fourier_power_spectrum':
                     samples[key] = self.M.trace(key)[:]
+
             # Append the stats results and the samples
             # Get the MAP results
             mp = pymc.MAP(self.pymcmodel)
             mp.fit()
             self.results.append({"timeseries": ts,
-                                 "norm": power_norm,
+                                 "mean": power_mean,
+                                 "std": power_std,
                                  "power": self.pwr,
                                  "frequencies": self.fpos,
                                  "location": k,
@@ -99,7 +108,7 @@ class Do_MCMC:
     def showfit(self, loc=0, figure=2):
         """ Show a spectral fit summary plot"""
         # Construct a summary for each variable
-        k = self.results[0]['stats'].keys()
+        k = self.results[loc]['stats'].keys()
         description = []
         for key in k:
             if key is not 'fourier_power_spectrum':

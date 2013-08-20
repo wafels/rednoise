@@ -42,10 +42,6 @@ def single_power_law(analysis_frequencies, analysis_power):
                            beta=1.0 / fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
-    # Simulated spectrum
-    predictive = pymc.Exponential('predictive',
-                           beta=1.0 / fourier_power_spectrum)
-
 
     # MCMC model as a list
     return locals()

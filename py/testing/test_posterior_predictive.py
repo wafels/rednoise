@@ -15,15 +15,14 @@ from pymcmodels import single_power_law_with_constant
 # Create some fake data
 dt = 12.0
 nt = 300
-pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0], nt=nt, dt=dt)
+pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 1.0, -5.0], nt=nt, dt=dt)
 data = TimeSeriesFromPowerSpectrum(pls1).sample
 
+# Create a time series object
 ts = TimeSeries(dt * np.arange(0, nt), data)
 
-filename = os.path.expanduser('~/Desktop/test.pickle')
-
 # Analyze using MCMC
-result = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
+analysis = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
 
 
 # Do the posterior predictive statistics to measure GOF
@@ -72,17 +71,25 @@ def posterior_predictive_distribution(iobs, fit_results,
         ts = TimeSeries(dt * np.arange(0, nt), data)
 
         # Get the simulated data's power spectrum
-        S = ts.PowerSpectrum.ppower
+        S = ts.PowerSpectrum.Npower
 
+        # Calculate the required discrepancy statistic 
         if statistic == 'vaughan_2010_T_R':
             value = vaughan_2010_T_R(iobs, S)
         if statistic == 'vaughan_2010_T_SSE':
             value = vaughan_2010_T_R(iobs, S)
         distribution.append(value)
+
     return np.array(distribution)
 
-fit_results = result.results[0]["samples"]
+# Get the MCMC results from the analysis
+fit_results = analysis.results[0]["samples"]
 
+str(list(mp.variables)[0].__name__)
+
+
+# Calculate the posterior predictive distribution
 x = posterior_predictive_distribution(ts.PowerSpectrum.ppower, fit_results)
 
-value = vaughan_2010_T_R(ts.PowerSpectrum.ppower/ts.PowerSpectrum.ppower[0], pls1.power()/pls1.power()[0])
+# Calculate the discrepancy statistic
+value = vaughan_2010_T_R(ts.PowerSpectrum.Npower, )

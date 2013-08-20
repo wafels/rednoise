@@ -33,6 +33,9 @@ class PowerSpectrum:
         self.power = power
         self.ppower = self.power[self.frequencies.posindex]
         self.label = 'Fourier power'
+        # normalized power
+        d1 = self.ppower / np.mean(self.ppower)
+        self.Npower = d1 / np.std(d1)
 
 
 class TimeSeries:
@@ -105,7 +108,7 @@ class BrokenPowerLaw(PowerLawPowerSpectrum):
 
 
 class TimeSeriesFromPowerSpectrum():
-    def __init__(self, powerspectrum, V=10, W=10, seed=None, fft_zero=0.0):
+    def __init__(self, powerspectrum, V=10, W=10, seed=None, fft_zero=0.0, **kwargs):
         """
         Create a time series with a given type of power spectrum.  This object
         can be used to generate time series that have a given power spectrum.
@@ -158,7 +161,7 @@ class TimeSeriesFromPowerSpectrum():
 
         # the fully over-sampled timeseries, with a sampling cadence of dt/W, with a
         # duration of V*N*dt
-        self.oversampled = time_series_from_power_spectrum(self.inputpower, fft_zero=self.fft_zero, seed=self.seed)
+        self.oversampled = time_series_from_power_spectrum(self.inputpower, fft_zero=self.fft_zero, seed=self.seed, **kwargs)
 
         # Subsample the time-series back down to the requested cadence of dt
         self.longtimeseries = self.oversampled[0:len(self.oversampled):self.W]
@@ -200,7 +203,7 @@ def noisy_power_spectrum(S, seed=None):
     return S * X / 2.0
 
 
-def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
+def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None, no_noise=False):
     """Create a time series with power law noise, following the recipe
     of Vaughan (2010), MNRAS, 402, 307, appendix B
 
@@ -224,11 +227,15 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
     K = len(S)
 
     # noisy power spectrum
-    I = S#noisy_power_spectrum(S, seed=seed)
+    if no_noise:
+        I = S
+    else:
+        I = noisy_power_spectrum(S, seed=seed)
 
     # random phases, except for the nyquist frequency.
     ph = uniform.rvs(loc=-np.pi / 2.0, scale=np.pi, size=K, seed=seed)
-    ph[:] = 0.0
+    if no_noise:
+        ph[:] = 0.0
     ph[-1] = 0.0
 
     # Amplitudes
@@ -242,13 +249,13 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None):
     F = A * np.exp(-np.complex(0, 1) * ph)
 
     # Form the negative frequency part
-    F_negative = np.conjugate(F)[::-1][1:]
+    #F_negative = np.conjugate(F)[::-1][1:]
 
     # Form the fourier transform
-    F_complete = np.concatenate((np.asarray([fft_zero]), F, F_negative))
+    #F_complete = np.concatenate((np.asarray([fft_zero]), F, F_negative))
 
     # create the time-series.  The complex part should be tiny.
-    T_sim = np.fft.ifft(F_complete)
+    #T_sim = np.fft.ifft(F_complete)
     T_sim = np.fft.irfft(np.concatenate((np.asarray([fft_zero]), F)))
 
     # The time series is formally complex.  Return the real part only.
