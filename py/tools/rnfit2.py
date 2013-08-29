@@ -108,6 +108,7 @@ class Do_MCMC:
     def showfit(self, loc=0, figure=2):
         """ Show a spectral fit summary plot"""
         # Construct a summary for each variable
+        print loc
         k = self.results[loc]['stats'].keys()
         description = []
         for key in k:

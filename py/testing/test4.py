@@ -8,12 +8,13 @@ import scipy
 import numpy as np
 from matplotlib import pyplot as plt
 import pymc
-from rnfit import Do_MCMC
+from rnfit2 import Do_MCMC
 import sunpy
 import pickle
 import os
 from pymcmodels import single_power_law_with_constant
 from cubetools import get_datacube
+from rnsimulation import TimeSeries
 
 
 # Directory where the data is
@@ -27,6 +28,9 @@ if True:
 else:
     directory = os.path.expanduser('~/Data/oscillations/mcateer/outgoing3/QS_E.sav')
     rootdir = os.path.expanduser('~/Desktop/')
+
+directory = os.path.expanduser('~/Data/AIA_Data/rn1/1/')
+
 print('Loading ' + directory)
 
 
@@ -42,7 +46,7 @@ nt = dc.shape[2]
 
 # Random subsamples
 # Number of samples
-nsample = np.min([nx * ny / 100, 250])
+nsample = 1# np.min([nx * ny / 100, 250])
 # Seed to ensure repeatability
 np.random.seed(seed=2)
 # Unique random locations
@@ -56,8 +60,12 @@ while isunique is False:
 
 # Result # 1 - add up all the emission and do the analysis on the full FOV
 full_ts = np.sum(dc, axis=(0, 1))
+t = 12.0 * np.arange(0, len(full_ts))
+
+ts = TimeSeries(t, full_ts)
+
 filename = rootdir + 'test4.full_ts.pickle'
-full_ts = Do_MCMC([full_ts], 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
+full_res = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
 
 # Result 2 - add up the time series from all the randomly selected locations
 # and do a fit
@@ -65,12 +73,14 @@ filename = rootdir + 'test4.rand_ts.pickle'
 rand_ts = np.zeros(shape=nt)
 for loc in locations:
     rand_ts = rand_ts + dc[loc[0], loc[1], :].flatten()
-rand_ts = Do_MCMC([rand_ts], 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
+ts = TimeSeries(t, rand_ts)
+rand_res = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
 
+"""
 # Result 3 - do all the randomly selected pixels one by one
 filename = rootdir + 'test4.rand_locations.pickle'
-data = []
+tss = []
 for loc in locations:
-    data.append(dc[loc[0], loc[1], :])
-zall = Do_MCMC(data, 12.0).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False).save(filename=filename)
-
+    tss.append(TimeSeries(t, dc[loc[0], loc[1], :].flatten()))
+zall = Do_MCMC(tss).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
+"""
