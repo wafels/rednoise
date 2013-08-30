@@ -60,13 +60,29 @@ while isunique is False:
 
 # Result # 1 - add up all the emission and do the analysis on the full FOV
 full_ts = np.sum(dc, axis=(0, 1))
-t = 12.0 * np.arange(0, len(full_ts))
 
+
+def fix_nonfinite(data):
+    """
+    Finds all the nonfinite regions in the data and replaces them with a simple
+    linear interpolation.
+    """
+    good_indexes = np.isfinite(data)
+    bad_indexes = np.logical_not(good_indexes)
+    good_data = data[good_indexes]
+    interpolated = np.interp(bad_indexes.nonzero()[0], good_indexes.nonzero()[0], good_data)
+    data[bad_indexes] = interpolated
+    return data
+
+full_ts = fix_nonfinite(full_ts)
+t = 12.0 * np.arange(0, len(full_ts))
 ts = TimeSeries(t, full_ts)
+
+
 
 filename = rootdir + 'test4.full_ts.pickle'
 full_res = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
-
+"""
 # Result 2 - add up the time series from all the randomly selected locations
 # and do a fit
 filename = rootdir + 'test4.rand_ts.pickle'
@@ -76,7 +92,6 @@ for loc in locations:
 ts = TimeSeries(t, rand_ts)
 rand_res = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
 
-"""
 # Result 3 - do all the randomly selected pixels one by one
 filename = rootdir + 'test4.rand_locations.pickle'
 tss = []
