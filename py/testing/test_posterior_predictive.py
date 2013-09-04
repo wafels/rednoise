@@ -7,22 +7,23 @@ indices.
 import numpy as np
 import os
 from rnfit2 import Do_MCMC
-from rnsimulation import TimeSeries, SimplePowerLawSpectrum, SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+from rnsimulation import TimeSeries, SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 from matplotlib import pyplot as plt
 from pymcmodels import single_power_law_with_constant
+plt.ion()
 
 
 # Create some fake data
 dt = 12.0
-nt = 300
-pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 1.0, -5.0], nt=nt, dt=dt)
+nt = 3600
+pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0], nt=nt, dt=dt)
 data = TimeSeriesFromPowerSpectrum(pls1).sample
 
 # Create a time series object
 ts = TimeSeries(dt * np.arange(0, nt), data)
 
 # Analyze using MCMC
-analysis = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=10000, burn=1000, thin=5, progress_bar=False)
+analysis = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
 
 # Do the posterior predictive statistics to measure GOF
 def vaughan_2010_T_R(iobs, S):
@@ -46,7 +47,7 @@ def vaughan_2010_T_LRT(logp_model1, logp_model2):
 
 
 def posterior_predictive_distribution(iobs, fit_results,
-                                      nsample=1,
+                                      nsample=1000,
                                       statistic='vaughan_2010_T_R',
                                       ):
     # Storage for the distribution results
@@ -72,7 +73,7 @@ def posterior_predictive_distribution(iobs, fit_results,
         # Get the simulated data's power spectrum
         S = ts.PowerSpectrum.Npower
 
-        # Calculate the required discrepancy statistic 
+        # Calculate the required discrepancy statistic
         if statistic == 'vaughan_2010_T_R':
             value = vaughan_2010_T_R(iobs, S)
         if statistic == 'vaughan_2010_T_SSE':
@@ -91,13 +92,30 @@ mp = analysis.results[0]["mp"]
 l = str(list(mp.variables)[0].__name__)
 
 # Best fit spectrum
-best_fit_power_spectrum = False
+mean = analysis.results[0]["mean"]
+std = analysis.results[0]["std"]
+best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
 
-# Observed power spectrum
+bfps1 = best_fit_power_spectrum / np.mean(best_fit_power_spectrum)
+
+bfps2 = bfps1 / np.std(bfps1)
+
+# Normalized observed power spectrum
 iobs = ts.PowerSpectrum.Npower
 
+plt.figure(1)
+plt.loglog(ts.PowerSpectrum.frequencies.positive, iobs)
+plt.loglog(ts.PowerSpectrum.frequencies.positive, bfps2)
+plt.show()
+
 # Calculate the posterior predictive distribution
-x = posterior_predictive_distribution(iobs, fit_results)
+x = posterior_predictive_distribution(iobs, fit_results, nsample=5000)
 
 # Calculate the discrepancy statistic
-value = vaughan_2010_T_R(iobs, best_fit_power_spectrum)
+value = vaughan_2010_T_R(iobs, bfps2)
+
+plt.figure(2)
+plt.hist(x, bins=100, range=[x.min(), x.min() + 100 * value])
+plt.axvline(value)
+plt.show()
+

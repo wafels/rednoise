@@ -18,6 +18,28 @@ class SampleTimes:
         self.units = units
 
 
+#def cadence(t, absoluteTolerance=0.5):
+    """#Get some information on the observed cadences in a SampleTimes object
+    cadences = t.time[1:] - t.time[0:-1]
+    segments = []
+    iStart = 0
+    iEnd = 0
+    nsegment = 0
+    repeat begin
+        repeat begin
+            iEnd = iEnd + 1
+            c0 = cadence[iStart]
+            c1 = cadence[iEnd]
+        endrep until (abs(c1-c0) gt absoluteTolerance) or (iEnd eq nt-2)
+        segment.append([iStart, iEnd])
+        nsegment = nsegment + 1
+        iStart = iEnd
+    endrep until (iEnd eq nt-2)
+"""
+#    return None
+#
+
+
 class Frequencies:
     def __init__(self, frequencies, label='frequency', units='Hz'):
         self.frequencies = frequencies
@@ -32,7 +54,7 @@ class PowerSpectrum:
         self.frequencies = Frequencies(frequencies)
         self.power = power
         self.ppower = self.power[self.frequencies.posindex]
-        self.label = 'Fourier power'
+        self.label = label
         # normalized power
         d1 = self.ppower / np.mean(self.ppower)
         self.Npower = d1 / np.std(d1)
@@ -46,7 +68,7 @@ class TimeSeries:
         self.data = data
         self.PowerSpectrum = PowerSpectrum(np.fft.fftfreq(self.SampleTimes.nt, self.SampleTimes.dt),
                                            np.abs(np.fft.fft(self.data)) ** 2)
-        self.label = 'data'
+        self.label = label
         self.units = units
 
 
@@ -169,6 +191,7 @@ class TimeSeriesFromPowerSpectrum():
 
         # get a sample of the desired length nt from the middle of the long time series
         self.sample = self.longtimeseries[nlts / 2 - self.nt / 2: nlts / 2 - self.nt / 2 + self.nt]
+
 
 def equally_spaced_nonzero_frequencies(n, dt):
     """
