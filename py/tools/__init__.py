@@ -11,3 +11,4 @@ import rnfit2
 import rnsimulation
 import rnspectralmodels
 import tssimulation
+import ppcheck

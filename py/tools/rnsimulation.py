@@ -177,7 +177,7 @@ class TimeSeriesFromPowerSpectrum():
         self.dt = self.powerspectrum.dt
 
         # Frequencies that we are calculating the power spectrum at
-        self.frequencies = np.arange(1, self.K + 1) / (self.V * self.nt * self.dt)
+        self.frequencies = np.arange(1, self.K + 1) / (1.0*(self.V * self.nt * self.dt))
         self.powerspectrum.frequencies = self.frequencies
         self.inputpower = self.powerspectrum.power()
 
