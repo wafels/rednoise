@@ -111,11 +111,13 @@ iobs = ts.PowerSpectrum.Npower# / mean / std
 plt.figure(1)
 plt.loglog(ts.PowerSpectrum.frequencies.positive, iobs, label="normalized observed power spectrum")
 plt.loglog(ts.PowerSpectrum.frequencies.positive, best_fit_power_spectrum, label="best fit")
-plt.legend()
+plt.axvline(1.0 / 300.0, color='k', linestyle='--', label='5 mins')
+plt.axvline(1.0 / 180.0, color='k', linestyle=':', label='3 mins')
+plt.legend(fontsize=10, loc=3)
 plt.show()
 
 # Calculate the posterior predictive distribution
-x, allpower = ppcheck.posterior_predictive_distribution(iobs, fit_results, nsample=5000, nt=nt, dt=dt)
+x, allpower = ppcheck.posterior_predictive_distribution(iobs, fit_results, nsample=1000, nt=nt, dt=dt)
 
 # Calculate the discrepancy statistic
 value = ppcheck.vaughan_2010_T_R(iobs, best_fit_power_spectrum)

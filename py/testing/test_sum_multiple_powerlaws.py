@@ -9,6 +9,7 @@ from rnsimulation import TimeSeries, SimplePowerLawSpectrum, TimeSeriesFromPower
 from matplotlib import pyplot as plt
 from rnfit2 import Do_MCMC
 from pymcmodels import single_power_law
+import ppcheck
 
 #
 dt = 12.0
@@ -21,11 +22,11 @@ pls = SimplePowerLawSpectrum([10.0, 2.0], nt=nt, dt=dt)
 tsnew3 = TimeSeriesFromPowerSpectrum(pls, V=V, W=W)
 
 i = 0
-ncount = 100000
+ncount = 10000
 data3 = np.zeros(shape=(nt))
 while i < ncount:
     i = i + 1
-    data3 = data3 + tsnew3.sample
+    data3 = data3 + tsnew3.sample * np.random.uniform()
 
 ts3 = TimeSeries(dt * np.arange(0, nt), data3)
 

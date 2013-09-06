@@ -105,10 +105,9 @@ class Do_MCMC:
         output.close()
         return self
 
-    def showfit(self, loc=0, figure=2):
+    def showfit(self, loc=0, figure=2, show_cor_seis=True):
         """ Show a spectral fit summary plot"""
         # Construct a summary for each variable
-        print loc
         k = self.results[loc]['stats'].keys()
         description = []
         for key in k:
@@ -133,6 +132,9 @@ class Do_MCMC:
                    label='low, 95% HPD')
         plt.loglog(x, y['fourier_power_spectrum']['95% HPD interval'][:, 1],
                    label='high, 95% HPD')
+        if show_cor_seis:
+            plt.axvline(1.0 / 300.0, color='k', linestyle='--', label='5 mins')
+            plt.axvline(1.0 / 180.0, color='k', linestyle=':', label='3 mins')
         plt.xlabel('frequencies (Hz)')
         plt.ylabel('normalized power')
         plt.title('model fit')

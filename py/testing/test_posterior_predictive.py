@@ -45,8 +45,11 @@ best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power
 iobs = ts.PowerSpectrum.Npower
 
 plt.figure(1)
-plt.loglog(ts.PowerSpectrum.frequencies.positive, iobs)
-plt.loglog(ts.PowerSpectrum.frequencies.positive, best_fit_power_spectrum)
+plt.loglog(ts.PowerSpectrum.frequencies.positive, iobs, label='normalized simulated power spectrum')
+plt.loglog(ts.PowerSpectrum.frequencies.positive, best_fit_power_spectrum, label ='best fit')
+plt.axvline(1.0 / 300.0, label='5 mins')
+plt.axvline(1.0 / 180.0, label='3 mins')
+plt.legend()
 plt.show()
 
 # Calculate the posterior predictive distribution
