@@ -53,13 +53,24 @@ plt.legend()
 plt.show()
 
 # Calculate the posterior predictive distribution
-x, allpower = ppcheck.posterior_predictive_distribution(iobs, fit_results, nsample=5000, nt=nt, dt=dt)
+nsample = 5000
+distribution, allpower = ppcheck.posterior_predictive_distribution(iobs, fit_results, nsample=nsample, nt=nt, dt=dt)
 
 # Calculate the discrepancy statistic
-value = ppcheck.vaughan_2010_T_R(iobs, best_fit_power_spectrum)
+# Calculate the discrepancy statistic
+value = {}
+value["vaughan_2010_T_R"] = ppcheck.vaughan_2010_T_R(iobs, best_fit_power_spectrum)
+value["vaughan_2010_T_SSE"] = ppcheck.vaughan_2010_T_SSE(iobs, best_fit_power_spectrum)
 
-plt.figure(2)
-plt.hist(x, bins=100, range=[x.min(), x.min() + 100 * value])
-plt.axvline(value)
-plt.show()
+for i, test_stat in enumerate(distribution):
+    x = np.asarray(distribution[test_stat])
+    v = value[test_stat]
+    plt.figure(2 + i)
+    plt.hist(x, bins=100, range=[x.min(), x.min() + 100 * v])
+    plt.axvline(v, label='best fit')
+    plt.xlabel('value of test statistic')
+    plt.ylabel('number found (%i samples)' % nsample)
+    plt.title(test_stat)
+    plt.show()
+
 

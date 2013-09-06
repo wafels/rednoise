@@ -43,4 +43,7 @@ plt.show()
 """
 z = Do_MCMC([ts3]).okgo(single_power_law, iter=50000, burn=10000, thin=5, progress_bar=False)
 
+
+
+
 #z = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)

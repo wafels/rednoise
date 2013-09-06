@@ -6,6 +6,7 @@ import numpy as np
 import rnspectralmodels
 import copy
 from scipy.stats import chi2, uniform
+from matplotlib import pyplot as plt
 
 
 class SampleTimes:
@@ -59,9 +60,15 @@ class PowerSpectrum:
         d1 = self.ppower / np.mean(self.ppower)
         self.Npower = d1 / np.std(d1)
 
+    def peek(self):
+        """
+        Generates a quick plot of the positive frequency part of the power
+        spectrum.
+        """
+        plt.plot(self.frequencies.positive, self.ppower)
 
 class TimeSeries:
-    def __init__(self, time, data, label='data', units=''):
+    def __init__(self, time, data, label='data', units=None):
         self.SampleTimes = SampleTimes(time)
         if self.SampleTimes.nt != data.size:
             raise ValueError('length of sample times not the same as the data')
@@ -71,6 +78,17 @@ class TimeSeries:
         self.label = label
         self.units = units
 
+    def peek(self):
+        """
+        Generates a quick plot of the data
+        """
+        plt.plot(self.SampleTimes.time, self.data)
+        plt.xlabel(self.SampleTimes.label + self.SampleTimes.units)
+        if self.units is not None:
+            plt.ylabel(self.label + self.units)
+        else:
+            plt.ylabel(self.label)
+        plt.show()
 
 class PowerLawPowerSpectrum:
     def __init__(self, parameters, frequencies=None, nt=300, dt=12.0):
