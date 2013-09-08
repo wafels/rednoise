@@ -9,7 +9,7 @@ from rnfit2 import Do_MCMC
 from rnsimulation import TimeSeries, SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 from matplotlib import pyplot as plt
 from pymcmodels import single_power_law_with_constant
-import ppcheck
+import ppcheck2
 
 
 # Create some fake data
@@ -18,13 +18,13 @@ nt = 300
 pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0], nt=nt, dt=dt)
 data = TimeSeriesFromPowerSpectrum(pls1).sample
 t = dt * np.arange(0, nt)
-#data = data + 0.5 * data.max() * np.sin(2 * np.pi * t / 300.0)
+data = data + 0.6 * data.max() * np.sin(2 * np.pi * t / 300.0)
 
 # Create a time series object
 ts = TimeSeries(t, data)
 
 # Analyze using MCMC
-analysis = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
+analysis = Do_MCMC([ts]).okgo(single_power_law_with_constant, iter=50000, burn=1000, thin=5, progress_bar=False)
 
 
 # Get the MCMC results from the analysis
@@ -44,6 +44,8 @@ best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power
 # Normalized observed power spectrum
 iobs = ts.PowerSpectrum.Npower
 
+value = ppcheck2.vaughan_2010_T_R(iobs, best_fit_power_spectrum)
+
 plt.figure(1)
 plt.loglog(ts.PowerSpectrum.frequencies.positive, iobs, label='normalized simulated power spectrum')
 plt.loglog(ts.PowerSpectrum.frequencies.positive, best_fit_power_spectrum, label ='best fit')
@@ -53,14 +55,22 @@ plt.legend()
 plt.show()
 
 # Calculate the posterior predictive distribution
-nsample = 5000
-distribution, allpower = ppcheck.posterior_predictive_distribution(iobs, fit_results, nsample=nsample, nt=nt, dt=dt)
+nsample = 7999
+#distribution, allpower = ppcheck2.posterior_predictive_distribution(iobs, fit_results, nsample=nsample, nt=nt, dt=dt)
+distribution = ppcheck2.posterior_predictive_distribution(best_fit_power_spectrum, fit_results, mean, std, nsample=nsample, nt=nt, dt=dt, M=analysis.results[0]["M"])
+plt.figure(2)
+plt.hist(distribution, bins=30, range=[distribution.min(), 1000.0])
+plt.axvline(value, label='best fit')
+plt.xlabel('value of test statistic')
+plt.ylabel('number found (%i samples)' % nsample)
+plt.show()
 
 # Calculate the discrepancy statistic
 # Calculate the discrepancy statistic
+"""
 value = {}
-value["vaughan_2010_T_R"] = ppcheck.vaughan_2010_T_R(iobs, best_fit_power_spectrum)
-value["vaughan_2010_T_SSE"] = ppcheck.vaughan_2010_T_SSE(iobs, best_fit_power_spectrum)
+value["vaughan_2010_T_R"] = ppcheck2.vaughan_2010_T_R(iobs, best_fit_power_spectrum)
+value["vaughan_2010_T_SSE"] = ppcheck2.vaughan_2010_T_SSE(iobs, best_fit_power_spectrum)
 
 for i, test_stat in enumerate(distribution):
     x = np.asarray(distribution[test_stat])
@@ -72,5 +82,4 @@ for i, test_stat in enumerate(distribution):
     plt.ylabel('number found (%i samples)' % nsample)
     plt.title(test_stat)
     plt.show()
-
-
+"""

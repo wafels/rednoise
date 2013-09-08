@@ -42,7 +42,6 @@ def single_power_law(analysis_frequencies, analysis_power):
                            beta=1.0 / fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
-
     # MCMC model as a list
     return locals()
 
@@ -82,6 +81,8 @@ def single_power_law_with_constant(analysis_frequencies, analysis_power):
                            beta=1.0 / fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
+
+    predictive = pymc.Exponential('predictive', beta=1.0 / fourier_power_spectrum)
 
     # MCMC model
     return locals()

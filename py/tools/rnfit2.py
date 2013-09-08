@@ -64,7 +64,11 @@ class Do_MCMC:
 
             # Set up the MCMC model
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
-            self.M = pymc.MCMC(self.pymcmodel)
+            # Get the MAP results
+            mp = pymc.MAP(self.pymcmodel)
+            mp.fit(method='fmin_powell')
+
+            self.M = pymc.MCMC(mp.variables)
 
             # Do the MCMC calculation
             self.M.sample(**kwargs)
@@ -73,13 +77,10 @@ class Do_MCMC:
             k = self.M.stats().keys()
             samples = {}
             for key in k:
-                if key is not 'fourier_power_spectrum':
+                if key not in ('fourier_power_spectrum', 'predictive'):
                     samples[key] = self.M.trace(key)[:]
 
             # Append the stats results and the samples
-            # Get the MAP results
-            mp = pymc.MAP(self.pymcmodel)
-            mp.fit()
             self.results.append({"timeseries": ts,
                                  "mean": power_mean,
                                  "std": power_std,
@@ -111,7 +112,7 @@ class Do_MCMC:
         k = self.results[loc]['stats'].keys()
         description = []
         for key in k:
-            if key is not 'fourier_power_spectrum':
+            if key not in ('fourier_power_spectrum', 'predictive'):
                 stats = self.results[loc]['stats']
                 mean = stats[key]['mean']
                 median = stats[key]['quantiles'][50]
