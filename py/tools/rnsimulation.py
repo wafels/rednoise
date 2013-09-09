@@ -56,9 +56,18 @@ class PowerSpectrum:
         self.power = power
         self.ppower = self.power[self.frequencies.posindex]
         self.label = label
-        # normalized power
-        d1 = self.ppower / np.mean(self.ppower)
-        self.Npower = d1 / np.std(d1)
+
+        # Mean power
+        self.vaughan_mean = np.mean(self.ppower)
+
+        # Power spectrum normalized by its mean
+        self.normed_by_mean = self.ppower / self.vaughan_mean
+
+        # Standard deviation of the normalized power
+        self.vaughan_std = np.std(self.normed_by_mean)
+
+        # Normalized power expressed in units of its standard deviation
+        self.Npower = self.normed_by_mean / self.vaughan_std
 
     def peek(self):
         """
@@ -66,6 +75,7 @@ class PowerSpectrum:
         spectrum.
         """
         plt.plot(self.frequencies.positive, self.ppower)
+
 
 class TimeSeries:
     def __init__(self, time, data, label='data', units=None):
@@ -89,6 +99,7 @@ class TimeSeries:
         else:
             plt.ylabel(self.label)
         plt.show()
+
 
 class PowerLawPowerSpectrum:
     def __init__(self, parameters, frequencies=None, nt=300, dt=12.0):
