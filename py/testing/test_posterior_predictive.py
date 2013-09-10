@@ -17,6 +17,7 @@ import ppcheck2
 # -----------------------------------------------------------------------------
 dt = 12.0
 nt = 300
+np.random.seed(seed=1)
 pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0], nt=nt, dt=dt)
 data = TimeSeriesFromPowerSpectrum(pls1).sample
 t = dt * np.arange(0, nt)
@@ -50,9 +51,12 @@ best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power
 
 # Normalized observed power spectrum
 iobs = ts.PowerSpectrum.Npower
+print "Normalized power"
+print iobs
 
 # Value of the test statistic using the best fit power spectrum
 value = ppcheck2.vaughan_2010_T_R(iobs, best_fit_power_spectrum)
+print "value ", value
 
 plt.figure(1)
 plt.loglog(ts.PowerSpectrum.frequencies.positive, iobs, label='normalized simulated power spectrum')
@@ -75,11 +79,12 @@ distribution = []
 nposterior = fit_results["power_law_index"].shape[0]
 
 # Number of samples taken from the posterior
-nsample = nposterior / 10
+nsample = 10
 
 # PyMC object
 M = analysis.results[0]["M"]
-
+print("sample predictive")
+M.trace("predictive")[0]
 # Use the PyMC predictive to generate power series taken from the posterior
 for i in range(0, nsample):
     # How many samples have we worked on?
@@ -87,9 +92,11 @@ for i in range(0, nsample):
 
     # get a random sample from the posterior
     r = np.random.randint(0, nposterior)
+    print r
 
     # Get a posterior power spectrum
     S = M.trace("predictive")[r]
+    print S
 
     # Normalize
     S = S / ts.PowerSpectrum.vaughan_mean

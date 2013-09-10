@@ -28,7 +28,7 @@ class Do_MCMC:
         self.M = None
 
     # Do the PyMC fit
-    def okgo(self, pymcmodel, locations=None, excise=None, **kwargs):
+    def okgo(self, pymcmodel, locations=None, MAP_only=None, **kwargs):
         """Controls the PyMC fit of the input data
 
         Parameters
@@ -55,21 +55,13 @@ class Do_MCMC:
             #print('Location number %i of %i' % (k + 1, self.nts))
             self.fpos = self.data[k][0]
             self.pwr = self.data[k][1]
-            # Do the MCMC
-            # Calculate the power at the positive frequencies
-            #self.pwr = ts.PowerSpectrum.ppower
-            #self.fpos = ts.PowerSpectrum.frequencies.positive
 
-            # Following Vaughan (2010): normalize to the mean power
-            #power_mean = np.mean(self.pwr)
-            #self.pwr = self.pwr / power_mean
-            # Normalize now to the standard deviation
-            #power_std = np.std(self.pwr)
-            #self.pwr = self.pwr / power_std
-
+            # Start at the MAP
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
             mp = pymc.MAP(self.pymcmodel)
             mp.fit(method='fmin_powell')
+            if MAP_only:
+                return mp
 
             # Set up the MCMC model
             self.M = pymc.MCMC(mp.variables)
@@ -190,5 +182,4 @@ class Do_MCMC:
             pwr = r["power"]
             mean = r['stats']['fourier_power_spectrum']['mean']
             self.mss.append(np.sum(((pwr - mean) / mean) ** 2) / (1.0 * (np.size(pwr))))
-
 

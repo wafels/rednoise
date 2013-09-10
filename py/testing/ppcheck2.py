@@ -1,5 +1,15 @@
 import numpy as np
-from rnsimulation import TimeSeries, SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum, noisy_power_spectrum
+from rnsimulation import SimplePowerLawSpectrumWithConstantBackground
+from rnfit2 import Do_MCMC
+from pymcmodels import single_power_law_with_constant
+
+
+# Calculate a statistic
+def calculate_statistic(k, iobs, S):
+    if k == 'vaughan_2010_T_R':
+        return vaughan_2010_T_R(iobs, S)
+    if k == 'vaughan_2010_T_SSE':
+        return vaughan_2010_T_SSE(iobs, S)
 
 
 # Do the posterior predictive statistics to measure GOF
@@ -23,44 +33,62 @@ Returns a test statistic used to compare nested models."""
     return -2 * (logp_model1 - logp_model2)
 
 
-def posterior_predictive_distribution(iobs, fit_results, passed_mean, passed_std,
+def posterior_predictive_distribution(ts, M,
                                       nsample=1000,
-                                      statistic='vaughan_2010_T_R',
-                                      nt=300, dt=12.0, M=None):
+                                      statistic=('vaughan_2010_T_R', 'vaughan_2010_T_SSE'),
+                                      verbose=True):
+    # Get some properties of the original time series
+    nt = ts.SampleTimes.nt
+    dt = ts.SampleTimes.dt
+
     # Storage for the distribution results
-    distribution = []
+    distribution = {k: [] for k in statistic}
 
-    # Sample from the Bayes posterior for the fit, generate a spectrum,
-    # and calculate the test statistic
+    # Number of posterior samples
+    nposterior = M.trace("power_law_index")[:].size
+
+    # Use the PyMC predictive to generate power series taken from the posterior
     for i in range(0, nsample):
+        # How many samples have we worked on?
+        if verbose:
+            print('Sample number %i out of %i' % (i + 1, nsample))
+
         # get a random sample from the posterior
-        r = np.random.randint(0, fit_results["power_law_index"].shape[0])
-        norm = fit_results["power_law_norm"][r]
-        index = fit_results["power_law_index"][r]
-        background = fit_results["background"][r]
+        r = np.random.randint(0, nposterior)
 
-        # Define some simulated time series data with the required spectral
-        # properties
-        pls = SimplePowerLawSpectrumWithConstantBackground([norm, index, background], nt=nt, dt=dt)
-        data = TimeSeriesFromPowerSpectrum(pls, V=1, W=1).sample
+        # Get a posterior power spectrum
+        S = M.trace("predictive")[i]
 
-        # Create a TimeSeries object from the simulated data
-        ts = TimeSeries(dt * np.arange(0, nt), data)
+        # Normalize
+        S = S / ts.PowerSpectrum.vaughan_mean
+        S = S / ts.PowerSpectrum.vaughan_std
 
-        # Get the simulated data's power spectrum
-        #S = ts.PowerSpectrum.Npower
-        #Sroot = pls.power()
-        #S = noisy_power_spectrum(Sroot)
-        S = M.trace("predictive")[r]
-        S = S / passed_mean
-        S = S / passed_std
-        for j in range(0, 100):
-            S2 = noisy_power_spectrum(S)
-            # Calculate the required discrepancy statistic
-            if statistic == 'vaughan_2010_T_R':
-                value = vaughan_2010_T_R(iobs, S2)
-            if statistic == 'vaughan_2010_T_SSE':
-                value = vaughan_2010_T_SSE(iobs, S2)
-            distribution.append(value)
+        # Generate the input for the MCMC algorithm
+        this2 = ([ts.PowerSpectrum.frequencies.positive, S],)
 
-    return np.array(distribution)
+        # Analyze using MCMC
+        analysis2 = Do_MCMC(this2).okgo(single_power_law_with_constant,
+                                 iter=50000, burn=1000, thin=5,
+                                    progress_bar=False)
+
+        # Get the MCMC results from the analysis
+        fit_results2 = analysis2.results[0]["samples"]
+
+        # Get the MAP values
+        mp2 = analysis2.results[0]["mp"]
+
+        # Get the MAP values
+        #mp2 = analysis2.results[0]["mp"]
+
+        # Best fit spectrum
+        best_fit_power_spectrum2 = SimplePowerLawSpectrumWithConstantBackground([mp2.power_law_norm.value,
+                                                                                 mp2.power_law_index.value,
+                                                                                 mp2.background.value],
+                                                                                nt=nt, dt=dt).power()
+
+        # Value of the test statistic using the best fit power spectrum
+        for k in statistic:
+            distribution[k].append(calculate_statistic(k,
+                                                       S,
+                                                       best_fit_power_spectrum2))
+    return distribution
