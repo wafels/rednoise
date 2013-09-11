@@ -73,11 +73,11 @@ class TimeSeries:
         self.label = label
         self.units = units
 
-    def peek(self):
+    def peek(self, **kwargs):
         """
         Generates a quick plot of the data
         """
-        plt.plot(self.SampleTimes.time, self.data)
+        plt.plot(self.SampleTimes.time, self.data, **kwargs)
         xunits = prepend_space(bracketize(self.SampleTimes.units))
         plt.xlabel(self.SampleTimes.label + xunits)
         if self.units is not None:
