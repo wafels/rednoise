@@ -159,19 +159,8 @@ class Do_MCMC:
         plt.legend(fontsize=10)
         plt.show()
 
-    def showts(self, loc=0, figure=1):
-        """ Show the time-series """
-        ts = self.data[loc]
-        plt.figure(figure)
-        plt.plot(ts.SampleTimes.time, ts.data, label='time series')
-        plt.xlabel('time (seconds)')
-        plt.ylabel('emission')
-        plt.legend(fontsize=10)
-        plt.show()
-
     def showall(self, loc=0):
         """Shows all the summary plots"""
-        self.showts(loc=loc, figure=1)
         self.showfit(loc=loc, figure=2)
         self.showdeviation(loc=loc, figure=3)
 
