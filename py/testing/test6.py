@@ -72,7 +72,7 @@ M = analysis.results[0]["M"]
 best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
 
 # -----------------------------------------------------------------------------
-# Now do the posterior predictive check
+# Now do the posterior predictive check - expensive
 # -----------------------------------------------------------------------------
 statistic = ('vaughan_2010_T_R', 'vaughan_2010_T_SSE')
 nsample = 1000

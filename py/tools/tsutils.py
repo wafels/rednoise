@@ -19,8 +19,8 @@ def fix_nonfinite(data):
 
 
 def unique_spatial_subsamples(shape, n):
-    """ Given a particular input array shape, generate 'n' random locations"""
-    # Unique random locations
+    """ Given a particular input array shape, generate 'n' unique random
+    locations"""
     isunique = False
     while isunique is False:
         rand_1 = np.random.randint(0, high=shape[0], size=n)
@@ -32,21 +32,28 @@ def unique_spatial_subsamples(shape, n):
 
 
 def cadence(t, absoluteTolerance=0.5):
-    """#Get some information on the observed cadences"""
-    """
-    cadences = t.time[1:] - t.time[0:-1]
+    """Get some information on the observed cadences"""
+    # raw cadences
+    cadences = t[1:] - t[0:-1]
+    n = len(cadences)
     segments = []
     iStart = 0
-    iEnd = 0
-    nsegment = 0
-    repeat begin
-        repeat begin
+    iEnd = 1
+    while iEnd <= n - 2:
+        c0 = cadences[iStart]
+        c1 = cadences[iEnd]
+        while (np.abs(c1 - c0) < absoluteTolerance) and (iEnd <= n - 2):
             iEnd = iEnd + 1
-            c0 = cadence[iStart]
-            c1 = cadence[iEnd]
-        endrep until (abs(c1-c0) gt absoluteTolerance) or (iEnd eq nt-2)
-        segment.append([iStart, iEnd])
-        nsegment = nsegment + 1
+            c0 = cadences[iStart]
+            c1 = cadences[iEnd]
+        segments.append([iStart, iEnd])
         iStart = iEnd
-    endrep until (iEnd eq nt-2)
-"""
+    return segments
+
+
+def longest_evenly_sampled(t, absoluteTolerance=0.5):
+    """Find which segments are the longest"""
+    segments = cadence(t, absoluteTolerance=absoluteTolerance)
+    segment_lengths = [seg[1] - seg[0] for seg in segments]
+    which_segments = (np.max(segment_lengths) == segment_lengths).nonzero()[0]
+    return [segments[k] for k in which_segments]
