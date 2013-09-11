@@ -22,10 +22,10 @@ plt.ion()
 
 # _____________________________________________________________________________
 # Main directory where the data is
-maindir = os.path.expanduser('~/Data/AIA_Data/rn2')
+maindir = os.path.expanduser('~/Data/AIA_Data/SOL2011-04-30T21-45-49L061C108')
 
 # Which wavelength to look at
-wave = '171'
+wave = '193'
 
 # Construct the directory
 directory = os.path.join(maindir, wave)
@@ -89,7 +89,8 @@ distribution = ppcheck2.posterior_predictive_distribution(ts,
 # -----------------------------------------------------------------------------
 # Summary plots
 # -----------------------------------------------------------------------------
-# Best fit
+
+# Plot the best fit
 plt.figure()
 plt.loglog(ts.PowerSpectrum.frequencies.positive, iobs, label="normalized observed power spectrum")
 plt.loglog(ts.PowerSpectrum.frequencies.positive, best_fit_power_spectrum, label="best fit")
