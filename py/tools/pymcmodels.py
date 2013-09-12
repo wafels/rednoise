@@ -25,8 +25,8 @@ def single_power_law(analysis_frequencies, analysis_power):
                                    doc='power law index')
 
     power_law_norm = pymc.Uniform('power_law_norm',
-                                  lower=-100.0,
-                                  upper=100.0,
+                                  lower=-7.0,
+                                  upper=7.0,
                                   doc='power law normalization')
 
     # Model for the power law spectrum
@@ -57,14 +57,14 @@ def single_power_law_with_constant(analysis_frequencies, analysis_power):
                                    doc='power law index')
 
     power_law_norm = pymc.Uniform('power_law_norm',
-                                  lower=-100.0,
-                                  upper=100.0,
+                                  lower=-10.0,
+                                  upper=10.0,
                                   doc='power law normalization')
 
     background = pymc.Uniform('background',
-                                  value=np.mean(np.log(analysis_power[-10:-1])),
-                                  lower=-100.0,
-                                  upper=100.0,
+                                  #value=np.mean(np.log(analysis_power[-10:-1])),
+                                  lower=-10.0,
+                                  upper=10.0,
                                   doc='background')
 
     # Model for the power law spectrum

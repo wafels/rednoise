@@ -60,6 +60,7 @@ class Do_MCMC:
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
             mp = pymc.MAP(self.pymcmodel)
             mp.fit(method='fmin_powell')
+            print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
             if MAP_only:
                 return mp
 
@@ -68,6 +69,7 @@ class Do_MCMC:
 
             # Do the MCMC calculation
             self.M.sample(**kwargs)
+            print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 
             # Get the samples
             k = self.M.stats().keys()

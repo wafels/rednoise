@@ -18,14 +18,14 @@ from timeseries import TimeSeries
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground
 
 # matplotlib interactive mode
-plt.ion()
+# plt.ion()
 
 # _____________________________________________________________________________
 # Main directory where the data is
-maindir = os.path.expanduser('~/Data/AIA_Data/SOL2011-04-30T21-45-49L061C108')
+maindir = os.path.expanduser('~/Data/AIA_Data/rn4/')
 
 # Which wavelength to look at
-wave = '193'
+wave = '304'
 
 # Construct the directory
 directory = os.path.join(maindir, wave)
@@ -33,20 +33,28 @@ directory = os.path.join(maindir, wave)
 # Load in the data
 print('Loading data from ' + directory)
 dc = get_datacube(directory)
-#ny = dc.shape[0]
-#nx = dc.shape[1]
+ny = dc.shape[0]
+nx = dc.shape[1]
 nt = dc.shape[2]
-
-# Result # 1 - add up all the emission and do the analysis on the full FOV
-full_ts = np.sum(dc, axis=(0, 1))
-
-# Fix the data for any non-finite entries
-full_ts = tsutils.fix_nonfinite(full_ts)
-
 # Create a time series object
 dt = 12.0
-t = dt * np.arange(0, len(full_ts))
-ts = TimeSeries(t, full_ts)
+t = dt * np.arange(0, nt)
+tsdummy = TimeSeries(t, t)
+iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
+
+# Result # 1 - add up all the emission and do the analysis on the full FOV
+full_ts = np.zeros((nt))
+for i in range(0, nx):
+    for j in range(0, ny):
+        d = dc[j, i, :].flatten()
+        # Fix the data for any non-finite entries
+        d = tsutils.fix_nonfinite(d)
+        d = d - np.mean(d)
+        d = d / np.std(d)
+        ts = TimeSeries(t, d)
+        iobs = iobs + ts.PowerSpectrum.Npower
+
+iobs = iobs / (1.0 * nx * ny)
 ts.label = 'emission (AIA ' + wave + ')'
 ts.units = 'counts'
 
@@ -70,15 +78,18 @@ M = analysis.results[0]["M"]
 
 # Best fit spectrum
 best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
+print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 
 # -----------------------------------------------------------------------------
 # Now do the posterior predictive check - expensive
 # -----------------------------------------------------------------------------
 statistic = ('vaughan_2010_T_R', 'vaughan_2010_T_SSE')
-nsample = 1000
+nsample = 10
 value = {}
 for k in statistic:
     value[k] = ppcheck2.calculate_statistic(k, iobs, best_fit_power_spectrum)
+
+print value
 
 distribution = ppcheck2.posterior_predictive_distribution(ts,
                                                           M,

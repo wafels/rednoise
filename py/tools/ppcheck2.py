@@ -2,6 +2,7 @@ import numpy as np
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground
 from rnfit2 import Do_MCMC
 from pymcmodels import single_power_law_with_constant
+from matplotlib import pyplot as plt
 
 
 # Calculate a statistic
@@ -57,11 +58,11 @@ def posterior_predictive_distribution(ts, M,
         r = np.random.randint(0, nposterior)
 
         # Get a posterior power spectrum
-        S = M.trace("predictive")[i]
+        S = M.trace("predictive")[r]
 
         # Normalize
-        S = S / ts.PowerSpectrum.vaughan_mean
-        S = S / ts.PowerSpectrum.vaughan_std
+        #S = S / ts.PowerSpectrum.vaughan_mean
+        #S = S / ts.PowerSpectrum.vaughan_std
 
         # Generate the input for the MCMC algorithm
         this2 = ([ts.PowerSpectrum.frequencies.positive, S],)
@@ -72,7 +73,7 @@ def posterior_predictive_distribution(ts, M,
                                     progress_bar=False)
 
         # Get the MCMC results from the analysis
-        fit_results2 = analysis2.results[0]["samples"]
+        #fit_results2 = analysis2.results[0]["samples"]
 
         # Get the MAP values
         mp2 = analysis2.results[0]["mp"]
@@ -85,10 +86,19 @@ def posterior_predictive_distribution(ts, M,
                                                                                  mp2.power_law_index.value,
                                                                                  mp2.background.value],
                                                                                 nt=nt, dt=dt).power()
+        plt.subplot(3, 1, 1)
+        plt.loglog(ts.PowerSpectrum.frequencies.positive, S)
+        plt.loglog(ts.PowerSpectrum.frequencies.positive, best_fit_power_spectrum2)
+        plt.subplot(3, 1, 2)
+        plt.loglog(ts.PowerSpectrum.frequencies.positive, 2 * S / best_fit_power_spectrum2)
+        plt.subplot(3, 1, 3)
+        plt.loglog(ts.PowerSpectrum.frequencies.positive, ((S - best_fit_power_spectrum2) / best_fit_power_spectrum2)**2)
+        plt.show()
 
         # Value of the test statistic using the best fit power spectrum
         for k in statistic:
             distribution[k].append(calculate_statistic(k,
                                                        S,
                                                        best_fit_power_spectrum2))
+            print k, calculate_statistic(k, S, best_fit_power_spectrum2)
     return distribution
