@@ -56,9 +56,18 @@ class PowerSpectrum:
         self.power = power
         self.ppower = self.power[self.frequencies.posindex]
         self.label = label
-        # normalized power
-        d1 = self.ppower / np.mean(self.ppower)
-        self.Npower = d1 / np.std(d1)
+
+        # Mean power
+        self.vaughan_mean = np.mean(self.ppower)
+
+        # Power spectrum normalized by its mean
+        self.normed_by_mean = self.ppower / self.vaughan_mean
+
+        # Standard deviation of the normalized power
+        self.vaughan_std = np.std(self.normed_by_mean)
+
+        # Normalized power expressed in units of its standard deviation
+        self.Npower = self.normed_by_mean / self.vaughan_std
 
     def peek(self):
         """
@@ -66,6 +75,7 @@ class PowerSpectrum:
         spectrum.
         """
         plt.plot(self.frequencies.positive, self.ppower)
+
 
 class TimeSeries:
     def __init__(self, time, data, label='data', units=None):
@@ -89,6 +99,7 @@ class TimeSeries:
         else:
             plt.ylabel(self.label)
         plt.show()
+
 
 class PowerLawPowerSpectrum:
     def __init__(self, parameters, frequencies=None, nt=300, dt=12.0):
@@ -119,12 +130,12 @@ class PowerLawPowerSpectrum:
         """
         return None
 
-    def sample(self, seed=None):
+    def sample(self):
         """
         Return a noisy power spectrum sampled from the probability distribution
         of the noisy spectra
         """
-        return noisy_power_spectrum(self.power(), seed=seed)
+        return noisy_power_spectrum(self.power())
 
 
 class ConstantSpectrum(PowerLawPowerSpectrum):
@@ -148,7 +159,7 @@ class BrokenPowerLaw(PowerLawPowerSpectrum):
 
 
 class TimeSeriesFromPowerSpectrum():
-    def __init__(self, powerspectrum, V=10, W=10, seed=None, fft_zero=0.0, **kwargs):
+    def __init__(self, powerspectrum, V=10, W=10, fft_zero=0.0, **kwargs):
         """
         Create a time series with a given type of power spectrum.  This object
         can be used to generate time series that have a given power spectrum.
@@ -176,8 +187,6 @@ class TimeSeriesFromPowerSpectrum():
         fft_zero : scalar number
             The value at the zero Fourier frequency.
 
-        seed : scalar number
-            A seed value for the random number generator
         """
         self.powerspectrum = copy.deepcopy(powerspectrum)
         self.nt = self.powerspectrum.nt
@@ -186,9 +195,6 @@ class TimeSeriesFromPowerSpectrum():
         # Vaughan (2010)
         self.V = V
         self.W = W
-
-        # Random number seed
-        self.seed = seed
 
         #
         self.K = self.V * self.W * self.nt / 2
@@ -201,7 +207,7 @@ class TimeSeriesFromPowerSpectrum():
 
         # the fully over-sampled timeseries, with a sampling cadence of dt/W, with a
         # duration of V*N*dt
-        self.oversampled = time_series_from_power_spectrum(self.inputpower, fft_zero=self.fft_zero, seed=self.seed, **kwargs)
+        self.oversampled = time_series_from_power_spectrum(self.inputpower, fft_zero=self.fft_zero, **kwargs)
 
         # Subsample the time-series back down to the requested cadence of dt
         self.longtimeseries = self.oversampled[0:len(self.oversampled):self.W]
@@ -219,7 +225,7 @@ def equally_spaced_nonzero_frequencies(n, dt):
     return all_fft[all_fft > 0]
 
 
-def noisy_power_spectrum(S, seed=None):
+def noisy_power_spectrum(S):
     """
     Create a noisy power spectrum, given some input power spectrum S, following
     the recipe of Vaughan (2010), MNRAS, 402, 307, appendix B
@@ -230,21 +236,19 @@ def noisy_power_spectrum(S, seed=None):
         Theoretical fourier power spectrum, from the first non-zero frequency
         up to the Nyquist frequency.
 
-    seed : scalar number
-        A seed value for the random number generator
     """
     # Number of positive frequencies to calculate.
     K = len(S)
 
     # chi-squared(2) random numbers for all frequencies except the nyquist
     # frequency
-    X = np.concatenate((chi2.rvs(2, size=K - 1, seed=seed),
-                        chi2.rvs(1, size=1, seed=seed)))
+    X = np.concatenate((chi2.rvs(2, size=K - 1),
+                        chi2.rvs(1, size=1)))
     # power spectrum
     return S * X / 2.0
 
 
-def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None, no_noise=False):
+def time_series_from_power_spectrum(S, fft_zero=0.0, no_noise=False):
     """Create a time series with power law noise, following the recipe
     of Vaughan (2010), MNRAS, 402, 307, appendix B
 
@@ -256,10 +260,6 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None, no_noise=False):
 
     fft_zero : scalar number
         The value at the zero Fourier frequency.
-
-    seed : scalar number
-        A seed value for the random number generator
-
     """
 
     # Number of positive frequencies to calculate.  This fills in the Fourier
@@ -271,10 +271,10 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, seed=None, no_noise=False):
     if no_noise:
         I = S
     else:
-        I = noisy_power_spectrum(S, seed=seed)
+        I = noisy_power_spectrum(S)
 
     # random phases, except for the nyquist frequency.
-    ph = uniform.rvs(loc=-np.pi / 2.0, scale=np.pi, size=K, seed=seed)
+    ph = uniform.rvs(loc=-np.pi / 2.0, scale=np.pi, size=K)
     if no_noise:
         ph[:] = 0.0
     ph[-1] = 0.0

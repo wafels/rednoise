@@ -71,19 +71,7 @@ while isunique is False:
 full_ts = np.sum(dc, axis=(0, 1))
 
 
-def fix_nonfinite(data):
-    """
-    Finds all the nonfinite regions in the data and replaces them with a simple
-    linear interpolation.
-    """
-    good_indexes = np.isfinite(data)
-    bad_indexes = np.logical_not(good_indexes)
-    good_data = data[good_indexes]
-    interpolated = np.interp(bad_indexes.nonzero()[0], good_indexes.nonzero()[0], good_data)
-    data[bad_indexes] = interpolated
-    return data
-
-full_ts = fix_nonfinite(full_ts)
+full_ts = tsutils.fix_nonfinite(full_ts)
 t = dt * np.arange(0, len(full_ts))
 ts = TimeSeries(t, full_ts)
 

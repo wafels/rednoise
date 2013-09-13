@@ -23,8 +23,12 @@ class Do_MCMC:
         # Number of time series
         self.ndata = len(self.data)
 
+        #
+        self.pymcmodel = None
+        self.M = None
+
     # Do the PyMC fit
-    def okgo(self, pymcmodel, locations=None, **kwargs):
+    def okgo(self, pymcmodel, locations=None, MAP_only=None, **kwargs):
         """Controls the PyMC fit of the input data
 
         Parameters
@@ -47,31 +51,25 @@ class Do_MCMC:
 
         for k in self.locations:
             # Progress
-            print(' ')
-            print('Location number %i of %i' % (k + 1, self.nts))
-            ts = self.data[k]
-            # Do the MCMC
-            # Calculate the power at the positive frequencies
-            self.pwr = ts.PowerSpectrum.ppower
-            self.fpos = ts.PowerSpectrum.frequencies.positive
+            #print(' ')
+            #print('Location number %i of %i' % (k + 1, self.nts))
+            self.fpos = self.data[k][0]
+            self.pwr = self.data[k][1]
 
-            # Following Vaughan (2010): normalize to the mean power
-            power_mean = np.mean(self.pwr)
-            self.pwr = self.pwr / power_mean
-            # Normalize now to the standard deviation
-            power_std = np.std(self.pwr)
-            self.pwr = self.pwr / power_std
-
-            # Set up the MCMC model
+            # Start at the MAP
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
-            # Get the MAP results
             mp = pymc.MAP(self.pymcmodel)
             mp.fit(method='fmin_powell')
+            print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
+            if MAP_only:
+                return mp
 
+            # Set up the MCMC model
             self.M = pymc.MCMC(mp.variables)
 
             # Do the MCMC calculation
             self.M.sample(**kwargs)
+            print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 
             # Get the samples
             k = self.M.stats().keys()
@@ -81,10 +79,7 @@ class Do_MCMC:
                     samples[key] = self.M.trace(key)[:]
 
             # Append the stats results and the samples
-            self.results.append({"timeseries": ts,
-                                 "mean": power_mean,
-                                 "std": power_std,
-                                 "power": self.pwr,
+            self.results.append({"power": self.pwr,
                                  "frequencies": self.fpos,
                                  "location": k,
                                  "stats": self.M.stats(),
@@ -166,19 +161,8 @@ class Do_MCMC:
         plt.legend(fontsize=10)
         plt.show()
 
-    def showts(self, loc=0, figure=1):
-        """ Show the time-series """
-        ts = self.data[loc]
-        plt.figure(figure)
-        plt.plot(ts.SampleTimes.time, ts.data, label='time series')
-        plt.xlabel('time (seconds)')
-        plt.ylabel('emission')
-        plt.legend(fontsize=10)
-        plt.show()
-
     def showall(self, loc=0):
         """Shows all the summary plots"""
-        self.showts(loc=loc, figure=1)
         self.showfit(loc=loc, figure=2)
         self.showdeviation(loc=loc, figure=3)
 
@@ -189,5 +173,4 @@ class Do_MCMC:
             pwr = r["power"]
             mean = r['stats']['fourier_power_spectrum']['mean']
             self.mss.append(np.sum(((pwr - mean) / mean) ** 2) / (1.0 * (np.size(pwr))))
-
 

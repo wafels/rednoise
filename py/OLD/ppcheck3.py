@@ -23,44 +23,29 @@ Returns a test statistic used to compare nested models."""
     return -2 * (logp_model1 - logp_model2)
 
 
-
 def posterior_predictive_distribution(iobs, fit_results, passed_mean, passed_std,
                                       nsample=1000,
                                       statistic='vaughan_2010_T_R',
-                                      nt=300, dt=12.0, M=None
-                                      ):
+                                      nt=300, dt=12.0, M=None):
     # Storage for the distribution results
     distribution = []
 
-    # Sample from the Bayes posterior for the fit, generate a spectrum,
-    # and calculate the test statistic
+    # Use the PyMC predictive
     for i in range(0, nsample):
         # get a random sample from the posterior
         r = np.random.randint(0, fit_results["power_law_index"].shape[0])
-        norm = fit_results["power_law_norm"][r]
-        index = fit_results["power_law_index"][r]
-        background = fit_results["background"][r]
-
-        # Define some simulated time series data with the required spectral
-        # properties
-        pls = SimplePowerLawSpectrumWithConstantBackground([norm, index, background], nt=nt, dt=dt)
-        data = TimeSeriesFromPowerSpectrum(pls, V=1, W=1).sample
-
-        # Create a TimeSeries object from the simulated data
-        ts = TimeSeries(dt * np.arange(0, nt), data)
-
-        # Get the simulated data's power spectrum
-        #S = ts.PowerSpectrum.Npower
-        #Sroot = pls.power()
-        #S = noisy_power_spectrum(Sroot)
-        S = M.trace("predictive")[i]
+        
+        # Get a posterior
+        S = M.trace("predictive")[r]
         S = S / passed_mean
         S = S / passed_std
-        # Calculate the required discrepancy statistic
-        if statistic == 'vaughan_2010_T_R':
-            value = vaughan_2010_T_R(iobs, S)
-        if statistic == 'vaughan_2010_T_SSE':
-            value = vaughan_2010_T_SSE(iobs, S)
-        distribution.append(value)
+        for j in range(0, 100):
+            S2 = noisy_power_spectrum(S)
+            # Calculate the required discrepancy statistic
+            if statistic == 'vaughan_2010_T_R':
+                value = vaughan_2010_T_R(iobs, S2)
+            if statistic == 'vaughan_2010_T_SSE':
+                value = vaughan_2010_T_SSE(iobs, S2)
+            distribution.append(value)
 
     return np.array(distribution)
