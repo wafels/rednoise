@@ -19,28 +19,6 @@ class SampleTimes:
         self.units = units
 
 
-#def cadence(t, absoluteTolerance=0.5):
-    """#Get some information on the observed cadences in a SampleTimes object
-    cadences = t.time[1:] - t.time[0:-1]
-    segments = []
-    iStart = 0
-    iEnd = 0
-    nsegment = 0
-    repeat begin
-        repeat begin
-            iEnd = iEnd + 1
-            c0 = cadence[iStart]
-            c1 = cadence[iEnd]
-        endrep until (abs(c1-c0) gt absoluteTolerance) or (iEnd eq nt-2)
-        segment.append([iStart, iEnd])
-        nsegment = nsegment + 1
-        iStart = iEnd
-    endrep until (iEnd eq nt-2)
-"""
-#    return None
-#
-
-
 class Frequencies:
     def __init__(self, frequencies, label='frequency', units='Hz'):
         self.frequencies = frequencies

@@ -5,58 +5,42 @@ Co-align a set of maps and make sure the
 
 # Test 6: Posterior predictive checking
 import numpy as np
-import os
+#import os
 from matplotlib import pyplot as plt
-import sunpy
-import pymc
-import tsutils
-from rnfit2 import Do_MCMC
+#import sunpy
+#import pymc
+#import tsutils
+from rnfit2 import Do_MCMC, rnsave
 import ppcheck2
 from pymcmodels import single_power_law_with_constant
-from cubetools import get_datacube
+#from cubetools import get_datacube
 from timeseries import TimeSeries
-from rnsimulation import SimplePowerLawSpectrumWithConstantBackground
+from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+#import pickle
 
 # matplotlib interactive mode
 # plt.ion()
 
 # _____________________________________________________________________________
-# Main directory where the data is
-maindir = os.path.expanduser('~/Data/AIA_Data/rn4/')
+# Set up where to save the data, and the file type/
+save = rnsave(root='~/ts/pickle', description='simulated', filetype='pickle')
 
-# Which wavelength to look at
-wave = '304'
+if True:
+    print('Fake data')
+    dt = 12.0
+    nt = 300
+    np.random.seed(seed=1)
+    pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0],
+                                                        nt=nt,
+                                                        dt=dt)
+    data = TimeSeriesFromPowerSpectrum(pls1).sample
+    t = dt * np.arange(0, nt)
+    amplitude = 0.0
+    data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
+    ts = TimeSeries(t, data)
 
-# Construct the directory
-directory = os.path.join(maindir, wave)
-
-# Load in the data
-print('Loading data from ' + directory)
-dc = get_datacube(directory)
-ny = dc.shape[0]
-nx = dc.shape[1]
-nt = dc.shape[2]
-# Create a time series object
-dt = 12.0
-t = dt * np.arange(0, nt)
-tsdummy = TimeSeries(t, t)
-iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
-
-# Result # 1 - add up all the emission and do the analysis on the full FOV
-full_ts = np.zeros((nt))
-for i in range(0, nx):
-    for j in range(0, ny):
-        d = dc[j, i, :].flatten()
-        # Fix the data for any non-finite entries
-        d = tsutils.fix_nonfinite(d)
-        d = d - np.mean(d)
-        d = d / np.std(d)
-        ts = TimeSeries(t, d)
-        iobs = iobs + ts.PowerSpectrum.Npower
-
-iobs = iobs / (1.0 * nx * ny)
-ts.label = 'emission (AIA ' + wave + ')'
-ts.units = 'counts'
+# Save the time-series
+save.ts(ts)
 
 # Get the normalized power and the positive frequencies
 iobs = ts.PowerSpectrum.Npower
@@ -65,13 +49,27 @@ this = ([ts.PowerSpectrum.frequencies.positive, iobs],)
 # -----------------------------------------------------------------------------
 # Analyze using MCMC
 # -----------------------------------------------------------------------------
-analysis = Do_MCMC(this).okgo(single_power_law_with_constant, iter=50000, burn=10000, thin=5, progress_bar=False)
+analysis = Do_MCMC(this).okgo(single_power_law_with_constant,
+                              iter=50000,
+                              burn=10000,
+                              thin=5,
+                              progress_bar=False,
+                              db=save.filetype,
+                              dbname=save.MCMC_filename)
 
 # Get the MAP values
 mp = analysis.results[0]["mp"]
 
 # Get the full MCMC object
-M = analysis.results[0]["M"]
+M = analysis.results.M
+
+# Save the MCMC output using the recommended save functionality
+save.PyMC_MCMC(M)
+
+# Save everything else
+datatype = 'analysis_summary'
+save.analysis_summary(analysis)
+
 
 # Get the list of variable names
 #l = str(list(mp.variables)[0].__name__)
@@ -81,7 +79,7 @@ best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power
 print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 
 # -----------------------------------------------------------------------------
-# Now do the posterior predictive check - expensive
+# Now do the posterior predictive check - computationally time-consuming
 # -----------------------------------------------------------------------------
 statistic = ('vaughan_2010_T_R', 'vaughan_2010_T_SSE')
 nsample = 10
@@ -96,6 +94,8 @@ distribution = ppcheck2.posterior_predictive_distribution(ts,
                                                           nsample=nsample,
                                                           statistic=statistic,
                                                           verbose=True)
+# Save the test statistic distribution information
+save.posterior_predictive((value, distribution))
 
 # -----------------------------------------------------------------------------
 # Summary plots

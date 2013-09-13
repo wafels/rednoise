@@ -86,7 +86,7 @@ def posterior_predictive_distribution(ts, M,
                                                                                  mp2.power_law_index.value,
                                                                                  mp2.background.value],
                                                                                 nt=nt, dt=dt).power()
-        plt.subplot(3, 1, 1)
+        """plt.subplot(3, 1, 1)
         plt.loglog(ts.PowerSpectrum.frequencies.positive, S)
         plt.loglog(ts.PowerSpectrum.frequencies.positive, best_fit_power_spectrum2)
         plt.subplot(3, 1, 2)
@@ -94,7 +94,7 @@ def posterior_predictive_distribution(ts, M,
         plt.subplot(3, 1, 3)
         plt.loglog(ts.PowerSpectrum.frequencies.positive, ((S - best_fit_power_spectrum2) / best_fit_power_spectrum2)**2)
         plt.show()
-
+        """
         # Value of the test statistic using the best fit power spectrum
         for k in statistic:
             distribution[k].append(calculate_statistic(k,

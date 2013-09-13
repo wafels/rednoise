@@ -5,6 +5,7 @@ import numpy as np
 import pymc
 import pickle
 import matplotlib.pyplot as plt
+import os
 
 
 class Do_MCMC:
@@ -28,7 +29,7 @@ class Do_MCMC:
         self.M = None
 
     # Do the PyMC fit
-    def okgo(self, pymcmodel, locations=None, MAP_only=None, **kwargs):
+    def okgo(self, pymcmodel, locations=None, MAP_only=None, db=None, dbname=None, **kwargs):
         """Controls the PyMC fit of the input data
 
         Parameters
@@ -60,16 +61,19 @@ class Do_MCMC:
             self.pymcmodel = pymcmodel(self.fpos, self.pwr)
             mp = pymc.MAP(self.pymcmodel)
             mp.fit(method='fmin_powell')
-            print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
-            if MAP_only:
-                return mp
+            #print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
+            #if MAP_only:
+            #    return mp
 
             # Set up the MCMC model
-            self.M = pymc.MCMC(mp.variables)
+            if (db is not None) and (dbname is not None):
+                self.M = pymc.MCMC(mp.variables, db=db, dbname=dbname)
+            else:
+                self.M = pymc.MCMC(mp.variables)
 
             # Do the MCMC calculation
             self.M.sample(**kwargs)
-            print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
+            #print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 
             # Get the samples
             k = self.M.stats().keys()
@@ -84,8 +88,7 @@ class Do_MCMC:
                                  "location": k,
                                  "stats": self.M.stats(),
                                  "samples": samples,
-                                 "mp": mp,
-                                 "M": self.M})
+                                 "mp": mp})
         return self
 
     def save(self, filename='Do_MCMC_output.pickle'):
@@ -174,3 +177,49 @@ class Do_MCMC:
             mean = r['stats']['fourier_power_spectrum']['mean']
             self.mss.append(np.sum(((pwr - mean) / mean) ** 2) / (1.0 * (np.size(pwr))))
 
+
+class rnsave:
+    """
+    Simple class that governs filenames and locations for where the data is
+    saved.
+    """
+    def __init__(self, root='~', description='no_description', filetype='pickle'):
+        self.root = root
+        self.description = description
+        self.filetype = filetype
+        # Full path
+        self.absolutedir = os.path.expanduser(self.root)
+        self.savelocation = os.path.join(self.absolutedir, self.description)
+
+        # Make the subdirectory if it does not exist already.
+        if not os.path.isdir(self.savelocation):
+            os.makedirs(self.savelocation)
+        
+        # The root filename has to be prefixed with the datatype
+        self.rootfilename = self.description + '.' + self.filetype
+        
+        # The PyMC_MCMC filename
+        self.MCMC_filename = 'PyMC_MCMC' + '.' + self.rootfilename
+
+    def save(self, obj, datatype):
+        """Generic save routine for simple objects.  The MCMC object has its
+        own save methods."""
+        if self.filetype == 'pickle':
+            filename = datatype + '.' + self.rootfilename
+            outfilename = os.path.join(self.savelocation, filename)
+            output = open(outfilename, 'wb')
+            pickle.dump(obj, output)
+            output.close()
+            print('Saved to ' + outfilename)
+
+    def ts(self, obj):
+        self.save(obj, 'timeseries')
+
+    def posterior_predictive(self, obj):
+        self.save(obj, 'posterior_predictive')
+
+    def analysis_summary(self, obj):
+        self.save(obj, 'analysis_summary')
+    
+    def PyMC_MCMC(self, obj):
+        obj.db.close()
