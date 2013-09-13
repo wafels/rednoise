@@ -57,7 +57,7 @@ plt.show()
 # Calculate the posterior predictive distribution
 nsample = 7999
 #distribution, allpower = ppcheck2.posterior_predictive_distribution(iobs, fit_results, nsample=nsample, nt=nt, dt=dt)
-distribution = ppcheck2.posterior_predictive_distribution(best_fit_power_spectrum, fit_results, mean, std, nsample=nsample, nt=nt, dt=dt, M=analysis.results[0]["M"])
+distribution = ppcheck2.posterior_predictive_distribution(iobs, fit_results, mean, std, nsample=nsample, nt=nt, dt=dt, M=analysis.results[0]["M"])
 plt.figure(2)
 plt.hist(distribution, bins=30, range=[distribution.min(), 1000.0])
 plt.axvline(value, label='best fit')
