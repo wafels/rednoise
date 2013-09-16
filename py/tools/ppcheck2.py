@@ -76,7 +76,7 @@ def posterior_predictive_distribution(ts, M,
         #fit_results2 = analysis2.results[0]["samples"]
 
         # Get the MAP values
-        mp2 = analysis2.results[0]["mp"]
+        mp2 = analysis2.mp
 
         # Get the MAP values
         #mp2 = analysis2.results[0]["mp"]

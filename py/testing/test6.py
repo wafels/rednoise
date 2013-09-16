@@ -22,11 +22,9 @@ from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSerie
 # plt.ion()
 
 # _____________________________________________________________________________
-# Set up where to save the data, and the file type/
-save = rnsave(root='~/ts/pickle', description='simulated', filetype='pickle')
 
 if True:
-    print('Fake data')
+    print('Simulated data')
     dt = 12.0
     nt = 300
     np.random.seed(seed=1)
@@ -35,11 +33,15 @@ if True:
                                                         dt=dt)
     data = TimeSeriesFromPowerSpectrum(pls1).sample
     t = dt * np.arange(0, nt)
-    amplitude = 0.0
+    amplitude = 0.3
     data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
     ts = TimeSeries(t, data)
 
 # Save the time-series
+# Set up where to save the data, and the file type/
+save = rnsave(root='~/ts/pickle',
+              description='simulated.' + str(amplitude),
+              filetype='pickle')
 save.ts(ts)
 
 # Get the normalized power and the positive frequencies
@@ -58,17 +60,16 @@ analysis = Do_MCMC(this).okgo(single_power_law_with_constant,
                               dbname=save.MCMC_filename)
 
 # Get the MAP values
-mp = analysis.results[0]["mp"]
+mp = analysis.mp
 
 # Get the full MCMC object
-M = analysis.results.M
+M = analysis.M
 
 # Save the MCMC output using the recommended save functionality
 save.PyMC_MCMC(M)
 
 # Save everything else
-datatype = 'analysis_summary'
-save.analysis_summary(analysis)
+save.analysis_summary(analysis.results[0])
 
 
 # Get the list of variable names
@@ -82,7 +83,7 @@ print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 # Now do the posterior predictive check - computationally time-consuming
 # -----------------------------------------------------------------------------
 statistic = ('vaughan_2010_T_R', 'vaughan_2010_T_SSE')
-nsample = 10
+nsample = 1000
 value = {}
 for k in statistic:
     value[k] = ppcheck2.calculate_statistic(k, iobs, best_fit_power_spectrum)

@@ -3,7 +3,7 @@ Spectra for use with the red noise MCMC analysis
 """
 
 import numpy as np
-   
+
 
 def fnorm(f, fnorm):
     """ Normalize the frequency spectrum"""

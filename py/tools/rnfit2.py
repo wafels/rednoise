@@ -76,19 +76,21 @@ class Do_MCMC:
             #print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 
             # Get the samples
-            k = self.M.stats().keys()
+            zzz = self.M.stats().keys()
             samples = {}
-            for key in k:
+            for key in zzz:
                 if key not in ('fourier_power_spectrum', 'predictive'):
                     samples[key] = self.M.trace(key)[:]
+
+            #TODO: Get the MAP values and explicitly save them
+            self.mp = mp
 
             # Append the stats results and the samples
             self.results.append({"power": self.pwr,
                                  "frequencies": self.fpos,
                                  "location": k,
                                  "stats": self.M.stats(),
-                                 "samples": samples,
-                                 "mp": mp})
+                                 "samples": samples})
         return self
 
     def save(self, filename='Do_MCMC_output.pickle'):
@@ -194,12 +196,13 @@ class rnsave:
         # Make the subdirectory if it does not exist already.
         if not os.path.isdir(self.savelocation):
             os.makedirs(self.savelocation)
-        
+
         # The root filename has to be prefixed with the datatype
         self.rootfilename = self.description + '.' + self.filetype
-        
+
         # The PyMC_MCMC filename
-        self.MCMC_filename = 'PyMC_MCMC' + '.' + self.rootfilename
+        self.MCMC_filename = os.path.join(self.savelocation,
+                                          'PyMC_MCMC' + '.' + self.rootfilename)
 
     def save(self, obj, datatype):
         """Generic save routine for simple objects.  The MCMC object has its
@@ -220,6 +223,6 @@ class rnsave:
 
     def analysis_summary(self, obj):
         self.save(obj, 'analysis_summary')
-    
+
     def PyMC_MCMC(self, obj):
         obj.db.close()
