@@ -107,7 +107,7 @@ def broken_power_law(analysis_frequencies, analysis_power,
                           doc='delta2')
 
     breakf = pymc.Uniform('breakf',
-                          lower=np.log10(analysis_frequencies[0]),
+                          lower=-1.5,#np.log10(analysis_frequencies[0]),
                           upper=np.log10(analysis_frequencies[-1]),
                           doc='break frequency')
 

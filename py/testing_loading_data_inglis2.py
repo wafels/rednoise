@@ -16,7 +16,7 @@ from rebin_prototype import rebin_prototype
 from matplotlib import rc
 import idlsave
 
-def analyse_event(event_number=None,wavelength='l3'):
+def analyse_event(event_number=None,wavelength='l3',function='bpow'):
 
     # Use LaTeX in matplotlib - very nice.
     #rc('text', usetex=True)
@@ -220,9 +220,12 @@ def analyse_event(event_number=None,wavelength='l3'):
     power_fit = c_estimate * analysis_frequencies ** (-m_estimate)
 
     # Define the MCMC model
-    #this_model = pymcmodels.single_power_law(analysis_frequencies, analysis_power, m_estimate)
-    this_model=pymcmodels.broken_power_law(analysis_frequencies,analysis_power,1.0,m_estimate,0.0,-1.0)
-    #this_model=pymcmodels.power_law_with_constant(analysis_frequencies,analysis_power,10,m_estimate,0.001)
+    if function == 'pow':
+        this_model = pymcmodels.single_power_law(analysis_frequencies, analysis_power, m_estimate)
+    if function == 'bpow':
+        this_model=pymcmodels.broken_power_law(analysis_frequencies,analysis_power,1.0,m_estimate,0.0,-1.0)
+    if function == 'pow_const':
+        this_model=pymcmodels.single_power_law_with_constant(analysis_frequencies,analysis_power,10,m_estimate,0.001)
     # Set up the MCMC model
     M1 = pymc.MCMC(this_model)
 
@@ -231,51 +234,68 @@ def analyse_event(event_number=None,wavelength='l3'):
 
     # Get the power law index before the break and save the results
     #pli = M1.trace("power_law_index")[:]
-    pli=M1.trace("delta1")[:]
-    s_pli = rn_utils.summary_stats(pli, 0.05, bins=40)
-    pi95 = rn_utils.credible_interval(pli, ci=0.95)
-
+    if function == 'bpow':
+        pli=M1.trace("delta1")[:]
+        s_pli = rn_utils.summary_stats(pli, 0.05, bins=40)
+        pi95 = rn_utils.credible_interval(pli, ci=0.95)
+    else:
+        pli=M1.trace("power_law_index")[:]
+        s_pli = rn_utils.summary_stats(pli, 0.05, bins=40)
+        pi95 = rn_utils.credible_interval(pli, ci=0.95)
+        
     cli = M1.trace("power_law_norm")[:]
     s_cli = rn_utils.summary_stats(cli, 0.05, bins=40)
     ci95 = rn_utils.credible_interval(cli, ci=0.95)
 
-    bayes_mean_fit = np.exp(s_cli["mean"]) * (analysis_frequencies ** -s_pli["mean"])
-    bayes_mode_fit = np.exp(s_cli["mode"]) * (analysis_frequencies ** -s_pli["mode"])
-    bayes_c68l_fit = np.exp(s_cli["ci68"][0]) * (analysis_frequencies ** -s_pli["ci68"][0])
-    bayes_c68u_fit = np.exp(s_cli["ci68"][1]) * (analysis_frequencies ** -s_pli["ci68"][1])
-    bayes_c95l_fit = np.exp(ci95[0]) * (analysis_frequencies ** -pi95[0])
-    bayes_c95u_fit = np.exp(ci95[1]) * (analysis_frequencies ** -pi95[1])
+    if M1.trace("background"):
+        bkg=M1.trace("background")[:]
+        s_bkg=rn_utils.summary_stats(bkg, 0.05, bins=40)
+        bkg95=rn_utils.credible_interval(bkg,ci=0.95)
+    else:
+        bkg=0.0
+        s_bkg=0.0
+        bkg95=0.0
+
+    bayes_mean_fit = np.exp(s_cli["mean"]) * (analysis_frequencies ** -s_pli["mean"]) + np.exp(s_bkg["mean"])
+    bayes_mode_fit = np.exp(s_cli["mode"]) * (analysis_frequencies ** -s_pli["mode"]) + np.exp(s_bkg["mean"])
+    bayes_c68l_fit = np.exp(s_cli["ci68"][0]) * (analysis_frequencies ** -s_pli["ci68"][0]) + np.exp(s_bkg["ci68"][0])
+    bayes_c68u_fit = np.exp(s_cli["ci68"][1]) * (analysis_frequencies ** -s_pli["ci68"][1]) + np.exp(s_bkg["ci68"][1])
+    bayes_c95l_fit = np.exp(ci95[0]) * (analysis_frequencies ** -pi95[0]) + np.exp(bkg95[0])
+    bayes_c95u_fit = np.exp(ci95[1]) * (analysis_frequencies ** -pi95[1]) + np.exp(bkg95[1])
 
 
+    if function == 'bpow':
+        #find out where the power law break is
+        f=M1.trace("breakf")[:]
+        fb=rn_utils.summary_stats(f,0.05,bins=40)
+        #f95=rn_utils.credible_interval(fb,ci=95)
 
-    #find out where the power law break is
-    f=M1.trace("breakf")[:]
-    fb=rn_utils.summary_stats(f,0.05,bins=40)
-    #f95=rn_utils.credible_interval(fb,ci=95)
+        #find the frequency index where the break is located
+        floc=np.searchsorted(np.log10(analysis_frequencies),fb["mean"])
 
-    #find the frequency index where the break is located
-    floc=np.searchsorted(np.log10(analysis_frequencies),fb["mean"])
+        # Get the power law index for after the break and save the results
+        #pli = M1.trace("power_law_index")[:]
+        plib=M1.trace("delta2")[:]
+        s_plib = rn_utils.summary_stats(plib, 0.05, bins=40)
+        pi95b = rn_utils.credible_interval(plib, ci=0.95)
 
-    # Get the power law index for after the break and save the results
-    #pli = M1.trace("power_law_index")[:]
-    plib=M1.trace("delta2")[:]
-    s_plib = rn_utils.summary_stats(plib, 0.05, bins=40)
-    pi95b = rn_utils.credible_interval(plib, ci=0.95)
-
-    #mod=(analysis_frequencies[floc]-analysis_frequencies[0])*s_plib["mean"]
-
-    bayes_mean_fitb = np.exp(s_cli["mean"]) * (analysis_frequencies[floc] ** (-(s_pli["mean"] - s_plib["mean"]))) * (analysis_frequencies[floc:] ** -s_plib["mean"])
-    bayes_mode_fitb = np.exp(s_cli["mode"]) * (analysis_frequencies[floc] ** (-(s_pli["mode"] - s_plib["mode"])))  * (analysis_frequencies[floc:] ** -s_plib["mode"])
-    bayes_c68l_fitb = np.exp(s_cli["ci68"][0]) * (analysis_frequencies[floc] ** (-(s_pli["ci68"][0] - s_plib["ci68"][0]))) * (analysis_frequencies[floc:] ** -s_plib["ci68"][0])
-    bayes_c68u_fitb = np.exp(s_cli["ci68"][1]) * (analysis_frequencies[floc] ** (-(s_pli["ci68"][1] - s_plib["ci68"][1]))) * (analysis_frequencies[floc:] ** -s_plib["ci68"][1])
-    bayes_c95l_fitb = np.exp(ci95[0]) * (analysis_frequencies[floc] ** (-(pi95[0] - pi95b[0]))) * (analysis_frequencies[floc:] ** -pi95b[0])
-    bayes_c95u_fitb = np.exp(ci95[1]) * (analysis_frequencies[floc] ** (-(pi95[1] - pi95b[1]))) * (analysis_frequencies[floc:] ** -pi95b[1])
+        bayes_mean_fitb = (np.exp(s_cli["mean"]) * (analysis_frequencies[floc] ** (-(s_pli["mean"] - s_plib["mean"]))) *
+        (analysis_frequencies[floc:] ** -s_plib["mean"]))
+        bayes_mode_fitb = (np.exp(s_cli["mode"]) * (analysis_frequencies[floc] ** (-(s_pli["mode"] - s_plib["mode"])))  *
+        (analysis_frequencies[floc:] ** -s_plib["mode"]))
+        bayes_c68l_fitb = (np.exp(s_cli["ci68"][0]) * (analysis_frequencies[floc] ** (-(s_pli["ci68"][0] - s_plib["ci68"][0]))) *
+        (analysis_frequencies[floc:] ** -s_plib["ci68"][0]))
+        bayes_c68u_fitb = (np.exp(s_cli["ci68"][1]) * (analysis_frequencies[floc] ** (-(s_pli["ci68"][1] - s_plib["ci68"][1]))) *
+        (analysis_frequencies[floc:] ** -s_plib["ci68"][1]))
+        bayes_c95l_fitb = np.exp(ci95[0]) * (analysis_frequencies[floc] ** (-(pi95[0] - pi95b[0]))) * (analysis_frequencies[floc:] ** -pi95b[0])
+        bayes_c95u_fitb = np.exp(ci95[1]) * (analysis_frequencies[floc] ** (-(pi95[1] - pi95b[1]))) * (analysis_frequencies[floc:] ** -pi95b[1])
 
 
+    starttim=lst.isoformat()
     # plot the power spectrum, the quick fit, and the Bayesian fit
     plt.figure(1)
     plt.plot(test_data)
-    plt.xlabel('time (seconds); sample cadence = %4.2f second' % (dt))
+    plt.xlabel('Time (seconds):  Start time = ' + starttim + ' (UT)')
     plt.ylabel('emission')
     if wavelength == 'l3':
         plt.title(r'LYRA Al filter')
@@ -289,18 +309,22 @@ def analyse_event(event_number=None,wavelength='l3'):
         plt.title(r'RHESSI 25-50 keV')
     if wavelength == '50100':
         plt.title(r'RHESSI 50-100 keV')
-    plt.savefig(directory + filename + 'timeseries_'+ wavelength +'_' + date_string+'.png', format=format)
+    plt.savefig(directory + filename + 'timeseries_'+ function + '_' + wavelength +'_' + date_string+'.png', format=format)
     plt.close()
 
     plt.figure(2)
     plt.loglog(analysis_frequencies, analysis_power / data_norm, label=r'observed power')   #: $\alpha_{true}= %4.2f$' % (alpha))
-    # plt.loglog(analysis_frequencies, power_fit, label=r'$\alpha_{lstsqr}=%4.2f$' % (m_estimate))
-    #plt.loglog(analysis_frequencies, bayes_mean_fit / data_norm, label=r'$\overline{\alpha}=%4.2f$' % (s_pli["mean"]))
-    plt.loglog(analysis_frequencies[:floc], bayes_mean_fit[:floc] / data_norm, label=r'$\alpha_{mean}=%4.2f$' % (s_pli["mean"]))
-    plt.loglog(analysis_frequencies[floc:], bayes_mean_fitb / data_norm, label=r'$\alpha_{mean}=%4.2f$' % (s_plib["mean"]))
-    plt.loglog(analysis_frequencies[floc], bayes_mean_fit[floc] / data_norm,label=r'$f_{break}=%4.2f$' % (fb["mean"]))
-    #plt.loglog(analysis_frequencies, bayes_c68l_fit / data_norm, label='Lower 68% CI: ' + r'$\alpha=%4.2f$' % (s_pli["ci68"][0]))
-    #plt.loglog(analysis_frequencies, bayes_c68u_fit / data_norm, label='Upper 68% CI: ' + r'$\alpha=%4.2f$' % (s_pli["ci68"][1]))
+
+    if function == 'bpow':
+        plt.loglog(analysis_frequencies[:floc], bayes_mean_fit[:floc] / data_norm, label=r'$\alpha_{mean}=%4.2f$' % (s_pli["mean"]))
+        plt.loglog(analysis_frequencies[floc:], bayes_mean_fitb / data_norm, label=r'$\alpha_{mean}=%4.2f$' % (s_plib["mean"]))
+        plt.loglog(analysis_frequencies[floc], bayes_mean_fit[floc] / data_norm,label=r'$f_{break}=%4.2f$' % (fb["mean"]))
+    else:
+        plt.loglog(analysis_frequencies, bayes_mean_fit / data_norm, label=r'$\alpha_{mean}=%4.2f$' % (s_pli["mean"]))
+        plt.loglog(analysis_frequencies[0], bayes_mean_fit[0] / data_norm, label=r'$const=%4.2f$' % (s_bkg["mean"]))
+        
+    plt.loglog(analysis_frequencies, bayes_c68l_fit / data_norm, label='Lower 68% CI: ' + r'$\alpha=%4.2f$' % (s_pli["ci68"][0]))
+    plt.loglog(analysis_frequencies, bayes_c68u_fit / data_norm, label='Upper 68% CI: ' + r'$\alpha=%4.2f$' % (s_pli["ci68"][1]))
     #plt.loglog(analysis_frequencies, bayes_c95l_fit / data_norm, label='Lower 95% CI: ' + r'$\alpha=%4.2f$' % (pi95[0]))
     #plt.loglog(analysis_frequencies, bayes_c95u_fit / data_norm, label='Upper 95% CI: ' + r'$\alpha=%4.2f$' % (pi95[1]))
     plt.xlabel('frequency')
@@ -310,20 +334,20 @@ def analyse_event(event_number=None,wavelength='l3'):
     else:
         plt.ylabel('Fourier power')
     if wavelength == 'l3':
-        plt.title('Broken power law fit (LYRA Al data)')
+        plt.title('Power law fit (LYRA Al data)')
     if wavelength == 'l4':
-        plt.title('Broken power law fit (LYRA Zr data)')
+        plt.title('Power law fit (LYRA Zr data)')
     if wavelength == '612':
-        plt.title('Broken power law fit (RHESSI 6-12 keV data)')
+        plt.title('Power law fit (RHESSI 6-12 keV data)')
     if wavelength == '1225':
-        plt.title('Broken power law fit (RHESSI 12-25 keV data)')
+        plt.title('Power law fit (RHESSI 12-25 keV data)')
     if wavelength == '2550':
-        plt.title('Broken power law fit (RHESSI 25-50 keV data)')
+        plt.title('Power law fit (RHESSI 25-50 keV data)')
     if wavelength == '50100':
-        plt.title('Broken power law fit (RHESSI 50-100 keV data)')
+        plt.title('Power law fit (RHESSI 50-100 keV data)')
         
     plt.legend(loc=3,prop={'size':12})
-    plt.savefig(directory + filename + 'fourier_loglog_'+ wavelength +'_' + date_string+'.png', format=format)
+    plt.savefig(directory + filename + 'fourier_loglog_'+ function + '_' + wavelength +'_' + date_string+'.png', format=format)
     plt.close()
 
     plt.figure(3)
@@ -334,7 +358,7 @@ def analyse_event(event_number=None,wavelength='l3'):
     plt.ylabel('power')
     plt.title('data / fit')
     plt.legend(loc=3)
-    plt.savefig(directory + filename + 'data_divided_by_fit_'+ wavelength + '_'+date_string+'.png', format=format)
+    plt.savefig(directory + filename + 'data_divided_by_fit_'+ function +'_' + wavelength + '_'+date_string+'.png', format=format)
     plt.close()
 
 
