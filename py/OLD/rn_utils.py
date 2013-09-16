@@ -8,36 +8,20 @@ import pickle
 import csv
 
 
+
+
+
 def power_law_power_spectrum_time_series(f, alpha, norm):
     """Create a time series with a power law power spectrum"""
-
     fft_sim = np.append(np.zeros((1)), f ** (-alpha / 2.0))
-
     T_sim = norm * np.fft.irfft(fft_sim)
     return T_sim
 
 
+
+
 def power_law_noise(n, dt, alpha, seed=None):
     """Create a time series with power law noise"""
-
-    # White noise
-    np.random.seed(seed=seed)
-    wn = np.random.normal(size=(n))
-
-    # FFT of the white noise - chi2(2) distribution
-    wn_fft = np.fft.rfft(wn)
-
-    # frequencies
-    f = np.fft.fftfreq(n, dt)[:len(wn_fft)]
-    f[-1] = np.abs(f[-1])
-
-    fft_sim = wn_fft[1:] * f[1:] ** (-alpha / 2.0)
-    T_sim = np.fft.irfft(fft_sim)
-    return T_sim
-
-
-def power_law_noise_random_phases(n, dt, alpha, seed=None):
-    """Create a time series with power law noise where all the Fourier"""
 
     # White noise
     np.random.seed(seed=seed)
@@ -138,7 +122,7 @@ def plot_ts_duration_and_power_law_index_results(pickle_directory, filename, img
                  label=r'$\alpha_{mode}\in [\alpha_{true}- %3.1f, \alpha_{true}+ %3.1f]$' % (alpha_range, alpha_range))
 
     plt.xlabel("length of time series (# samples)")
-    plt.ylabel("fraction found (# trials=%8i)" % (ntrial))
+    plt.ylabel("fraction found (no. trials=%8i)" % (ntrial))
     plt.title(r"Fraction found with $\alpha=%3.1f$" % (alpha))
     plt.legend(loc=4)
     plt.savefig(img_directory + filename, format=format)
