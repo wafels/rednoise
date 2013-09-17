@@ -4,6 +4,7 @@ Main analysis module for Bayesian MCMC Fourier spectrum fitting
 """
 
 import numpy as np
+import sys
 #import os
 from matplotlib import pyplot as plt
 #import sunpy
@@ -17,7 +18,8 @@ from timeseries import TimeSeries
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 #import pickle
 
-def main_analysis(ts,ppcheck=True,plots=False):
+def main_analysis(ts,ppcheck=True,plots=False,nsample=10):
+
 
     # _____________________________________________________________________________
     # Set up where to save the data, and the file type/
@@ -60,12 +62,12 @@ def main_analysis(ts,ppcheck=True,plots=False):
     best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
     print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 
-    if ppcheck == True:
+    if ppcheck:
         # -----------------------------------------------------------------------------
         # Now do the posterior predictive check - computationally time-consuming
         # -----------------------------------------------------------------------------
         statistic = ('vaughan_2010_T_R', 'vaughan_2010_T_SSE')
-        nsample = 10
+        #nsample = 10
         value = {}
         for k in statistic:
             value[k] = ppcheck2.calculate_statistic(k, iobs, best_fit_power_spectrum)
@@ -81,7 +83,7 @@ def main_analysis(ts,ppcheck=True,plots=False):
         save.posterior_predictive((value, distribution))
 
 
-    if plots == True:
+    if plots:
         # -----------------------------------------------------------------------------
         # Summary plots
         # -----------------------------------------------------------------------------
