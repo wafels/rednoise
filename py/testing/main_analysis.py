@@ -18,12 +18,12 @@ from timeseries import TimeSeries
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 #import pickle
 
-def main_analysis(ts,ppcheck=True,plots=False,nsample=10):
+def main_analysis(ts,ppcheck=True,plots=False,nsample=10,root='~/ts/pickle',description='simulated',filetype='pickle'):
 
 
     # _____________________________________________________________________________
     # Set up where to save the data, and the file type/
-    save = rnsave(root='~/ts/pickle', description='simulated', filetype='pickle')
+    save = rnsave(root=root, description=description, filetype=filetype)
 
     #get the Fourier spectrum out of the timeseries object
     nt = ts.SampleTimes.nt
