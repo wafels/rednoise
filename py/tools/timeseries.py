@@ -80,11 +80,12 @@ class TimeSeries:
         plt.plot(self.SampleTimes.time, self.data, **kwargs)
         xunits = prepend_space(bracketize(self.SampleTimes.units))
         plt.xlabel(self.SampleTimes.label + xunits)
+        nsamples = ' [%i samples]' % self.SampleTimes.nt
         if self.units is not None:
             yunits = prepend_space(bracketize(self.units))
-            plt.ylabel(self.label + yunits)
+            plt.ylabel(self.label + yunits + nsamples)
         else:
-            plt.ylabel(self.label)
+            plt.ylabel(self.label + nsamples)
 
 
 def prepend_left_bracket(s, bracket='(', force_replace=False,
