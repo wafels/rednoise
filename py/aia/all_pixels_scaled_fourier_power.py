@@ -17,10 +17,10 @@ from timeseries import TimeSeries
 from scipy.io import readsav
 from scipy.optimize import curve_fit
 #from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+plt.ion()
 
-
-if True:
-    location = '~/Data/oscillations/mcateer/outgoing3/CH_I.sav'
+if False:
+    location = '~/Data/oscillations/mcateer/outgoing3/AR_A.sav'
     maindir = os.path.expanduser(location)
     print('Loading data from ' + maindir)
     wave = '???'
@@ -32,7 +32,7 @@ else:
     maindir = os.path.expanduser(location)
 
     # Which wavelength to look at
-    wave = '193'
+    wave = '171'
 
     # Construct the directory
     directory = os.path.join(maindir, wave)
@@ -57,9 +57,6 @@ nposfreq = len(iobs)
 # Also, make a histogram of all the power spectra to get an idea of the
 # varition present
 
-# number of histogram bins
-bins = 1000
-
 # storage
 pwr = np.zeros((ny, nx, nposfreq))
 
@@ -69,24 +66,43 @@ for i in range(0, nx):
         d = dc[j, i, :].flatten()
         # Fix the data for any non-finite entries
         d = tsutils.fix_nonfinite(d)
-        d = d - np.mean(d)
-        d = d / np.std(d)
-        ts = TimeSeries(t, d)
-        iobs = iobs + ts.PowerSpectrum.Npower
-        pwr[j, i, :] = ts.PowerSpectrum.Npower
 
-# Average power in units of estimated standard deviation
+        # Remove the mean
+        d = d - np.mean(d)
+        # Express in units of the standard deviation of the time series
+        #d = d / np.std(d)
+
+        # Form a time series object.  Handy for calculating the Fourier power
+        # at all non-zero frequencies
+        ts = TimeSeries(t, d)
+
+        # Define the Fourier power we are analyzing
+        this_power = ts.PowerSpectrum.ppower
+        iobs = iobs + this_power
+        pwr[j, i, :] = this_power
+
+# Average power over all the pixels
 iobs = iobs / (1.0 * nx * ny)
 
-# Fit a simple model to the data
-x = tsdummy.PowerSpectrum.frequencies.positive / tsdummy.PowerSpectrum.frequencies.positive[0]
+# Express the power in each frequency as a multiple of the average
+av_iobs = np.mean(iobs)
+iobs = iobs / av_iobs
 
-# Sigma for the fit
+# Express the power in each frequency as a multiple of the average for all
+# Fourier power at each pixel
+pwr = pwr / av_iobs
+
+# Normalize the frequency.
+freqs = tsdummy.PowerSpectrum.frequencies.positive
+x = freqs / tsdummy.PowerSpectrum.frequencies.positive[0]
+
+# Sigma for the fit to the power
 sigma = np.std(pwr, axis=(0, 1))
 
+
 # function we are fitting
-def func(x, a, n, c):
-    return a * x ** -n + c
+def func(freq, a, n, c):
+    return a * freq ** -n + c
 
 # do the fit
 answer = curve_fit(func, x, iobs, sigma=sigma)
@@ -95,10 +111,54 @@ answer = curve_fit(func, x, iobs, sigma=sigma)
 param = answer[0]
 bf = func(x, param[0], param[1], param[2])
 
-# Create the histogram of all the powers
+# Error estimate for the power law index
+nerr = np.sqrt(answer[1][1, 1])
+
+# Give the best plot we can under the circumstances.
+plt.figure()
+plt.loglog(freqs, iobs, label='mean')
+plt.loglog(freqs, bf, color='k', label='best fit n=%4.2f +/- %4.2f' % (param[1], nerr))
+plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
+plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
+plt.xlabel('frequency (Hz)')
+plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
+plt.title('AIA ' + str(wave) + ': ' + location)
+plt.legend(loc=3, fontsize=10)
+plt.ylim(0.0001, 1000.0)
+plt.show()
+
+
+# Do the same thing over again, this time working with the log of the
+# normalized power
+# Define the log of the Fourier power
+logpwr = np.log(pwr)
+
+# Sigma for the log of the power over all pixels
+logsigma = np.std(logpwr, axis=(0, 1))
+
+
+# Log of the power spectrum model
+def func2(freq, a, n, c):
+    return np.log(a * freq ** -n + c)
+
+# Fit the function to the log of the mean power
+answer2 = curve_fit(func2, x, np.log(iobs), sigma=logsigma)
+
+# Get the fit parameters out and calculate the best fit
+param2 = answer2[0]
+
+# Error estimate for the power law index
+nerr2 = np.sqrt(answer2[1][1, 1])
+
+# Create the histogram of all the log powers.  Histograms look normal-ish if
+# you take the logarithm of the power.  This suggests a log-normal distribution
+# of power in all frequencies
+
+# number of histogram bins
+bins = 1000
 hpwr = np.zeros((nposfreq, bins))
 for f in range(0, nposfreq):
-    h = np.histogram(pwr[:, :, f], bins=bins, range=[pwr.min(), pwr.max()])
+    h = np.histogram(logpwr[:, :, f], bins=bins, range=[np.min(logpwr), np.max(logpwr)])
     hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
 
 # Calculate the probability density in each frequency bin.
@@ -113,21 +173,24 @@ for i, thisp in enumerate(p):
         hi = 0
         while np.sum(hpwr[f, 0:hi]) <= 1.0 - tailp:
             hi = hi + 1
-        lim[i, 0, f] = h[1][lo]
-        lim[i, 1, f] = h[1][hi]
+        lim[i, 0, f] = np.exp(h[1][lo])
+        lim[i, 1, f] = np.exp(h[1][hi])
+
+# Give the best plot we can under the circumstances.  Since we have been
+# looking at the log of the power, plots are slightly different
 
 plt.figure()
-plt.loglog(tsdummy.PowerSpectrum.frequencies.positive, iobs, label='mean')
-plt.loglog(tsdummy.PowerSpectrum.frequencies.positive, lim[0, 0, :], linestyle='--', label='lower 68%')
-plt.loglog(tsdummy.PowerSpectrum.frequencies.positive, lim[0, 1, :], linestyle='--', label='upper 68%')
-plt.loglog(tsdummy.PowerSpectrum.frequencies.positive, lim[1, 0, :], linestyle=':', label='lower 95%')
-plt.loglog(tsdummy.PowerSpectrum.frequencies.positive, lim[1, 1, :], linestyle=':', label='upper 95%')
-plt.loglog(tsdummy.PowerSpectrum.frequencies.positive, bf, color='k', label='best fit n=%4.2f' %(param[1]))
+plt.loglog(freqs, iobs, label='mean')
+plt.loglog(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
+plt.loglog(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
+plt.loglog(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
+plt.loglog(freqs, lim[1, 1, :], linestyle=':', label='upper 95%')
+plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
 plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
 plt.title('AIA ' + str(wave) + ': ' + location)
-plt.legend(loc=3)
-plt.ylim(0.0001, 100.0)
+plt.legend(loc=3, fontsize=10)
+plt.ylim(0.0001, 1000.0)
 plt.show()
