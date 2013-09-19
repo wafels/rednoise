@@ -4,7 +4,6 @@ all the pixels in the derotated datacube.
 """
 # Test 6: Posterior predictive checking
 import numpy as np
-import os
 from matplotlib import pyplot as plt
 #import sunpy
 #import pymc
@@ -12,12 +11,15 @@ import tsutils
 #from rnfit2 import Do_MCMC, rnsave
 #import ppcheck2
 #from pymcmodels import single_power_law_with_constant
-from cubetools import get_datacube
+import os
 from timeseries import TimeSeries
-from scipy.io import readsav
 from scipy.optimize import curve_fit
+from scipy.io import readsav
+from cubetools import get_datacube
 #from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+import aia_specific
 plt.ion()
+
 
 if False:
     location = '~/Data/oscillations/mcateer/outgoing3/AR_A.sav'
@@ -41,6 +43,10 @@ else:
     print('Loading data from ' + directory)
     dc = get_datacube(directory)
 
+
+#wave = '171'
+#dc, location = aia_specific.rn4(wave, Xrange=[-201, -1])
+
 # Get some properties of the datacube
 ny = dc.shape[0]
 nx = dc.shape[1]
@@ -51,6 +57,7 @@ dt = 12.0
 t = dt * np.arange(0, nt)
 tsdummy = TimeSeries(t, t)
 iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
+logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
 nposfreq = len(iobs)
 
 # Result # 1 - add up all the emission and do the analysis on the full FOV
@@ -59,7 +66,7 @@ nposfreq = len(iobs)
 
 # storage
 pwr = np.zeros((ny, nx, nposfreq))
-
+logpwr = np.zeros_like(pwr)
 full_ts = np.zeros((nt))
 for i in range(0, nx):
     for j in range(0, ny):
@@ -78,8 +85,15 @@ for i in range(0, nx):
 
         # Define the Fourier power we are analyzing
         this_power = ts.PowerSpectrum.ppower
+
+        # Look at the power
         iobs = iobs + this_power
         pwr[j, i, :] = this_power
+
+        # Look at the log of the power
+        logiobs = logiobs + np.log(this_power)
+        logpwr[j, i, :] = np.log(this_power)
+
 
 # Average power over all the pixels
 iobs = iobs / (1.0 * nx * ny)
@@ -116,7 +130,7 @@ nerr = np.sqrt(answer[1][1, 1])
 
 # Give the best plot we can under the circumstances.
 plt.figure()
-plt.loglog(freqs, iobs, label='mean')
+plt.loglog(freqs, iobs, label='arithmetic mean')
 plt.loglog(freqs, bf, color='k', label='best fit n=%4.2f +/- %4.2f' % (param[1], nerr))
 plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
@@ -127,11 +141,11 @@ plt.legend(loc=3, fontsize=10)
 plt.ylim(0.0001, 1000.0)
 plt.show()
 
-
+# ------------------------------------------------------------------------
 # Do the same thing over again, this time working with the log of the
 # normalized power
-# Define the log of the Fourier power
-logpwr = np.log(pwr)
+# Average power over all the pixels
+logiobs = logiobs / (1.0 * nx * ny)
 
 # Sigma for the log of the power over all pixels
 logsigma = np.std(logpwr, axis=(0, 1))
@@ -139,13 +153,14 @@ logsigma = np.std(logpwr, axis=(0, 1))
 
 # Log of the power spectrum model
 def func2(freq, a, n, c):
-    return np.log(a * freq ** -n + c)
+    return np.log(func(freq, a, n, c))
 
 # Fit the function to the log of the mean power
-answer2 = curve_fit(func2, x, np.log(iobs), sigma=logsigma)
+answer2 = curve_fit(func2, x, logiobs, sigma=logsigma, p0=answer[0])
 
 # Get the fit parameters out and calculate the best fit
 param2 = answer2[0]
+bf2 = np.exp(func2(x, param2[0], param2[1], param2[2]))
 
 # Error estimate for the power law index
 nerr2 = np.sqrt(answer2[1][1, 1])
@@ -180,7 +195,7 @@ for i, thisp in enumerate(p):
 # looking at the log of the power, plots are slightly different
 
 plt.figure()
-plt.loglog(freqs, iobs, label='mean')
+plt.loglog(freqs, np.exp(logiobs), label='harmonic mean')
 plt.loglog(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
 plt.loglog(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
 plt.loglog(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
@@ -192,5 +207,16 @@ plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
 plt.title('AIA ' + str(wave) + ': ' + location)
 plt.legend(loc=3, fontsize=10)
-plt.ylim(0.0001, 1000.0)
+plt.show()
+
+# plot some histograms of the log power at a small number of equally spaced
+# frequencies
+findex = np.arange(0, nposfreq, nposfreq / 5)
+plt.figure()
+plt.xlabel('$\log_{10}(power)$')
+plt.ylabel('proportion found at given frequency')
+plt.title('AIA ' + str(wave) + ': ' + location)
+for f in findex:
+    plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
+plt.legend(loc=3, fontsize=10)
 plt.show()
