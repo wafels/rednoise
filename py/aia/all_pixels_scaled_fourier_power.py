@@ -195,7 +195,7 @@ for i, thisp in enumerate(p):
 # looking at the log of the power, plots are slightly different
 
 plt.figure()
-plt.loglog(freqs, np.exp(logiobs), label='harmonic mean')
+plt.loglog(freqs, np.exp(logiobs), label='geometric mean')
 plt.loglog(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
 plt.loglog(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
 plt.loglog(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
