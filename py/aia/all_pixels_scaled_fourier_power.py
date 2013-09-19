@@ -73,7 +73,7 @@ for i in range(0, nx):
         d = d / np.std(d)
         ts = TimeSeries(t, d)
         iobs = iobs + ts.PowerSpectrum.Npower
-        pwr[j, i, :] = np.log(ts.PowerSpectrum.Npower)
+        pwr[j, i, :] = ts.PowerSpectrum.Npower
 
 # Average power in units of estimated standard deviation
 iobs = iobs / (1.0 * nx * ny)
@@ -82,13 +82,16 @@ iobs = iobs / (1.0 * nx * ny)
 x = tsdummy.PowerSpectrum.frequencies.positive / tsdummy.PowerSpectrum.frequencies.positive[0]
 
 # Sigma for the fit
-sigma = np.std(np.exp(pwr), axis=(0, 1))
+sigma = np.std(pwr, axis=(0, 1))
 
+# function we are fitting
 def func(x, a, n, c):
     return a * x ** -n + c
 
+# do the fit
 answer = curve_fit(func, x, iobs, sigma=sigma)
 
+# Get the fit parameters out and calculate the best fit
 param = answer[0]
 bf = func(x, param[0], param[1], param[2])
 
@@ -98,6 +101,7 @@ for f in range(0, nposfreq):
     h = np.histogram(pwr[:, :, f], bins=bins, range=[pwr.min(), pwr.max()])
     hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
 
+# Calculate the probability density in each frequency bin.
 p = [0.68, 0.95]
 lim = np.zeros((len(p), 2, nposfreq))
 for i, thisp in enumerate(p):
@@ -109,8 +113,8 @@ for i, thisp in enumerate(p):
         hi = 0
         while np.sum(hpwr[f, 0:hi]) <= 1.0 - tailp:
             hi = hi + 1
-        lim[i, 0, f] = np.exp(h[1][lo])
-        lim[i, 1, f] = np.exp(h[1][hi])
+        lim[i, 0, f] = h[1][lo]
+        lim[i, 1, f] = h[1][hi]
 
 plt.figure()
 plt.loglog(tsdummy.PowerSpectrum.frequencies.positive, iobs, label='mean')
