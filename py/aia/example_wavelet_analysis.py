@@ -16,7 +16,7 @@ plt.ion()
 # Create some fake data
 # -----------------------------------------------------------------------------
 
-red_noise = True
+red_noise = False
 
 dt = 12.0
 nt = 300
@@ -165,13 +165,20 @@ levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 bx.contourf(time, np.log2(period), np.log2(power), np.log2(levels),
             extend='both')
 bx.contour(time, np.log2(period), sig95, [-99, 1], colors='k',
-           linewidths=2.)
-"""
-bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt,
-        time[:1] - dt, time[:1] - dt]), np.log2(np.concatenate([[1e-9], coi,
-        [1e-9], period[-1:], period[-1:], [1e-9]])), 'k', alpha='0.3',
+           linewidths=2., label='95%')
+bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='w', linestyle='--')
+bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='w')
+legend = bx.legend(shadow=True)
+# The frame is matplotlib.patches.Rectangle instance surrounding the legend.
+frame = legend.get_frame()
+frame.set_facecolor('0.8')
+
+coi[-1] = 0.001
+bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt]),
+        np.log2(np.concatenate([[1e-9], coi, [1e-9], period[-1:], period[-1:], [1e-9]])),
+        'k',
+        alpha=0.3,
         hatch='x')
-"""
 bx.set_title('b) Wavelet Power Spectrum (%s) assuming %s' % (mother.name, noise_type))
 bx.set_ylabel('Period (seconds)')
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
@@ -218,6 +225,6 @@ pylab.show()
 
 
 # -----------------------------------------------------------------------------
-# Wavelet transform using a red noise background
+# Wavelet transform using a white noise background
 # -----------------------------------------------------------------------------
 
