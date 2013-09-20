@@ -63,7 +63,7 @@ class PowerSpectrum:
 
 
 class TimeSeries:
-    def __init__(self, time, data, label='data', units=None):
+    def __init__(self, time, data, label='data', units=None, name=None):
         self.SampleTimes = SampleTimes(time)
         if self.SampleTimes.nt != data.size:
             raise ValueError('length of sample times not the same as the data')
@@ -72,6 +72,7 @@ class TimeSeries:
                                            np.abs(np.fft.fft(self.data)) ** 2)
         self.label = label
         self.units = units
+        self.name = name
 
     def peek(self, **kwargs):
         """
