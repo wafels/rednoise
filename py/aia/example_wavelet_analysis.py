@@ -76,12 +76,9 @@ s0 = -1
 J = -1
 
 #alpha = 0.0 # Lag-1 autocorrelation for white noise
-if red_noise:
-    alpha, _, _ = wavelet.ar1(var)
-    noise_type = 'red noise'
-else:
-    alpha = 0.0
-    noise_type = 'white noise'
+
+alpha, _, _ = wavelet.ar1(var)
+noise_type = 'red noise'
 
 # Morlet mother wavelet with wavenumber=6
 mother = wavelet.Morlet(6.)
@@ -148,6 +145,7 @@ pylab.rcParams.update(params)
 figprops = dict(figsize=(11, 8), dpi=72)
 fig = pylab.figure(**figprops)
 
+# ---------------------------------------------------------------------------
 # First sub-plot, the original time series anomaly.
 ax = pylab.axes([0.1, 0.75, 0.65, 0.2])
 ax.plot(time, iwave, '-', linewidth=1, color=[0.5, 0.5, 0.5])
@@ -157,7 +155,7 @@ if ts.units != '':
     ax.set_ylabel(r'%s [$%s$]' % (ts.label, ts.units,))
 else:
     ax.set_ylabel(r'%s' % (ts.label, ))
-
+# ---------------------------------------------------------------------------
 # Second sub-plot, the normalized wavelet power spectrum and significance level
 # contour lines and cone of influece hatched area.
 bx = pylab.axes([0.1, 0.37, 0.65, 0.28], sharex=ax)
@@ -187,6 +185,37 @@ bx.set_yticks(np.log2(Yticks))
 bx.set_yticklabels(Yticks)
 bx.invert_yaxis()
 
+# Fourth sub-plot, the scale averaged wavelet spectrum as determined by the
+# avg1 and avg2 parameters
+
+Bx = pylab.axes([0.1, 0.07, 0.65, 0.22], sharex=ax)
+levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
+Bx.contourf(time, np.log2(period), np.log2(power), np.log2(levels),
+            extend='both')
+Bx.contour(time, np.log2(period), sig95, [-99, 1], colors='k',
+           linewidths=2., label='95%')
+Bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='w', linestyle='--')
+Bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='w')
+legend = Bx.legend(shadow=True)
+# The frame is matplotlib.patches.Rectangle instance surrounding the legend.
+frame = legend.get_frame()
+frame.set_facecolor('0.8')
+
+coi[-1] = 0.001
+Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt]),
+        np.log2(np.concatenate([[1e-9], coi, [1e-9], period[-1:], period[-1:], [1e-9]])),
+        'k',
+        alpha=0.3,
+        hatch='x')
+Bx.set_title('b) Wavelet Power Spectrum (%s) assuming %s' % (mother.name, noise_type))
+Bx.set_ylabel('Period (seconds)')
+Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
+                           np.ceil(np.log2(period.max())))
+Bx.set_yticks(np.log2(Yticks))
+Bx.set_yticklabels(Yticks)
+Bx.invert_yaxis()
+
+
 # Third sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
 cx = pylab.axes([0.77, 0.37, 0.2, 0.28], sharey=bx)
@@ -206,8 +235,9 @@ cx.set_yticklabels(Yticks)
 pylab.setp(cx.get_yticklabels(), visible=False)
 cx.invert_yaxis()
 
-# Fourth sub-plot, the scale averaged wavelet spectrum as determined by the
-# avg1 and avg2 parameters
+
+"""
+
 dx = pylab.axes([0.1, 0.07, 0.65, 0.2], sharex=ax)
 dx.axhline(scale_avg_signif, color='k', linestyle='--', linewidth=1.)
 dx.plot(time, scale_avg, 'k-', linewidth=1.5)
@@ -219,12 +249,8 @@ else:
     dx.set_ylabel(r'Average variance')
 #
 ax.set_xlim([time.min(), time.max()])
+"""
 #
 pylab.draw()
 pylab.show()
-
-
-# -----------------------------------------------------------------------------
-# Wavelet transform using a white noise background
-# -----------------------------------------------------------------------------
 
