@@ -20,6 +20,33 @@ from cubetools import get_datacube
 import aia_specific
 plt.ion()
 
+"""
+For any input datacube we wish to define a certain number of data products...
+(1) full_data : sum up all the emission in a region to get a single time series
+
+(2) Fourier power : for each pixel in the region calculate the Fourier power
+
+(3) Average Fourier power : the arithmetic mean of the Fourier power (2)
+
+(4) Log Fourier power : the log of the Fourier power for each pixel in the
+                        region (2).
+
+(5) Average log Fourier power : the average of the log Fourier power (4).  This
+                                is the same as the geometric mean of the
+                                Fourier power (2).
+
+(6) A set of pixel locations that can be shared across datasets that image
+    different wavebands.
+
+This is what we do with the data and how we do it:
+
+(a) Fit (1) using the MCMC algorithm.
+
+(b) Fit (3) using a least-squares fitting algorithm (yields an approximate
+    answer which will be similar to that of (a))
+
+(c)
+"""
 
 if False:
     location = '~/Data/oscillations/mcateer/outgoing3/AR_A.sav'
