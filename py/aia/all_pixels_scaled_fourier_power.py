@@ -34,7 +34,7 @@ else:
     maindir = os.path.expanduser(location)
 
     # Which wavelength to look at
-    wave = '171'
+    wave = '193'
 
     # Construct the directory
     directory = os.path.join(maindir, wave)
@@ -67,12 +67,15 @@ nposfreq = len(iobs)
 # storage
 pwr = np.zeros((ny, nx, nposfreq))
 logpwr = np.zeros_like(pwr)
-full_ts = np.zeros((nt))
+full_data = np.zeros((nt))
 for i in range(0, nx):
     for j in range(0, ny):
         d = dc[j, i, :].flatten()
         # Fix the data for any non-finite entries
         d = tsutils.fix_nonfinite(d)
+
+        # Sum up all the data
+        full_data = full_data + d
 
         # Remove the mean
         d = d - np.mean(d)
@@ -94,6 +97,11 @@ for i in range(0, nx):
         logiobs = logiobs + np.log(this_power)
         logpwr[j, i, :] = np.log(this_power)
 
+# Average emission over all the data
+full_data = full_data / (1.0 * nx * ny)
+
+# Create a time series object
+full_ts = TimeSeries(t, full_data)
 
 # Average power over all the pixels
 iobs = iobs / (1.0 * nx * ny)
@@ -118,6 +126,12 @@ sigma = np.std(pwr, axis=(0, 1))
 def func(freq, a, n, c):
     return a * freq ** -n + c
 
+
+# Log of the power spectrum model
+def func2(freq, a, n, c):
+    return np.log(func(freq, a, n, c))
+
+
 # do the fit
 answer = curve_fit(func, x, iobs, sigma=sigma)
 
@@ -128,16 +142,28 @@ bf = func(x, param[0], param[1], param[2])
 # Error estimate for the power law index
 nerr = np.sqrt(answer[1][1, 1])
 
+# Analyze the summed time-series
+# do the fit
+full_ts_iobs = full_ts.PowerSpectrum.ppower / np.mean(full_ts.PowerSpectrum.ppower)
+answer_full_ts = curve_fit(func2, x, np.log(full_ts_iobs), p0=answer[0])
+# Get the fit parameters out and calculate the best fit
+param_fts = answer_full_ts[0]
+bf_fts = np.exp(func2(x, param_fts[0], param_fts[1], param_fts[2]))
+nerr_fts = np.sqrt(answer[1][1, 1])
+
 # Give the best plot we can under the circumstances.
 plt.figure()
-plt.loglog(freqs, iobs, label='arithmetic mean')
-plt.loglog(freqs, bf, color='k', label='best fit n=%4.2f +/- %4.2f' % (param[1], nerr))
+plt.loglog(freqs, iobs, label='arithmetic mean (Erlang distributed)', color='b')
+plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean n=%4.2f +/- %4.2f' % (param[1], nerr))
+plt.loglog(freqs, full_ts_iobs, label='summed emission (exponential distributed)', color='r')
+plt.loglog(freqs, bf_fts, label='fit to summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts), color='r', linestyle="--")
 plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
 plt.title('AIA ' + str(wave) + ': ' + location)
 plt.legend(loc=3, fontsize=10)
+plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
 plt.ylim(0.0001, 1000.0)
 plt.show()
 
@@ -149,11 +175,6 @@ logiobs = logiobs / (1.0 * nx * ny)
 
 # Sigma for the log of the power over all pixels
 logsigma = np.std(logpwr, axis=(0, 1))
-
-
-# Log of the power spectrum model
-def func2(freq, a, n, c):
-    return np.log(func(freq, a, n, c))
 
 # Fit the function to the log of the mean power
 answer2 = curve_fit(func2, x, logiobs, sigma=logsigma, p0=answer[0])
@@ -196,11 +217,11 @@ for i, thisp in enumerate(p):
 
 plt.figure()
 plt.loglog(freqs, np.exp(logiobs), label='geometric mean')
+plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
 plt.loglog(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
 plt.loglog(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
 plt.loglog(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
 plt.loglog(freqs, lim[1, 1, :], linestyle=':', label='upper 95%')
-plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
 plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
@@ -220,3 +241,4 @@ for f in findex:
     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
 plt.legend(loc=3, fontsize=10)
 plt.show()
+
