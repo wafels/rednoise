@@ -60,10 +60,6 @@ def posterior_predictive_distribution(ts, M,
         # Get a posterior power spectrum
         S = M.trace("predictive")[r]
 
-        # Normalize
-        #S = S / ts.PowerSpectrum.vaughan_mean
-        #S = S / ts.PowerSpectrum.vaughan_std
-
         # Generate the input for the MCMC algorithm
         this2 = ([ts.PowerSpectrum.frequencies.positive, S],)
 
