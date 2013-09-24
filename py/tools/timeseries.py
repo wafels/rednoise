@@ -25,6 +25,9 @@ class SampleTimes:
         # Differences between consecutive sample times
         self.tdiff = self.time[1:] - self.time[0:-1]
 
+        # Include base time for input series
+        self.basetime=time[0]
+
 
 class Frequencies:
     def __init__(self, frequencies, label='frequency', units='Hz'):
