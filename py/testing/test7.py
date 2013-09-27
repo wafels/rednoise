@@ -46,13 +46,13 @@ save.ts(ts)
 
 # Get the positive frequencies and the power at those frequencies
 iobs = ts.PowerSpectrum.ppower
-
+"""
 # Normalize to the number of elements in the original time series.  The
 # motivation for this is that if the original time-series is pure Gaussian
 # white noise with mean zero and standard devation of 1, then the average of
 # the power spectrum is 1.
 iobs = iobs / (1.0 * nt)
-
+"""
 # Normalize the frequency so that the first element is equal to 1 and
 # all higher frequencies are multiples of the first non-zero frequency.  This
 # makes calculation slightly easier.
@@ -60,11 +60,16 @@ freqs = ts.PowerSpectrum.frequencies.positive / ts.PowerSpectrum.frequencies.pos
 
 # Form the input for the MCMC algorithm.
 this = ([freqs, iobs],)
+
+
+norm_estimate[1] = 
+
 # _____________________________________________________________________________
 # -----------------------------------------------------------------------------
 # Analyze using MCMC
 # -----------------------------------------------------------------------------
 analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
+                              estimate=estimate,
                               iter=50000,
                               burn=10000,
                               thin=5,
