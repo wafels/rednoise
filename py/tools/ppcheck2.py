@@ -1,7 +1,7 @@
 import numpy as np
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground
 from rnfit2 import Do_MCMC
-from pymcmodels import single_power_law_with_constant
+from pymcmodels import single_power_law_with_constant_not_normalized
 from matplotlib import pyplot as plt
 
 
@@ -34,7 +34,7 @@ Returns a test statistic used to compare nested models."""
     return -2 * (logp_model1 - logp_model2)
 
 
-def posterior_predictive_distribution(ts, M,
+def posterior_predictive_distribution(ts, M, estimate,
                                       nsample=1000,
                                       statistic=('vaughan_2010_T_R', 'vaughan_2010_T_SSE'),
                                       verbose=True):
@@ -64,7 +64,7 @@ def posterior_predictive_distribution(ts, M,
         this2 = ([ts.PowerSpectrum.frequencies.positive, S],)
 
         # Analyze using MCMC
-        analysis2 = Do_MCMC(this2).okgo(single_power_law_with_constant,
+        analysis2 = Do_MCMC(this2).okgo(single_power_law_with_constant_not_normalized, estimate=estimate,
                                  iter=50000, burn=1000, thin=5,
                                     progress_bar=False)
 

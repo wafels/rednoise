@@ -29,7 +29,7 @@ class Do_MCMC:
         self.M = None
 
     # Do the PyMC fit
-    def okgo(self, pymcmodel, locations=None, MAP_only=None, db=None, dbname=None, **kwargs):
+    def okgo(self, pymcmodel, locations=None, MAP_only=None, db=None, dbname=None, estimate=None, seed=None, **kwargs):
         """Controls the PyMC fit of the input data
 
         Parameters
@@ -38,7 +38,7 @@ class Do_MCMC:
         locations : which elements of the input data we are analyzing
         **kwargs : PyMC control keywords
         """
-
+        self.seed = seed
         # stats results
         self.results = []
 
@@ -49,6 +49,9 @@ class Do_MCMC:
             self.locations = locations
         # Define the number of results we are looking at
         self.nts = len(self.locations)
+        
+        # Parameter estimates
+        self.estimate = estimate
 
         for k in self.locations:
             # Progress
@@ -58,7 +61,8 @@ class Do_MCMC:
             self.pwr = self.data[k][1]
 
             # Start at the MAP
-            self.pymcmodel = pymcmodel(self.fpos, self.pwr)
+            pymc.numpy.random.seed(self.seed)
+            self.pymcmodel = pymcmodel(self.fpos, self.pwr, self.estimate)
             mp = pymc.MAP(self.pymcmodel)
             mp.fit(method='fmin_powell')
             #print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value

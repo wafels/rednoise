@@ -27,14 +27,15 @@ if True:
     print('Simulated data')
     dt = 12.0
     nt = 300
-    np.random.seed(seed=1)
+    seed = 1
+    np.random.seed(seed)
     pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0],
                                                         nt=nt,
                                                         dt=dt)
     data = TimeSeriesFromPowerSpectrum(pls1).sample
     t = dt * np.arange(0, nt)
-    amplitude = 0.3
-    data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
+    amplitude = 0.0
+    data = 1000*data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
     ts = TimeSeries(t, data)
 
 # Save the time-series
@@ -59,10 +60,21 @@ iobs = iobs / (1.0 * nt)
 freqs = ts.PowerSpectrum.frequencies.positive / ts.PowerSpectrum.frequencies.positive[0]
 
 # Form the input for the MCMC algorithm.
-this = ([freqs, iobs],)
+this = ([ts.PowerSpectrum.frequencies.positive, iobs],)
 
 
-norm_estimate[1] = 
+norm_estimate = np.zeros((3,))
+norm_estimate[0] = iobs[0]
+norm_estimate[1] = norm_estimate[0] / 1000.0
+norm_estimate[2] = norm_estimate[0] * 1000.0
+
+background_estimate = np.zeros_like(norm_estimate)
+background_estimate[0] = np.mean(iobs[-10:-1])
+background_estimate[1] = background_estimate[0] / 1000.0
+background_estimate[2] = background_estimate[0] * 1000.0
+
+estimate = {"norm_estimate": norm_estimate,
+            "background_estimate": background_estimate}
 
 # _____________________________________________________________________________
 # -----------------------------------------------------------------------------
@@ -70,6 +82,7 @@ norm_estimate[1] =
 # -----------------------------------------------------------------------------
 analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
                               estimate=estimate,
+                              seed=seed,
                               iter=50000,
                               burn=10000,
                               thin=5,
@@ -101,7 +114,7 @@ print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
 # Now do the posterior predictive check - computationally time-consuming
 # -----------------------------------------------------------------------------
 statistic = ('vaughan_2010_T_R', 'vaughan_2010_T_SSE')
-nsample = 1000
+nsample = 10
 value = {}
 for k in statistic:
     value[k] = ppcheck2.calculate_statistic(k, iobs, best_fit_power_spectrum)
@@ -109,7 +122,7 @@ for k in statistic:
 print value
 
 distribution = ppcheck2.posterior_predictive_distribution(ts,
-                                                          M,
+                                                          M, estimate,
                                                           nsample=nsample,
                                                           statistic=statistic,
                                                           verbose=True)
@@ -128,7 +141,7 @@ plt.axvline(1.0 / 300.0, color='k', linestyle='--', label='5 mins')
 plt.axvline(1.0 / 180.0, color='k', linestyle=':', label='3 mins')
 plt.legend(fontsize=10, loc=3)
 plt.show()
-
+"""
 # Discrepancy statistics
 for i, k in enumerate(statistic):
     v = value[k]
@@ -143,3 +156,4 @@ for i, k in enumerate(statistic):
     plt.title('Statistic: ' + k)
     plt.text(v, np.max(h[0]), "p = %f" % (pvalue))
 plt.show()
+"""
