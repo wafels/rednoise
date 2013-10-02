@@ -76,6 +76,9 @@ class TimeSeries:
         self.label = label
         self.units = units
         self.name = name
+        self.nt = self.SampleTimes.nt
+        self.pfreq = self.PowerSpectrum.frequencies.positive
+        self.ppower = self.PowerSpectrum.ppower
 
     def peek(self, **kwargs):
         """
@@ -90,6 +93,17 @@ class TimeSeries:
             plt.ylabel(self.label + yunits + nsamples)
         else:
             plt.ylabel(self.label + nsamples)
+
+    def peek_ps(self, **kwargs):
+        """
+        Generates a quick plot of the power power spectrum of the data
+        """
+        plt.plot(self.PowerSpectrum.frequencies.positive,
+                 self.PowerSpectrum.ppower, **kwargs)
+        xunits = prepend_space(bracketize('%i frequencies' % len(self.pfreq)))
+        plt.xlabel('Hz' + xunits)
+        nsamples = ' [%i samples]' % self.SampleTimes.nt
+        plt.ylabel('power' + nsamples)
 
 
 def prepend_left_bracket(s, bracket='(', force_replace=False,

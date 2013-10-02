@@ -5,9 +5,9 @@ from cubetools import get_datacube
 plt.ion()
 
 
-def rn4(wave, Xrange=None, Yrange=None):
+def rn4(wave, location='~/Data/AIA_Data/rn4', derotate=False,
+        Xrange=None, Yrange=None):
     # Main directory where the data is
-    location = '~/Data/AIA_Data/rn4'
     maindir = os.path.expanduser(location)
     # Which wavelength to look at
 
@@ -18,7 +18,7 @@ def rn4(wave, Xrange=None, Yrange=None):
     # the region quite dramatically
     print('Loading data from ' + directory)
 
-    dc = get_datacube(directory)
+    dc = get_datacube(directory, derotate=derotate)
     # Get some properties of the datacube
     ny = dc.shape[0]
     nx = dc.shape[1]

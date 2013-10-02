@@ -95,7 +95,7 @@ def visualize(datacube, delay=0.1):
     return None
 
 
-def get_datacube(path):
+def get_datacube(path, derotate=True):
     """
     Function that goes to a directory and returns a datacube
     """
@@ -105,5 +105,13 @@ def get_datacube(path):
     else:
         # Get a mapcube
         maps = sunpy.Map(path, cube=True)
-        dc = derotated_datacube_from_mapcube(maps)
+        if derotate:
+            dc = derotated_datacube_from_mapcube(maps)
+        else:
+            nt = len(maps[:])
+            ny = maps[0].shape[0]
+            nx = maps[0].shape[1]    
+            dc = np.zeros((ny, nx, nt))
+            for i, m in enumerate(maps):
+                dc[:, :, i] = m.data[:, :]
         return dc

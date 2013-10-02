@@ -117,11 +117,19 @@ class Do_MCMC:
         description = []
         for key in k:
             if key not in ('fourier_power_spectrum', 'predictive'):
+                if key not in ('power_law_index'):
+                    scale = np.log(10.0)
+                    prefix = 'log10('
+                    suffix = ')'
+                else:
+                    scale = 1.0
+                    prefix = ''
+                    suffix = ''
                 stats = self.results[loc]['stats']
-                mean = stats[key]['mean']
-                median = stats[key]['quantiles'][50]
-                hpd95 = stats[key]['95% HPD interval']
-                description.append(key + ': mean=%8.4f, median=%8.4f, 95%% HPD= %8.4f, %8.4f' % (mean, median, hpd95[0], hpd95[1]))
+                mean = stats[key]['mean'] / scale
+                median = stats[key]['quantiles'][50] / scale
+                hpd95 = stats[key]['95% HPD interval'] / scale
+                description.append(prefix + key + suffix + ': mean=%8.4f, median=%8.4f, 95%% HPD= %8.4f, %8.4f' % (mean, median, hpd95[0], hpd95[1]))
 
         x = self.results[loc]["frequencies"]
         y = self.results[loc]["stats"]
