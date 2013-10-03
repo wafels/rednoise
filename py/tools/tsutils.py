@@ -5,6 +5,19 @@ Helper routines for time-series
 import numpy as np
 
 
+def autocorrelate(data):
+    """
+    Calculate the autocorrelation function of some input data.  Copied more or
+    less directly from http://stackoverflow.com/questions/643699/
+    how-can-i-use-numpy-correlate-to-do-autocorrelation
+    """
+    yunbiased = data - np.mean(data)
+    ynorm = np.sum(yunbiased**2)
+    acor = np.correlate(yunbiased, yunbiased, "same") / ynorm
+    # use only second half
+    return acor[len(acor)/2:]
+
+
 def fix_nonfinite(data):
     """
     Finds all the nonfinite regions in the data and replaces them with a simple
