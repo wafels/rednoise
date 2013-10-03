@@ -55,7 +55,7 @@ for i in range(0, nx):
         # Sum up all the data
         full_data = full_data + d
 
-full_data = tsutils.fix_nonfinite(dc[100, 100, 0:150])
+#full_data = tsutils.fix_nonfinite(dc[100, 100, :])
 
 # Average emission over all the data
 full_data = full_data / (1.0 * nx * ny)
