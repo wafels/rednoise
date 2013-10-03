@@ -4,6 +4,7 @@ Simple time series object
 
 import numpy as np
 from matplotlib import pyplot as plt
+import tsutils
 
 
 class SampleTimes:
@@ -79,6 +80,9 @@ class TimeSeries:
         self.nt = self.SampleTimes.nt
         self.pfreq = self.PowerSpectrum.frequencies.positive
         self.ppower = self.PowerSpectrum.ppower
+        
+        # Autocorrelation
+        self.acor = tsutils.autocorrelate(self.data)
 
     def peek(self, **kwargs):
         """
