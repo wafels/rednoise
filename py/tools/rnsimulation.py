@@ -156,30 +156,16 @@ def noisy_power_spectrum(S):
     return S * X / 2.0
 
 
-def time_series_from_power_spectrum(S, fft_zero=0.0, no_noise=False):
-    """Create a time series with power law noise, following the recipe
-    of Vaughan (2010), MNRAS, 402, 307, appendix B
-
-    Parameters
-    ----------
-    S : numpy array
-        Theoretical fourier power spectrum, from the first non-zero frequency
-        up to the Nyquist frequency.
-
-    fft_zero : scalar number
-        The value at the zero Fourier frequency.
+def noisy_fourier_transform(I, fft_zero=0.0, no_noise=False):
     """
-
+    Take an input power spectrum I and create a full Fourier transform over all
+    positive and negative frequencies and has random phases such that the time
+    series it describes is purely real valued
+    """
     # Number of positive frequencies to calculate.  This fills in the Fourier
     # frequency a[1:n/2+1].  Since we are working with the power spectrum to
     # generate a time-series, the resulting time-series is always even.
-    K = len(S)
-
-    # noisy power spectrum
-    if no_noise:
-        I = S
-    else:
-        I = noisy_power_spectrum(S)
+    K = len(I)
 
     # random phases, except for the nyquist frequency.
     ph = uniform.rvs(loc=-np.pi / 2.0, scale=np.pi, size=K)
@@ -198,14 +184,44 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, no_noise=False):
     F = A * np.exp(-np.complex(0, 1) * ph)
 
     # Form the negative frequency part
-    #F_negative = np.conjugate(F)[::-1][1:]
+    F_negative = np.conjugate(F)[::-1][1:]
 
     # Form the fourier transform
-    #F_complete = np.concatenate((np.asarray([fft_zero]), F, F_negative))
+    F_complete = np.concatenate((np.asarray([fft_zero]), F, F_negative))
+
+    return F_complete, F
+    
+    
+
+def time_series_from_power_spectrum(S, fft_zero=0.0, no_noise=False):
+    """Create a time series with power law noise, following the recipe
+    of Vaughan (2010), MNRAS, 402, 307, appendix B
+
+    Parameters
+    ----------
+    S : numpy array
+        Theoretical fourier power spectrum, from the first non-zero frequency
+        up to the Nyquist frequency.
+
+    fft_zero : scalar number
+        The value at the zero Fourier frequency.
+    """
+
+    # noisy power spectrum
+    if no_noise:
+        I = S
+    else:
+        I = noisy_power_spectrum(S)
+
+    # Get noisy Fourier transform
+    F_complete, F = noisy_fourier_transform(I,
+                                            fft_zero=fft_zero,
+                                            no_noise=no_noise)
 
     # create the time-series.  The complex part should be tiny.
-    #T_sim = np.fft.ifft(F_complete)
-    T_sim = np.fft.irfft(np.concatenate((np.asarray([fft_zero]), F)))
+    T_sim = np.fft.ifft(F_complete)
+    #T_sim = np.fft.irfft(np.concatenate((np.asarray([fft_zero]), F)))
 
     # The time series is formally complex.  Return the real part only.
-    return np.real(T_sim)
+    #return np.real(T_sim)
+    return T_sim
