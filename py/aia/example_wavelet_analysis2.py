@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from timeseries import TimeSeries
 import wav as wavelet
 import pylab
+import matplotlib.cm as cm
 
 # interactive mode
 plt.ion()
@@ -48,7 +49,8 @@ var = ts.data
 avg1, avg2 = (150.0, 400.0)
 
 # Significance level
-slevel = 0.95
+slev = 99
+slevel = slev / 100.0
 
 # Standard deviation
 std = var.std()
@@ -114,6 +116,9 @@ dof = N - scales
 glbl_signif, tmp = wavelet.significance(std2, dt, scales, 1, 0.0,
                        significance_level=slevel, dof=dof, wavelet=mother)
 
+max_glbl_power = np.max(np.abs(glbl_power))
+glbl_power = glbl_power / max_glbl_power
+
 # -------------------------------------------------------------------------
 # Red noise
 rsignif, rfft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
@@ -132,16 +137,7 @@ rglbl_signif, rtmp = wavelet.significance(std2, dt, scales, 1, alpha,
                        significance_level=slevel, dof=dof, wavelet=mother)
 
 
-
-
-
-
-
-
-
-
-
-
+rglbl_power = rglbl_power / max_glbl_power
 
 
 
@@ -197,11 +193,11 @@ bx = pylab.axes([0.1, 0.38, fig_width, fig_height], sharex=ax)
 levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 YYY = np.log2(period)
 bx.contourf(time, YYY, np.log2(power), np.log2(levels),
-            extend='both')
+            extend='both', cmap=cm.coolwarm)
 bx.contour(time, np.log2(period), sig95, [-99, 1], colors='k',
            linewidths=2., label='95%')
-bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='w', linestyle='--')
-bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='w')
+bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
+bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='k')
 legend = bx.legend(shadow=True)
 # The frame is matplotlib.patches.Rectangle instance surrounding the legend.
 frame = legend.get_frame()
@@ -213,7 +209,7 @@ bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
         'k',
         alpha=0.3,
         hatch='x')
-bx.set_title('b) Wavelet Power Spectrum assuming white noise')
+bx.set_title('b) Wavelet power spectrum compared to white noise [%i percent conf. level]' %(slev) )
 bx.set_ylabel('Period (seconds)')
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                            np.ceil(np.log2(period.max())))
@@ -225,13 +221,13 @@ bx.invert_yaxis()
 # Third sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
 cx = pylab.axes([0.77, 0.38, 0.2, fig_height], sharey=bx)
-cx.plot(glbl_signif, np.log2(period), 'k--')
+cx.plot(glbl_signif/max_glbl_power, np.log2(period), 'k--', label='white noise')
 #cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
-cx.plot(glbl_power, np.log2(period), 'k-', linewidth=1.5)
-cx.set_title('c) Global Wavelet Spectrum')
+cx.plot(glbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
+cx.set_title('c) Global wavelet spectrum')
 if ts.units != '':
-    cx.set_xlabel(r'Power [$%s^2$]' % (ts.units, ))
+    cx.set_xlabel(r'Power [arb units.]')
 else:
     cx.set_xlabel(r'Power')
 #cx.set_xlim([0, glbl_power.max() + std2])
@@ -240,6 +236,8 @@ cx.set_yticks(np.log2(Yticks))
 cx.set_yticklabels(Yticks)
 pylab.setp(cx.get_yticklabels(), visible=False)
 cx.invert_yaxis()
+clegend = cx.legend(shadow=True, fontsize=10)
+cframe = clegend.get_frame()
 
 
 # RED Fourth sub-plot, the normalized wavelet power spectrum and significance level
@@ -247,11 +245,11 @@ cx.invert_yaxis()
 
 Bx = pylab.axes([0.1, 0.07, fig_width, fig_height], sharex=ax)
 levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
-Bx.contourf(time, YYY, np.log2(power), np.log2(levels), extend='both')
+Bx.contourf(time, YYY, np.log2(power), np.log2(levels), extend='both', cmap=cm.coolwarm)
 Bx.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
            linewidths=2., label='95%')
-Bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='w', linestyle='--')
-Bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='w')
+Bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
+Bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='k')
 legend = Bx.legend(shadow=True)
 # The frame is matplotlib.patches.Rectangle instance surrounding the legend.
 frame = legend.get_frame()
@@ -264,7 +262,7 @@ Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
         'k',
         alpha=0.3,
         hatch='x')
-Bx.set_title('d) Wavelet Power Spectrum assuming red noise')
+Bx.set_title('d) Wavelet power spectrum compared to red noise [%i percent conf. level]' % (slev) )
 Bx.set_ylabel('Period (seconds)')
 Bx.set_xlabel('Time (seconds) [%i samples]' % (nt) )
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
@@ -277,13 +275,13 @@ Bx.invert_yaxis()
 # Fifth sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
 Cx = pylab.axes([0.77, 0.07, 0.2, fig_height], sharey=bx)
-Cx.plot(rglbl_signif, np.log2(period), 'k--', label='significance')
+Cx.plot(rglbl_signif/max_glbl_power, np.log2(period), 'k--', label='red noise')
 #Cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
-Cx.plot(rglbl_power, np.log2(period), 'k-', linewidth=1.5, label='global power')
-Cx.set_title('e) Global Wavelet Spectrum')
+Cx.plot(rglbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
+Cx.set_title('e) Global wavelet spectrum')
 if ts.units != '':
-    Cx.set_xlabel(r'Power [$%s^2$]' % (ts.units, ))
+    Cx.set_xlabel(r'Power [arb. units]')
 else:
     Cx.set_xlabel(r'Power')
 #Cx.set_xlim([0, glbl_power.max() + std2])
@@ -292,9 +290,8 @@ Cx.set_yticks(np.log2(Yticks))
 Cx.set_yticklabels(Yticks)
 pylab.setp(Cx.get_yticklabels(), visible=False)
 Cx.invert_yaxis()
-Clegend = Cx.legend(shadow=True)
+Clegend = Cx.legend(shadow=True, fontsize=10)
 Cframe = Clegend.get_frame()
-Cframe.set_fontsize(0.7)
 
 
 

@@ -320,7 +320,37 @@ _{-\lambda}(p)
 %% equations (displaymath environment). The last paragraph includes some
 %% examples of in-line math featuring a couple of the AASTeX symbol macros.
 
-\section{Floating material and so forth}
+\section{Coronal seismology and the effect of background assumptions}
+\label{sec:corseis}
+
+\begin{figure}
+\epsscale{.80}
+\plotone{white_red_compare.eps}
+\caption{Comparison of the effect of assuming a white or red noise
+  background on the detection of an oscillatory signal for simulated
+  time-series.  Plot (a) shows the simulated time-series, generated
+  from a power spectrum $P(f)\tilde\mbox{frequency^{-1.77}}$ and no
+  explicit oscillation included.  Plot (b) shows the wavelet power
+  spectrum with the cone-of-influence (shaded area) and regions above
+  the 95\% confidence level, assuming a white-noise (Gaussian)
+ background .  Plot (c) shows the global wavelet power spectrum for
+  this wavelet transform.  Plots (d) and (e) are the same as plots (b)
+  and (c) under the assumption of a red-noise background.}\label{fig:comparison}}
+\end{figure}
+
+Figure \ref{fig:comparison} shows how a red-noise power spectrum can
+be mistakenly thought to contain an oscillatory signal.  The time
+series (Figure \ref{fig:comparison}(a)) is constructed from a power
+spectrum $P(f)\tilde\mbox{frequency^{-1.77}}$ with no explicit
+oscillatory content, following the construction procedure of
+\cite{vaughan2010}.  Figure \ref{fig:comparison}(b) shows that the
+assumption of a white-noise background and a 95\% confidence level
+leads to the positive detection of significant oscillatory power in
+this time series. Figure \ref{fig:comparison}(c) shows that the
+assumption of a red-noise background with the same confidence level
+significantly reduces the area for which a detection may be claimed.
+Raising the confidence level to 99\% or higher 
+
 
 %% The displaymath environment will produce the same sort of equation as
 %% the equation environment, except that the equation will not be numbered
@@ -518,13 +548,6 @@ e = mc^2
 %% 80% of its natural size with \epsscale. Its caption
 %% has been written to indicate that additional figure parts will be
 %% available in the electronic journal.
-
-\begin{figure}
-\epsscale{.80}
-\plotone{f1.eps}
-\caption{Derived spectra for 3C138 \citep[see][]{heiles03}. Plots for all sources are available
-in the electronic edition of {\it The Astrophysical Journal}.\label{fig1}}
-\end{figure}
 
 \clearpage
 
