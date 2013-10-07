@@ -316,6 +316,12 @@ _{-\lambda}(p)
 \end{eqnarray}
 \end{mathletters}
 
+
+\section{Results}
+\label{sec:results}
+
+
+
 %% This section contains more display math examples, including unnumbered
 %% equations (displaymath environment). The last paragraph includes some
 %% examples of in-line math featuring a couple of the AASTeX symbol macros.
@@ -329,27 +335,32 @@ _{-\lambda}(p)
 \caption{Comparison of the effect of assuming a white or red noise
   background on the detection of an oscillatory signal for simulated
   time-series.  Plot (a) shows the simulated time-series, generated
-  from a power spectrum $P(f)\tilde\mbox{frequency^{-1.77}}$ and no
+  from a power spectrum \protect$P(f)\approx f^{-1.77}$ and no
   explicit oscillation included.  Plot (b) shows the wavelet power
   spectrum with the cone-of-influence (shaded area) and regions above
   the 95\% confidence level, assuming a white-noise (Gaussian)
  background .  Plot (c) shows the global wavelet power spectrum for
   this wavelet transform.  Plots (d) and (e) are the same as plots (b)
-  and (c) under the assumption of a red-noise background.}\label{fig:comparison}}
+  and (c) under the assumption of a red-noise background.\label{fig:comparison}}
 \end{figure}
 
 Figure \ref{fig:comparison} shows how a red-noise power spectrum can
 be mistakenly thought to contain an oscillatory signal.  The time
 series (Figure \ref{fig:comparison}(a)) is constructed from a power
-spectrum $P(f)\tilde\mbox{frequency^{-1.77}}$ with no explicit
-oscillatory content, following the construction procedure of
-\cite{vaughan2010}.  Figure \ref{fig:comparison}(b) shows that the
-assumption of a white-noise background and a 95\% confidence level
-leads to the positive detection of significant oscillatory power in
-this time series. Figure \ref{fig:comparison}(c) shows that the
-assumption of a red-noise background with the same confidence level
-significantly reduces the area for which a detection may be claimed.
-Raising the confidence level to 99\% or higher 
+spectrum $P(f)\approx f^{-1.77}$ with no explicit oscillatory content,
+following the construction procedure of \cite{vaughan2010}.  Figure
+\ref{fig:comparison}(b) shows that the assumption of a white-noise
+background and a 95\% confidence level leads to the positive detection
+of significant oscillatory power in this time series. Figure
+\ref{fig:comparison}(c) shows that the assumption of a red-noise
+background with the same confidence level significantly reduces the
+area for which a detection may be claimed.  This simulated data, along
+with the results of Section \ref{sec:results}, suggest that when
+examining the wavelet transforms of time-seris for wave packets, a
+background red-noise power spectrum should be assumed, along with
+higher confidence levels, in order to minimize the effects of
+mistakenly identifying red-noise as evidence for an oscillatory
+signal.
 
 
 %% The displaymath environment will produce the same sort of equation as
