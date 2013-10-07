@@ -25,14 +25,17 @@ from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSerie
 
 if True:
     print('Simulated data')
+    nts = 1
     dt = 12.0
-    nt = 300
+    nt = 5000
     seed = 1
     np.random.seed(seed)
     pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0],
                                                         nt=nt,
                                                         dt=dt)
     data = TimeSeriesFromPowerSpectrum(pls1).sample
+    for i in range(1, nts):
+        data = data + TimeSeriesFromPowerSpectrum(pls1).sample
     t = dt * np.arange(0, nt)
     amplitude = 0.0
     data = 1000*data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
@@ -109,7 +112,7 @@ save.analysis_summary(analysis.results[0])
 # Best fit spectrum
 best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
 print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
-
+"""
 # -----------------------------------------------------------------------------
 # Now do the posterior predictive check - computationally time-consuming
 # -----------------------------------------------------------------------------
@@ -141,7 +144,7 @@ plt.axvline(1.0 / 300.0, color='k', linestyle='--', label='5 mins')
 plt.axvline(1.0 / 180.0, color='k', linestyle=':', label='3 mins')
 plt.legend(fontsize=10, loc=3)
 plt.show()
-"""
+
 # Discrepancy statistics
 for i, k in enumerate(statistic):
     v = value[k]
