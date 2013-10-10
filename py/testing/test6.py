@@ -125,3 +125,16 @@ for i, k in enumerate(statistic):
     plt.title('Statistic: ' + k)
     plt.text(v, np.max(h[0]), "p = %f" % (pvalue))
 plt.show()
+
+# Get the MAP values
+mp = analysis.mp
+best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
+r = iobs / best_fit_power_spectrum
+
+h, xh = np.histogram(r, bins=20)
+h = h / (1.0 * np.sum(h))
+x = 0.5*(xh[0:-1] + xh[1:])
+plt.plot(x, h)
+xx = 0.01 * np.arange(0, 300)
+plt.plot(xx, stats.chi2.pdf(xx, 2))
+

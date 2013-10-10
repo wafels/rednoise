@@ -16,8 +16,9 @@ from timeseries import TimeSeries
 from scipy.optimize import curve_fit
 from scipy.io import readsav
 from cubetools import get_datacube
-#from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 import aia_specific
+import scipy.stats as stats
 plt.ion()
 
 wave = '171'
@@ -55,13 +56,21 @@ for i in range(0, nx):
         # Sum up all the data
         full_data = full_data + d
 
-#full_data = tsutils.fix_nonfinite(dc[100, 100, :])
+full_data = tsutils.fix_nonfinite(dc[30, 110, :])
 
 # Average emission over all the data
-full_data = full_data / (1.0 * nx * ny)
+full_data = full_data #/ (1.0 * nx * ny)
 
 # Create a time series object
 full_ts = TimeSeries(t, full_data)
+
+# Save the time-series
+# Set up where to save the data, and the file type/
+save = rnsave(root='~/ts/pickle',
+              description='all_aia',
+              filetype='pickle')
+save.ts(full_ts)
+
 
 freqs = full_ts.PowerSpectrum.frequencies.positive / full_ts.PowerSpectrum.frequencies.positive[0]
 
@@ -92,3 +101,14 @@ analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
                               burn=10000,
                               thin=5,
                               progress_bar=False)
+# Get the MAP values
+mp = analysis.mp
+best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
+r = iobs / best_fit_power_spectrum
+
+h, xh = np.histogram(r, bins=20)
+h = h / (1.0 * np.sum(h))
+x = 0.5*(xh[0:-1] + xh[1:])
+plt.plot(x, h)
+xx = 0.01 * np.arange(0, 300)
+plt.plot(xx, stats.chi2.pdf(xx, 2))

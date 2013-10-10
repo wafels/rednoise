@@ -93,15 +93,11 @@ def single_power_law_with_constant_not_normalized(analysis_frequencies,
         return out
 
     spectrum = pymc.Exponential('spectrum',
-                                1.0 / fourier_power_spectrum,
+                                beta=1.0 / fourier_power_spectrum,
                                 value=analysis_power,
                                 observed=True)
 
-    #predictive = pymc.Exponential('predictive', 1.0 / fourier_power_spectrum / 2.0)
-
-    predictive = pymc.Chi2('predictive',
-                           2,
-                           value=fourier_power_spectrum)
+    predictive = pymc.Exponential('predictive', beta=1.0 / fourier_power_spectrum)
 
     # MCMC model
     return locals()

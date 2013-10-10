@@ -16,6 +16,7 @@ from pymcmodels import single_power_law_with_constant_not_normalized
 #from cubetools import get_datacube
 from timeseries import TimeSeries
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+import scipy.stats as stats
 #import pickle
 
 # matplotlib interactive mode
@@ -27,18 +28,19 @@ if True:
     print('Simulated data')
     nts = 1
     dt = 12.0
-    nt = 5000
+    nt = 300
     seed = 1
     np.random.seed(seed)
-    pls1 = SimplePowerLawSpectrumWithConstantBackground([10.0, 2.0, -5.0],
+    pls1 = SimplePowerLawSpectrumWithConstantBackground([0.0, 0.0, 0.0],
                                                         nt=nt,
                                                         dt=dt)
     data = TimeSeriesFromPowerSpectrum(pls1).sample
-    for i in range(1, nts):
-        data = data + TimeSeriesFromPowerSpectrum(pls1).sample
+    data = np.random.normal(size=nt)
+    #for i in range(1, nts):
+    #    data = data + TimeSeriesFromPowerSpectrum(pls1).sample
     t = dt * np.arange(0, nt)
     amplitude = 0.0
-    data = 1000*data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
+    data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
     ts = TimeSeries(t, data)
 
 # Save the time-series
@@ -89,7 +91,7 @@ analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
                               iter=50000,
                               burn=10000,
                               thin=5,
-                              progress_bar=False,
+                              progress_bar=True,
                               db=save.filetype,
                               dbname=save.MCMC_filename)
 
@@ -112,6 +114,18 @@ save.analysis_summary(analysis.results[0])
 # Best fit spectrum
 best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
 print mp.power_law_norm.value, mp.power_law_index.value, mp.background.value
+
+r = iobs / best_fit_power_spectrum
+
+
+h, xh = np.histogram(r, bins=10, density=True)
+h = h / (1.0 * np.sum(h))
+x = 0.5*(xh[0:-1] + xh[1:])
+plt.plot(x, 2*h)
+xx = 0.01 * np.arange(0, 300)
+plt.plot(xx, stats.chi2.pdf(xx, 2))
+
+
 """
 # -----------------------------------------------------------------------------
 # Now do the posterior predictive check - computationally time-consuming
