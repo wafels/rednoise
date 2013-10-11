@@ -6,7 +6,7 @@ import pymc
 import pickle
 import matplotlib.pyplot as plt
 import os
-
+from scipy.optimize import curve_fit
 
 class Do_MCMC:
     def __init__(self, data):
@@ -238,3 +238,82 @@ class rnsave:
 
     def PyMC_MCMC(self, obj):
         obj.db.close()
+
+
+
+
+# function we are fitting
+def func(freq, a, n, c):
+    return a * freq ** -n + c
+
+
+# Log of the power spectrum model
+def logfunc2(freq, a, n, c):
+    return np.log(func(freq, a, n, c))
+
+
+class Do_Lstsqr:
+    def __init__(self, data):
+        """"
+        Handles a lest-squares fit of data.
+
+        Parameters
+        ----------
+        data : a list of frequency-power pairs
+        dt : the cadence of the time-seris
+        """
+        self.data = data
+
+        # Number of frequency-power pairs
+        self.ndata = len(self.data)
+
+        #
+
+    # Do the least squares fit
+    def okgo(self, estimate=None, seed=None, locations=None, sigma=None,
+             log=False, **kwargs):
+        """Controls the least-squares fit of the input data
+
+        Parameters
+        ----------
+        pymcmodel : the PyMC model we are using
+        locations : which elements of the input data we are analyzing
+        **kwargs : PyMC control keywords
+        """
+        self.seed = seed
+        # stats results
+        self.results = []
+
+        # locations in the input array
+        if locations is None:
+            self.locations = range(0, self.ndata)
+        else:
+            self.locations = locations
+        # Define the number of results we are looking at
+        self.nts = len(self.locations)
+        
+        # Parameter estimates
+        self.estimate = estimate
+        
+        #
+        self.sigma = sigma
+
+        for k in self.locations:
+            self.fpos = self.data[k][0]
+            self.pwr = self.data[k][1]
+
+            if self.sigma is not None:
+                sig = self.sigma[k]
+
+            # do the fit
+            if log:
+                answer = curve_fit(logfunc, self.fpos, self.pwr, sigma=sig)
+            else:
+                answer = curve_fit(func, self.fpos, self.pwr, sigma=sig)
+
+            # Append the stats results and the samples
+            self.results.append({"power": self.pwr,
+                                 "frequencies": self.fpos,
+                                 "location": k,
+                                 "answer": answer})
+        return self

@@ -43,7 +43,7 @@ class PowerSpectrum:
     def __init__(self, frequencies, power, label='Fourier power'):
         self.frequencies = Frequencies(frequencies)
         self.power = power
-        self.ppower = self.power[self.frequencies.posindex]
+        self.ppower = self.power[..., self.frequencies.posindex]
         self.label = label
 
         # Mean power
@@ -68,21 +68,36 @@ class PowerSpectrum:
 
 class TimeSeries:
     def __init__(self, time, data, label='data', units=None, name=None):
+        """
+        A simple object that defines a time-series object.  Handy for storing
+        time-series and their (its) Fourier power spectra.  Fourier power
+        spectra defined by this object are divided by the number of elements in
+        the source time-series.  This is done so that the expected mathematical
+        properties of the Fourier power spectrum are ensured.  For example,
+        a time series of purely Gaussian-noisy data has the same Fourier power
+        at all frequencies.  If the standard deviation of the Gaussian noise
+        process is 1, then the Fourier power at all frequencies has an
+        expectation value of 1.  Given the numpy definition of the FFT, to
+        maintain this expectation value, this requires the Fourier power to be
+        divided by the number of samples in the original time-series.
+        """
         self.SampleTimes = SampleTimes(time)
-        if self.SampleTimes.nt != data.size:
+        if self.SampleTimes.nt != data.shape[-1]:
             raise ValueError('length of sample times not the same as the data')
+        self.nt = self.SampleTimes.nt
         self.data = data
+        
+        # Note that the power spectrum is defined
         self.PowerSpectrum = PowerSpectrum(np.fft.fftfreq(self.SampleTimes.nt, self.SampleTimes.dt),
-                                           np.abs(np.fft.fft(self.data)) ** 2)
+                                           (np.abs(np.fft.fft(self.data)) ** 2) / (1.0 * self.nt))
         self.label = label
         self.units = units
         self.name = name
-        self.nt = self.SampleTimes.nt
         self.pfreq = self.PowerSpectrum.frequencies.positive
         self.ppower = self.PowerSpectrum.ppower
         
         # Autocorrelation
-        self.acor = tsutils.autocorrelate(self.data)
+        #self.acor = tsutils.autocorrelate(self.data)
 
     def peek(self, **kwargs):
         """
@@ -97,6 +112,7 @@ class TimeSeries:
             plt.ylabel(self.label + yunits + nsamples)
         else:
             plt.ylabel(self.label + nsamples)
+        plt.title(self.name)
 
     def peek_ps(self, **kwargs):
         """

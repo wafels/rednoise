@@ -48,6 +48,7 @@ This is what we do with the data and how we do it:
 (c)
 """
 
+
 if False:
     location = '~/Data/oscillations/mcateer/outgoing3/AR_A.sav'
     maindir = os.path.expanduser(location)
@@ -56,23 +57,13 @@ if False:
     idl = readsav(maindir)
     dc = np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
 else:
-    # Main directory where the data is
-    location = '~/Data/AIA_Data/SOL2011-04-30T21-45-49L061C108'
-    maindir = os.path.expanduser(location)
-
-    # Which wavelength to look at
-    wave = '193'
-
-    # Construct the directory
-    directory = os.path.join(maindir, wave)
-
-    # Load in the data
-    print('Loading data from ' + directory)
-    dc = get_datacube(directory)
+    wave = '171'
+    dc, location = aia_specific.rn4(wave,
+                                    '~/Data/AIA/shutdownfun2/',
+                                    Xrange=[0, 300],
+                                    Yrange=[200, 350])
 
 
-#wave = '171'
-#dc, location = aia_specific.rn4(wave, Xrange=[-201, -1])
 
 # Get some properties of the datacube
 ny = dc.shape[0]
@@ -82,71 +73,40 @@ nt = dc.shape[2]
 # Create a time series object
 dt = 12.0
 t = dt * np.arange(0, nt)
-tsdummy = TimeSeries(t, t)
-iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
-logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
-nposfreq = len(iobs)
 
-# Result # 1 - add up all the emission and do the analysis on the full FOV
-# Also, make a histogram of all the power spectra to get an idea of the
-# varition present
-
-# storage
-pwr = np.zeros((ny, nx, nposfreq))
-logpwr = np.zeros_like(pwr)
-full_data = np.zeros((nt))
+# Fix the input datacube for any non-finite data
 for i in range(0, nx):
     for j in range(0, ny):
         d = dc[j, i, :].flatten()
         # Fix the data for any non-finite entries
         d = tsutils.fix_nonfinite(d)
-
-        # Sum up all the data
-        full_data = full_data + d
-
         # Remove the mean
         d = d - np.mean(d)
-        # Express in units of the standard deviation of the time series
-        #d = d / np.std(d)
+        dc[j, i, :] = d
 
-        # Form a time series object.  Handy for calculating the Fourier power
-        # at all non-zero frequencies
-        ts = TimeSeries(t, d)
+# Time series datacube
+dcts = TimeSeries(t, dc)
+dcts.name = 'AIA ' + str(wave) + ': ' + location
 
-        # Define the Fourier power we are analyzing
-        this_power = ts.PowerSpectrum.ppower
+# Get the Fourier power
+pwr = dcts.ppower
 
-        # Look at the power
-        iobs = iobs + this_power
-        pwr[j, i, :] = this_power
-
-        # Look at the log of the power
-        logiobs = logiobs + np.log(this_power)
-        logpwr[j, i, :] = np.log(this_power)
-
-# Average emission over all the data
-full_data = full_data / (1.0 * nx * ny)
-
-# Create a time series object
-full_ts = TimeSeries(t, full_data)
-
-# Average power over all the pixels
-iobs = iobs / (1.0 * nx * ny)
-
-# Express the power in each frequency as a multiple of the average
-av_iobs = np.mean(iobs)
-iobs = iobs / av_iobs
-
-# Express the power in each frequency as a multiple of the average for all
-# Fourier power at each pixel
-pwr = pwr / av_iobs
-
-# Normalize the frequency.
-freqs = tsdummy.PowerSpectrum.frequencies.positive
-x = freqs / tsdummy.PowerSpectrum.frequencies.positive[0]
+# Arithmetic mean of the Fourier power
+iobs = np.mean(pwr, axis=(0, 1))
 
 # Sigma for the fit to the power
 sigma = np.std(pwr, axis=(0, 1))
+
+# Result # 1 - add up all the emission and do the analysis on the full FOV
+# Also, make a histogram of all the power spectra to get an idea of the
+# varition present
+
+# Create a time series object of the average emission over the whole datacube
+full_ts = TimeSeries(t, np.mean(dcts.data, axis=(0, 1)))
+
+# Normalize the frequency.
+freqs = dcts.PowerSpectrum.frequencies.positive
+x = freqs / dcts.PowerSpectrum.frequencies.positive[0]
 
 
 # function we are fitting
@@ -159,10 +119,20 @@ def func2(freq, a, n, c):
     return np.log(func(freq, a, n, c))
 
 
-# do the fit
-answer = curve_fit(func, x, iobs, sigma=sigma)
+# do the fit to the arithmetic mean
+answer = curve_fit(func, x, iobs, sigma=sigma, p0=[iobs[0], 2, iobs[-1]])
 
-# Get the fit parameters out and calculate the best fit
+pwrlaw = np.zeros((ny, nx))
+for i in range(0,ny-1):
+    for j in range(0,nx-1):
+        y = pwr[i,j,:]
+        try:
+            aaa = curve_fit(func, x, y, sigma=sigma, p0=[y[0], 2, y[-1]])
+            pwrlaw[i,j] = aaa[0][1]
+        except:
+            pwrlaw[i,j] = -1
+
+# Get the fit parameters out and calculate the best fit spectrum
 param = answer[0]
 bf = func(x, param[0], param[1], param[2])
 
@@ -171,16 +141,16 @@ nerr = np.sqrt(answer[1][1, 1])
 
 # Analyze the summed time-series
 # do the fit
-full_ts_iobs = full_ts.PowerSpectrum.ppower / np.mean(full_ts.PowerSpectrum.ppower)
+full_ts_iobs = full_ts.PowerSpectrum.ppower
 answer_full_ts = curve_fit(func2, x, np.log(full_ts_iobs), p0=answer[0])
 # Get the fit parameters out and calculate the best fit
 param_fts = answer_full_ts[0]
 bf_fts = np.exp(func2(x, param_fts[0], param_fts[1], param_fts[2]))
 nerr_fts = np.sqrt(answer[1][1, 1])
 
-# Give the best plot we can under the circumstances.
+# Plot the 
 plt.figure()
-plt.loglog(freqs, iobs, label='arithmetic mean (Erlang distributed)', color='b')
+plt.loglog(freqs, iobs, label='arithmetic mean of the power spectra in every pixel (Erlang distributed)', color='b')
 plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean n=%4.2f +/- %4.2f' % (param[1], nerr))
 plt.loglog(freqs, full_ts_iobs, label='summed emission (exponential distributed)', color='r')
 plt.loglog(freqs, bf_fts, label='fit to summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts), color='r', linestyle="--")
@@ -188,7 +158,7 @@ plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
-plt.title('AIA ' + str(wave) + ': ' + location)
+plt.title(dcts.name)
 plt.legend(loc=3, fontsize=10)
 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
 plt.ylim(0.0001, 1000.0)
@@ -197,8 +167,12 @@ plt.show()
 # ------------------------------------------------------------------------
 # Do the same thing over again, this time working with the log of the
 # normalized power
-# Average power over all the pixels
-logiobs = logiobs / (1.0 * nx * ny)
+
+# Get the logarithm of the Fourier power
+logpwr = np.log(pwr)
+
+# Geometric mean of the Fourier power
+logiobs = np.mean(logpwr, axis=(0,1))
 
 # Sigma for the log of the power over all pixels
 logsigma = np.std(logpwr, axis=(0, 1))
