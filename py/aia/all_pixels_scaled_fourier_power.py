@@ -58,10 +58,19 @@ if False:
     dc = np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
 else:
     wave = '171'
+    AR = False
+    if AR:
+        Xrange = [0, 300]
+        Yrange = [200, 350]
+        type = 'AR'
+    else:
+        Xrange = [550, 650]
+        Yrange = [20, 300]
+        type = 'QS'
     dc, location = aia_specific.rn4(wave,
                                     '~/Data/AIA/shutdownfun2/',
-                                    Xrange=[0, 300],
-                                    Yrange=[200, 350])
+                                    Xrange=Xrange,
+                                    Yrange=Yrange)
 
 
 
@@ -86,7 +95,7 @@ for i in range(0, nx):
 
 # Time series datacube
 dcts = TimeSeries(t, dc)
-dcts.name = 'AIA ' + str(wave) + ': ' + location
+dcts.name = 'AIA ' + str(wave) + '-' + type + ': ' + location
 
 # Get the Fourier power
 pwr = dcts.ppower
@@ -123,14 +132,17 @@ def func2(freq, a, n, c):
 answer = curve_fit(func, x, iobs, sigma=sigma, p0=[iobs[0], 2, iobs[-1]])
 
 pwrlaw = np.zeros((ny, nx))
-for i in range(0,ny-1):
-    for j in range(0,nx-1):
-        y = pwr[i,j,:]
+norm = np.zeros((ny, nx))
+for i in range(0, ny-1):
+    for j in range(0, nx-1):
+        y = pwr[i, j, :]
         try:
             aaa = curve_fit(func, x, y, sigma=sigma, p0=[y[0], 2, y[-1]])
-            pwrlaw[i,j] = aaa[0][1]
+            pwrlaw[i, j] = aaa[0][1]
+            norm[i, j] = aaa[0][0]
         except:
             pwrlaw[i,j] = -1
+            norm[i, j] = -1
 
 # Get the fit parameters out and calculate the best fit spectrum
 param = answer[0]
@@ -191,6 +203,7 @@ nerr2 = np.sqrt(answer2[1][1, 1])
 # you take the logarithm of the power.  This suggests a log-normal distribution
 # of power in all frequencies
 
+nposfreq = len(x)
 # number of histogram bins
 bins = 1000
 hpwr = np.zeros((nposfreq, bins))
@@ -227,7 +240,7 @@ plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
-plt.title('AIA ' + str(wave) + ': ' + location)
+plt.title(dcts.name)
 plt.legend(loc=3, fontsize=10)
 plt.show()
 
@@ -237,7 +250,7 @@ findex = np.arange(0, nposfreq, nposfreq / 5)
 plt.figure()
 plt.xlabel('$\log_{10}(power)$')
 plt.ylabel('proportion found at given frequency')
-plt.title('AIA ' + str(wave) + ': ' + location)
+plt.title(dcts.name)
 for f in findex:
     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
 plt.legend(loc=3, fontsize=10)
