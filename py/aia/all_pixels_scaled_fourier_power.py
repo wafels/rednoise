@@ -58,7 +58,7 @@ if False:
     dc = np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
 else:
     wave = '171'
-    AR = False
+    AR = True
     if AR:
         Xrange = [0, 300]
         Yrange = [200, 350]
@@ -67,17 +67,22 @@ else:
         Xrange = [550, 650]
         Yrange = [20, 300]
         type = 'QS'
-    dc, location = aia_specific.rn4(wave,
-                                    '~/Data/AIA/shutdownfun2/',
+    dc, location, savename = aia_specific.rn4(wave,
+                                    '~/Data/AIA/shutdownfun3/',
+                                    derotate=True,
                                     Xrange=Xrange,
                                     Yrange=Yrange)
-
-
 
 # Get some properties of the datacube
 ny = dc.shape[0]
 nx = dc.shape[1]
 nt = dc.shape[2]
+
+# Get a random spatial sample and save it
+nsample = 100
+pixel_locations = zip(np.random.randint(0, high=nx, size=nsample),
+                      np.random.randint(0, high=ny, size=nsample))
+
 
 # Create a time series object
 dt = 12.0

@@ -248,11 +248,11 @@ def func(freq, a, n, c):
 
 
 # Log of the power spectrum model
-def logfunc2(freq, a, n, c):
+def logfunc(freq, a, n, c):
     return np.log(func(freq, a, n, c))
 
 
-class Do_Lstsqr:
+class Do_LSTSQR:
     def __init__(self, data):
         """"
         Handles a lest-squares fit of data.
@@ -270,7 +270,7 @@ class Do_Lstsqr:
         #
 
     # Do the least squares fit
-    def okgo(self, estimate=None, seed=None, locations=None, sigma=None,
+    def okgo(self, p0=None, seed=None, sigma=None,
              log=False, **kwargs):
         """Controls the least-squares fit of the input data
 
@@ -284,36 +284,39 @@ class Do_Lstsqr:
         # stats results
         self.results = []
 
-        # locations in the input array
-        if locations is None:
-            self.locations = range(0, self.ndata)
-        else:
-            self.locations = locations
-        # Define the number of results we are looking at
-        self.nts = len(self.locations)
+        # Define the number of time-series
+        self.nts = len(self.data)
         
         # Parameter estimates
-        self.estimate = estimate
+        self.p0 = p0
         
         #
         self.sigma = sigma
 
-        for k in self.locations:
-            self.fpos = self.data[k][0]
-            self.pwr = self.data[k][1]
+        for i, d in enumerate(self.data):
 
             if self.sigma is not None:
-                sig = self.sigma[k]
+                sig = self.sigma[i]
+            else:
+                sig = None
+
+            if self.p0 is not None:
+                estimate = self.p0[i]
+            else:
+                estimate = None
 
             # do the fit
             if log:
-                answer = curve_fit(logfunc, self.fpos, self.pwr, sigma=sig)
+                answer = curve_fit(logfunc, d[0], d[1],
+                                   p0=estimate, sigma=sig)
             else:
-                answer = curve_fit(func, self.fpos, self.pwr, sigma=sig)
+                answer = curve_fit(func, d[0], d[1],
+                                   p0=estimate, sigma=sig)
 
             # Append the stats results and the samples
-            self.results.append({"power": self.pwr,
-                                 "frequencies": self.fpos,
-                                 "location": k,
+            self.results.append({"power": d[1],
+                                 "frequencies": d[0],
+                                 "location": i,
+                                 "p0": estimate,
                                  "answer": answer})
         return self
