@@ -44,11 +44,11 @@ if fitsdata is not None:
         type = 'QS'
     
     # Get the data
-    dc, location  = aia_specific.rn4(wave, fitsdata, Xrange=Xrange,
+    dc, location, xyrange  = aia_specific.rn4(wave, fitsdata, Xrange=Xrange,
                                     Yrange=Yrange, derotate=True)
     
     # Convert the location into an identifier
-    savename = location.replace('/', '_')
+    savename = location.replace('/', '_') + '_' + xyrange
     
     # Create the save subdirectory
     save_location = os.path.join(os.path.expanduser(savedir), savename)

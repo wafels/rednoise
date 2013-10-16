@@ -26,14 +26,18 @@ def rn4(wave, location, derotate=False, Xrange=None, Yrange=None):
     nx = dc.shape[1]
     if Xrange is None:
         xr = [0, nx - 1]
+        xrname = ''
     else:
         xr = Xrange
+        xrname = 'x' + str(xr[0]) + '_' + str(xr[1])
     if Yrange is None:
         yr = [0, ny - 1]
+        yrname = ''
     else:
         yr = Yrange
+        yrname = 'y' + str(yr[0]) + '_' + str(yr[1])
 
-    return dc[yr[0]:yr[1], xr[0]:xr[1], :], directory
+    return dc[yr[0]:yr[1], xr[0]:xr[1], :], directory, xrname + yrname
 
 
 def get_pixel_locations(iput=None, nsample=100):
