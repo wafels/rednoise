@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.io import readsav
 import os
 import solar_derotate
+import tsutils
 
 def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
     """Return a datacube from a set of maps"""
@@ -115,3 +116,30 @@ def get_datacube(path, derotate=True):
             for i, m in enumerate(maps):
                 dc[:, :, i] = m.data[:, :]
         return dc
+
+
+def sum_over_space(dc, remove_mean=False):
+    """
+    Sum a datacube over all the spatial locations
+    """
+    # Get some properties of the datacube
+    ny = dc.shape[0]
+    nx = dc.shape[1]
+    nt = dc.shape[2]
+    
+    # Storage for the 
+    fd = np.zeros((nt))
+    for i in range(0, nx):
+        for j in range(0, ny):
+            d = dc[j, i, :].flatten()
+
+            # Fix the data for any non-finite entries
+            d = tsutils.fix_nonfinite(d)
+            
+            # Remove the mean
+            if remove_mean:
+                d = d - np.mean(d)
+    
+            # Sum up all the data
+            fd = fd + d
+    return fd

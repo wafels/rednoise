@@ -15,14 +15,15 @@ import os
 from timeseries import TimeSeries
 from scipy.optimize import curve_fit
 from scipy.io import readsav
-from cubetools import get_datacube
+from cubetools import get_datacube, sum_over_space
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 import aia_specific
 import scipy.stats as stats
 plt.ion()
 
-wave = '171'
-dc, location = aia_specific.rn4(wave, location='~/Data/AIA/shutdownfun', derotate=False)
+wave = '211'
+choice = 'shutdownfun3'
+dc, location, xyrange = aia_specific.rn4(wave, location='~/Data/AIA/' + choice, derotate=True)
 
 
 #wave = '171'
@@ -45,29 +46,23 @@ nposfreq = len(iobs)
 # Also, make a histogram of all the power spectra to get an idea of the
 # varition present
 
-# storage
-full_data = np.zeros((nt))
-for i in range(0, nx):
-    for j in range(0, ny):
-        d = dc[j, i, :].flatten()
-        # Fix the data for any non-finite entries
-        d = tsutils.fix_nonfinite(d)
+# Sum over all the spatial locations
+full_data = sum_over_space(dc)
 
-        # Sum up all the data
-        full_data = full_data + d
-
-full_data = tsutils.fix_nonfinite(dc[30, 110, :])
+#
+#full_data = tsutils.fix_nonfinite(dc[200, 200, :])
 
 # Average emission over all the data
 full_data = full_data #/ (1.0 * nx * ny)
 
 # Create a time series object
 full_ts = TimeSeries(t, full_data)
+full_ts.name = location + ' ' + xyrange
 
 # Save the time-series
 # Set up where to save the data, and the file type/
 save = rnsave(root='~/ts/pickle',
-              description='all_aia',
+              description='all_aia.' + choice + '.' + wave,
               filetype='pickle')
 save.ts(full_ts)
 
@@ -100,7 +95,7 @@ analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
                               iter=50000,
                               burn=10000,
                               thin=5,
-                              progress_bar=False)
+                              progress_bar=True)
 # Get the MAP values
 mp = analysis.mp
 best_fit_power_spectrum = SimplePowerLawSpectrumWithConstantBackground([mp.power_law_norm.value, mp.power_law_index.value, mp.background.value], nt=nt, dt=dt).power()
@@ -110,5 +105,4 @@ h, xh = np.histogram(r, bins=20)
 h = h / (1.0 * np.sum(h))
 x = 0.5*(xh[0:-1] + xh[1:])
 plt.plot(x, h)
-xx = 0.01 * np.arange(0, 300)
-plt.plot(xx, stats.chi2.pdf(xx, 2))
+plt.plot(x, stats.chi2.pdf(x, 2))
