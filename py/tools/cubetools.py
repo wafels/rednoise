@@ -4,7 +4,7 @@ import sunpy
 import matplotlib.pyplot as plt
 from scipy.io import readsav
 import os
-import solar_derotate
+#import solar_derotate
 import tsutils
 
 def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
@@ -32,10 +32,10 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
     # location has to be rotated forward to get the correct center of the FOV
     # for the next maps.
     for t, m in enumerate(maps):
-        newx, newy = solar_derotate.rot_hpc(ref_center['x'],
-                                          ref_center['y'],
-                                          ref_time,
-                                          m.date)
+        #newx, newy = solar_derotate.rot_hpc(ref_center['x'],
+        #                                  ref_center['y'],
+        #                                  ref_time,
+        #                                  m.date)
         if newx is None:
             xdiff = 0
         else:

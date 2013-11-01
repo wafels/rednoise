@@ -21,9 +21,22 @@ import aia_specific
 import scipy.stats as stats
 plt.ion()
 
-wave = '211'
-choice = 'shutdownfun3'
-dc, location, xyrange = aia_specific.rn4(wave, location='~/Data/AIA/' + choice, derotate=True)
+if True:
+    location = '~/Data/oscillations/mcateer/outgoing3/CH_I.sav'
+    maindir = os.path.expanduser(location)
+    print('Loading data from ' + maindir)
+    wave = '171'
+    idl = readsav(maindir)
+    dc = np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
+    stype = 'QS'
+    xyrange = ''
+    choice = '171'
+else:
+    wave = '211'
+    choice = 'shutdownfun3'
+    dc, location, xyrange = aia_specific.rn4(wave, location='~/Data/AIA/' + choice, derotate=True)
+
+
 
 
 #wave = '171'
@@ -53,7 +66,7 @@ full_data = sum_over_space(dc)
 #full_data = tsutils.fix_nonfinite(dc[200, 200, :])
 
 # Average emission over all the data
-full_data = full_data #/ (1.0 * nx * ny)
+full_data = full_data  # / (1.0 * nx * ny)
 
 # Create a time series object
 full_ts = TimeSeries(t, full_data)
@@ -103,6 +116,6 @@ r = iobs / best_fit_power_spectrum
 
 h, xh = np.histogram(r, bins=20)
 h = h / (1.0 * np.sum(h))
-x = 0.5*(xh[0:-1] + xh[1:])
-plt.plot(x, h)
-plt.plot(x, stats.chi2.pdf(x, 2))
+x = 0.5 * (xh[0:-1] + xh[1:])
+#plt.plot(x, h)
+#plt.plot(x, stats.chi2.pdf(x, 2))

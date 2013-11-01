@@ -49,24 +49,25 @@ This is what we do with the data and how we do it:
 """
 
 
-if False:
+if True:
     location = '~/Data/oscillations/mcateer/outgoing3/AR_A.sav'
     maindir = os.path.expanduser(location)
     print('Loading data from ' + maindir)
     wave = '???'
     idl = readsav(maindir)
     dc = np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
+    stype = 'AR'
 else:
     wave = '171'
     AR = True
     if AR:
         Xrange = [0, 300]
         Yrange = [200, 350]
-        type = 'AR'
+        stype = 'AR'
     else:
         Xrange = [550, 650]
         Yrange = [20, 300]
-        type = 'QS'
+        stype = 'QS'
     dc, location, savename = aia_specific.rn4(wave,
                                     '~/Data/AIA/shutdownfun3/',
                                     derotate=True,
@@ -100,7 +101,7 @@ for i in range(0, nx):
 
 # Time series datacube
 dcts = TimeSeries(t, dc)
-dcts.name = 'AIA ' + str(wave) + '-' + type + ': ' + location
+dcts.name = 'AIA ' + str(wave) + '-' + stype + ': ' + location
 
 # Get the Fourier power
 pwr = dcts.ppower
@@ -138,15 +139,15 @@ answer = curve_fit(func, x, iobs, sigma=sigma, p0=[iobs[0], 2, iobs[-1]])
 
 pwrlaw = np.zeros((ny, nx))
 norm = np.zeros((ny, nx))
-for i in range(0, ny-1):
-    for j in range(0, nx-1):
+for i in range(0, ny - 1):
+    for j in range(0, nx - 1):
         y = pwr[i, j, :]
         try:
             aaa = curve_fit(func, x, y, sigma=sigma, p0=[y[0], 2, y[-1]])
             pwrlaw[i, j] = aaa[0][1]
             norm[i, j] = aaa[0][0]
         except:
-            pwrlaw[i,j] = -1
+            pwrlaw[i, j] = -1
             norm[i, j] = -1
 
 # Get the fit parameters out and calculate the best fit spectrum
@@ -165,7 +166,7 @@ param_fts = answer_full_ts[0]
 bf_fts = np.exp(func2(x, param_fts[0], param_fts[1], param_fts[2]))
 nerr_fts = np.sqrt(answer[1][1, 1])
 
-# Plot the 
+# Plot the
 plt.figure()
 plt.loglog(freqs, iobs, label='arithmetic mean of the power spectra in every pixel (Erlang distributed)', color='b')
 plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean n=%4.2f +/- %4.2f' % (param[1], nerr))
@@ -189,7 +190,7 @@ plt.show()
 logpwr = np.log(pwr)
 
 # Geometric mean of the Fourier power
-logiobs = np.mean(logpwr, axis=(0,1))
+logiobs = np.mean(logpwr, axis=(0, 1))
 
 # Sigma for the log of the power over all pixels
 logsigma = np.std(logpwr, axis=(0, 1))
@@ -260,4 +261,3 @@ for f in findex:
     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
 plt.legend(loc=3, fontsize=10)
 plt.show()
-
