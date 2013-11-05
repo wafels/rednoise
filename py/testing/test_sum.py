@@ -37,7 +37,7 @@ gamma = 1.0
 power = alpha_e * (1.0 + gamma) - gamma
 
 # Number of events at each time scale
-number = 10*np.random.pareto(power, size=nscale)
+number = 10 * np.random.pareto(power, size=nscale)
 
 # Nearest integer number of events
 number_int = np.rint(number)

@@ -21,7 +21,7 @@ import aia_specific
 import scipy.stats as stats
 plt.ion()
 
-if True:
+if False:
     location = '~/Data/oscillations/mcateer/outgoing3/CH_I.sav'
     maindir = os.path.expanduser(location)
     print('Loading data from ' + maindir)
@@ -33,8 +33,8 @@ if True:
     choice = '171'
 else:
     wave = '211'
-    choice = 'shutdownfun3'
-    dc, location, xyrange = aia_specific.rn4(wave, location='~/Data/AIA/' + choice, derotate=True)
+    choice = ''
+    dc, location, xyrange = aia_specific.rn4(wave, location='/home/ireland/Data/AIA_Data/shutdownfun3/off/1.0/' + choice, derotate=False)
 
 
 
