@@ -25,7 +25,7 @@ def event(t, t0, A, T):
 
 
 # number of time-scales to sample
-nscale = 1000
+nscale = 10000
 
 # N(E) - number of events and their energy N(E) ~ E^{-alpha_e}
 alpha_e = 1.0
