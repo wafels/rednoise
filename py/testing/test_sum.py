@@ -25,7 +25,7 @@ def event(t, t0, A, T):
 
 
 # number of time-scales to sample
-nscale = 10000
+nscale = 1000
 
 # N(E) - number of events and their energy N(E) ~ E^{-alpha_e}
 alpha_e = 1.0
@@ -55,14 +55,18 @@ np.random.shuffle(event_list)
 # Poisson mean time between events
 lam = 1.0
 
+print 'Number of events %i' % (len(event_list))
+
 #
 t = 0.01 * np.arange(lam * event_list.size)
+tmin = np.min(t)
+tmax = np.max(t)
 emission = np.zeros_like(t)
 start_time = 0.0
 for ev in event_list:
     T = (1.0 * ev) ** (-power)
     energy = T ** (1.0 + gamma)
-    start_time = start_time + 0.01 * np.random.poisson(lam=lam)
+    start_time = np. random.uniform(low=tmin, high=tmax)
     emnew = event(t, start_time, energy, T)
     if np.max(emnew) >= 0.0:
         emission = emission + emnew

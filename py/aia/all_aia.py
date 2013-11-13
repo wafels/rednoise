@@ -32,15 +32,11 @@ if False:
     xyrange = ''
     choice = '171'
 else:
-    wave = '171'
+    wave = '193'
     choice = ''
     dc, location, xyrange = aia_specific.rn4(wave,
-                                             location='/home/ireland/Data/AIA_Data/shutdownfun3/off/1.0/' + choice,
-                                             derotate=False,
-                                             Xrange=[500, 550],
-                                             Yrange=[0, 50])
-
-
+                                             location='/home/ireland/Data/AIA_Data/shutdownfun3_6hr/disk/1.0/' + choice,
+                                             derotate=False)
 
 
 #wave = '171'
@@ -67,7 +63,7 @@ nposfreq = len(iobs)
 full_data = sum_over_space(dc)
 
 #
-full_data = tsutils.fix_nonfinite(dc[10, 10, :])
+#full_data = tsutils.fix_nonfinite(dc[10, 10, :])
 
 # Average emission over all the data
 full_data = full_data  # / (1.0 * nx * ny)

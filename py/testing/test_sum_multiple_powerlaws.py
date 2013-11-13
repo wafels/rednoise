@@ -15,8 +15,8 @@ from pymcmodels import single_power_law_with_constant_not_normalized
 #
 dt = 12.0
 nt = 300
-V = 2
-W = 3
+V = 100
+W = 100
 no_noise = False
 pls = SimplePowerLawSpectrum([10.0, 2.0], nt=nt, dt=dt)
 
@@ -27,7 +27,7 @@ ncount = 10000
 data3 = np.zeros(shape=(nt))
 while i < ncount:
     i = i + 1
-    data3 = data3 + tsnew3.sample# * np.random.uniform()
+    data3 = data3 + tsnew3.sample * np.random.pareto(2.0)
 
 ts3 = TimeSeries(dt * np.arange(0, nt), data3)
 
