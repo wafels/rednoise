@@ -32,10 +32,10 @@ if False:
     xyrange = ''
     choice = '171'
 else:
-    wave = '193'
+    wave = '171'
     choice = ''
     dc, location, xyrange = aia_specific.rn4(wave,
-                                             location='/home/ireland/Data/AIA_Data/shutdownfun3_6hr/disk/1.0/' + choice,
+                                             location='/Users/ireland/Data/AIA_Data/shutdownfun/' + choice,
                                              derotate=False)
 
 
@@ -83,7 +83,7 @@ save.ts(full_ts)
 freqs = full_ts.PowerSpectrum.frequencies.positive / full_ts.PowerSpectrum.frequencies.positive[0]
 
 # Form the input for the MCMC algorithm.
-iobs = full_ts.ppower
+iobs = np.sqrt(full_ts.ppower)
 this = ([full_ts.pfreq, iobs],)
 
 

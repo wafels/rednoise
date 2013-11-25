@@ -31,16 +31,16 @@ if True:
     nt = 300
     seed = 1
     np.random.seed(seed)
-    pls1 = SimplePowerLawSpectrumWithConstantBackground([0.0, 0.0, 0.0],
+    pls1 = SimplePowerLawSpectrumWithConstantBackground([1.0, 2.0, 0.0],
                                                         nt=nt,
                                                         dt=dt)
     data = TimeSeriesFromPowerSpectrum(pls1).sample
-    data = np.random.normal(size=nt)
+    #data = np.random.normal(size=nt)
     #for i in range(1, nts):
     #    data = data + TimeSeriesFromPowerSpectrum(pls1).sample
     t = dt * np.arange(0, nt)
     amplitude = 0.0
-    data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
+    #data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
     ts = TimeSeries(t, data)
 
 # Save the time-series

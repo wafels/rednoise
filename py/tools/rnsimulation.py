@@ -156,7 +156,7 @@ def noisy_power_spectrum(S):
     return S * X / 2.0
 
 
-def noisy_fourier_transform(I, fft_zero=0.0, no_noise=False):
+def noisy_fourier_transform(I, fft_zero=0.0, phase_noise=True):
     """
     Take an input power spectrum I and create a full Fourier transform over all
     positive and negative frequencies and has random phases such that the time
@@ -169,12 +169,14 @@ def noisy_fourier_transform(I, fft_zero=0.0, no_noise=False):
 
     # random phases, except for the nyquist frequency.
     ph = uniform.rvs(loc=-np.pi / 2.0, scale=np.pi, size=K)
-    if no_noise:
+    if not phase_noise:
         ph[:] = 0.0
     ph[-1] = 0.0
 
     # Amplitudes
     A = np.sqrt(I / 2.0)
+
+    print np.sqrt(I)
 
     # WARNING - SPECTRAL POWER APPEARs TO BE OUT BY A FACTOR 2 WITHOUT THIS
     # MULTIPLICATION FACTOR BELOW
@@ -191,9 +193,8 @@ def noisy_fourier_transform(I, fft_zero=0.0, no_noise=False):
 
     return F_complete, F
     
-    
 
-def time_series_from_power_spectrum(S, fft_zero=0.0, no_noise=False):
+def time_series_from_power_spectrum(S, fft_zero=0.0, phase_noise=True, power_noise=True):
     """Create a time series with power law noise, following the recipe
     of Vaughan (2010), MNRAS, 402, 307, appendix B
 
@@ -208,15 +209,17 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, no_noise=False):
     """
 
     # noisy power spectrum
-    if no_noise:
-        I = S
-    else:
+    if power_noise:
         I = noisy_power_spectrum(S)
+    else:
+        I = S
+
+    print np.sqrt(I)
 
     # Get noisy Fourier transform
     F_complete, F = noisy_fourier_transform(I,
                                             fft_zero=fft_zero,
-                                            no_noise=no_noise)
+                                            phase_noise=phase_noise)
 
     # create the time-series.  The complex part should be tiny.
     T_sim = np.fft.ifft(F_complete)
