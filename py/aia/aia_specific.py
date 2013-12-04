@@ -8,19 +8,16 @@ import numpy as np
 plt.ion()
 
 
-def rn4(wave, location, derotate=False, Xrange=None, Yrange=None):
+def rn4(location, derotate=False, Xrange=None, Yrange=None):
     # Main directory where the data is
-    maindir = os.path.expanduser(location)
+    directory = os.path.expanduser(location)
     # Which wavelength to look at
-
-    # Construct the directory
-    directory = os.path.join(maindir, wave)
 
     # Load in the data using a very specific piece of code that will cut down
     # the region quite dramatically
     print('Loading data from ' + directory)
 
-    dc = get_datacube(directory, derotate=derotate)
+    dc, maps = get_datacube(directory, derotate=derotate)
     # Get some properties of the datacube
     ny = dc.shape[0]
     nx = dc.shape[1]
@@ -37,7 +34,7 @@ def rn4(wave, location, derotate=False, Xrange=None, Yrange=None):
         yr = Yrange
         yrname = 'y' + str(yr[0]) + '_' + str(yr[1])
 
-    return dc[yr[0]:yr[1], xr[0]:xr[1], :], directory, xrname + yrname
+    return dc[yr[0]:yr[1], xr[0]:xr[1], :], directory, xrname + yrname, maps
 
 
 def get_pixel_locations(iput=None, nsample=100):

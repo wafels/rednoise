@@ -6,14 +6,11 @@ some fit estimates.
 import numpy as np
 from matplotlib import pyplot as plt
 import tsutils
-from rnfit2 import Do_Lstsqr
 import os
 from timeseries import TimeSeries
 from scipy.optimize import curve_fit
-from scipy.io import readsav
-from cubetools import get_datacube
 #from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
-import aia_specific
+import cPickle as pickle
 plt.ion()
 
 """
@@ -44,8 +41,19 @@ This is what we do with the data and how we do it:
 (c)
 """
 
-wave = '171'
-dc, location = aia_specific.rn4(wave, '~/Data/AIA/shutdownfun2/')
+# Load in the datacube
+directory = '~/ts/pickle/shutdownfun3'
+wave = '193'
+region = 'qs'
+
+location = os.path.join(os.path.expanduser(directory), wave)
+filename = region + '.' + wave + '.datacube.pickle'
+pkl_file_location = os.path.join(location, filename)
+print('Loading ' + pkl_file_location)
+pkl_file = open(pkl_file_location, 'rb')
+dc = pickle.load(pkl_file)
+pkl_file.close()
+
 
 # Get some properties of the datacube
 ny = dc.shape[0]
@@ -152,16 +160,17 @@ bf_fts = np.exp(func2(x, param_fts[0], param_fts[1], param_fts[2]))
 nerr_fts = np.sqrt(answer[1][1, 1])
 
 # Give the best plot we can under the circumstances.
-plt.figure()
-plt.loglog(freqs, iobs, label='arithmetic mean (Erlang distributed)', color='b')
-plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean n=%4.2f +/- %4.2f' % (param[1], nerr))
-plt.loglog(freqs, full_ts_iobs, label='summed emission (exponential distributed)', color='r')
-plt.loglog(freqs, bf_fts, label='fit to summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts), color='r', linestyle="--")
+plt.figure(1)
+plt.loglog(freqs, iobs, label='arithmetic mean of power spectra from each pixel (Erlang distributed)', color='b')
+plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
+plt.loglog(freqs, full_ts_iobs, label='power spectrum from summed emission (exponential distributed)', color='r')
+plt.loglog(freqs, bf_fts, label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts), color='r', linestyle="--")
 plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
+plt.axhline(1.0, color='k', label='average power')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
-plt.title('AIA ' + str(wave) + ': ' + location)
+plt.title('AIA ' + str(wave) + ': ' + region)
 plt.legend(loc=3, fontsize=10)
 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
 plt.ylim(0.0001, 1000.0)
@@ -191,7 +200,7 @@ nerr2 = np.sqrt(answer2[1][1, 1])
 # of power in all frequencies
 
 # number of histogram bins
-bins = 1000
+bins = 100
 hpwr = np.zeros((nposfreq, bins))
 for f in range(0, nposfreq):
     h = np.histogram(logpwr[:, :, f], bins=bins, range=[np.min(logpwr), np.max(logpwr)])
@@ -215,8 +224,8 @@ for i, thisp in enumerate(p):
 # Give the best plot we can under the circumstances.  Since we have been
 # looking at the log of the power, plots are slightly different
 
-plt.figure()
-plt.loglog(freqs, np.exp(logiobs), label='geometric mean')
+plt.figure(2)
+plt.loglog(freqs, np.exp(logiobs), label='geometric mean of power spectra at each pixel')
 plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
 plt.loglog(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
 plt.loglog(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
@@ -226,17 +235,17 @@ plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
-plt.title('AIA ' + str(wave) + ': ' + location)
+plt.title('AIA ' + str(wave) + ': ' + region)
 plt.legend(loc=3, fontsize=10)
 plt.show()
 
 # plot some histograms of the log power at a small number of equally spaced
 # frequencies
 findex = np.arange(0, nposfreq, nposfreq / 5)
-plt.figure()
+plt.figure(3)
 plt.xlabel('$\log_{10}(power)$')
 plt.ylabel('proportion found at given frequency')
-plt.title('AIA ' + str(wave) + ': ' + location)
+plt.title('AIA ' + str(wave) + ': ' + region)
 for f in findex:
     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
 plt.legend(loc=3, fontsize=10)
