@@ -279,6 +279,14 @@ for f in findex:
 plt.legend(loc=3, fontsize=10)
 plt.savefig(savefig + '.power_spectra_distributions.png')
 
+
+# plot out the time series
+plt.figure(4)
+full_ts.peek()
+plt.savefig(savefig + '.full_ts_timeseries.png')
+
+
+
 #
 # Make maps of the Fourier power
 #
@@ -314,7 +322,7 @@ background_estimate[2] = background_estimate[0] * 1000.0
 
 estimate = {"norm_estimate": norm_estimate,
             "background_estimate": background_estimate}
-"""
+
 # _____________________________________________________________________________
 # -----------------------------------------------------------------------------
 # Analyze using MCMC
@@ -327,5 +335,6 @@ analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
                               thin=5,
                               progress_bar=True)
 
-
-"""
+analysis.showfit(figure=6)
+plt.plot(freqs, analysis.M.trace('predictive')[0], label='posterior simulation')
+plt.savefig(savefig + '.mcmc_fit_with_stochastic_estimate.png')
