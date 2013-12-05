@@ -15,6 +15,7 @@ from rnfit2 import Do_MCMC, rnsave
 from pymcmodels import single_power_law_with_constant_not_normalized
 from cubetools import get_datacube
 import scipy.stats as stats
+import csv
 import cPickle as pickle
 
 
@@ -58,12 +59,14 @@ This is what we do with the data and how we do it:
 """
 
 # Load in the datacube
-directory = '~/ts/pickle/shutdownfun3'
-wave = '171'
-region = 'qs'
+directory = '~/ts/pickle/shutdownfun3/'
+fits_level = '1.0'
+wave = '131'
+region = 'sunspot'
 savefig = '~/ts/img/shutdownfun3_1hr'
+savecsv = '~/ts/csv/shutdownfun3_1hr'
 
-location = os.path.join(os.path.expanduser(directory), wave)
+location = os.path.join(os.path.expanduser(directory), fits_level, wave)
 filename = region + '.' + wave + '.datacube.pickle'
 pkl_file_location = os.path.join(location, filename)
 print('Loading ' + pkl_file_location)
@@ -71,11 +74,13 @@ pkl_file = open(pkl_file_location, 'rb')
 dc = pickle.load(pkl_file)
 pkl_file.close()
 
+data_name = 'AIA ' + wave + ' (' + fits_level + '), ' + region
+
 # Create a location to save the figures
 savefig = os.path.join(os.path.expanduser(savefig), wave)
 if not(os.path.isdir(savefig)):
     os.makedirs(savefig)
-figname = wave + '.' + region
+figname = data_name
 savefig = os.path.join(savefig, figname)
 
 
@@ -135,10 +140,21 @@ full_data = full_data / (1.0 * nx * ny)
 
 # Create a time series object
 full_ts = TimeSeries(t, full_data)
-full_ts.name = 'AIA '+wave+': '+region 
+full_ts.name = data_name
 full_ts.label = 'average emission [%i time series]' % (nx * ny)
 # Average power over all the pixels
 iobs = iobs / (1.0 * nx * ny)
+
+# Save the full time series to a CSV file
+savecsv = os.path.join(os.path.expanduser(savecsv), fits_level, wave)
+if not(os.path.isdir(savecsv)):
+    os.makedirs(savecsv)
+savecsv = os.path.join(savecsv, data_name)
+ofile  = open(savecsv + '.full_ts.csv', "wb")
+writer = csv.writer(ofile, delimiter=',')
+for i, d in enumerate(full_data):
+    writer.writerow([t[i], d])
+ofile.close()
 
 # Express the power in each frequency as a multiple of the average
 av_iobs = np.mean(iobs)
@@ -198,7 +214,7 @@ plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.axhline(1.0, color='k', label='average power')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
-plt.title('AIA ' + str(wave) + ': ' + region)
+plt.title(data_name + ' - power spectra, arith. mean')
 plt.legend(loc=3, fontsize=10)
 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
 plt.ylim(0.0001, 1000.0)
@@ -263,7 +279,7 @@ plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
 plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
-plt.title('AIA ' + str(wave) + ': ' + region)
+plt.title(data_name + ' - power spectra, geom. mean')
 plt.legend(loc=3, fontsize=10)
 plt.savefig(savefig + '.geometric_mean_power_spectra.png')
 
@@ -273,7 +289,7 @@ findex = np.arange(0, nposfreq, nposfreq / 5)
 plt.figure(3)
 plt.xlabel('$\log_{10}(power)$')
 plt.ylabel('proportion found at given frequency')
-plt.title('AIA ' + str(wave) + ': ' + region)
+plt.title(data_name + ' - power distributions')
 for f in findex:
     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
 plt.legend(loc=3, fontsize=10)
@@ -336,5 +352,5 @@ analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
                               progress_bar=True)
 
 analysis.showfit(figure=5, show_simulated=[0], show_1=True,
-                 title='AIA '+ wave + ' ' + region + ': '+ 'Bayesian/MCMC fit')
+                 title=data_name + ' - '+ 'Bayesian/MCMC fit')
 plt.savefig(savefig + '.mcmc_fit_with_stochastic_estimate.png')

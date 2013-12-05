@@ -13,10 +13,12 @@ import os
 aiadata = '~/Data/AIA/shutdownfun3/disk/1.5'
 
 # wavelength
-wave = '171'
+wave = '193'
 
 # output data
-output = os.path.expanduser('~/ts/pickle/shutdownfun3/1.5')
+output = os.path.join(os.path.expanduser('~/ts/pickle/shutdownfun3/1.5'), wave)
+if not os.path.isdir(output):
+    os.makedirs(output)
 
 dc, location, savename, original_mapcube = aia_specific.rn4(os.path.join(aiadata, wave), derotate=True)
 
