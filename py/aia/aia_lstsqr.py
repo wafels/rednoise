@@ -5,13 +5,29 @@ some fit estimates.
 # Test 6: Posterior predictive checking
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib
 import tsutils
 import os
 from timeseries import TimeSeries
 from scipy.optimize import curve_fit
-#from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+from rnfit2 import Do_MCMC, rnsave
+from pymcmodels import single_power_law_with_constant_not_normalized
+from cubetools import get_datacube
+import scipy.stats as stats
 import cPickle as pickle
+
+
+font = {'family' : 'normal',
+        'weight' : 'bold',
+        'size'   : 22}
+
+matplotlib.rc('font', **font)
+matplotlib.rc('lines', linewidth=2)
+matplotlib.rc('figure', figsize=(12.5, 10))
+
 plt.ion()
+
 
 """
 For any input datacube we wish to define a certain number of data products...
@@ -43,8 +59,9 @@ This is what we do with the data and how we do it:
 
 # Load in the datacube
 directory = '~/ts/pickle/shutdownfun3'
-wave = '193'
-region = 'qs'
+wave = '211'
+region = 'loopfootpoints'
+savefig = '~/ts/img/shutdownfun3_1hr'
 
 location = os.path.join(os.path.expanduser(directory), wave)
 filename = region + '.' + wave + '.datacube.pickle'
@@ -53,6 +70,14 @@ print('Loading ' + pkl_file_location)
 pkl_file = open(pkl_file_location, 'rb')
 dc = pickle.load(pkl_file)
 pkl_file.close()
+
+# Create a location to save the figures
+savefig = os.path.join(os.path.expanduser(savefig), wave)
+if not(os.path.isdir(savefig)):
+    os.makedirs(savefig)
+figname = wave + '.' + region
+savefig = os.path.join(savefig, figname)
+
 
 
 # Get some properties of the datacube
@@ -110,7 +135,8 @@ full_data = full_data / (1.0 * nx * ny)
 
 # Create a time series object
 full_ts = TimeSeries(t, full_data)
-
+full_ts.name = 'AIA '+wave+': '+region 
+full_ts.label = 'summed emission [%i time series]' % (nx * ny)
 # Average power over all the pixels
 iobs = iobs / (1.0 * nx * ny)
 
@@ -134,10 +160,12 @@ sigma = np.std(pwr, axis=(0, 1))
 def func(freq, a, n, c):
     return a * freq ** -n + c
 
-
 # Log of the power spectrum model
 def func2(freq, a, n, c):
-    return np.log(func(freq, a, n, c))
+    print a, n, c
+    z = func(freq, a, n, c)
+    print z
+    return np.log(z)
 
 
 # do the fit
@@ -174,7 +202,7 @@ plt.title('AIA ' + str(wave) + ': ' + region)
 plt.legend(loc=3, fontsize=10)
 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
 plt.ylim(0.0001, 1000.0)
-plt.show()
+plt.savefig(savefig + '.arithmetic_mean_power_spectra.png')
 
 # ------------------------------------------------------------------------
 # Do the same thing over again, this time working with the log of the
@@ -237,7 +265,7 @@ plt.xlabel('frequency (Hz)')
 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
 plt.title('AIA ' + str(wave) + ': ' + region)
 plt.legend(loc=3, fontsize=10)
-plt.show()
+plt.savefig(savefig + '.geometric_mean_power_spectra.png')
 
 # plot some histograms of the log power at a small number of equally spaced
 # frequencies
@@ -249,5 +277,55 @@ plt.title('AIA ' + str(wave) + ': ' + region)
 for f in findex:
     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
 plt.legend(loc=3, fontsize=10)
-plt.show()
+plt.savefig(savefig + '.power_spectra_distributions.png')
 
+#
+# Make maps of the Fourier power
+#
+fmap = []
+franges = [[1.0/360.0, 1.0/240.0], [1.0/240.0, 1.0/120.0]]
+for fr in franges:
+    ind = []
+    for i, testf in enumerate(freqs):
+        if testf >= fr[0] and testf <= fr[1]:
+            ind.append(i)
+    fmap.append(np.sum(pwr[:,:,ind[:]], axis=2))
+
+#
+# Do the MCMC stuff
+#
+# Normalize the frequency so that the first element is equal to 1 and
+# all higher frequencies are multiples of the first non-zero frequency.  This
+# makes calculation slightly easier.
+
+# Form the input for the MCMC algorithm.
+this = ([freqs, full_ts_iobs],)
+
+
+norm_estimate = np.zeros((3,))
+norm_estimate[0] = iobs[0]
+norm_estimate[1] = norm_estimate[0] / 1000.0
+norm_estimate[2] = norm_estimate[0] * 1000.0
+
+background_estimate = np.zeros_like(norm_estimate)
+background_estimate[0] = np.mean(iobs[-10:-1])
+background_estimate[1] = background_estimate[0] / 1000.0
+background_estimate[2] = background_estimate[0] * 1000.0
+
+estimate = {"norm_estimate": norm_estimate,
+            "background_estimate": background_estimate}
+"""
+# _____________________________________________________________________________
+# -----------------------------------------------------------------------------
+# Analyze using MCMC
+# -----------------------------------------------------------------------------
+analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
+                              estimate=estimate,
+                              seed=None,
+                              iter=50000,
+                              burn=10000,
+                              thin=5,
+                              progress_bar=True)
+
+
+"""
