@@ -59,8 +59,8 @@ This is what we do with the data and how we do it:
 
 # Load in the datacube
 directory = '~/ts/pickle/shutdownfun3'
-wave = '211'
-region = 'loopfootpoints'
+wave = '171'
+region = 'qs'
 savefig = '~/ts/img/shutdownfun3_1hr'
 
 location = os.path.join(os.path.expanduser(directory), wave)

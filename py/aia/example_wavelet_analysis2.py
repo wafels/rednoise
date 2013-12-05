@@ -30,6 +30,48 @@ t = dt * np.arange(0, nt)
 amplitude = 0.0
 data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
 
+# Linear increase
+data = data + 0.1 * t/np.max(t)
+
+
+"""
+# Running average filter
+def movingaverage(interval, window_size):
+    window = np.ones(int(window_size))/float(window_size)
+    return np.convolve(interval, window, 'same')
+
+def moving_average(a, n=3) :
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1:] / n
+
+
+mvav = moving_average(data, n=84)
+data = data - mvav
+"""
+def smooth(x,window_len=11,window='hanning'):
+    if x.ndim != 1:
+            raise ValueError, "smooth only accepts 1 dimension arrays."
+    if x.size < window_len:
+            raise ValueError, "Input vector needs to be bigger than window size."
+    if window_len<3:
+            return x
+    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+            raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+    s=np.r_[2*x[0]-x[window_len-1::-1],x,2*x[-1]-x[-1:-window_len:-1]]
+    if window == 'flat': #moving average
+            w=np.ones(window_len,'d')
+    else:  
+            w=eval('np.'+window+'(window_len)')
+    y=np.convolve(w/w.sum(),s,mode='same')
+    return y[window_len:-window_len+1]
+
+tsoriginal = TimeSeries(t, data)
+plt.figure(10)
+tsoriginal.peek()
+
+data = data - smooth(data, window_len=84)
+
 # Create a time series object
 ts = TimeSeries(t, data)
 ts.label = 'emission'

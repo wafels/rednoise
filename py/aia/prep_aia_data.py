@@ -10,15 +10,16 @@ import os
 
 """
 # inout data
-aiadata = '~/Data/AIA/shutdownfun3/'
+aiadata = '~/Data/AIA/shutdownfun3/disk/1.5'
 
 # wavelength
-wave = '193'
+wave = '171'
 
 # output data
-output = os.path.expanduser('~/ts/pickle/shutdownfun3')
+output = os.path.expanduser('~/ts/pickle/shutdownfun3/1.5')
 
 dc, location, savename, original_mapcube = aia_specific.rn4(os.path.join(aiadata, wave), derotate=True)
+
 
 # moss
 pickle.dump(dc[175:210,115:180,:], open(os.path.join(output, 'moss.'+wave+'.datacube.pickle'), 'wb'))
