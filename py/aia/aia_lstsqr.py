@@ -136,7 +136,7 @@ full_data = full_data / (1.0 * nx * ny)
 # Create a time series object
 full_ts = TimeSeries(t, full_data)
 full_ts.name = 'AIA '+wave+': '+region 
-full_ts.label = 'summed emission [%i time series]' % (nx * ny)
+full_ts.label = 'average emission [%i time series]' % (nx * ny)
 # Average power over all the pixels
 iobs = iobs / (1.0 * nx * ny)
 
@@ -262,7 +262,7 @@ plt.loglog(freqs, lim[1, 1, :], linestyle=':', label='upper 95%')
 plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
 plt.xlabel('frequency (Hz)')
-plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
+plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
 plt.title('AIA ' + str(wave) + ': ' + region)
 plt.legend(loc=3, fontsize=10)
 plt.savefig(savefig + '.geometric_mean_power_spectra.png')
@@ -335,6 +335,6 @@ analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
                               thin=5,
                               progress_bar=True)
 
-analysis.showfit(figure=6)
-plt.plot(freqs, analysis.M.trace('predictive')[0], label='posterior simulation')
+analysis.showfit(figure=5, show_simulated=[0], show_1=True,
+                 title='AIA '+ wave + ' ' + region + ': '+ 'Bayesian/MCMC fit')
 plt.savefig(savefig + '.mcmc_fit_with_stochastic_estimate.png')

@@ -110,7 +110,8 @@ class Do_MCMC:
         output.close()
         return self
 
-    def showfit(self, loc=0, figure=2, show_cor_seis=True):
+    def showfit(self, loc=0, figure=2, show_cor_seis=True,
+                show_1=False, show_simulated=None, title='model fit'):
         """ Show a spectral fit summary plot"""
         # Construct a summary for each variable
         k = self.results[loc]['stats'].keys()
@@ -148,17 +149,23 @@ class Do_MCMC:
         if show_cor_seis:
             plt.axvline(1.0 / 300.0, color='k', linestyle='--', label='5 mins')
             plt.axvline(1.0 / 180.0, color='k', linestyle=':', label='3 mins')
+        if show_1:
+            plt.axhline(1.0, color='k', label='average power')
+        if show_simulated is not None:
+            for ind in show_simulated:
+                plt.loglog(x, self.M.trace('predictive')[ind], label='simulated = %i' % (ind))
         plt.xlabel('frequencies (Hz)')
         plt.ylabel('normalized power')
-        plt.title('model fit')
+        plt.title(title)
         nd = len(description)
         ymax = np.log(np.max(self.results[loc]["power"]))
         ymin = np.log(np.min(self.results[loc]["power"]))
-        ymax = ymin + 0.5 * (ymax - ymin)
+        ymax = ymin + 0.25 * (ymax - ymin)
         ystep = (ymax - ymin) / (1.0 * nd)
+        ypos2= [10.0**-4, 10.0**-3.5, 10.0**-3]
         for i, d in enumerate(description):
             ypos = np.exp(ymin + i * ystep)
-            plt.text(x[0], ypos, d, fontsize=8)
+            plt.text(x[0], ypos2[i], d, fontsize=8)
         plt.legend(fontsize=10)
         plt.show()
 
