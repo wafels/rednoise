@@ -61,8 +61,8 @@ This is what we do with the data and how we do it:
 # Load in the datacube
 directory = '~/ts/pickle/shutdownfun3/'
 fits_level = '1.0'
-wave = '131'
-region = 'sunspot'
+wave = '171'
+region = 'loopfootpoints'
 savefig = '~/ts/img/shutdownfun3_1hr'
 savecsv = '~/ts/csv/shutdownfun3_1hr'
 
@@ -74,7 +74,8 @@ pkl_file = open(pkl_file_location, 'rb')
 dc = pickle.load(pkl_file)
 pkl_file.close()
 
-data_name = 'AIA ' + wave + ' (' + fits_level + '), ' + region
+#data_name = 'AIA ' + wave + ' (' + fits_level + '), ' + region
+data_name = 'AIA ' + wave + ', ' + region
 
 # Create a location to save the figures
 savefig = os.path.join(os.path.expanduser(savefig), wave)
@@ -137,6 +138,7 @@ for i in range(0, nx):
 
 # Average emission over all the data
 full_data = full_data / (1.0 * nx * ny)
+full_data = dc[10, 10, :].flatten()
 
 # Create a time series object
 full_ts = TimeSeries(t, full_data)
