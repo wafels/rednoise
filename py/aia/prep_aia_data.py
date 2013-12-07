@@ -5,7 +5,7 @@ Load in the FITS files and write out a numpy arrays
 import cPickle as pickle
 import aia_specific
 import os
-
+from sunpy.time import parse_time
 """
 
 """
@@ -13,7 +13,7 @@ import os
 aiadata = '~/Data/AIA/shutdownfun3/disk/1.0'
 
 # wavelength
-wave = '131'
+wave = '211'
 
 # output data
 output = os.path.join(os.path.expanduser('~/ts/pickle/shutdownfun3/1.0'), wave)
@@ -22,7 +22,15 @@ if not os.path.isdir(output):
 
 dc, location, savename, original_mapcube = aia_specific.rn4(os.path.join(aiadata, wave), derotate=True)
 
-kkdasd = lkasda
+t=[]
+for m in original_mapcube:
+    t.append(parse_time(m.header['date_obs']))
+
+for i in range(0,299):
+    print t[i+1] - t[i]
+    
+    
+aaa =  akfla
 
 # moss
 pickle.dump(dc[175:210,115:180,:], open(os.path.join(output, 'moss.'+wave+'.datacube.pickle'), 'wb'))
