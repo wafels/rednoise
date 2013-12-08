@@ -64,7 +64,14 @@ def do_lstsqr(fits_level='1.0',
           ldir='~/ts/pickle/shutdownfun3/',
           sfig='~/ts/img/shutdownfun3_1hr_agu',
           scsv='~/ts/csv/shutdownfun3_1hr',
-          windows=['no window']):
+          windows=['no window'],
+          subtractmean=False):
+
+    # Subtract the mean of each time-series?
+    if subtractmean:
+        subname = 'subtract'
+    else:
+        subname = 'nosub'
 
     # main loop
     for iwave, wave in enumerate(waves):
@@ -103,10 +110,10 @@ def do_lstsqr(fits_level='1.0',
                 winname = ', ' + window
      
                 # Create the name for the data
-                data_name = 'AIA ' + wave + ' (' + fits_level + winname + '), ' + region
+                data_name = wave + ' (' + fits_level + winname + ', ' + subname + '), ' + region
 
                 # Create a location to save the figures
-                savefig = os.path.join(os.path.expanduser(savefig), fits_level, wave, region, window)
+                savefig = os.path.join(os.path.expanduser(savefig), fits_level, wave, region, window, subname)
                 if not(os.path.isdir(savefig)):
                     os.makedirs(savefig)
                 figname = data_name
@@ -138,7 +145,8 @@ def do_lstsqr(fits_level='1.0',
                         full_data = full_data + d
                 
                         # Remove the mean
-                        d = d - np.mean(d)
+                        if subtractmean:
+                            d = d - np.mean(d)
                         # Express in units of the standard deviation of the time series
                         #d = d / np.std(d)
  
@@ -240,7 +248,7 @@ def do_lstsqr(fits_level='1.0',
                 plt.axhline(1.0, color='k', label='average power')
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
-                plt.title(data_name + ' - power spectra')
+                plt.title(data_name + ' - aPS')
                 plt.legend(loc=3, fontsize=10)
                 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
                 plt.ylim(0.0001, 1000.0)
@@ -305,7 +313,7 @@ def do_lstsqr(fits_level='1.0',
                 plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
-                plt.title(data_name + ' - power spectra, geom. mean')
+                plt.title(data_name + ' - gPS')
                 plt.legend(loc=3, fontsize=10)
                 plt.savefig(savefig + '.geometric_mean_power_spectra.png')
                 
@@ -331,12 +339,22 @@ def do_lstsqr(fits_level='1.0',
 
 
 do_lstsqr(fits_level='1.0',
-          waves=['171', '193', '211', '131'],
+          waves=['171'],
           regions=['qs', 'loopfootpoints'],
           ldir='~/ts/pickle/shutdownfun3/',
           sfig='~/ts/img/shutdownfun3_1hr_agu',
           scsv='~/ts/csv/shutdownfun3_1hr',
-          windows=['no window','hanning', 'hamming'])
+          windows=['no window','hanning'],
+          subtractmean=False)
+
+do_lstsqr(fits_level='1.0',
+          waves=['171'],
+          regions=['qs', 'loopfootpoints'],
+          ldir='~/ts/pickle/shutdownfun3/',
+          sfig='~/ts/img/shutdownfun3_1hr_agu',
+          scsv='~/ts/csv/shutdownfun3_1hr',
+          windows=['no window','hanning'],
+          subtractmean=True)
 """
 
 #
