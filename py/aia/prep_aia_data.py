@@ -6,46 +6,41 @@ import cPickle as pickle
 import aia_specific
 import os
 from sunpy.time import parse_time
+import cubetools
 """
 
 """
-# inout data
+# input data
 aiadata = '~/Data/AIA/shutdownfun3/disk/1.0'
 
-# wavelength
+# Wavelength
 wave = '211'
 
-# output data
+# Output data location
 output = os.path.join(os.path.expanduser('~/ts/pickle/shutdownfun3/1.0'), wave)
-if not os.path.isdir(output):
-    os.makedirs(output)
+cubetools.makedirs(output)
 
+# Load in the derotated data into a datacube
 dc, location, savename, original_mapcube = aia_specific.rn4(os.path.join(aiadata, wave), derotate=True)
 
-t=[]
-for m in original_mapcube:
-    t.append(parse_time(m.header['date_obs']))
-
-for i in range(0,299):
-    print t[i+1] - t[i]
-    
-    
-aaa =  akfla
-
-# moss
-pickle.dump(dc[175:210,115:180,:], open(os.path.join(output, 'moss.'+wave+'.datacube.pickle'), 'wb'))
-
-# sunspot
-pickle.dump(dc[135:210, 320:420, :], open(os.path.join(output, 'sunspot.'+wave+'.datacube.pickle'), 'wb'))
-
-# QS
-pickle.dump(dc[150:200, 650:700, :], open(os.path.join(output, 'qs.'+wave+'.datacube.pickle'), 'wb'))
-
-# Loop footpoints
-pickle.dump(dc[165:245, 0:50, :], open(os.path.join(output, 'loopfootpoints.'+wave+'.datacube.pickle'), 'wb'))
-
-# SunPy mapcibe
+# Save the SunPy mapcube
 pickle.dump(original_mapcube,open(os.path.join(output, 'full.'+wave+'.mapcube.pickle'), 'wb'))
 
-# full data
-pickle.dump(dc, open(os.path.join(output, 'full.'+wave+'.datacube.pickle'), 'wb'))
+# Get the date and times from the original mapcube
+date_obs = []
+time_in_seconds = []
+for m in original_mapcube:
+    date_obs.append(parse_time(original_mapcube.header['date_obs']))
+    time_in_seconds.append((date_obs[-1] - date_obs[0]).total_seconds())
+times ={"date_obs": date_obs, "time_in_seconds":time_in_seconds}
+
+
+# Define regions in the datacube
+regions = {'moss':[[175, 210], [115, 180]],
+           'sunspot':[[135, 210], [320, 420]],
+           'qs':[[135, 210], [320, 420]],
+           'loopfootpoints':[[165, 245], [0, 50]],
+           'full':[[0, -1], [0, -1]]}
+
+# Save all regions
+cubetools.save_region(dc, output, regions, wave, times)

@@ -27,7 +27,7 @@ matplotlib.rc('font', **font)
 matplotlib.rc('lines', linewidth=2)
 matplotlib.rc('figure', figsize=(12.5, 10))
 
-plt.ion()
+plt.ioff()
 
 
 """
@@ -58,6 +58,34 @@ This is what we do with the data and how we do it:
 (c)
 """
 
+               
+                
+# function we are fitting
+def PowerLawPlusConstant(freq, a, n, c):
+    return a * freq ** -n + c
+
+# Log of the power spectrum model
+def LogPowerLawPlusConstant(freq, a, n, c):
+    z = PowerLawPlusConstant(freq, a, n, c)
+    return np.log(z)
+
+# String defining the basics number of time series
+def tsDetails(nx, ny, nt):
+    return '[%i samples, %i time series]'  % (nt, nx * ny)
+
+# Apodization windowing function
+def DefineWindow(window, nt):
+    if window == 'no window':
+        win = np.ones(nt)
+    if window == 'hanning':
+        win = np.hanning(nt)
+    if window == 'hamming':
+        win = np.hamming(nt)
+    winname = ', ' + window
+    return win, winname
+
+
+# Main analysis loop
 def do_lstsqr(fits_level='1.0',
           waves=['171', '193', '211', '131'],
           regions=['qs', 'loopfootpoints'],
@@ -66,6 +94,8 @@ def do_lstsqr(fits_level='1.0',
           scsv='~/ts/csv/shutdownfun3_1hr',
           windows=['no window'],
           subtractmean=False):
+
+    frequency_factor = 1000.0
 
     # Subtract the mean of each time-series?
     if subtractmean:
@@ -99,15 +129,13 @@ def do_lstsqr(fits_level='1.0',
                 ny = dc.shape[0]
                 nx = dc.shape[1]
                 nt = dc.shape[2]
+                tsdetails = tsDetails(nx, ny, nt)
+                
+                # Define an array to store the analyzed data
+                dc_analysed = np.zeros_like(dc)
    
                 # calculate a window function
-                if window == 'no window':
-                    win = np.ones(nt)
-                if window == 'hanning':
-                    win = np.hanning(nt)
-                if window == 'hamming':
-                    win = np.hamming(nt)
-                winname = ', ' + window
+                win, winname= DefineWindow(window, nt)
      
                 # Create the name for the data
                 data_name = wave + ' (' + fits_level + winname + ', ' + subname + '), ' + region
@@ -127,55 +155,74 @@ def do_lstsqr(fits_level='1.0',
                 logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 nposfreq = len(iobs)
                 
-                # Result # 1 - add up all the emission and do the analysis on the full FOV
-                # Also, make a histogram of all the power spectra to get an idea of the
-                # varition present
-                
                 # storage
                 pwr = np.zeros((ny, nx, nposfreq))
                 logpwr = np.zeros_like(pwr)
-                full_data = np.zeros((nt))
+                    
+                # Figure that will show all the time series.
+                plt.figure(10)
                 for i in range(0, nx):
                     for j in range(0, ny):
+                        
+                        # Get the next time-series
                         d = dc[j, i, :].flatten()
+
                         # Fix the data for any non-finite entries
                         d = tsutils.fix_nonfinite(d)
-                
-                        # Sum up all the data
-                        full_data = full_data + d
                 
                         # Remove the mean
                         if subtractmean:
                             d = d - np.mean(d)
-                        # Express in units of the standard deviation of the time series
-                        #d = d / np.std(d)
- 
-                        # Multiply by the window
+
+                        # Define the apodization windowing function
+                        win = DefineWindow(window, nt)
+
+                        # Multiply the data by the apodization window
                         d = d * win
-                
-                        # Form a time series object.  Handy for calculating the Fourier power
-                        # at all non-zero frequencies
+
+                        # Keep the analyzed data cube
+                        dc_analysed[i, j, :] = d
+
+                        # Form a time series object.  Handy for calculating the Fourier power at all non-zero frequencies
                         ts = TimeSeries(t, d)
-                
+                        
+                        # Plot out the time series; we will overplot all the analyzed time series
+                        ts.peek()
+
                         # Define the Fourier power we are analyzing
                         this_power = ts.PowerSpectrum.ppower
                 
-                        # Look at the power
+                        # Get the total Fourier power
                         iobs = iobs + this_power
+                        
+                        # Store the individual Fourier power
                         pwr[j, i, :] = this_power
                 
-                        # Look at the log of the power
+                        # Sum up the log of the Fourier power - equivalent to doing the geometric mean
                         logiobs = logiobs + np.log(this_power)
+                        
+                        # Store the individual log Fourier power
                         logpwr[j, i, :] = np.log(this_power)
                 
-                # Average emission over all the data and multiply by the window
-                full_data = win * full_data / (1.0 * nx * ny)
-                #full_data = dc[10, 10, :].flatten()
-        
-                # Create a time series object
+                # Finalize the time series plot, and save the results
+                plt.title(data_name)
+                plt.ylabel('emission ' + tsdetails)
+                plt.savefig(savefig + '.all_analysed_ts.png')
+                
+                # Plot a histogram of the studied data at each time
+                #bins = 50
+                #minmax = [np.min(dc_analysed), np.max(dc_analysed)]
+                #hist_dc_analysed = np.zeros((nt, bins))
+                #for this_time in range(0, nt):
+                #    hist_dc_analysed[this_time, :] = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=minmax)
+ 
+                # Plot all the Fourier powers
+
+                # Average of the analyzed time-series and create a time series object
+                full_data = np.mean(dc_analysed, axis=(0, 1))
                 full_ts = TimeSeries(t, full_data)
                 full_ts.name = data_name
-                full_ts.label = 'average emission [%i time series]' % (nx * ny)
+                full_ts.label = 'average emission ' + tsdetails
                 # Average power over all the pixels
                 iobs = iobs / (1.0 * nx * ny)
                 
@@ -204,26 +251,14 @@ def do_lstsqr(fits_level='1.0',
                 
                 # Sigma for the fit to the power
                 sigma = np.std(pwr, axis=(0, 1))
-                
-                
-                # function we are fitting
-                def func(freq, a, n, c):
-                    return a * freq ** -n + c
-                
-                # Log of the power spectrum model
-                def func2(freq, a, n, c):
-                    #print a, n, c
-                    z = func(freq, a, n, c)
-                    #print z
-                    return np.log(z)
-                
+                 
                 
                 # do the fit
-                answer = curve_fit(func, x, iobs, sigma=sigma)
+                answer = curve_fit(PowerLawPlusConstant, x, iobs, sigma=sigma)
                 
                 # Get the fit parameters out and calculate the best fit
                 param = answer[0]
-                bf = func(x, param[0], param[1], param[2])
+                bf = PowerLawPlusConstant(x, param[0], param[1], param[2])
                 
                 # Error estimate for the power law index
                 nerr = np.sqrt(answer[1][1, 1])
@@ -231,10 +266,10 @@ def do_lstsqr(fits_level='1.0',
                 # Analyze the summed time-series
                 # do the fit
                 full_ts_iobs = full_ts.PowerSpectrum.ppower / np.mean(full_ts.PowerSpectrum.ppower)
-                answer_full_ts = curve_fit(func2, x, np.log(full_ts_iobs), p0=answer[0])
+                answer_full_ts = curve_fit(LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
                 # Get the fit parameters out and calculate the best fit
                 param_fts = answer_full_ts[0]
-                bf_fts = np.exp(func2(x, param_fts[0], param_fts[1], param_fts[2]))
+                bf_fts = np.exp(LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
                 nerr_fts = np.sqrt(answer[1][1, 1])
                 
                 # Give the best plot we can under the circumstances.
@@ -264,11 +299,11 @@ def do_lstsqr(fits_level='1.0',
                 logsigma = np.std(logpwr, axis=(0, 1))
                 
                 # Fit the function to the log of the mean power
-                answer2 = curve_fit(func2, x, logiobs, sigma=logsigma, p0=answer[0])
+                answer2 = curve_fit(LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
                 
                 # Get the fit parameters out and calculate the best fit
                 param2 = answer2[0]
-                bf2 = np.exp(func2(x, param2[0], param2[1], param2[2]))
+                bf2 = np.exp(LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
                 
                 # Error estimate for the power law index
                 nerr2 = np.sqrt(answer2[1][1, 1])
@@ -338,23 +373,15 @@ def do_lstsqr(fits_level='1.0',
                 plt.close('all')
 
 
-do_lstsqr(fits_level='1.0',
+do_lstsqr(fits_level='1.5',
           waves=['171'],
-          regions=['qs', 'loopfootpoints'],
+          regions=['loopfootpoints'],
           ldir='~/ts/pickle/shutdownfun3/',
           sfig='~/ts/img/shutdownfun3_1hr_agu',
-          scsv='~/ts/csv/shutdownfun3_1hr',
-          windows=['no window','hanning'],
-          subtractmean=False)
-
-do_lstsqr(fits_level='1.0',
-          waves=['171'],
-          regions=['qs', 'loopfootpoints'],
-          ldir='~/ts/pickle/shutdownfun3/',
-          sfig='~/ts/img/shutdownfun3_1hr_agu',
-          scsv='~/ts/csv/shutdownfun3_1hr',
+          scsv='~/ts/csv/shutdownfun3_1hr_agu',
           windows=['no window','hanning'],
           subtractmean=True)
+
 """
 
 #
