@@ -71,7 +71,7 @@ def LogPowerLawPlusConstant(freq, a, n, c):
 
 # String defining the basics number of time series
 def tsDetails(nx, ny, nt):
-    return '[%i samples, %i time series]'  % (nt, nx * ny)
+    return '[%i time series, %i samples each]'  % (nx * ny, nt)
 
 # Apodization windowing function
 def DefineWindow(window, nt):
@@ -96,6 +96,8 @@ def do_lstsqr(fits_level='1.0',
           subtractmean=False):
 
     frequency_factor = 1000.0
+    five_min = 1.0 / 300.0
+    three_min = 1.0 / 180.0
 
     # Subtract the mean of each time-series?
     if subtractmean:
@@ -135,7 +137,7 @@ def do_lstsqr(fits_level='1.0',
                 dc_analysed = np.zeros_like(dc)
    
                 # calculate a window function
-                win, winname= DefineWindow(window, nt)
+                win, winname = DefineWindow(window, nt)
      
                 # Create the name for the data
                 data_name = wave + ' (' + fits_level + winname + ', ' + subname + '), ' + region
@@ -158,9 +160,7 @@ def do_lstsqr(fits_level='1.0',
                 # storage
                 pwr = np.zeros((ny, nx, nposfreq))
                 logpwr = np.zeros_like(pwr)
-                    
-                # Figure that will show all the time series.
-                plt.figure(10)
+
                 for i in range(0, nx):
                     for j in range(0, ny):
                         
@@ -174,20 +174,14 @@ def do_lstsqr(fits_level='1.0',
                         if subtractmean:
                             d = d - np.mean(d)
 
-                        # Define the apodization windowing function
-                        win = DefineWindow(window, nt)
-
                         # Multiply the data by the apodization window
                         d = d * win
 
                         # Keep the analyzed data cube
-                        dc_analysed[i, j, :] = d
+                        dc_analysed[j, i, :] = d
 
                         # Form a time series object.  Handy for calculating the Fourier power at all non-zero frequencies
                         ts = TimeSeries(t, d)
-                        
-                        # Plot out the time series; we will overplot all the analyzed time series
-                        ts.peek()
 
                         # Define the Fourier power we are analyzing
                         this_power = ts.PowerSpectrum.ppower
@@ -204,17 +198,59 @@ def do_lstsqr(fits_level='1.0',
                         # Store the individual log Fourier power
                         logpwr[j, i, :] = np.log(this_power)
                 
-                # Finalize the time series plot, and save the results
+                # Plot all the analyzed time series
+                plt.figure(10)
+                for i in range(0, nx):
+                    for j in range(0, ny):
+                        plt.plot(t, dc_analysed[j, i, :])
+                plt.xlabel('time (seconds)')
+                plt.ylabel('analyzed emission ' + tsdetails)
                 plt.title(data_name)
-                plt.ylabel('emission ' + tsdetails)
                 plt.savefig(savefig + '.all_analysed_ts.png')
-                
+
                 # Plot a histogram of the studied data at each time
-                #bins = 50
-                #minmax = [np.min(dc_analysed), np.max(dc_analysed)]
-                #hist_dc_analysed = np.zeros((nt, bins))
-                #for this_time in range(0, nt):
-                #    hist_dc_analysed[this_time, :] = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=minmax)
+                bins = 50
+                minmax = [np.min(dc_analysed), np.max(dc_analysed)]
+                hist_dc_analysed = np.zeros((bins, nt))
+                for this_time in range(0, nt):
+                    hist_dc_analysed[:, this_time], bin_edges = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=minmax)
+                plt.figure(12)
+                plt.xlabel('time (seconds)')
+                plt.ylabel('analyzed emission ' + tsdetails)
+                plt.imshow(hist_dc_analysed, aspect='auto')
+                plt.colorbar()
+                plt.savefig(savefig + '.all_analyzed_ts_histogram.png')
+
+                # Plot all the analyzed FFTs
+                plt.figure(11)
+                for i in range(0, nx):
+                    for j in range(0, ny):
+                        ts = TimeSeries(t, dc_analysed[j, i, :])
+                        ts.peek_ps()
+                plt.loglog()
+                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
+                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
+                plt.xlabel('frequency (Hz)')
+                plt.ylabel('FFT power ' + tsdetails)
+                plt.title(data_name)
+                plt.savefig(savefig + '.all_analysed_fft.png')
+
+                # Plot a histogram of the studied FFTs at each time
+                bins = 50
+                minmax = [np.min(logpwr), np.max(logpwr)]
+                hist_dc_analysed_logpwr = np.zeros((bins, nposfreq))
+                for this_freq in range(0, nposfreq):
+                    hist_dc_analysed_logpwr[:, this_freq], bin_edges = np.histogram(logpwr[:, :, this_freq], bins=bins, range=minmax)
+                plt.figure(13)
+                plt.xlabel('frequency (Hz)')
+                plt.ylabel('FFT power ' + tsdetails)
+                plt.imshow(hist_dc_analysed_logpwr, aspect='auto')
+                plt.yticks()
+                plt.yscale('log')
+                plt.colorbar()
+                plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
+                
+ 
  
                 # Plot all the Fourier powers
 
@@ -278,15 +314,15 @@ def do_lstsqr(fits_level='1.0',
                 plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
                 plt.loglog(freqs, full_ts_iobs, label='power spectrum from summed emission (exponential distributed)', color='r')
                 plt.loglog(freqs, bf_fts, label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts), color='r', linestyle="--")
-                plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
-                plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
+                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
+                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
                 plt.axhline(1.0, color='k', label='average power')
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' - aPS')
-                plt.legend(loc=3, fontsize=10)
+                plt.legend(loc=1, fontsize=10)
                 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
-                plt.ylim(0.0001, 1000.0)
+                #plt.ylim(0.0001, 1000.0)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.png')
                 
                 # ------------------------------------------------------------------------
@@ -344,12 +380,12 @@ def do_lstsqr(fits_level='1.0',
                 plt.loglog(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
                 plt.loglog(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
                 plt.loglog(freqs, lim[1, 1, :], linestyle=':', label='upper 95%')
-                plt.axvline(1.0 / 300.0, color='k', linestyle='-.', label='5 mins.')
-                plt.axvline(1.0 / 180.0, color='k', linestyle='--', label='3 mins.')
+                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
+                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' - gPS')
-                plt.legend(loc=3, fontsize=10)
+                plt.legend(loc=1, fontsize=10)
                 plt.savefig(savefig + '.geometric_mean_power_spectra.png')
                 
                 # plot some histograms of the log power at a small number of equally spaced
@@ -369,18 +405,17 @@ def do_lstsqr(fits_level='1.0',
                 plt.figure(4)
                 full_ts.peek()
                 plt.savefig(savefig + '.full_ts_timeseries.png')
-        
                 plt.close('all')
 
 
 do_lstsqr(fits_level='1.5',
-          waves=['171'],
+          waves=['193'],
           regions=['loopfootpoints'],
           ldir='~/ts/pickle/shutdownfun3/',
           sfig='~/ts/img/shutdownfun3_1hr_agu',
           scsv='~/ts/csv/shutdownfun3_1hr_agu',
           windows=['no window','hanning'],
-          subtractmean=True)
+          subtractmean=False)
 
 """
 
