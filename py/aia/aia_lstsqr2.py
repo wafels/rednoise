@@ -153,6 +153,7 @@ def do_lstsqr(fits_level='1.0',
                 dt = 12.0
                 t = dt * np.arange(0, nt)
                 tsdummy = TimeSeries(t, t)
+                freqs = tsdummy.PowerSpectrum.frequencies.positive
                 iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 nposfreq = len(iobs)
@@ -197,6 +198,9 @@ def do_lstsqr(fits_level='1.0',
                         
                         # Store the individual log Fourier power
                         logpwr[j, i, :] = np.log(this_power)
+ 
+                #
+                dc_analysed_minmax = (np.min(dc_analysed), np.max(dc_analysed))
                 
                 # Plot all the analyzed time series
                 plt.figure(10)
@@ -206,19 +210,23 @@ def do_lstsqr(fits_level='1.0',
                 plt.xlabel('time (seconds)')
                 plt.ylabel('analyzed emission ' + tsdetails)
                 plt.title(data_name)
-                plt.savefig(savefig + '.all_analysed_ts.png')
+                plt.ylim(dc_analysed_minmax)
+                plt.xlim((t[0], t[-1]))
+                plt.savefig(savefig + '.all_analyzed_ts.png')
 
                 # Plot a histogram of the studied data at each time
                 bins = 50
-                minmax = [np.min(dc_analysed), np.max(dc_analysed)]
                 hist_dc_analysed = np.zeros((bins, nt))
                 for this_time in range(0, nt):
-                    hist_dc_analysed[:, this_time], bin_edges = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=minmax)
+                    hist_dc_analysed[:, this_time], bin_edges = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=dc_analysed_minmax)
+                hist_dc_analysed = hist_dc_analysed /(1.0 * nx * ny)
                 plt.figure(12)
                 plt.xlabel('time (seconds)')
                 plt.ylabel('analyzed emission ' + tsdetails)
-                plt.imshow(hist_dc_analysed, aspect='auto')
+                plt.imshow(hist_dc_analysed, aspect='auto', origin='lower',
+                           extent=(t[0], t[-1], dc_analysed_minmax[0], dc_analysed_minmax[1]))
                 plt.colorbar()
+                plt.title(data_name)
                 plt.savefig(savefig + '.all_analyzed_ts_histogram.png')
 
                 # Plot all the analyzed FFTs
@@ -233,7 +241,7 @@ def do_lstsqr(fits_level='1.0',
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('FFT power ' + tsdetails)
                 plt.title(data_name)
-                plt.savefig(savefig + '.all_analysed_fft.png')
+                plt.savefig(savefig + '.all_analyzed_fft.png')
 
                 # Plot a histogram of the studied FFTs at each time
                 bins = 50
@@ -241,13 +249,15 @@ def do_lstsqr(fits_level='1.0',
                 hist_dc_analysed_logpwr = np.zeros((bins, nposfreq))
                 for this_freq in range(0, nposfreq):
                     hist_dc_analysed_logpwr[:, this_freq], bin_edges = np.histogram(logpwr[:, :, this_freq], bins=bins, range=minmax)
+                hist_dc_analysed_logpwr = hist_dc_analysed_logpwr / (1.0 * nx * ny)
                 plt.figure(13)
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('FFT power ' + tsdetails)
-                plt.imshow(hist_dc_analysed_logpwr, aspect='auto')
-                plt.yticks()
-                plt.yscale('log')
+                plt.imshow(hist_dc_analysed_logpwr, aspect='auto', origin='lower',
+                           extent=(freqs[0], freqs[-1], np.exp(minmax[0]), np.exp(minmax[1])))
+                plt.semilogy()
                 plt.colorbar()
+                plt.title(data_name)
                 plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
                 
  
@@ -282,7 +292,6 @@ def do_lstsqr(fits_level='1.0',
                 pwr = pwr / av_iobs
                 
                 # Normalize the frequency.
-                freqs = tsdummy.PowerSpectrum.frequencies.positive
                 x = freqs / tsdummy.PowerSpectrum.frequencies.positive[0]
                 
                 # Sigma for the fit to the power
@@ -409,8 +418,8 @@ def do_lstsqr(fits_level='1.0',
 
 
 do_lstsqr(fits_level='1.5',
-          waves=['193'],
-          regions=['loopfootpoints'],
+          waves=['171'],
+          regions=['sunspot'],
           ldir='~/ts/pickle/shutdownfun3/',
           sfig='~/ts/img/shutdownfun3_1hr_agu',
           scsv='~/ts/csv/shutdownfun3_1hr_agu',
