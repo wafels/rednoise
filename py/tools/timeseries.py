@@ -27,7 +27,7 @@ class SampleTimes:
         self.tdiff = self.time[1:] - self.time[0:-1]
 
         # Include base time for input series
-        self.basetime=time[0]
+        self.basetime = time[0]
 
 
 class Frequencies:
@@ -114,14 +114,20 @@ class TimeSeries:
             plt.ylabel(self.label + nsamples)
         plt.title(self.name)
 
-    def peek_ps(self, **kwargs):
+    def peek_ps(self, mHz=False, **kwargs):
         """
         Generates a quick plot of the power power spectrum of the data
         """
-        plt.plot(self.PowerSpectrum.frequencies.positive,
+        if mHz:
+            factor = 1000
+            fname = 'mHz'
+        else:
+            factor = 1
+            fname = 'Hz'
+        plt.plot(factor * self.PowerSpectrum.frequencies.positive,
                  self.PowerSpectrum.ppower, **kwargs)
         xunits = prepend_space(bracketize('%i frequencies' % len(self.pfreq)))
-        plt.xlabel('Hz' + xunits)
+        plt.xlabel(fname + xunits)
         nsamples = ' [%i samples]' % self.SampleTimes.nt
         plt.ylabel('power' + nsamples)
 

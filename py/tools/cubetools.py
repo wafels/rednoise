@@ -8,6 +8,7 @@ from sunpy.coords.util import rot_hpc
 import tsutils
 import pickle
 
+
 def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
     """Return a datacube from a set of maps"""
 
@@ -125,8 +126,8 @@ def sum_over_space(dc, remove_mean=False):
     ny = dc.shape[0]
     nx = dc.shape[1]
     nt = dc.shape[2]
-    
-    # Storage for the 
+
+    # Storage for the
     fd = np.zeros((nt))
     for i in range(0, nx):
         for j in range(0, ny):
@@ -134,11 +135,11 @@ def sum_over_space(dc, remove_mean=False):
 
             # Fix the data for any non-finite entries
             d = tsutils.fix_nonfinite(d)
-            
+
             # Remove the mean
             if remove_mean:
                 d = d - np.mean(d)
-    
+
             # Sum up all the data
             fd = fd + d
     return fd
@@ -154,18 +155,21 @@ def save_output(filename, datacube, times, pixel_index):
     print('Saved to ' + filename)
     return
 
+
 # Save multiple regions
 def save_region(dc, output, regions, wave, times):
     keys = regions.keys()
     for region in keys:
-        pixel_index = regions['region']
+        pixel_index = regions[region]
         y = pixel_index[0]
         x = pixel_index[1]
-        filename = region + '.' + wave + '+' + str(pixel_index) +'.datacube.pickle'
+        #filename = region + '.' + wave + '.' + str(pixel_index) + '.datacube.pickle'
+        filename = region + '.' + wave + '.datacube.pickle'
         save_output(os.path.join(output, filename),
                     dc[y[0]: y[1], x[0]:x[1], :],
                     times,
                     pixel_index)
+
 
 def makedirs(output):
     if not os.path.isdir(output):

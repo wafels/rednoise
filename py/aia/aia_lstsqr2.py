@@ -9,7 +9,7 @@ import matplotlib
 import tsutils
 import os
 from timeseries import TimeSeries
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, fmin_tnc
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 from rnfit2 import Do_MCMC, rnsave
 from pymcmodels import single_power_law_with_constant_not_normalized
@@ -19,9 +19,9 @@ import csv
 import cPickle as pickle
 
 
-font = {'family' : 'normal',
-        'weight' : 'bold',
-        'size'   : 22}
+font = {'family': 'normal',
+        'weight': 'bold',
+        'size': 22}
 
 matplotlib.rc('font', **font)
 matplotlib.rc('lines', linewidth=2)
@@ -58,20 +58,22 @@ This is what we do with the data and how we do it:
 (c)
 """
 
-               
-                
+
 # function we are fitting
 def PowerLawPlusConstant(freq, a, n, c):
-    return a * freq ** -n + c
+    return a * a * freq ** -n + c
+
 
 # Log of the power spectrum model
 def LogPowerLawPlusConstant(freq, a, n, c):
     z = PowerLawPlusConstant(freq, a, n, c)
     return np.log(z)
 
+
 # String defining the basics number of time series
 def tsDetails(nx, ny, nt):
-    return '[%i time series, %i samples each]'  % (nx * ny, nt)
+    return '[%i t.s., %i samples]' % (nx * ny, nt)
+
 
 # Apodization windowing function
 def DefineWindow(window, nt):
@@ -88,38 +90,33 @@ def DefineWindow(window, nt):
 # Main analysis loop
 def do_lstsqr(fits_level='1.0',
           waves=['171', '193', '211', '131'],
+          loc='disk',
           regions=['qs', 'loopfootpoints'],
-          ldir='~/ts/pickle/shutdownfun3/',
-          sfig='~/ts/img/shutdownfun3_1hr_agu',
+          ldir='~/ts/pickle/shutdownfun3_1hr/',
+          sfig='~/ts/img/shutdownfun3_1hr',
           scsv='~/ts/csv/shutdownfun3_1hr',
           windows=['no window'],
-          subtractmean=False):
+          manip='none'):
 
     frequency_factor = 1000.0
     five_min = 1.0 / 300.0
     three_min = 1.0 / 180.0
 
-    # Subtract the mean of each time-series?
-    if subtractmean:
-        subname = 'subtract'
-    else:
-        subname = 'nosub'
-
     # main loop
     for iwave, wave in enumerate(waves):
-        print('Wave: '+ wave + ' (%i out of %i)' %(iwave+1, len(waves)))
+        print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
         for iregion, region in enumerate(regions):
-            print('Region: '+ region + ' (%i out of %i)' %(iregion+1, len(regions)))
+            print('Region: ' + region + ' (%i out of %i)' % (iregion + 1, len(regions)))
             for iwindow, window in enumerate(windows):
-                print('Window: '+ window + ' (%i out of %i)' %(iwindow+1, len(windows)))
+                print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
-                # set the loading and saving locations    
+                # set the loading and saving locations
                 directory = ldir
                 savefig = sfig
                 savecsv = scsv
-    
+
                 # load the data
-                location = os.path.join(os.path.expanduser(directory), fits_level, wave)
+                location = os.path.join(os.path.expanduser(directory), loc, fits_level, wave)
                 filename = region + '.' + wave + '.datacube.pickle'
                 pkl_file_location = os.path.join(location, filename)
                 print('Loading ' + pkl_file_location)
@@ -132,23 +129,23 @@ def do_lstsqr(fits_level='1.0',
                 nx = dc.shape[1]
                 nt = dc.shape[2]
                 tsdetails = tsDetails(nx, ny, nt)
-                
+
                 # Define an array to store the analyzed data
                 dc_analysed = np.zeros_like(dc)
-   
+
                 # calculate a window function
                 win, winname = DefineWindow(window, nt)
-     
+
                 # Create the name for the data
-                data_name = wave + ' (' + fits_level + winname + ', ' + subname + '), ' + region
+                data_name = wave + ' (' + fits_level + winname + ', ' + manip + '), ' + region
 
                 # Create a location to save the figures
-                savefig = os.path.join(os.path.expanduser(savefig), fits_level, wave, region, window, subname)
+                savefig = os.path.join(os.path.expanduser(savefig), fits_level, wave, region, window, manip)
                 if not(os.path.isdir(savefig)):
                     os.makedirs(savefig)
                 figname = data_name
                 savefig = os.path.join(savefig, figname)
-        
+
                 # Create a time series object
                 dt = 12.0
                 t = dt * np.arange(0, nt)
@@ -157,23 +154,28 @@ def do_lstsqr(fits_level='1.0',
                 iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 nposfreq = len(iobs)
-                
+
                 # storage
                 pwr = np.zeros((ny, nx, nposfreq))
                 logpwr = np.zeros_like(pwr)
 
                 for i in range(0, nx):
                     for j in range(0, ny):
-                        
+
                         # Get the next time-series
                         d = dc[j, i, :].flatten()
 
                         # Fix the data for any non-finite entries
                         d = tsutils.fix_nonfinite(d)
-                
+
                         # Remove the mean
-                        if subtractmean:
-                            d = d - np.mean(d)
+                        #if manip == 'submean':
+                        #    d = d - np.mean(d)
+
+                        # Relative intensity
+                        if manip == 'relative':
+                            dmean = np.mean(d)
+                            d = (d - dmean) / dmean
 
                         # Multiply the data by the apodization window
                         d = d * win
@@ -186,22 +188,22 @@ def do_lstsqr(fits_level='1.0',
 
                         # Define the Fourier power we are analyzing
                         this_power = ts.PowerSpectrum.ppower
-                
+
                         # Get the total Fourier power
                         iobs = iobs + this_power
-                        
+
                         # Store the individual Fourier power
                         pwr[j, i, :] = this_power
-                
+
                         # Sum up the log of the Fourier power - equivalent to doing the geometric mean
                         logiobs = logiobs + np.log(this_power)
-                        
+
                         # Store the individual log Fourier power
                         logpwr[j, i, :] = np.log(this_power)
- 
+
                 #
                 dc_analysed_minmax = (np.min(dc_analysed), np.max(dc_analysed))
-                
+
                 # Plot all the analyzed time series
                 plt.figure(10)
                 for i in range(0, nx):
@@ -219,7 +221,7 @@ def do_lstsqr(fits_level='1.0',
                 hist_dc_analysed = np.zeros((bins, nt))
                 for this_time in range(0, nt):
                     hist_dc_analysed[:, this_time], bin_edges = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=dc_analysed_minmax)
-                hist_dc_analysed = hist_dc_analysed /(1.0 * nx * ny)
+                hist_dc_analysed = hist_dc_analysed / (1.0 * nx * ny)
                 plt.figure(12)
                 plt.xlabel('time (seconds)')
                 plt.ylabel('analyzed emission ' + tsdetails)
@@ -259,11 +261,9 @@ def do_lstsqr(fits_level='1.0',
                 plt.colorbar()
                 plt.title(data_name)
                 plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
-                
- 
- 
-                # Plot all the Fourier powers
 
+
+                # Plot all the Fourier powers
                 # Average of the analyzed time-series and create a time series object
                 full_data = np.mean(dc_analysed, axis=(0, 1))
                 full_ts = TimeSeries(t, full_data)
@@ -271,52 +271,55 @@ def do_lstsqr(fits_level='1.0',
                 full_ts.label = 'average emission ' + tsdetails
                 # Average power over all the pixels
                 iobs = iobs / (1.0 * nx * ny)
-                
+
                 # Save the full time series to a CSV file
                 savecsv = os.path.join(os.path.expanduser(savecsv), fits_level, wave)
                 if not(os.path.isdir(savecsv)):
                     os.makedirs(savecsv)
                 savecsv = os.path.join(savecsv, data_name)
-                ofile  = open(savecsv + '.full_ts.csv', "wb")
+                ofile = open(savecsv + '.full_ts.csv', "wb")
                 writer = csv.writer(ofile, delimiter=',')
                 for i, d in enumerate(full_data):
                     writer.writerow([t[i], d])
                 ofile.close()
-                
+
                 # Express the power in each frequency as a multiple of the average
                 av_iobs = np.mean(iobs)
                 iobs = iobs / av_iobs
-                
+
                 # Express the power in each frequency as a multiple of the average for all
                 # Fourier power at each pixel
                 pwr = pwr / av_iobs
-                
+
                 # Normalize the frequency.
                 x = freqs / tsdummy.PowerSpectrum.frequencies.positive[0]
-                
+
                 # Sigma for the fit to the power
                 sigma = np.std(pwr, axis=(0, 1))
-                 
-                
+
+                # Generate a guess
+                pguess = [iobs[0], 1.8, iobs[-1]]
+
                 # do the fit
-                answer = curve_fit(PowerLawPlusConstant, x, iobs, sigma=sigma)
-                
+                answer = curve_fit(PowerLawPlusConstant, x, iobs, sigma=sigma, p0=pguess)
+
                 # Get the fit parameters out and calculate the best fit
                 param = answer[0]
                 bf = PowerLawPlusConstant(x, param[0], param[1], param[2])
-                
+
                 # Error estimate for the power law index
                 nerr = np.sqrt(answer[1][1, 1])
-                
+
                 # Analyze the summed time-series
                 # do the fit
                 full_ts_iobs = full_ts.PowerSpectrum.ppower / np.mean(full_ts.PowerSpectrum.ppower)
                 answer_full_ts = curve_fit(LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
+                #answer_full_ts = fmin_tnc(LogPowerLawPlusConstant, x, approx_grad=True)
                 # Get the fit parameters out and calculate the best fit
                 param_fts = answer_full_ts[0]
                 bf_fts = np.exp(LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
                 nerr_fts = np.sqrt(answer[1][1, 1])
-                
+
                 # Give the best plot we can under the circumstances.
                 plt.figure(1)
                 plt.loglog(freqs, iobs, label='arithmetic mean of power spectra from each pixel (Erlang distributed)', color='b')
@@ -333,37 +336,37 @@ def do_lstsqr(fits_level='1.0',
                 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
                 #plt.ylim(0.0001, 1000.0)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.png')
-                
+
                 # ------------------------------------------------------------------------
                 # Do the same thing over again, this time working with the log of the
                 # normalized power
                 # Average power over all the pixels
                 logiobs = logiobs / (1.0 * nx * ny)
-                
+
                 # Sigma for the log of the power over all pixels
                 logsigma = np.std(logpwr, axis=(0, 1))
-                
+
                 # Fit the function to the log of the mean power
                 answer2 = curve_fit(LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
-                
+
                 # Get the fit parameters out and calculate the best fit
                 param2 = answer2[0]
                 bf2 = np.exp(LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
-                
+
                 # Error estimate for the power law index
                 nerr2 = np.sqrt(answer2[1][1, 1])
-                
+
                 # Create the histogram of all the log powers.  Histograms look normal-ish if
                 # you take the logarithm of the power.  This suggests a log-normal distribution
                 # of power in all frequencies
-                
+
                 # number of histogram bins
                 bins = 100
                 hpwr = np.zeros((nposfreq, bins))
                 for f in range(0, nposfreq):
                     h = np.histogram(logpwr[:, :, f], bins=bins, range=[np.min(logpwr), np.max(logpwr)])
                     hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
-                
+
                 # Calculate the probability density in each frequency bin.
                 p = [0.68, 0.95]
                 lim = np.zeros((len(p), 2, nposfreq))
@@ -378,10 +381,10 @@ def do_lstsqr(fits_level='1.0',
                             hi = hi + 1
                         lim[i, 0, f] = np.exp(h[1][lo])
                         lim[i, 1, f] = np.exp(h[1][hi])
-                
+
                 # Give the best plot we can under the circumstances.  Since we have been
                 # looking at the log of the power, plots are slightly different
-                
+
                 plt.figure(2)
                 plt.loglog(freqs, np.exp(logiobs), label='geometric mean of power spectra at each pixel')
                 plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
@@ -396,7 +399,7 @@ def do_lstsqr(fits_level='1.0',
                 plt.title(data_name + ' - gPS')
                 plt.legend(loc=1, fontsize=10)
                 plt.savefig(savefig + '.geometric_mean_power_spectra.png')
-                
+
                 # plot some histograms of the log power at a small number of equally spaced
                 # frequencies
                 findex = [0, 11, 19, 38, 76]
@@ -408,8 +411,7 @@ def do_lstsqr(fits_level='1.0',
                     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
                 plt.legend(loc=3, fontsize=10)
                 plt.savefig(savefig + '.power_spectra_distributions.png')
-                
-                
+
                 # plot out the time series
                 plt.figure(4)
                 full_ts.peek()
@@ -417,14 +419,14 @@ def do_lstsqr(fits_level='1.0',
                 plt.close('all')
 
 
-do_lstsqr(fits_level='1.5',
-          waves=['171'],
-          regions=['sunspot'],
-          ldir='~/ts/pickle/shutdownfun3/',
-          sfig='~/ts/img/shutdownfun3_1hr_agu',
-          scsv='~/ts/csv/shutdownfun3_1hr_agu',
-          windows=['no window','hanning'],
-          subtractmean=False)
+do_lstsqr(fits_level='1.0',
+          waves=['171', '193', '211', '131'],
+          regions=['qs', 'moss', 'sunspot', 'loopfootpoints'],
+          ldir='~/ts/pickle/shutdownfun3_6hr/',
+          sfig='~/ts/img/shutdownfun3_6hr',
+          scsv='~/ts/csv/shutdownfun3_6hr',
+          windows=['hanning'],
+          manip='relative')
 
 """
 
