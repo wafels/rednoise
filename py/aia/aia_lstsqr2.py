@@ -88,25 +88,35 @@ def DefineWindow(window, nt):
 
 
 # Main analysis loop
-def do_lstsqr(fits_level='1.0',
-          waves=['171', '193', '211', '131'],
-          loc='disk',
-          regions=['qs', 'loopfootpoints'],
-          ldir='~/ts/pickle/shutdownfun3_1hr/',
-          sfig='~/ts/img/shutdownfun3_1hr',
-          scsv='~/ts/csv/shutdownfun3_1hr',
-          windows=['no window'],
-          manip='none'):
+def do_lstsqr(dataroot='~/Data/AIA/',
+              ldirroot='~/ts/pickle/',
+              sfigroot='~/ts/img/',
+              scsvroot='~/ts/csv/',
+              corename='shutdownfun3_6hr',
+              sunlocation='disk',
+              fits_level='1.5',
+              waves=['171', '193', '211', '131'],
+              regions=['qs', 'loopfootpoints'],
+              windows=['no window'],
+              manip='none'):
+
+    ldir = os.path.join(os.path.expanduser(ldirroot), corename)
+    sfig = os.path.join(os.path.expanduser(sfigroot), corename)
+    scsv = os.path.join(os.path.expanduser(scsvroot), corename)
 
     frequency_factor = 1000.0
     five_min = 1.0 / 300.0
     three_min = 1.0 / 180.0
 
+
     # main loop
     for iwave, wave in enumerate(waves):
         print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
+        # Identifier
+        ident = corename + '_' + sunlocation + '_' + fits_level + '_' + wave
         for iregion, region in enumerate(regions):
             print('Region: ' + region + ' (%i out of %i)' % (iregion + 1, len(regions)))
+            region_id = region + '.' + ident
             for iwindow, window in enumerate(windows):
                 print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
@@ -116,8 +126,8 @@ def do_lstsqr(fits_level='1.0',
                 savecsv = scsv
 
                 # load the data
-                location = os.path.join(os.path.expanduser(directory), loc, fits_level, wave)
-                filename = region + '.' + wave + '.datacube.pickle'
+                location = os.path.join(os.path.expanduser(directory), sunlocation, fits_level, wave)
+                filename = region_id + '.datacube.pickle'
                 pkl_file_location = os.path.join(location, filename)
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
@@ -273,7 +283,7 @@ def do_lstsqr(fits_level='1.0',
                 iobs = iobs / (1.0 * nx * ny)
 
                 # Save the full time series to a CSV file
-                savecsv = os.path.join(os.path.expanduser(savecsv), fits_level, wave)
+                savecsv = os.path.join(os.path.expanduser(savecsv), fits_level, wave, region, window, manip)
                 if not(os.path.isdir(savecsv)):
                     os.makedirs(savecsv)
                 savecsv = os.path.join(savecsv, data_name)
@@ -284,12 +294,12 @@ def do_lstsqr(fits_level='1.0',
                 ofile.close()
 
                 # Express the power in each frequency as a multiple of the average
-                av_iobs = np.mean(iobs)
-                iobs = iobs / av_iobs
+                #av_iobs = np.mean(iobs)
+                #iobs = iobs / av_iobs
 
                 # Express the power in each frequency as a multiple of the average for all
                 # Fourier power at each pixel
-                pwr = pwr / av_iobs
+                #pwr = pwr / av_iobs
 
                 # Normalize the frequency.
                 x = freqs / tsdummy.PowerSpectrum.frequencies.positive[0]
@@ -419,15 +429,17 @@ def do_lstsqr(fits_level='1.0',
                 plt.close('all')
 
 
-do_lstsqr(fits_level='1.0',
-          waves=['171', '193', '211', '131'],
-          regions=['qs', 'moss', 'sunspot', 'loopfootpoints'],
-          ldir='~/ts/pickle/shutdownfun3_6hr/',
-          sfig='~/ts/img/shutdownfun3_6hr',
-          scsv='~/ts/csv/shutdownfun3_6hr',
+do_lstsqr(dataroot='~/Data/AIA/',
+          ldirroot='~/ts/pickle/',
+          sfigroot='~/ts/img/',
+          scsvroot='~/ts/csv/',
+          corename='shutdownfun3_6hr',
+          sunlocation='disk',
+          fits_level='1.5',
+          waves=['193', '211', '131'],
+          regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
-
 """
 
 #
