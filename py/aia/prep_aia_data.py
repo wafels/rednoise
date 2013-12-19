@@ -2,14 +2,15 @@
 Load in the FITS files and write out a numpy arrays
 """
 # Movie creation
-import matplotlib
-matplotlib.use("Agg")
+#import matplotlib
+#matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+#import matplotlib.animation as animation
 import cPickle as pickle
 import aia_specific
 import os
 from sunpy.time import parse_time
+from sunpy.cm import cm
 import cubetools
 import numpy as np
 
@@ -18,8 +19,8 @@ import numpy as np
 dataroot = '~/Data/AIA/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
-fits_level = '1.5'
-wave = '131'
+fits_level = '1.0'
+wave = '211'
 
 # Pickle file storage
 pickleroot = '~/ts/pickle/'
@@ -46,6 +47,8 @@ id = corename + '_' + sunlocation + '_' + fits_level + '_' + wave
 
 # Shape of the datacube
 nt = dc.shape[2]
+ny = dc.shape[0]
+nx = dc.shape[1]
 
 # Get the date and times from the original mapcube
 date_obs = []
@@ -57,10 +60,37 @@ times = {"date_obs": date_obs, "time_in_seconds": time_in_seconds}
 
 
 # Define regions in the datacube
+# y locations are first, x locations second
 regions = {'moss': [[175, 210], [115, 180]],
-           'sunspot': [[135, 210], [320, 420]],
+           'sunspot': [[125, 200], [270, 370]],
            'qs': [[150, 200], [520, 570]],
            'loopfootpoints': [[165, 245], [0, 50]]}
+
+
+# Plot an image of the regions
+def plot_square(x, y, **kwargs):
+    plt.plot([x[0], x[0]], [y[0], y[1]], **kwargs)
+    plt.plot([x[0], x[1]], [y[1], y[1]], **kwargs)
+    plt.plot([x[1], x[1]], [y[0], y[1]], **kwargs)
+    plt.plot([x[0], x[1]], [y[0], y[0]], **kwargs)
+
+plt.figure(1)
+ind = 0
+plt.imshow(np.log(dc[:, :, ind]), origin='bottom', cmap=cm.get_cmap(name='sdoaia' + wave))
+plt.title(id)
+plt.ylabel('y pixel (%i images)' % (nt))
+plt.xlabel('x pixel (%s)' % (str(times["date_obs"][ind])))
+for region in regions:
+    pixel_index = regions[region]
+    y = pixel_index[0]
+    x = pixel_index[1]
+    plot_square(x, y, color='w', linewidth=3)
+    plot_square(x, y, color='k', linewidth=1)
+    plt.text(x[1], y[1], region, color='k', bbox=dict(facecolor='white', alpha=0.5))
+plt.xlim(0, nx)
+plt.ylim(0, ny)
+plt.savefig(os.path.join(movie, id + '.png'))
+
 
 # Save all regions
 # cubetools.save_region(dc, output, regions, wave, times)
