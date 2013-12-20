@@ -428,7 +428,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.savefig(savefig + '.full_ts_timeseries.png')
                 plt.close('all')
 
-
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
           sfigroot='~/ts/img/',
@@ -440,6 +440,20 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
+"""
+do_lstsqr(dataroot='~/Data/AIA/',
+          ldirroot='~/ts/pickle/',
+          sfigroot='~/ts/img/',
+          scsvroot='~/ts/csv/',
+          corename='shutdownfun6_6hr',
+          sunlocation='limb',
+          fits_level='1.0',
+          waves=['131'],
+          regions=['highlimb', 'lowlimb', 'crosslimb', 'loopfootpoints1', 'loopfootpoints2'],
+          windows=['hanning'],
+          manip='relative')
+
+
 """
 
 #

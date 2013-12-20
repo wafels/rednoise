@@ -17,9 +17,9 @@ import numpy as np
 
 # input data
 dataroot = '~/Data/AIA/'
-corename = 'shutdownfun3_6hr'
-sunlocation = 'disk'
-fits_level = '1.5'
+corename = 'shutdownfun6_6hr'
+sunlocation = 'limb'
+fits_level = '1.0'
 wave = '131'
 
 # Pickle file storage
@@ -61,10 +61,12 @@ times = {"date_obs": date_obs, "time_in_seconds": time_in_seconds}
 
 # Define regions in the datacube
 # y locations are first, x locations second
-regions = {'moss': [[175, 210], [115, 180]],
-           'sunspot': [[125, 200], [270, 370]],
-           'qs': [[150, 200], [520, 570]],
-           'loopfootpoints': [[165, 245], [0, 50]]}
+regions = {'highlimb': [[100, 150], [50, 150]],
+           'lowlimb': [[100, 150], [200, 250]],
+           'crosslimb': [[100, 150], [285, 340]],
+           'loopfootpoints1': [[90, 155], [515, 620]],
+           'loopfootpoints2': [[20, 90], [793, 828]],
+           'moss': [[45, 95], [888, 950]]}
 
 
 # Plot an image of the regions
