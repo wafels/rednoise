@@ -5,8 +5,9 @@ Simple time series object
 import numpy as np
 from matplotlib import pyplot as plt
 import tsutils
+from astropy import units as u
 
-
+# TODO: use astropy quantities to implement the sample time class
 class SampleTimes:
     def __init__(self, time, label='time', units='seconds'):
         """A class holding time series sample times."""
@@ -30,6 +31,7 @@ class SampleTimes:
         self.basetime = time[0]
 
 
+# TODO: use astropy quantities to implement the frequencies class
 class Frequencies:
     def __init__(self, frequencies, label='frequency', units='Hz'):
         self.frequencies = frequencies
@@ -37,6 +39,28 @@ class Frequencies:
         self.positive = self.frequencies[self.posindex]
         self.label = label
         self.units = units
+        self.angular_frequencies = 2 * np.pi * self.frequencies
+
+
+class NewFrequencies:
+    def __init__(self, frequencies, label='frequency'):
+        if isinstance(frequencies, u.Quantity):
+            if frequencies.unit == u.Unit("1 / s"):
+                self.frequencies = frequencies
+            else:
+                print('input array has the wrong units')
+        else:
+            # Assume the user input a numpy array which has units of 1/s
+            self.frequencies = frequencies * 1 * u.Unit("1 / s")
+
+        # Location of the strictly positive frequencies
+        self.posindex = self.frequencies > 0
+
+        # Separate out the strictly positive frequencies
+        self.positive = self.frequencies[self.posindex]
+
+        # Apply the label
+        self.label = label
 
 
 class PowerSpectrum:
@@ -86,7 +110,7 @@ class TimeSeries:
             raise ValueError('length of sample times not the same as the data')
         self.nt = self.SampleTimes.nt
         self.data = data
-        
+
         # Note that the power spectrum is defined
         self.PowerSpectrum = PowerSpectrum(np.fft.fftfreq(self.SampleTimes.nt, self.SampleTimes.dt),
                                            (np.abs(np.fft.fft(self.data)) ** 2) / (1.0 * self.nt))
@@ -95,7 +119,7 @@ class TimeSeries:
         self.name = name
         self.pfreq = self.PowerSpectrum.frequencies.positive
         self.ppower = self.PowerSpectrum.ppower
-        
+
         # Autocorrelation
         #self.acor = tsutils.autocorrelate(self.data)
 

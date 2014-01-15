@@ -9,7 +9,7 @@ import matplotlib
 import tsutils
 import os
 from timeseries import TimeSeries
-from scipy.optimize import curve_fit, fmin_tnc
+from scipy.optimize import curve_fit
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 from rnfit2 import Do_MCMC, rnsave
 from pymcmodels import single_power_law_with_constant_not_normalized
@@ -18,13 +18,12 @@ import scipy.stats as stats
 import csv
 import cPickle as pickle
 
-
 font = {'family': 'normal',
         'weight': 'bold',
         'size': 22}
 
 matplotlib.rc('font', **font)
-matplotlib.rc('lines', linewidth=2)
+matplotlib.rc('lines', linewidth=1)
 matplotlib.rc('figure', figsize=(12.5, 10))
 
 plt.ioff()
@@ -104,10 +103,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
     sfig = os.path.join(os.path.expanduser(sfigroot), corename)
     scsv = os.path.join(os.path.expanduser(scsvroot), corename)
 
-    frequency_factor = 1000.0
+    frequency_factor = 'Hz'
     five_min = 1.0 / 300.0
     three_min = 1.0 / 180.0
-
 
     # main loop
     for iwave, wave in enumerate(waves):
@@ -127,8 +125,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # load the data
                 location = os.path.join(os.path.expanduser(directory), sunlocation, fits_level, wave)
-                filename = region_id + '.datacube.pickle'
-                pkl_file_location = os.path.join(location, filename)
+                filename = region_id + '.datacube'
+                pkl_file_location = os.path.join(location, filename + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 dc = pickle.load(pkl_file)
@@ -211,7 +209,24 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         # Store the individual log Fourier power
                         logpwr[j, i, :] = np.log(this_power)
 
-                #
+                # Save various data products
+                # Analyzed data
+                pkl_file_location = os.path.join(location, 'OUT.' + filename + '.dc_analysed.pickle')
+                print('Writing ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'wb')
+                pickle.dump(dc_analysed, pkl_file)
+                pickle.dump(t, pkl_file)
+                pkl_file.close()
+
+                # Fourier Power
+                pkl_file_location = os.path.join(location, 'OUT.' + filename + '.fourier_power.pickle')
+                print('Writing ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'wb')
+                pickle.dump(pwr, pkl_file)
+                pickle.dump(freqs, pkl_file)
+                pkl_file.close()
+
+                # Limits to the data
                 dc_analysed_minmax = (np.min(dc_analysed), np.max(dc_analysed))
 
                 # Plot all the analyzed time series
@@ -272,7 +287,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title(data_name)
                 plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
 
-
                 # Plot all the Fourier powers
                 # Average of the analyzed time-series and create a time series object
                 full_data = np.mean(dc_analysed, axis=(0, 1))
@@ -332,10 +346,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Give the best plot we can under the circumstances.
                 plt.figure(1)
-                plt.loglog(freqs, iobs, label='arithmetic mean of power spectra from each pixel (Erlang distributed)', color='b')
+                plt.loglog(freqs, full_ts_iobs, color='r', label='power spectrum from summed emission (exponential distributed)')
+                plt.loglog(freqs, bf_fts, color='r', linestyle="--", label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts))
+                plt.loglog(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
                 plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
-                plt.loglog(freqs, full_ts_iobs, label='power spectrum from summed emission (exponential distributed)', color='r')
-                plt.loglog(freqs, bf_fts, label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts), color='r', linestyle="--")
                 plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
                 plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
                 plt.axhline(1.0, color='k', label='average power')
@@ -445,11 +459,11 @@ do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
           sfigroot='~/ts/img/',
           scsvroot='~/ts/csv/',
-          corename='shutdownfun6_6hr',
-          sunlocation='limb',
-          fits_level='1.0',
-          waves=['131'],
-          regions=['highlimb', 'lowlimb', 'crosslimb', 'loopfootpoints1', 'loopfootpoints2'],
+          corename='shutdownfun3_6hr',
+          sunlocation='disk',
+          fits_level='1.5',
+          waves=['171'],
+          regions=['moss'],
           windows=['hanning'],
           manip='relative')
 

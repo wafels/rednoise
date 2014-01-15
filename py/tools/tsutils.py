@@ -70,3 +70,21 @@ def longest_evenly_sampled(t, absoluteTolerance=0.5):
     segment_lengths = [seg[1] - seg[0] for seg in segments]
     which_segments = (np.max(segment_lengths) == segment_lengths).nonzero()[0]
     return [segments[k] for k in which_segments]
+
+
+def frequency_response_function(index, weight, angularfreq):
+    w = np.zeros_like(angularfreq, dtype=np.complex64)
+    for i, f in enumerate(angularfreq):
+        onent = np.zeros_like(index) + np.complex(0, -f) * index
+        w[i] = np.sum(weight * np.exp(onent))
+    return w
+
+
+def transfer_function(index, weight, angularfreq):
+    w = frequency_response_function(index, weight, angularfreq)
+    return np.abs(w) ** 2
+
+
+def movingaverage(interval, window_size):
+    window = np.ones(int(window_size)) / float(window_size)
+    return np.convolve(interval, window, 'same')
