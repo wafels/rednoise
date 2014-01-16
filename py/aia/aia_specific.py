@@ -5,6 +5,7 @@ from cubetools import get_datacube
 from timeseries import TimeSeries
 import pickle
 import numpy as np
+import cubetools
 plt.ion()
 
 
@@ -70,3 +71,33 @@ def get_tslist(dc, pixel_locations, name=''):
         tslist.append(ts)
 
     return tslist
+
+def location_branch(location_root, branches):
+    """Recursively adds a branch to a directory listing"""
+    loc = os.path.expanduser(location_root)
+    for branch in branches:
+        loc = os.path.join(loc, branch)
+    return loc
+
+
+def save_location_calculator(roots, branches):
+    """Takes a bunch of roots and creates subdirectories as needed"""
+    locations = {}
+    for k in roots.keys():
+        loc = location_branch(roots[k], branches)
+        cubetools.makedirs(loc)
+        locations[k] = loc
+
+    return locations
+
+
+def ident_creator(branches):
+    return '_'.join(branches)
+
+
+# Plot an image of the regions
+def plot_square(x, y, **kwargs):
+    plt.plot([x[0], x[0]], [y[0], y[1]], **kwargs)
+    plt.plot([x[0], x[1]], [y[1], y[1]], **kwargs)
+    plt.plot([x[1], x[1]], [y[0], y[1]], **kwargs)
+    plt.plot([x[0], x[1]], [y[0], y[0]], **kwargs)

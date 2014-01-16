@@ -11,39 +11,8 @@ import aia_specific
 import os
 from sunpy.time import parse_time
 from sunpy.cm import cm
-import cubetools
 import numpy as np
 
-
-def location_branch(location_root, branches):
-    """Recursively adds a branch to a directory listing"""
-    loc = os.path.expanduser(location_root)
-    for branch in branches:
-        loc = os.path.join(loc, branch)
-    return loc
-
-
-def save_location_calculator(roots, branches):
-    """Takes a bunch of roots and creates subdirectories as needed"""
-    locations = {}
-    for k in roots.keys():
-        loc = location_branch(roots[k], branches)
-        cubetools.makedirs(loc)
-        locations[k] = loc
-
-    return locations
-
-
-def ident_creator(branches):
-    return '_'.join(branches)
-
-
-# Plot an image of the regions
-def plot_square(x, y, **kwargs):
-    plt.plot([x[0], x[0]], [y[0], y[1]], **kwargs)
-    plt.plot([x[0], x[1]], [y[1], y[1]], **kwargs)
-    plt.plot([x[1], x[1]], [y[0], y[1]], **kwargs)
-    plt.plot([x[0], x[1]], [y[0], y[0]], **kwargs)
 
 # input data
 dataroot = '~/Data/AIA/'
@@ -56,16 +25,16 @@ wave = '131'
 branches = [corename, sunlocation, fits_level, wave]
 
 # Create the AIA source data location
-aia_data_location = save_location_calculator({"aiadata": dataroot},
+aia_data_location = aia_specific.save_location_calculator({"aiadata": dataroot},
                                              branches)
 
 # Create the locations of where we will store output
 roots = {"pickle": '~/ts/pickle/',
          "image": '~/ts/img/',
          "movie": '~/ts/movies'}
-save_locations = save_location_calculator(roots, branches)
+save_locations = aia_specific.save_location_calculator(roots, branches)
 
-ident = ident_creator(branches)
+ident = aia_specific.ident_creator(branches)
 
 # Load in the derotated data into a datacube
 dc, location, savename, original_mapcube = aia_specific.rn4(aia_data_location["aiadata"],
@@ -114,8 +83,8 @@ for region in regions:
     pixel_index = regions[region]
     y = pixel_index[0]
     x = pixel_index[1]
-    plot_square(x, y, color='w', linewidth=3)
-    plot_square(x, y, color='k', linewidth=1)
+    aia_specific.plot_square(x, y, color='w', linewidth=3)
+    aia_specific.plot_square(x, y, color='k', linewidth=1)
     plt.text(x[1], y[1], region, color='k', bbox=dict(facecolor='white', alpha=0.5))
 plt.xlim(0, nx)
 plt.ylim(0, ny)
@@ -141,7 +110,7 @@ for region in keys:
     b = [corename, sunlocation, fits_level, wave, region]
 
     # Output location
-    output = save_location_calculator(roots, b)["pickle"]
+    output = aia_specific.save_location_calculator(roots, b)["pickle"]
 
     # Output filename
     ofilename = os.path.join(output, region_id + '.datacube.pickle')
