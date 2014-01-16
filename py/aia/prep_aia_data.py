@@ -19,7 +19,7 @@ dataroot = '~/Data/AIA/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.0'
-wave = '131'
+wave = '211'
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]
@@ -37,8 +37,8 @@ save_locations = aia_specific.save_location_calculator(roots, branches)
 ident = aia_specific.ident_creator(branches)
 
 # Load in the derotated data into a datacube
-dc, location, savename, original_mapcube = aia_specific.rn4(aia_data_location["aiadata"],
-                                                            derotate=True)
+dc, original_mapcube = aia_specific.rn4(aia_data_location["aiadata"],
+                                        derotate=True)
 
 # Shape of the datacube
 nt = dc.shape[2]

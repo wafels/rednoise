@@ -10,17 +10,16 @@ import tsutils
 import os
 from timeseries import TimeSeries
 from scipy.optimize import curve_fit
-from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
-from rnfit2 import Do_MCMC, rnsave
-from pymcmodels import single_power_law_with_constant_not_normalized
-from cubetools import get_datacube
-import scipy.stats as stats
+#from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
+#from rnfit2 import Do_MCMC, rnsave
+#from pymcmodels import single_power_law_with_constant_not_normalized
 import csv
 import cPickle as pickle
+import aia_specific
 
 font = {'family': 'normal',
         'weight': 'bold',
-        'size': 22}
+        'size': 12}
 
 matplotlib.rc('font', **font)
 matplotlib.rc('lines', linewidth=1)
@@ -99,33 +98,50 @@ def do_lstsqr(dataroot='~/Data/AIA/',
               windows=['no window'],
               manip='none'):
 
-    ldir = os.path.join(os.path.expanduser(ldirroot), corename)
-    sfig = os.path.join(os.path.expanduser(sfigroot), corename)
-    scsv = os.path.join(os.path.expanduser(scsvroot), corename)
-
-    frequency_factor = 'Hz'
     five_min = 1.0 / 300.0
     three_min = 1.0 / 180.0
 
     # main loop
     for iwave, wave in enumerate(waves):
+        # Which wavelength?
         print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
-        # Identifier
-        ident = corename + '_' + sunlocation + '_' + fits_level + '_' + wave
+
+        # Now that the loading and saving locations are set up, proceed with
+        # the analysis.
         for iregion, region in enumerate(regions):
+            # Which region
             print('Region: ' + region + ' (%i out of %i)' % (iregion + 1, len(regions)))
-            region_id = region + '.' + ident
+
+            # Create the branches in order
+            branches = [corename, sunlocation, fits_level, wave, region]
+
+            # Set up the roots we are interested in
+            roots = {"pickle": ldirroot,
+                     "image": sfigroot,
+                     "csv": scsvroot}
+
+            # Data and save locations are based here
+            locations = aia_specific.save_location_calculator(roots,
+                                         branches)
+
+            # set the saving locations
+            savefig = locations["image"]
+            savecsv = locations["csv"]
+
+            # Identifier
+            ident = aia_specific.ident_creator(branches)
+
+            # Go through all the windows
             for iwindow, window in enumerate(windows):
+                # Which window
                 print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
-                # set the loading and saving locations
-                directory = ldir
-                savefig = sfig
-                savecsv = scsv
+                # Update the region identifier
+                region_id = '.'.join((ident, window, manip))
 
-                # load the data
-                location = os.path.join(os.path.expanduser(directory), sunlocation, fits_level, wave)
-                filename = region_id + '.datacube'
+                # Load the data
+                location = locations['pickle']
+                filename = ident + '.datacube'
                 pkl_file_location = os.path.join(location, filename + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
@@ -142,17 +158,17 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 dc_analysed = np.zeros_like(dc)
 
                 # calculate a window function
-                win, winname = DefineWindow(window, nt)
+                win, dummy_winname = DefineWindow(window, nt)
 
                 # Create the name for the data
-                data_name = wave + ' (' + fits_level + winname + ', ' + manip + '), ' + region
+                #data_name = wave + ' (' + fits_level + winname + ', ' + manip + '), ' + region
+                data_name = region_id
 
                 # Create a location to save the figures
-                savefig = os.path.join(os.path.expanduser(savefig), fits_level, wave, region, window, manip)
+                savefig = os.path.join(os.path.expanduser(savefig), window, manip)
                 if not(os.path.isdir(savefig)):
                     os.makedirs(savefig)
-                figname = data_name
-                savefig = os.path.join(savefig, figname)
+                savefig = os.path.join(savefig, region_id)
 
                 # Create a time series object
                 dt = 12.0
@@ -297,7 +313,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 iobs = iobs / (1.0 * nx * ny)
 
                 # Save the full time series to a CSV file
-                savecsv = os.path.join(os.path.expanduser(savecsv), fits_level, wave, region, window, manip)
+                savecsv = os.path.join(os.path.expanduser(savecsv), window, manip)
                 if not(os.path.isdir(savecsv)):
                     os.makedirs(savecsv)
                 savecsv = os.path.join(savecsv, data_name)
@@ -461,7 +477,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           scsvroot='~/ts/csv/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
-          fits_level='1.5',
+          fits_level='1.0',
           waves=['171'],
           regions=['moss'],
           windows=['hanning'],
