@@ -18,8 +18,8 @@ import numpy as np
 dataroot = '~/Data/AIA/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
-fits_level = '1.0'
-wave = '211'
+fits_level = '1.5'
+wave = '171'
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]

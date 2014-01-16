@@ -85,6 +85,34 @@ def DefineWindow(window, nt):
     return win, winname
 
 
+# Write out a pickle file
+def pkl_write(location, fname, a):
+    pkl_file_location = os.path.join(location, fname)
+    print('Writing ' + pkl_file_location)
+    pkl_file = open(pkl_file_location, 'wb')
+    for element in a:
+        pickle.dump(element, pkl_file)
+    pkl_file.close()
+
+
+# Write a CSV time series
+def csv_timeseries_write(location, fname, a):
+    # Get the time and the data out separately
+    t = a[0]
+    d = a[1]
+    # Make the directory if it is not already
+    if not(os.path.isdir(location)):
+        os.makedirs(location)
+    # full file name
+    savecsv = os.path.join(location, fname)
+    # Open and write the file
+    ofile = open(savecsv, "wb")
+    writer = csv.writer(ofile, delimiter=',')
+    for i, dd in enumerate(d):
+        writer.writerow([t[i], dd])
+    ofile.close()
+
+
 # Main analysis loop
 def do_lstsqr(dataroot='~/Data/AIA/',
               ldirroot='~/ts/pickle/',
@@ -106,7 +134,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
         # Which wavelength?
         print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
 
-        # Now that the loading and saving locations are set up, proceed with
+        # Now that the loading and saving locations are seot up, proceed with
         # the analysis.
         for iregion, region in enumerate(regions):
             # Which region
@@ -125,8 +153,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                                          branches)
 
             # set the saving locations
-            savefig = locations["image"]
-            savecsv = locations["csv"]
+            sfig = locations["image"]
+            scsv = locations["csv"]
 
             # Identifier
             ident = aia_specific.ident_creator(branches)
@@ -140,9 +168,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 region_id = '.'.join((ident, window, manip))
 
                 # Load the data
-                location = locations['pickle']
-                filename = ident + '.datacube'
-                pkl_file_location = os.path.join(location, filename + '.pickle')
+                pkl_location = locations['pickle']
+                ifilename = ident + '.datacube'
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 dc = pickle.load(pkl_file)
@@ -165,7 +193,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 data_name = region_id
 
                 # Create a location to save the figures
-                savefig = os.path.join(os.path.expanduser(savefig), window, manip)
+                savefig = os.path.join(os.path.expanduser(sfig), window, manip)
                 if not(os.path.isdir(savefig)):
                     os.makedirs(savefig)
                 savefig = os.path.join(savefig, region_id)
@@ -182,6 +210,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # storage
                 pwr = np.zeros((ny, nx, nposfreq))
                 logpwr = np.zeros_like(pwr)
+                doriginal = np.zeros_like(t)
+                dmanip = np.zeros_like(t)
 
                 for i in range(0, nx):
                     for j in range(0, ny):
@@ -192,6 +222,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         # Fix the data for any non-finite entries
                         d = tsutils.fix_nonfinite(d)
 
+                        # Sum up all the original data
+                        doriginal = doriginal + d
+
                         # Remove the mean
                         #if manip == 'submean':
                         #    d = d - np.mean(d)
@@ -200,6 +233,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         if manip == 'relative':
                             dmean = np.mean(d)
                             d = (d - dmean) / dmean
+
+                        # Sum up all the manipulated data
+                        dmanip = dmanip + d
 
                         # Multiply the data by the apodization window
                         d = d * win
@@ -225,26 +261,37 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         # Store the individual log Fourier power
                         logpwr[j, i, :] = np.log(this_power)
 
-                # Save various data products
-                # Analyzed data
-                pkl_file_location = os.path.join(location, 'OUT.' + filename + '.dc_analysed.pickle')
-                print('Writing ' + pkl_file_location)
-                pkl_file = open(pkl_file_location, 'wb')
-                pickle.dump(dc_analysed, pkl_file)
-                pickle.dump(t, pkl_file)
-                pkl_file.close()
-
-                # Fourier Power
-                pkl_file_location = os.path.join(location, 'OUT.' + filename + '.fourier_power.pickle')
-                print('Writing ' + pkl_file_location)
-                pkl_file = open(pkl_file_location, 'wb')
-                pickle.dump(pwr, pkl_file)
-                pickle.dump(freqs, pkl_file)
-                pkl_file.close()
-
+                ###############################################################
+                # Post-processing of the data products
                 # Limits to the data
                 dc_analysed_minmax = (np.min(dc_analysed), np.max(dc_analysed))
 
+                # Average of the analyzed time-series and create a time series object
+                full_data = np.mean(dc_analysed, axis=(0, 1))
+                full_ts = TimeSeries(t, full_data)
+                full_ts.name = data_name
+                full_ts.label = 'average emission ' + tsdetails
+
+                # Fourier power: average over all the pixels
+                iobs = iobs / (1.0 * nx * ny)
+
+                # Fourier power: standard deviation over all the pixels
+                sigma = np.std(pwr, axis=(0, 1))
+
+                # Logarithmic power: average over all the pixels
+                logiobs = logiobs / (1.0 * nx * ny)
+
+                # Logarithmic power: standard deviation over all pixels
+                logsigma = np.std(logpwr, axis=(0, 1))
+
+                # Original data: average
+                doriginal = doriginal / (1.0 * nx * ny)
+
+                # Manipulated data: average
+                dmanip = dmanip / (1.0 * nx * ny)
+
+                ###############################################################
+                # Time series plots
                 # Plot all the analyzed time series
                 plt.figure(10)
                 for i in range(0, nx):
@@ -272,6 +319,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title(data_name)
                 plt.savefig(savefig + '.all_analyzed_ts_histogram.png')
 
+                ###############################################################
+                # Fourier power plots
                 # Plot all the analyzed FFTs
                 plt.figure(11)
                 for i in range(0, nx):
@@ -303,40 +352,13 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title(data_name)
                 plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
 
-                # Plot all the Fourier powers
-                # Average of the analyzed time-series and create a time series object
-                full_data = np.mean(dc_analysed, axis=(0, 1))
-                full_ts = TimeSeries(t, full_data)
-                full_ts.name = data_name
-                full_ts.label = 'average emission ' + tsdetails
-                # Average power over all the pixels
-                iobs = iobs / (1.0 * nx * ny)
-
-                # Save the full time series to a CSV file
-                savecsv = os.path.join(os.path.expanduser(savecsv), window, manip)
-                if not(os.path.isdir(savecsv)):
-                    os.makedirs(savecsv)
-                savecsv = os.path.join(savecsv, data_name)
-                ofile = open(savecsv + '.full_ts.csv', "wb")
-                writer = csv.writer(ofile, delimiter=',')
-                for i, d in enumerate(full_data):
-                    writer.writerow([t[i], d])
-                ofile.close()
-
-                # Express the power in each frequency as a multiple of the average
-                #av_iobs = np.mean(iobs)
-                #iobs = iobs / av_iobs
-
-                # Express the power in each frequency as a multiple of the average for all
-                # Fourier power at each pixel
-                #pwr = pwr / av_iobs
-
+                ###############################################################
+                # Power spectrum analysis: arithmetic mean approach
                 # Normalize the frequency.
                 x = freqs / tsdummy.PowerSpectrum.frequencies.positive[0]
 
-                # Sigma for the fit to the power
-                sigma = np.std(pwr, axis=(0, 1))
-
+                # Fourier power: fit a power law to the arithmetic mean of the
+                # Fourier power
                 # Generate a guess
                 pguess = [iobs[0], 1.8, iobs[-1]]
 
@@ -350,17 +372,20 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Error estimate for the power law index
                 nerr = np.sqrt(answer[1][1, 1])
 
-                # Analyze the summed time-series
-                # do the fit
+                # Fourier powerr: get a Time series from the arithmetic sum of
+                # all the time-series at every pixel, find the Fourier power
+                # and do the fit
                 full_ts_iobs = full_ts.PowerSpectrum.ppower / np.mean(full_ts.PowerSpectrum.ppower)
                 answer_full_ts = curve_fit(LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
                 #answer_full_ts = fmin_tnc(LogPowerLawPlusConstant, x, approx_grad=True)
+
                 # Get the fit parameters out and calculate the best fit
                 param_fts = answer_full_ts[0]
                 bf_fts = np.exp(LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
                 nerr_fts = np.sqrt(answer[1][1, 1])
 
-                # Give the best plot we can under the circumstances.
+                # Plots of power spectra: arithmetic means of summed emission
+                # and summed power spectra
                 plt.figure(1)
                 plt.loglog(freqs, full_ts_iobs, color='r', label='power spectrum from summed emission (exponential distributed)')
                 plt.loglog(freqs, bf_fts, color='r', linestyle="--", label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts))
@@ -377,14 +402,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #plt.ylim(0.0001, 1000.0)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.png')
 
+                ###############################################################
+                # Power spectrum analysis: geometric mean approach
                 # ------------------------------------------------------------------------
                 # Do the same thing over again, this time working with the log of the
-                # normalized power
-                # Average power over all the pixels
-                logiobs = logiobs / (1.0 * nx * ny)
-
-                # Sigma for the log of the power over all pixels
-                logsigma = np.std(logpwr, axis=(0, 1))
+                # normalized power.  This is effectively the geometric mean
 
                 # Fit the function to the log of the mean power
                 answer2 = curve_fit(LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
@@ -424,7 +446,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Give the best plot we can under the circumstances.  Since we have been
                 # looking at the log of the power, plots are slightly different
-
                 plt.figure(2)
                 plt.loglog(freqs, np.exp(logiobs), label='geometric mean of power spectra at each pixel')
                 plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
@@ -458,6 +479,30 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.savefig(savefig + '.full_ts_timeseries.png')
                 plt.close('all')
 
+                ###############################################################
+                # Save various data products
+                # Fourier Power of the analyzed data
+                ofilename = region_id
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.fourier_power.pickle',
+                          (freqs, pwr))
+
+                # Analyzed data
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.dc_analysed.pickle',
+                          (t, dc_analysed))
+
+                # Save the full time series to a CSV file
+                csv_timeseries_write(os.path.join(os.path.expanduser(scsv), window, manip),
+                                     '.'.join((data_name, 'average_analyzed_ts.csv')),
+                                     (t, full_data))
+
+                # Original data
+                csv_timeseries_write(os.path.join(os.path.expanduser(scsv)),
+                                     '.'.join((ident, 'average_original_ts.csv')),
+                                     (t, doriginal))
+
+                ###############################################################
 """
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
@@ -477,9 +522,9 @@ do_lstsqr(dataroot='~/Data/AIA/',
           scsvroot='~/ts/csv/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
-          fits_level='1.0',
-          waves=['171'],
-          regions=['moss'],
+          fits_level='1.5',
+          waves=['171', '193', '211', '131'],
+          regions=['moss', 'qs', 'loopfootpoints', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 
