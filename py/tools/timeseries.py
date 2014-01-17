@@ -40,6 +40,7 @@ class Frequencies:
         self.label = label
         self.units = units
         self.angular_frequencies = 2 * np.pi * self.frequencies
+        self.nfreq = len(frequencies)
 
 
 class NewFrequencies:
@@ -63,6 +64,7 @@ class NewFrequencies:
         self.label = label
 
 
+# TODO - define a proper FFT class.
 class PowerSpectrum:
     def __init__(self, frequencies, power, label='Fourier power'):
         self.frequencies = Frequencies(frequencies)
@@ -112,8 +114,9 @@ class TimeSeries:
         self.data = data
 
         # Note that the power spectrum is defined
+        self.fft_transform = np.fft.fft(self.data)
         self.PowerSpectrum = PowerSpectrum(np.fft.fftfreq(self.SampleTimes.nt, self.SampleTimes.dt),
-                                           (np.abs(np.fft.fft(self.data)) ** 2) / (1.0 * self.nt))
+                                           (np.abs(self.fft_transform) ** 2) / (1.0 * self.nt))
         self.label = label
         self.units = units
         self.name = name

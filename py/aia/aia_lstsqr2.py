@@ -57,15 +57,34 @@ This is what we do with the data and how we do it:
 """
 
 
-# function we are fitting
+# A power law function
 def PowerLawPlusConstant(freq, a, n, c):
+    # The amplitude definition assures positivity
     return a * a * freq ** -n + c
 
 
 # Log of the power spectrum model
 def LogPowerLawPlusConstant(freq, a, n, c):
-    z = PowerLawPlusConstant(freq, a, n, c)
-    return np.log(z)
+    return np.log(PowerLawPlusConstant(freq, a, n, c))
+
+
+# A Gaussian power distribution
+def GaussianPower(freq, amp, lloc, lsigma):
+    # The amplitude definition assures positivity
+    lfreq = np.log10(freq)
+    return amp * np.exp(-((lfreq - lloc) / lsigma) ** 2)
+
+
+# A model based on what is observed
+def ObservedPowerSpectrumModel(freq, a, n, c, amp, loc, sigma):
+    power_spectrum = PowerLawPlusConstant(freq, a, n, c)
+    power_spectrum = power_spectrum + GaussianPower(freq, amp, loc, sigma)
+    return power_spectrum
+
+
+# The log of the observed model
+def LogObservedPowerSpectrumModel(freq, powerlaw, gaussians):
+    return np.log(ObservedPowerSpectrumModel(freq, powerlaw, gaussians))
 
 
 # String defining the basics number of time series
@@ -206,12 +225,14 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 nposfreq = len(iobs)
+                nfreq = tsdummy.PowerSpectrum.frequencies.nfreq
 
                 # storage
                 pwr = np.zeros((ny, nx, nposfreq))
                 logpwr = np.zeros_like(pwr)
                 doriginal = np.zeros_like(t)
                 dmanip = np.zeros_like(t)
+                fft_transform = np.zeros((ny, nx, nfreq), dtype=np.complex64)
 
                 for i in range(0, nx):
                     for j in range(0, ny):
@@ -261,6 +282,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         # Store the individual log Fourier power
                         logpwr[j, i, :] = np.log(this_power)
 
+                        # Get the FFT transform values and store them
+                        fft_transform[j, i, :] = ts.fft_transform
+
                 ###############################################################
                 # Post-processing of the data products
                 # Limits to the data
@@ -291,83 +315,34 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 dmanip = dmanip / (1.0 * nx * ny)
 
                 ###############################################################
-                # Time series plots
-                # Plot all the analyzed time series
-                plt.figure(10)
-                for i in range(0, nx):
-                    for j in range(0, ny):
-                        plt.plot(t, dc_analysed[j, i, :])
-                plt.xlabel('time (seconds)')
-                plt.ylabel('analyzed emission ' + tsdetails)
-                plt.title(data_name)
-                plt.ylim(dc_analysed_minmax)
-                plt.xlim((t[0], t[-1]))
-                plt.savefig(savefig + '.all_analyzed_ts.png')
-
-                # Plot a histogram of the studied data at each time
-                bins = 50
-                hist_dc_analysed = np.zeros((bins, nt))
-                for this_time in range(0, nt):
-                    hist_dc_analysed[:, this_time], bin_edges = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=dc_analysed_minmax)
-                hist_dc_analysed = hist_dc_analysed / (1.0 * nx * ny)
-                plt.figure(12)
-                plt.xlabel('time (seconds)')
-                plt.ylabel('analyzed emission ' + tsdetails)
-                plt.imshow(hist_dc_analysed, aspect='auto', origin='lower',
-                           extent=(t[0], t[-1], dc_analysed_minmax[0], dc_analysed_minmax[1]))
-                plt.colorbar()
-                plt.title(data_name)
-                plt.savefig(savefig + '.all_analyzed_ts_histogram.png')
-
-                ###############################################################
-                # Fourier power plots
-                # Plot all the analyzed FFTs
-                plt.figure(11)
-                for i in range(0, nx):
-                    for j in range(0, ny):
-                        ts = TimeSeries(t, dc_analysed[j, i, :])
-                        ts.peek_ps()
-                plt.loglog()
-                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
-                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
-                plt.xlabel('frequency (Hz)')
-                plt.ylabel('FFT power ' + tsdetails)
-                plt.title(data_name)
-                plt.savefig(savefig + '.all_analyzed_fft.png')
-
-                # Plot a histogram of the studied FFTs at each time
-                bins = 50
-                minmax = [np.min(logpwr), np.max(logpwr)]
-                hist_dc_analysed_logpwr = np.zeros((bins, nposfreq))
-                for this_freq in range(0, nposfreq):
-                    hist_dc_analysed_logpwr[:, this_freq], bin_edges = np.histogram(logpwr[:, :, this_freq], bins=bins, range=minmax)
-                hist_dc_analysed_logpwr = hist_dc_analysed_logpwr / (1.0 * nx * ny)
-                plt.figure(13)
-                plt.xlabel('frequency (Hz)')
-                plt.ylabel('FFT power ' + tsdetails)
-                plt.imshow(hist_dc_analysed_logpwr, aspect='auto', origin='lower',
-                           extent=(freqs[0], freqs[-1], np.exp(minmax[0]), np.exp(minmax[1])))
-                plt.semilogy()
-                plt.colorbar()
-                plt.title(data_name)
-                plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
-
-                ###############################################################
                 # Power spectrum analysis: arithmetic mean approach
                 # Normalize the frequency.
-                x = freqs / tsdummy.PowerSpectrum.frequencies.positive[0]
+                xnorm = tsdummy.PowerSpectrum.frequencies.positive[0]
+                x = freqs / xnorm
 
                 # Fourier power: fit a power law to the arithmetic mean of the
                 # Fourier power
                 # Generate a guess
                 pguess = [iobs[0], 1.8, iobs[-1]]
 
+                # 5 minute power bump
+                #gguess = [1.0, five_min, 0.0025]
+
+                # Final guess
+                #p0 = [np.sqrt(iobs[0]), 1.8, iobs[-1],
+                #      0.01, 1.4, 0.25]
+                #p0 = pguess
+                #bff = ObservedPowerSpectrumModel(x, p0[0], p0[1], p0[2], p0[3], p0[4], p0[5])
+
                 # do the fit
+                p0 = pguess
                 answer = curve_fit(PowerLawPlusConstant, x, iobs, sigma=sigma, p0=pguess)
+                #answer = curve_fit(ObservedPowerSpectrumModel, x, iobs, p0=p0)
 
                 # Get the fit parameters out and calculate the best fit
                 param = answer[0]
                 bf = PowerLawPlusConstant(x, param[0], param[1], param[2])
+                #bf = ObservedPowerSpectrumModel(x, param[0], param[1], param[2], param[3], param[4], param[5])
 
                 # Error estimate for the power law index
                 nerr = np.sqrt(answer[1][1, 1])
@@ -480,6 +455,68 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.close('all')
 
                 ###############################################################
+                # Time series plots
+                # Plot all the analyzed time series
+                plt.figure(10)
+                for i in range(0, nx):
+                    for j in range(0, ny):
+                        plt.plot(t, dc_analysed[j, i, :])
+                plt.xlabel('time (seconds)')
+                plt.ylabel('analyzed emission ' + tsdetails)
+                plt.title(data_name)
+                plt.ylim(dc_analysed_minmax)
+                plt.xlim((t[0], t[-1]))
+                plt.savefig(savefig + '.all_analyzed_ts.png')
+
+                # Plot a histogram of the studied data at each time
+                bins = 50
+                hist_dc_analysed = np.zeros((bins, nt))
+                for this_time in range(0, nt):
+                    hist_dc_analysed[:, this_time], bin_edges = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=dc_analysed_minmax)
+                hist_dc_analysed = hist_dc_analysed / (1.0 * nx * ny)
+                plt.figure(12)
+                plt.xlabel('time (seconds)')
+                plt.ylabel('analyzed emission ' + tsdetails)
+                plt.imshow(hist_dc_analysed, aspect='auto', origin='lower',
+                           extent=(t[0], t[-1], dc_analysed_minmax[0], dc_analysed_minmax[1]))
+                plt.colorbar()
+                plt.title(data_name)
+                plt.savefig(savefig + '.all_analyzed_ts_histogram.png')
+
+                ###############################################################
+                # Fourier power plots
+                # Plot all the analyzed FFTs
+                plt.figure(11)
+                for i in range(0, nx):
+                    for j in range(0, ny):
+                        ts = TimeSeries(t, dc_analysed[j, i, :])
+                        ts.peek_ps()
+                plt.loglog()
+                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
+                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
+                plt.xlabel('frequency (Hz)')
+                plt.ylabel('FFT power ' + tsdetails)
+                plt.title(data_name)
+                plt.savefig(savefig + '.all_analyzed_fft.png')
+
+                # Plot a histogram of the studied FFTs at each time
+                bins = 50
+                minmax = [np.min(logpwr), np.max(logpwr)]
+                hist_dc_analysed_logpwr = np.zeros((bins, nposfreq))
+                for this_freq in range(0, nposfreq):
+                    hist_dc_analysed_logpwr[:, this_freq], bin_edges = np.histogram(logpwr[:, :, this_freq], bins=bins, range=minmax)
+                hist_dc_analysed_logpwr = hist_dc_analysed_logpwr / (1.0 * nx * ny)
+                plt.figure(13)
+                plt.xlabel('frequency (Hz)')
+                plt.ylabel('FFT power ' + tsdetails)
+                plt.imshow(hist_dc_analysed_logpwr, aspect='auto', origin='lower',
+                           extent=(freqs[0], freqs[-1], np.exp(minmax[0]), np.exp(minmax[1])))
+                plt.semilogy()
+                plt.colorbar()
+                plt.title(data_name)
+                plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
+
+                ###############################################################
                 # Save various data products
                 # Fourier Power of the analyzed data
                 ofilename = region_id
@@ -491,6 +528,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.dc_analysed.pickle',
                           (t, dc_analysed))
+
+                # Fourier transform
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.fft_transform.pickle',
+                          (freqs, fft_transform))
 
                 # Save the full time series to a CSV file
                 csv_timeseries_write(os.path.join(os.path.expanduser(scsv), window, manip),
@@ -523,8 +565,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['171', '193', '211', '131'],
-          regions=['moss', 'qs', 'loopfootpoints', 'sunspot'],
+          waves=['171'],
+          regions=['moss'],
           windows=['hanning'],
           manip='relative')
 

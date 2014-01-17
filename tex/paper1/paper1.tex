@@ -151,29 +151,10 @@ NGC 6624, NGC 7078, Terzan 8}
 
 \section{Introduction}
 
-A focal problem today in the dynamics of globular clusters is core collapse.  
-It has been predicted by theory for decades \citep{hen61,lyn68,spi85}, but
-observation has been less alert to the phenomenon. For many years the
-central brightness peak in M15 \citep{kin75,new78} seemed a unique anomaly.  
-Then \citet{aur82} suggested a central peak in \object{NGC 6397}, and a 
-limited photographic survey of ours \citep[Paper I]{djo84} found three more 
-cases, \objectname{NGC 6624}, \objectname[M 15]{NGC 7078}, and 
-\object[Cl 1938-341]{Terzan 8}), whose sharp center had often been 
-remarked on \citep{can78}.  
+The solar corona is observed to support many different oscillatory
+phenomena.
 
-As an example of how the new AASTeX object tagging macros work, we will
-cite some of the ``Superlative'' objects mentioned in section 10 of
-Trimble's (1992) review of astrophysics in the year 1991.  The youngest
-star yet found was \object[\[JCC87\] IRAS 4]{IRAS 4} in \objectname{NGC 1333}.
-\object{70 Oph} was found to be the longest period spectroscopic binary.
-The most massive white dwarf was \object{GD 50}, estimated at 1.2 solar masses.
-The first neutral hydrogen found in a globular cluster was \object{NGC 2808}
-while the \objectname[SDSS J093401.92+551427.9]{I Zw 18} retained the
-record for metal deficiency.  However, another low metallicitity
-galaxy was \object{UGC 4483} in the \objectname{M 83} group. The
-largest redshift \object[PC 1247+3406]{source} in 1991 was found at
-z=4.897.  Lastly, what paper would be complete without a mention of the
-\object[M1]{Crab nebula}!
+
 
 \section{Observations}
 
@@ -191,28 +172,26 @@ z=4.897.  Lastly, what paper would be complete without a mention of the
 %% compile your manuscript.  Special characters do not 
 %% need to be escaped in the optional, square-bracket argument.
 
-All our observations were short direct exposures with CCD's.  We also have
-a random {\it Chandra} data set \dataset{ADS/Sa.ASCA\#X/86008020} and a
-neat \dataset[ADS/Sa.HST#Y0Q70101T]{HST FOS spectrum} that readers can access
-via the links in the electronic edition.  Unfortunately this has nothing 
-whatsoever to do with this research.  At Lick Observatory we used a TI 500$\times$500 
-chip and a GEC 575$\times$385, on the 1-m Nickel reflector.  The only
-filter available at Lick was red.  At CTIO we used a GEC 575$\times$385, with
-$B, V,$ and $R$ filters, and an RCA 512$\times$320, with $U, B, V, R,$ and $I$
-filters, on the 1.5-m reflector. In the CTIO observations we tried to
-concentrate on the shortest practicable wavelengths; but faintness, reddening,
-and poor short-wavelength sensitivity often kept us from observing in $U$ or
-even in $B$. All four cameras had scales of the order of 0.4 arcsec/pixel, and
-our field sizes were around 3 arcmin.
+Data was obtained from SDO-AIA using the Lockheed Martin Solar
+Astrophysics cutout service (http://lmsal.com/get\_aia\_data/).  Six
+hours of image data at 12 second cadence was selected in the 171\AA,
+193\AA, 211\AA\ and 131\AA\ wavebands (2012-09-22 00:00 - 06:00 UT,
+1800 images per waveband).  These wavebands were selected in order to
+obtain a wide range of approximate temperatures in the solar corona.
 
-The CCD images are unfortunately not always suitable, for very poor
-clusters or for clusters with large cores.  Since the latter are easily
-studied by other means, we augmented our own CCD profiles by collecting
-from the literature a number of star-count profiles 
-\citep{kin68,pet76,har84,ort85}, as well as photoelectric profiles 
-\citep{kin66,kin75} and electronographic profiles \citep{kro84}.
-In a few cases we judged normality by eye estimates on one of the Sky
-Surveys.
+The downloaded cutout data was prepared for analysis using the
+SolarSoft / IDL routines READ\_SDO and AIA\_PREP.  These procedures
+move the downloaded level 1.0 FITS files to level 1.5 FITS files.  All
+further processing from this point was performed in the SunPy 0.4
+(http://www.sunpy.org) data analysis environment.  
+
+Datacubes were formed in each waveband.  The data were
+de-rotated using fractional pixel offsets relative to the first image
+in the data, with the amount of offset calculated based on solar
+rotation (Howard et
+al. http://adsabs.harvard.edu/abs/1990SoPh..130..295H).
+
+\section{Analysis}
 
 %% In this section, we use  the \subsection command to set off
 %% a subsection.  \footnote is used to insert a footnote to the text.
@@ -319,7 +298,7 @@ _{-\lambda}(p)
 
 \section{Results}
 \label{sec:results}
-
+Figure \ref{}
 
 
 %% This section contains more display math examples, including unnumbered
@@ -343,6 +322,10 @@ _{-\lambda}(p)
   this wavelet transform.  Plots (d) and (e) are the same as plots (b)
   and (c) under the assumption of a red-noise background.\label{fig:comparison}}
 \end{figure}
+
+Section \ref{sec:results} demonstrates the presence of a red
+noise-like signal in two of the most commonly used wavebands for
+coronal seismology, SDO-AIA 171\AA\ and 193\AA.
 
 Figure \ref{fig:comparison} shows how a red-noise power spectrum can
 be mistakenly thought to contain an oscillatory signal.  The time
