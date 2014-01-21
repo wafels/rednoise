@@ -16,7 +16,7 @@ import numpy as np
 
 # input data
 dataroot = '~/Data/AIA/'
-corename = 'shutdownfun3_6hr'
+corename = '20120923_0000__20120923_0100'
 sunlocation = 'disk'
 fits_level = '1.5'
 wave = '171'
@@ -65,7 +65,7 @@ if corename == 'shutdownfun6_6hr':
                'loopfootpoints2': [[20, 90], [793, 828]],
                'moss': [[45, 95], [888, 950]]}
 
-if corename == 'shutdownfun3_6hr':
+if corename == 'shutdownfun3_6hr' or corename == '20120923_0000__20120923_0100':
     regions = {'moss': [[175, 210], [115, 180]],
                'sunspot': [[125, 200], [270, 370]],
                'qs': [[150, 200], [520, 570]],

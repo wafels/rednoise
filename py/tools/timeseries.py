@@ -65,6 +65,23 @@ class NewFrequencies:
 
 
 # TODO - define a proper FFT class.
+class NewPowerSpectrum:
+    def __init__(self, frequencies, power, ylabel='Fourier power'):
+        self.frequencies = NewFrequencies(frequencies)
+        self.power = power
+        self.ppower = self.power[..., self.frequencies.posindex]
+        self.ylabel = ylabel
+
+    def peek(self, units='Hz', **kwargs):
+        """
+        Generates a quick plot of the positive frequency part of the power
+        spectrum.
+        """
+        plt.xlabel(units)
+        plt.ylabel(self.ylabel)
+        plt.plot(self.frequencies.positive.to(units), self.ppower, **kwargs)
+
+
 class PowerSpectrum:
     def __init__(self, frequencies, power, label='Fourier power'):
         self.frequencies = Frequencies(frequencies)
@@ -90,6 +107,7 @@ class PowerSpectrum:
         spectrum.
         """
         plt.plot(self.frequencies.positive, self.ppower, **kwargs)
+
 
 
 class TimeSeries:
