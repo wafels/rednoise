@@ -141,8 +141,6 @@ def fit_using_simple(freqs, pwr):
                     answer[j, i, :] = results[0]
                     error[j, i, :] = np.sqrt(np.diag(results[1]))
     return answer, error
-    
-    pass
 
 
 # Go through all the time series and generate a fit with a bump
