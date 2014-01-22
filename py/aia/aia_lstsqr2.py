@@ -16,6 +16,7 @@ from scipy.optimize import curve_fit
 import csv
 import cPickle as pickle
 import aia_specific
+import aia_plaw_fit
 
 font = {'family': 'normal',
         'weight': 'bold',
@@ -56,146 +57,6 @@ This is what we do with the data and how we do it:
 (c)
 """
 
-
-# A power law function
-def PowerLawPlusConstant(freq, a, n, c):
-    # The amplitude definition assures positivity
-    return a * a * freq ** -n + c
-
-
-# Log of the power spectrum model
-def LogPowerLawPlusConstant(freq, a, n, c):
-    return np.log(PowerLawPlusConstant(freq, a, n, c))
-
-
-# A Gaussian power distribution
-def GaussianPower(freq, amp, lloc, lsigma):
-    # The amplitude definition assures positivity
-    lfreq = np.log10(freq)
-    return amp * np.exp(-((lfreq - lloc) / lsigma) ** 2)
-
-
-# A model based on what is observed
-def ObservedPowerSpectrumModel(freq, a, n, c, amp, loc, sigma):
-    power_spectrum = PowerLawPlusConstant(freq, a, n, c)
-    power_spectrum = power_spectrum + GaussianPower(freq, amp, loc, sigma)
-    return power_spectrum
-
-
-# The log of the observed model
-def LogObservedPowerSpectrumModel(freq, powerlaw, gaussians):
-    return np.log(ObservedPowerSpectrumModel(freq, powerlaw, gaussians))
-
-
-def BrokenLinear(x, m, c, x0):
-    y = np.zeros_like(x)
-    y[x <= x0] = m * x[x <= x0] + c
-    y[x > x0] = m * x0 + c
-    return y
-
-
-def GaussianShape(x, a, xc, sigma):
-    #constant = (1.0 / np.sqrt(2.0 * np.pi))
-    z = (x - xc) / sigma
-    return a * np.exp(-0.5 * z ** 2)
-
-
-def ObserverdPowerSpectrumWithBump(x, m, c, x0, a, xc, sigma):
-    ps = BrokenLinear(x, m, c, x0)
-    return ps + GaussianShape(x, a, xc, sigma)
-
-
-# Go through all the time series and generate a simple spectral fits
-def fit_using_simple(freqs, pwr):
-    """
-    Simple fit to the data
-    """
-    ny = pwr.shape[0]
-    nx = pwr.shape[1]
-
-    # Answer array - 3 variables for the spectrum
-    answer = np.zeros((ny, nx, 3))
-    error = np.zeros((ny, nx, 3))
-    
-    for i in range(0, nx):
-        for j in range(0, ny):
-            y = np.log10(pwr[j, i, :])
-            # Generate a guess for the power spectrum
-
-
-            # Do the fit
-            try:
-                results = curve_fit(LogPowerLawPlusConstant,
-                                freqs, y, p0=p0)
-            except RuntimeError:
-                # Fit cannot be found
-                answer[j, i, :] = np.nan
-                error[j, i, :] = np.nan
-            else:
-                # If the error array is messed up, store nans
-                if np.any(np.isfinite(results[1]) == False):
-                    answer[j, i, :] = np.nan
-                    error[j, i, :] = np.nan
-                else:
-                    # Keep the results
-                    answer[j, i, :] = results[0]
-                    error[j, i, :] = np.sqrt(np.diag(results[1]))
-    return answer, error
-
-
-# Go through all the time series and generate a fit with a bump
-def fit_using_bump(freqs, pwr):
-    """
-    Assumes that the data consists of a linear power law with
-    a break and a bump of excess power.
-    """
-    x = np.log10(freqs)
-    ny = pwr.shape[0]
-    nx = pwr.shape[1]
-
-    # Broken linear guesses
-    x0guess = -1.75
-
-    # Center of the Gaussian bump guess
-    xc_guess = np.log10(1.0 / 300.0)
-
-    # Answer array - 3 variables for the background spectrum
-    # and 3 for the bump
-    answer = np.zeros((ny, nx, 6))
-    error = np.zeros((ny, nx, 6))
-    
-    for i in range(0, nx):
-        for j in range(0, ny):
-            y = np.log10(pwr[j, i, :])
-            # Generate a guess for the broken linear
-            mguess = (y[-1] - y[0]) / (x[-1] - x[0])
-            cguess = y[0] - mguess * x[0]
-            
-            # Guess for the bump
-            gauss_guess = [1.0, xc_guess, 0.25]
-
-            # Final Guess
-            p0 = [mguess, cguess, x0guess,
-                  gauss_guess[0], gauss_guess[1], gauss_guess[2]]
-
-            # Do the fit
-            try:
-                results = curve_fit(ObserverdPowerSpectrumWithBump,
-                                x, y, p0=p0)
-            except RuntimeError:
-                # Fit cannot be found
-                answer[j, i, :] = np.nan
-                error[j, i, :] = np.nan
-            else:
-                # If the error array is messed up, store nans
-                if np.any(np.isfinite(results[1]) == False):
-                    answer[j, i, :] = np.nan
-                    error[j, i, :] = np.nan
-                else:
-                    # Keep the results
-                    answer[j, i, :] = results[0]
-                    error[j, i, :] = np.sqrt(np.diag(results[1]))
-    return answer, error
 
 # String defining the basics number of time series
 def tsDetails(nx, ny, nt):
@@ -400,7 +261,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Limits to the data
                 dc_analysed_minmax = (np.min(dc_analysed), np.max(dc_analysed))
 
-                # Average of the analyzed time-series and create a time series object
+                # Average of the analyzed time-series and create a time series
+                # object
                 full_data = np.mean(dc_analysed, axis=(0, 1))
                 full_ts = TimeSeries(t, full_data)
                 full_ts.name = data_name
@@ -425,11 +287,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 dmanip = dmanip / (1.0 * nx * ny)
 
                 # Fit all the data with a bump
-                bump_ans_all, bump_err_all = fit_using_bump(freqs, pwr)
+                bump_ans_all, bump_err_all = aia_plaw_fit.fit_using_bump(freqs, pwr)
 
                 # Fit all the data with a simple model
-                simple_ans_all, simple_err_all = fit_using_simple(freqs, pwr)
-
+                simple_ans_all, simple_err_all = aia_plaw_fit.fit_using_simple(freqs, pwr)
 
                 ###############################################################
                 # Power spectrum analysis: arithmetic mean approach
@@ -439,41 +300,27 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Fourier power: fit a power law to the arithmetic mean of the
                 # Fourier power
-                # Generate a guess
-                pguess = [iobs[0], 1.8, iobs[-1]]
 
-                # 5 minute power bump
-                #gguess = [1.0, five_min, 0.0025]
-
-                # Final guess
-                #p0 = [np.sqrt(iobs[0]), 1.8, iobs[-1],
-                #      0.01, 1.4, 0.25]
-                #p0 = pguess
-                #bff = ObservedPowerSpectrumModel(x, p0[0], p0[1], p0[2], p0[3], p0[4], p0[5])
-
-                # do the fit
-                p0 = pguess
-                answer = curve_fit(PowerLawPlusConstant, x, iobs, sigma=sigma, p0=pguess)
-                #answer = curve_fit(ObservedPowerSpectrumModel, x, iobs, p0=p0)
+                #answer = curve_fit(aia_plaw_fit.PowerLawPlusConstant, x, iobs, sigma=sigma, p0=pguess)
+                answer, error = aia_plaw_fit.fit_PowerLawPlusConstant(x, iobs, sigma=sigma)
 
                 # Get the fit parameters out and calculate the best fit
-                param = answer[0]
-                bf = PowerLawPlusConstant(x, param[0], param[1], param[2])
-                #bf = ObservedPowerSpectrumModel(x, param[0], param[1], param[2], param[3], param[4], param[5])
+                param = answer[0, 0, :]
+                bf = aia_plaw_fit.PowerLawPlusConstant(x, param[0], param[1], param[2])
 
                 # Error estimate for the power law index
-                nerr = np.sqrt(answer[1][1, 1])
+                nerr = np.sqrt(error[0, 0, 2])
 
                 # Fourier powerr: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, find the Fourier power
                 # and do the fit
                 full_ts_iobs = full_ts.PowerSpectrum.ppower / np.mean(full_ts.PowerSpectrum.ppower)
-                answer_full_ts = curve_fit(LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
+                answer_full_ts = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
                 #answer_full_ts = fmin_tnc(LogPowerLawPlusConstant, x, approx_grad=True)
 
                 # Get the fit parameters out and calculate the best fit
                 param_fts = answer_full_ts[0]
-                bf_fts = np.exp(LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
+                bf_fts = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
                 nerr_fts = np.sqrt(answer[1][1, 1])
 
                 # Plots of power spectra: arithmetic means of summed emission
@@ -501,11 +348,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # normalized power.  This is effectively the geometric mean
 
                 # Fit the function to the log of the mean power
-                answer2 = curve_fit(LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
+                answer2 = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
 
                 # Get the fit parameters out and calculate the best fit
                 param2 = answer2[0]
-                bf2 = np.exp(LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
+                bf2 = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
 
                 # Error estimate for the power law index
                 nerr2 = np.sqrt(answer2[1][1, 1])
@@ -650,12 +497,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.fft_transform.pickle',
                           (freqs, fft_transform))
-                
+
                 # Bump fit
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.bump_fit_all.pickle',
                           (bump_ans_all, bump_err_all))
-                
+
                 # Simple fit
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.simple_fit_all.pickle',
@@ -672,7 +519,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                                      (t, doriginal))
 
                 ###############################################################
-                
 
 """
 do_lstsqr(dataroot='~/Data/AIA/',
