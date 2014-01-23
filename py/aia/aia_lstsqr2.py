@@ -63,6 +63,19 @@ def tsDetails(nx, ny, nt):
     return '[%i t.s., %i samples]' % (nx * ny, nt)
 
 
+# Apply the manipulation function
+def ts_manip(d, manip):
+    if manip == 'relative':
+        dmean = np.mean(d)
+        d = (d - dmean) / dmean
+    return d
+
+
+# Apply the window
+def ts_apply_window(d, win):
+    return d * win
+
+
 # Apodization windowing function
 def DefineWindow(window, nt):
     if window == 'no window':
@@ -221,16 +234,14 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         #if manip == 'submean':
                         #    d = d - np.mean(d)
 
-                        # Relative intensity
-                        if manip == 'relative':
-                            dmean = np.mean(d)
-                            d = (d - dmean) / dmean
+                        # Basic rescaling of the time-series
+                        d = ts_manip(d, manip)
 
                         # Sum up all the manipulated data
                         dmanip = dmanip + d
 
                         # Multiply the data by the apodization window
-                        d = d * win
+                        d = ts_apply_window(d, win)
 
                         # Keep the analyzed data cube
                         dc_analysed[j, i, :] = d
@@ -261,12 +272,25 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Limits to the data
                 dc_analysed_minmax = (np.min(dc_analysed), np.max(dc_analysed))
 
+                # Original data: average
+                doriginal = doriginal / (1.0 * nx * ny)
+
+                # Manipulated data: average
+                dmanip = dmanip / (1.0 * nx * ny)
+
                 # Average of the analyzed time-series and create a time series
                 # object
                 full_data = np.mean(dc_analysed, axis=(0, 1))
                 full_ts = TimeSeries(t, full_data)
                 full_ts.name = data_name
-                full_ts.label = 'average emission ' + tsdetails
+                full_ts.label = 'average analyzed emission ' + tsdetails
+
+                # Time series of the average original data
+                doriginal = ts_manip(doriginal, manip)
+                doriginal = ts_apply_window(d, win)
+                doriginal_ts = TimeSeries(t, doriginal)
+                doriginal_ts.name = data_name
+                doriginal_ts.label = 'average summed emission ' + tsdetails
 
                 # Fourier power: average over all the pixels
                 iobs = iobs / (1.0 * nx * ny)
@@ -280,17 +304,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Logarithmic power: standard deviation over all pixels
                 logsigma = np.std(logpwr, axis=(0, 1))
 
-                # Original data: average
-                doriginal = doriginal / (1.0 * nx * ny)
-
-                # Manipulated data: average
-                dmanip = dmanip / (1.0 * nx * ny)
-
                 # Fit all the data with a bump
-                bump_ans_all, bump_err_all = aia_plaw_fit.fit_using_bump(freqs, pwr)
+                #bump_ans_all, bump_err_all = aia_plaw_fit.fit_using_bump(freqs, pwr)
 
                 # Fit all the data with a simple model
-                simple_ans_all, simple_err_all = aia_plaw_fit.fit_using_simple(freqs, pwr)
+                #simple_ans_all, simple_err_all = aia_plaw_fit.fit_using_simple(freqs, pwr)
 
                 ###############################################################
                 # Power spectrum analysis: arithmetic mean approach
@@ -306,37 +324,57 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Get the fit parameters out and calculate the best fit
                 param = answer[0, 0, :]
-                bf = aia_plaw_fit.PowerLawPlusConstant(x, param[0], param[1], param[2])
+                bf = aia_plaw_fit.PowerLawPlusConstant(x,
+                                                       answer[0, 0, 0],
+                                                       answer[0, 0, 1],
+                                                       answer[0, 0, 2])
 
                 # Error estimate for the power law index
-                nerr = np.sqrt(error[0, 0, 2])
+                nerr = np.sqrt(error[0, 0, 1])
 
-                # Fourier powerr: get a Time series from the arithmetic sum of
-                # all the time-series at every pixel, find the Fourier power
+                # Fourier power: get a Time series from the arithmetic sum of
+                # all the analyzed time-series at every pixel, find the Fourier power
                 # and do the fit
-                full_ts_iobs = full_ts.PowerSpectrum.ppower / np.mean(full_ts.PowerSpectrum.ppower)
+                full_ts_iobs = full_ts.PowerSpectrum.ppower
                 answer_full_ts = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
-                #answer_full_ts = fmin_tnc(LogPowerLawPlusConstant, x, approx_grad=True)
 
-                # Get the fit parameters out and calculate the best fit
                 param_fts = answer_full_ts[0]
                 bf_fts = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
-                nerr_fts = np.sqrt(answer[1][1, 1])
+                nerr_fts = np.sqrt(answer_full_ts[1][1, 1])
+
+                # Fourier power: get a Time series from the arithmetic sum of
+                # all the time-series at every pixel, then apply the
+                # manipulation and the window. find the Fourier power
+                # and do the fit
+                doriginal_ts_iobs = doriginal_ts.PowerSpectrum.ppower
+                answer_doriginal_ts = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, np.log(doriginal_ts_iobs), p0=answer[0])
+                param_dts = answer_doriginal_ts[0]
+                bf_dts = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param_dts[0], param_dts[1], param_dts[2]))
+                nerr_dts = np.sqrt(answer_doriginal_ts[1][1, 1])
 
                 # Plots of power spectra: arithmetic means of summed emission
                 # and summed power spectra
                 plt.figure(1)
-                plt.loglog(freqs, full_ts_iobs, color='r', label='power spectrum from summed emission (exponential distributed)')
-                plt.loglog(freqs, bf_fts, color='r', linestyle="--", label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts))
+                # Average all the individual analyzed data
+                #plt.loglog(freqs, full_ts_iobs, color='r', label='power spectrum from summed emission (exponential distributed)')
+                #plt.loglog(freqs, bf_fts, color='r', linestyle="--", label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts))
+
+                # Sum all the original data, then apply manipulation, then apply window
+                plt.loglog(freqs, doriginal_ts_iobs, color='r', label='zzz')
+                plt.loglog(freqs, bf_dts, color='r', linestyle="--", label='fit to zzz n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
+
+                # Arithmetic mean of the power spectra from each pixel
                 plt.loglog(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
                 plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
+
+                # Extra information for the plot
                 plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
                 plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
                 plt.axhline(1.0, color='k', label='average power')
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' - aPS')
-                plt.legend(loc=1, fontsize=10)
+                plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
                 #plt.ylim(0.0001, 1000.0)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.png')
@@ -537,7 +575,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
           sfigroot='~/ts/img/',
           scsvroot='~/ts/csv/',
-          corename='20120923_0000__20120923_0100',
+          corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
           waves=['171'],

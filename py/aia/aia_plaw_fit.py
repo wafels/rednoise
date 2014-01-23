@@ -8,7 +8,7 @@ from scipy.optimize import curve_fit
 # A power law function
 def PowerLawPlusConstant(freq, a, n, c):
     # The amplitude definition assures positivity
-    return a * a * freq ** -n + c
+    return (a * a) + freq ** -n + np.abs(c)
 
 
 # Log of the power spectrum model
@@ -16,10 +16,16 @@ def LogPowerLawPlusConstant(freq, a, n, c):
     return np.log(PowerLawPlusConstant(freq, a, n, c))
 
 
-def fit_PowerLawPlusConstant(freqs, pwr, sigma=None):
+def fit_PowerLawPlusConstant(freqs, pwrinput, sigma=None):
     """
     Assumes that the data consists of a power law with a constant.
     """
+    if pwrinput.ndim == 1:
+        pwr = np.zeros((1, 1, pwrinput.size))
+        pwr[0, 0, :] = pwrinput
+    else:
+        pwr = pwrinput
+
     ny = pwr.shape[0]
     nx = pwr.shape[1]
 
@@ -37,11 +43,11 @@ def fit_PowerLawPlusConstant(freqs, pwr, sigma=None):
 
             # Do the fit
             try:
-                results = curve_fit(PowerLawPlusConstant, freqs, y, sigma=sigma, p0=pguess)
+                results = curve_fit(PowerLawPlusConstant, freqs, y, p0=pguess)
             except RuntimeError:
                 # Fit cannot be found
-                answer[j, i, :] = np.nan
-                error[j, i, :] = np.nan
+                answer[j, i, :] = np.inf
+                error[j, i, :] = np.inf
             else:
                 # If the error array is messed up, store nans
                 if np.any(np.isfinite(results[1]) == False):
@@ -88,11 +94,11 @@ def fit_using_simple(freqs, pwr):
         for j in range(0, ny):
             y = np.log10(pwr[j, i, :])
             # Generate a guess for the power spectrum
-
+            pguess = [y[0], 1.8, y[-1]]
             # Do the fit
             try:
                 results = curve_fit(LogPowerLawPlusConstant,
-                                freqs, y, p0=p0)
+                                freqs, y, p0=pguess)
             except RuntimeError:
                 # Fit cannot be found
                 answer[j, i, :] = np.nan
