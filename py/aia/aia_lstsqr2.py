@@ -335,12 +335,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the analyzed time-series at every pixel, find the Fourier power
                 # and do the fit
-                full_ts_iobs = full_ts.PowerSpectrum.ppower
-                answer_full_ts = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
+                #full_ts_iobs = full_ts.PowerSpectrum.ppower
+                #answer_full_ts = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
 
-                param_fts = answer_full_ts[0]
-                bf_fts = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
-                nerr_fts = np.sqrt(answer_full_ts[1][1, 1])
+                #param_fts = answer_full_ts[0]
+                #bf_fts = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
+                #nerr_fts = np.sqrt(answer_full_ts[1][1, 1])
 
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, then apply the
@@ -360,8 +360,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #plt.loglog(freqs, bf_fts, color='r', linestyle="--", label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts))
 
                 # Sum all the original data, then apply manipulation, then apply window
-                plt.loglog(freqs, doriginal_ts_iobs, color='r', label='zzz')
-                plt.loglog(freqs, bf_dts, color='r', linestyle="--", label='fit to zzz n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
+                plt.loglog(freqs, doriginal_ts_iobs, color='r', label='sum over region')
+                plt.loglog(freqs, bf_dts, color='r', linestyle="--", label='fit to sum over region n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
 
                 # Arithmetic mean of the power spectra from each pixel
                 plt.loglog(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
@@ -537,14 +537,14 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                           (freqs, fft_transform))
 
                 # Bump fit
-                pkl_write(pkl_location,
-                          'OUT.' + ofilename + '.bump_fit_all.pickle',
-                          (bump_ans_all, bump_err_all))
+                #pkl_write(pkl_location,
+                #          'OUT.' + ofilename + '.bump_fit_all.pickle',
+                #          (bump_ans_all, bump_err_all))
 
                 # Simple fit
-                pkl_write(pkl_location,
-                          'OUT.' + ofilename + '.simple_fit_all.pickle',
-                          (simple_ans_all, simple_err_all))
+                #pkl_write(pkl_location,
+                #          'OUT.' + ofilename + '.simple_fit_all.pickle',
+                #          (simple_ans_all, simple_err_all))
 
                 # Save the full time series to a CSV file
                 csv_timeseries_write(os.path.join(os.path.expanduser(scsv), window, manip),
@@ -563,9 +563,9 @@ do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
           sfigroot='~/ts/img/',
           scsvroot='~/ts/csv/',
-          corename='shutdownfun3_6hr',
+          corename='shutdownfun6_6hr',
           sunlocation='disk',
-          fits_level='1.5',
+          fits_level='1.0',
           waves=['171', '193', '211', '131'],
           regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
@@ -578,8 +578,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['171'],
-          regions=['moss'],
+          waves=['171', '193', '211', '131'],
+          regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
 

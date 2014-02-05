@@ -8,7 +8,7 @@ from scipy.optimize import curve_fit
 # A power law function
 def PowerLawPlusConstant(freq, a, n, c):
     # The amplitude definition assures positivity
-    return (a * a) + freq ** -n + np.abs(c)
+    return a * a * freq ** -n + c
 
 
 # Log of the power spectrum model
@@ -43,7 +43,7 @@ def fit_PowerLawPlusConstant(freqs, pwrinput, sigma=None):
 
             # Do the fit
             try:
-                results = curve_fit(PowerLawPlusConstant, freqs, y, p0=pguess)
+                results = curve_fit(PowerLawPlusConstant, freqs, y, p0=pguess, sigma=sigma)
             except RuntimeError:
                 # Fit cannot be found
                 answer[j, i, :] = np.inf
@@ -79,7 +79,7 @@ def ObserverdPowerSpectrumWithBump(x, m, c, x0, a, xc, sigma):
 
 
 # Go through all the time series and generate a simple spectral fits
-def fit_using_simple(freqs, pwr):
+def fit_using_simple(freqs, pwr, sigma=None):
     """
     Simple fit to the data
     """
@@ -98,7 +98,7 @@ def fit_using_simple(freqs, pwr):
             # Do the fit
             try:
                 results = curve_fit(LogPowerLawPlusConstant,
-                                freqs, y, p0=pguess)
+                                freqs, y, p0=pguess, sigma=None)
             except RuntimeError:
                 # Fit cannot be found
                 answer[j, i, :] = np.nan

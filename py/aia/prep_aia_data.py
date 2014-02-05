@@ -16,10 +16,11 @@ import numpy as np
 
 # input data
 dataroot = '~/Data/AIA/'
-corename = '20120923_0000__20120923_0100'
-sunlocation = 'disk'
-fits_level = '1.5'
-wave = '171'
+#corename = '20120923_0000__20120923_0100'
+corename = 'shutdownfun6_6hr'
+sunlocation = 'limb'
+fits_level = '1.0'
+wave = '211'
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]
