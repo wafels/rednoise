@@ -8,6 +8,9 @@ from sunpy.coords.util import rot_hpc
 import tsutils
 import pickle
 
+# For image co-registration
+from skimage.feature import match_template
+
 
 def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
     """Return a datacube from a set of maps"""
@@ -96,7 +99,7 @@ def visualize(datacube, delay=0.1):
     return None
 
 
-def get_datacube(path, derotate=True):
+def get_datacube(path, derotate=False, correlate=False):
     """
     Function that goes to a directory and returns a datacube
     """
@@ -115,7 +118,48 @@ def get_datacube(path, derotate=True):
             dc = np.zeros((ny, nx, nt))
             for i, m in enumerate(maps):
                 dc[:, :, i] = m.data[:, :]
+        if correlate:
+            dc = coregister_datacube(dc)
         return dc, maps
+
+
+def coregister_datacube(dc, register_index=0, diff_limit=0.01):
+    """
+    Co-register a series of layers in a datacube
+    """
+    # data cube shape
+    ny = dc.shape[0]
+    nx = dc.shape[1]
+    nt = dc.shape[2]
+
+    # Define a template at the registration layer
+    center = [ny / 2, nx / 2]
+    template_y = [center[0] - ny / 4, center[0] + ny / 4]
+    template_x = [center[1] - nx / 4, center[1] + nx / 4]
+    template = dc[template_y[0]:template_y[1],
+                  template_x[0]:template_x[1],
+                  register_index]
+
+    # Go through each layer and perform the matching
+    for t in range(0, nt):
+        # Get the layer
+        layer = dc[:, :, t]
+        # Get the cross correlation function
+        result = match_template(layer, template)
+
+        # Fit a 2-dimensional Gaussian to the correlation peak and get the
+        # displacement
+        gaussian_parameters = fitgaussian(result)
+        ydiff = gaussian_parameters[2] - center[0]
+        xdiff = gaussian_parameters[1] - center[1]
+
+        # Shift the layer
+        if np.abs(ydiff) >= diff_limit and np.abs(xdiff) >= diff_limit:
+            shifted = scipy.ndimage.interpolation.shift(layer, [-ydiff, -xdiff])
+        else:
+            shifted = layer
+        dc[..., t] = shifted
+    return dc
 
 
 def sum_over_space(dc, remove_mean=False):
@@ -174,3 +218,43 @@ def save_region(dc, output, regions, wave, times):
 def makedirs(output):
     if not os.path.isdir(output):
         os.makedirs(output)
+
+
+#
+# 2d Gaussian fitting code
+#
+# Taken from http://wiki.scipy.org/Cookbook/FittingData
+#
+#
+def gaussian(height, center_x, center_y, width_x, width_y, rotation):
+    """Returns a gaussian function with the given parameters"""
+    width_x = np.float(width_x)
+    width_y = np.float(width_y)
+    return lambda x, y: height * np.exp(
+                                  -(((center_x - x) / width_x) ** 2
+                                    + ((center_y - y) / width_y) ** 2) / 2)
+
+
+def moments(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution by calculating its
+    moments """
+    total = data.sum()
+    X, Y = np.indices(data.shape)
+    x = (X * data).sum() / total
+    y = (Y * data).sum() / total
+    col = data[:, int(y)]
+    width_x = np.sqrt(abs((np.arange(col.size) - y) ** 2 * col).sum() / col.sum())
+    row = data[int(x), :]
+    width_y = np.sqrt(abs((np.arange(row.size) - x) ** 2 * row).sum() / row.sum())
+    height = data.max()
+    return height, x, y, width_x, width_y, 0.0
+
+
+def fitgaussian(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution found by a fit"""
+    params = moments(data)
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+    p, success = scipy.optimize.leastsq(errorfunction, params)
+return p

@@ -9,7 +9,7 @@ import cubetools
 plt.ion()
 
 
-def rn4(location, derotate=False, Xrange=None, Yrange=None):
+def rn4(location, derotate=False, Xrange=None, Yrange=None, correlate=False):
     # Main directory where the data is
     directory = os.path.expanduser(location)
     # Which wavelength to look at
@@ -18,7 +18,7 @@ def rn4(location, derotate=False, Xrange=None, Yrange=None):
     # the region quite dramatically
     print('Loading data from ' + directory)
 
-    dc, maps = get_datacube(directory, derotate=derotate)
+    dc, maps = get_datacube(directory, derotate=derotate, correlate=correlate)
     # Get some properties of the datacube
     ny = dc.shape[0]
     nx = dc.shape[1]
@@ -58,11 +58,11 @@ def get_tslist(dc, pixel_locations, name=''):
     """
     # Get some properties of the datacube
     nt = dc.shape[2]
-    
+
     # Create the sample time array
     dt = 12.0
     t = dt * np.arange(0, nt)
-    
+
     # Define a list of time-series
     tslist = []
     for pxy in pixel_locations:
@@ -71,6 +71,7 @@ def get_tslist(dc, pixel_locations, name=''):
         tslist.append(ts)
 
     return tslist
+
 
 def location_branch(location_root, branches):
     """Recursively adds a branch to a directory listing"""

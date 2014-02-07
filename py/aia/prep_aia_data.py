@@ -18,9 +18,10 @@ import numpy as np
 dataroot = '~/Data/AIA/'
 #corename = '20120923_0000__20120923_0100'
 corename = 'shutdownfun6_6hr'
-sunlocation = 'limb'
+sunlocation = 'disk5'
 fits_level = '1.0'
-wave = '211'
+wave = '131'
+correlate = False
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]
@@ -30,16 +31,21 @@ aia_data_location = aia_specific.save_location_calculator({"aiadata": dataroot},
                                              branches)
 
 # Create the locations of where we will store output
-roots = {"pickle": '~/ts/pickle/',
-         "image": '~/ts/img/',
-         "movie": '~/ts/movies'}
+if correlate:
+    extension = '_correlated'
+else:
+    extension = ''
+
+roots = {"pickle": '~/ts/pickle' + extension,
+         "image": '~/ts/img' + extension,
+         "movie": '~/ts/movies' + extension}
 save_locations = aia_specific.save_location_calculator(roots, branches)
 
 ident = aia_specific.ident_creator(branches)
 
 # Load in the derotated data into a datacube
 dc, original_mapcube = aia_specific.rn4(aia_data_location["aiadata"],
-                                        derotate=True)
+                                        derotate=True, correlate=correlate)
 
 # Shape of the datacube
 nt = dc.shape[2]

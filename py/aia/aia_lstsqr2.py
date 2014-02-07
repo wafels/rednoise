@@ -558,18 +558,19 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 ###############################################################
 
-"""
+
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
           sfigroot='~/ts/img/',
           scsvroot='~/ts/csv/',
           corename='shutdownfun6_6hr',
-          sunlocation='disk',
+          sunlocation='limb',
           fits_level='1.0',
           waves=['171', '193', '211', '131'],
-          regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
+          regions=['highlimb', 'crosslimb', 'lowlimb', 'moss', 'loopfootpoints1', 'loopfootpoints2'],
           windows=['hanning'],
           manip='relative')
+
 """
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
@@ -582,7 +583,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
-
+"""
 
 """
 
