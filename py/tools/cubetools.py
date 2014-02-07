@@ -144,6 +144,7 @@ def coregister_datacube(dc, register_index=0, diff_limit=0.01):
     for t in range(0, nt):
         # Get the layer
         layer = dc[:, :, t]
+
         # Get the cross correlation function
         result = match_template(layer, template)
 
@@ -223,7 +224,7 @@ def makedirs(output):
 #
 # 2d Gaussian fitting code
 #
-# Taken from http://wiki.scipy.org/Cookbook/FittingData
+# Based on http://wiki.scipy.org/Cookbook/FittingData
 #
 #
 def gaussian(height, center_x, center_y, width_x, width_y, rotation):
@@ -239,13 +240,16 @@ def moments(data):
     """Returns (height, x, y, width_x, width_y)
     the gaussian parameters of a 2D distribution by calculating its
     moments """
-    total = data.sum()
-    X, Y = np.indices(data.shape)
-    x = (X * data).sum() / total
-    y = (Y * data).sum() / total
-    col = data[:, int(y)]
+    total = np.abs(data).sum()
+    Y, X = np.indices(data.shape)
+    x = np.argmax((Y * np.abs(data)).sum(axis=0) / total)
+    y = np.argmax((X * np.abs(data)).sum(axis=1) / total)
+    ij = np.unravel_index(np.argmax(data), data.shape)
+    x, y = ij[::-1]
+    print 'moment ', x, y
+    col = data[int(y), :]
     width_x = np.sqrt(abs((np.arange(col.size) - y) ** 2 * col).sum() / col.sum())
-    row = data[int(x), :]
+    row = data[:, int(x)]
     width_y = np.sqrt(abs((np.arange(row.size) - x) ** 2 * row).sum() / row.sum())
     height = data.max()
     return height, x, y, width_x, width_y, 0.0
@@ -257,4 +261,4 @@ def fitgaussian(data):
     params = moments(data)
     errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
     p, success = scipy.optimize.leastsq(errorfunction, params)
-return p
+    return p
