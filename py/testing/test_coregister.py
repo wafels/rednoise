@@ -55,13 +55,23 @@ for t in range(1, nt):
 
     # Get the cross correlation function
     result = match_template(layer, template)
+    
+    # Get the index of the maximum in the correlation function
     ij = np.unravel_index(np.argmax(result), result.shape)
-    x, y = ij[::-1]
-    print 'Maximum cross correlation ', x, y
+    cor_max_x, cor_max_y = ij[::-1]
+    print 'Maximum cross correlation ', cor_max_x, cor_max_y
 
-    # Fit a 2-dimensional Gaussian to the correlation peak and get the
-    # displacement
-    gaussian_parameters = fitgaussian(result * (result > 0.0))
+    # Fit a 2-dimensional Gaussian to the correlation peak.  Use only
+    # the positively correlated parts of the cross-correlation
+    # function.  We also ensure that the initial estimate of the location
+    # of the Gaussian peak is right on top of the maximum of the cross-
+    # correlation function.  This ensures that the final fit will not wander
+    # too far from the peak of the cross-correlation function, which is what we
+    # expect for image data that has already been corrected for solar rotation.
+    gaussian_parameters = fitgaussian(result * (result > 0.0),
+                                      estimate=[None, cor_max_x, cor_max_y, None, None])
+
+    # Calculate the offset - could be less than one pixel.
     ydiff = 0
     xdiff = 0
     print 'Gaussian parameters : ' + str(gaussian_parameters)
@@ -73,4 +83,6 @@ for t in range(1, nt):
         shifted = shift(layer, [-ydiff, -xdiff])
     else:
         shifted = layer
+
+    # Store it back in the datacube.
     dc[..., t] = shifted
