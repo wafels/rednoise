@@ -24,7 +24,7 @@ def plot_square(x, y, **kwargs):
 
 # data
 filename = '/home/ireland/ts/pickle/shutdownfun3_1hr/disk/1.0/171/moss.171.datacube.pickle'
-filename = '/Users/ireland/ts/pickle/20120923_0000__20120923_0100/disk/1.5/171/loopfootpoints/20120923_0000__20120923_0100_disk_1.5_171_loopfootpoints.datacube.pickle'
+filename = '/Users/ireland/ts/pickle/20120923_0000__20120923_0100/disk/1.5/171/moss/20120923_0000__20120923_0100_disk_1.5_171_moss.datacube.pickle'
 
 register_index = 0
 diff_limit = 0.01
@@ -59,13 +59,15 @@ keep_y = []
 for t in range(1, nt):
     print ' '
     print 'Layer ' + str(t)
-    # Get the layer
-    layer = dc[:, :, t]
-    template = dc[template_y[0]:template_y[1],
-              template_x[0]:template_x[1],
-              t-1]
+    # The previous layer is the reference layer
+    layer = dc[:, :, t - 1]
+    
+    # get a template for the current layer
+    current_layer = dc[:, :, t]
+    template = current_layer[template_y[0]:template_y[1],
+                             template_x[0]:template_x[1]]
 
-    # Get the cross correlation function
+    # Match the current template to the previous layer
     result = match_template(layer, template)
     
     # Get the index of the maximum in the correlation function
@@ -89,11 +91,11 @@ for t in range(1, nt):
     keep_x.append(gaussian_parameters[1])
     keep_y.append(gaussian_parameters[2])
 
-    # Shift the layer
+    # Shift the current layer
     if np.abs(ydiff) >= diff_limit and np.abs(xdiff) >= diff_limit:
-        shifted = shift(layer, [-ydiff, -xdiff])
+        shifted = shift(current_layer, [-ydiff, -xdiff])
     else:
-        shifted = layer
+        shifted = current_layer
 
     # Store it back in the datacube.
     dc[..., t] = shifted
@@ -106,8 +108,8 @@ plot_square(template_x, template_y, color='k', linewidth=1)
 
 
 plt.figure(2)
-kx = np.asarray(keep_x - keep_x[register_index])
-ky = np.asarray(keep_y - keep_y[register_index])
+kx = np.asarray(keep_x - keep_x[0])
+ky = np.asarray(keep_y - keep_y[0])
 plt.plot(kx, label='x displacement')
 plt.plot(ky, label='y displacement')
 plt.plot(np.sqrt(kx ** 2 + ky ** 2), label ='total displacement')
