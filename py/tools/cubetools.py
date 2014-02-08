@@ -14,6 +14,7 @@ from skimage.feature import match_template
 # Shift an image by a given amount - subpixel shifts are permitted
 from scipy.ndimage.interpolation import shift
 
+# Used in the fitting of Gaussians
 
 
 def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
@@ -246,6 +247,7 @@ def moments(data):
     distribution by calculating its moments.
     """
     total = np.abs(data).sum()
+
     # Indices.... basically the arrays below are like this
     # Y[i, :] = i and X[:, j] = j
     Y, X = np.indices(data.shape)
@@ -268,7 +270,7 @@ def moments(data):
     
     # Return the moments.  The last entry 0.0 is the rotation of the Gaussian,
     # which is assumed to be zero at the moment
-    return height, x, y, width_x, width_y, 0.0
+    return [height, x, y, width_x, width_y, 0.0]
 
 
 def fitgaussian(data, estimate=None):
@@ -285,7 +287,39 @@ def fitgaussian(data, estimate=None):
     for i, gvalue in enumerate(estimate):
         if gvalue is not None:
             params[i] = gvalue
+    # Calculate the error function
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
     
+    # Do the fit and return the answer
+    p, success = scipy.optimize.leastsq(errorfunction, params)
+    return p
+
+def fitgaussian_for_coregistration(data):
+    """
+    Returns (height, x, y, width_x, width_y) the gaussian parameters of a 2D
+    distribution found by a fit.
+    """
+    ij = np.unravel_index(np.argmax(data), data.shape)
+    x, y = ij[::-1]
+
+    # Having located were the moment maximum is in the x and y locations,
+    # derive widths in the x and y directions.
+    col = data[int(y), :]
+    width_x = np.sqrt(abs((np.arange(col.size) - y) ** 2 * col).sum() / col.sum())
+    row = data[:, int(x)]
+    width_y = np.sqrt(abs((np.arange(row.size) - x) ** 2 * row).sum() / row.sum())
+
+    # Maximum height of the data
+    height = data.max()
+    
+    # Return the moments.  The last entry 0.0 is the rotation of the Gaussian,
+    # which is assumed to be zero at the moment
+    params = [height, 1.0*x, 1.0*y, width_x, width_y, 0.0]
+    # Replace the moment-estimated parameters with parameters passed from the
+    # the calling routine.
+    #for i, gvalue in enumerate(estimate):
+    #    if gvalue is not None:
+    #        params[i] = gvalue
     # Calculate the error function
     errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
     
