@@ -63,9 +63,9 @@ for t in range(1, nt):
     layer = dc[:, :, t - 1]
     
     # get a template for the current layer
-    current_layer = dc[:, :, t]
-    template = current_layer[template_y[0]:template_y[1],
-                             template_x[0]:template_x[1]]
+    #current_layer = dc[:, :, t]
+    #template = current_layer[template_y[0]:template_y[1],
+    #                         template_x[0]:template_x[1]]
 
     # Match the current template to the previous layer
     result = match_template(layer, template)
@@ -108,7 +108,7 @@ plot_square(template_x, template_y, color='k', linewidth=1)
 
 
 plt.figure(2)
-kx = np.asarray(keep_x - keep_x[0])
+kx = np.asarray(keep_x)
 ky = np.asarray(keep_y - keep_y[0])
 plt.plot(kx, label='x displacement')
 plt.plot(ky, label='y displacement')
