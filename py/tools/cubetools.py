@@ -7,9 +7,15 @@ import os
 from sunpy.coords.util import rot_hpc
 import tsutils
 import pickle
+import itertools
 
 # For image co-registration
 from skimage.feature import match_template
+
+# Shift an image by a given amount - subpixel shifts are permitted
+from scipy.ndimage.interpolation import shift
+
+# Used in the fitting of Gaussians
 
 
 def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
@@ -61,7 +67,7 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
         # physicist refers to as the north-south (i.e., 'y') direction.
         #print t, xdiff, ydiff
         if np.abs(ydiff) >= diff_limit and np.abs(xdiff) >= diff_limit:
-            shifted = scipy.ndimage.interpolation.shift(m.data, [-ydiff, -xdiff])
+            shifted = shift(m.data, [-ydiff, -xdiff])
         else:
             shifted = m.data
         # Store all the shifted data.
@@ -156,7 +162,7 @@ def coregister_datacube(dc, register_index=0, diff_limit=0.01):
 
         # Shift the layer
         if np.abs(ydiff) >= diff_limit and np.abs(xdiff) >= diff_limit:
-            shifted = scipy.ndimage.interpolation.shift(layer, [-ydiff, -xdiff])
+            shifted = shift(layer, [-ydiff, -xdiff])
         else:
             shifted = layer
         dc[..., t] = shifted
@@ -237,28 +243,103 @@ def gaussian(height, center_x, center_y, width_x, width_y, rotation):
 
 
 def moments(data):
-    """Returns (height, x, y, width_x, width_y)
-    the gaussian parameters of a 2D distribution by calculating its
-    moments """
+    """
+    Returns (height, x, y, width_x, width_y) the gaussian parameters of a 2D
+    distribution by calculating its moments.
+    """
     total = np.abs(data).sum()
+
+    # Indices.... basically the arrays below are like this
+    # Y[i, :] = i and X[:, j] = j
     Y, X = np.indices(data.shape)
+
+    # Sum over the y-axis, and then find the index locating the maximum
     x = np.argmax((Y * np.abs(data)).sum(axis=0) / total)
+
+    # Sum over the x-axis, and then find the index locating the maximum
     y = np.argmax((X * np.abs(data)).sum(axis=1) / total)
-    ij = np.unravel_index(np.argmax(data), data.shape)
-    x, y = ij[::-1]
-    print 'moment ', x, y
+
+    # Having located were the moment maximum is in the x and y locations,
+    # derive widths in the x and y directions.
     col = data[int(y), :]
     width_x = np.sqrt(abs((np.arange(col.size) - y) ** 2 * col).sum() / col.sum())
     row = data[:, int(x)]
     width_y = np.sqrt(abs((np.arange(row.size) - x) ** 2 * row).sum() / row.sum())
+
+    # Maximum height of the data
     height = data.max()
-    return height, x, y, width_x, width_y, 0.0
+
+    # Return the moments.  The last entry 0.0 is the rotation of the Gaussian,
+    # which is assumed to be zero at the moment
+    return [height, x, y, width_x, width_y, 0.0]
 
 
-def fitgaussian(data):
-    """Returns (height, x, y, width_x, width_y)
-    the gaussian parameters of a 2D distribution found by a fit"""
+def fitgaussian(data, estimate=None):
+    """
+    Returns (height, x, y, width_x, width_y) the gaussian parameters of a 2D
+    distribution found by a fit.
+    """
+
+    # Get an estimate of the parameters of the Gaussian
     params = moments(data)
+
+    # Replace the moment-estimated parameters with parameters passed from the
+    # the calling routine.
+    for i, gvalue in enumerate(estimate):
+        if gvalue is not None:
+            params[i] = gvalue
+    # Calculate the error function
     errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+
+    # Do the fit and return the answer
     p, success = scipy.optimize.leastsq(errorfunction, params)
     return p
+
+
+def fitgaussian_for_coregistration(data):
+    """
+    Returns (height, x, y, width_x, width_y) the gaussian parameters of a 2D
+    distribution found by a fit.
+    """
+    ij = np.unravel_index(np.argmax(data), data.shape)
+    x, y = ij[::-1]
+
+    # Having located were the moment maximum is in the x and y locations,
+    # derive widths in the x and y directions.
+    col = data[int(y), :]
+    width_x = np.sqrt(abs((np.arange(col.size) - y) ** 2 * col).sum() / col.sum())
+    row = data[:, int(x)]
+    width_y = np.sqrt(abs((np.arange(row.size) - x) ** 2 * row).sum() / row.sum())
+
+    # Maximum height of the data
+    height = data.max()
+
+    # Return the moments.  The last entry 0.0 is the rotation of the Gaussian,
+    # which is assumed to be zero at the moment
+    params = [height, 1.0 * x, 1.0 * y, width_x, width_y, 0.0]
+    # Replace the moment-estimated parameters with parameters passed from the
+    # the calling routine.
+    #for i, gvalue in enumerate(estimate):
+    #    if gvalue is not None:
+    #        params[i] = gvalue
+    # Calculate the error function
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+
+    # Do the fit and return the answer
+    p, success = scipy.optimize.leastsq(errorfunction, params)
+    return p
+
+#
+# Lifted from http://stackoverflow.com/questions/7997152/python-3d-polynomial-surface-fit-order-dependent
+#
+# The strategy here is to pick a small region around the peak of correlation
+# coefficient and fit to that, instead of the full correlation peak
+#
+def polyfit2d(x, y, z, order=3):
+    ncols = (order + 1) ** 2
+    G = np.zeros((x.size, ncols))
+    ij = itertools.product(range(order + 1), range(order + 1))
+    for k, (i, j) in enumerate(ij):
+        G[:, k] = x ** i * y ** j
+    m, _, _, _ = np.linalg.lstsq(G, z)
+    return m
