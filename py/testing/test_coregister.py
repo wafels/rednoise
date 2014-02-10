@@ -17,6 +17,8 @@ plt.ion()
 
 # data
 filename = '/home/ireland/ts/pickle/shutdownfun3_1hr/disk/1.0/171/moss.171.datacube.pickle'
+filename = '/home/ireland/ts/pickle/shutdownfun3_1hr/disk/1.0/171/qs.171.datacube.pickle'
+filename = '/home/ireland/ts/pickle/shutdownfun3_6hr/disk/1.5/171/qs/shutdownfun3_6hr_disk_1.5_171_qs.datacube.pickle'
 register_index = 0
 diff_limit = 0.01
 
