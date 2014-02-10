@@ -105,7 +105,8 @@ for t in range(1, nt):
     # correlation function.  This ensures that the final fit will not wander
     # too far from the peak of the cross-correlation function, which is what we
     # expect for image data that has already been corrected for solar rotation.
-    gaussian_parameters = fitgaussian_for_coregistration(result * (result > 0.0))
+    res = result[cor_max_y - 1: cor_max_y + 2, cor_max_x - 1: cor_max_x + 2]
+    gaussian_parameters = fitgaussian_for_coregistration(result * (result > 0))
 
     # Calculate the offset - could be less than one pixel.
     ydiff = 0
@@ -113,8 +114,8 @@ for t in range(1, nt):
     print 'Gaussian parameters : ' + str(gaussian_parameters)
     #keep_x.append(gaussian_parameters[1])
     #keep_y.append(gaussian_parameters[2])
-    keep_x.append(cor_max_x)
-    keep_y.append(cor_max_y)
+    keep_x.append(cor_max_x + gaussian_parameters[1])
+    keep_y.append(cor_max_y + gaussian_parameters[2])
 
 
     # Shift the current layer

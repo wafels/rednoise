@@ -329,13 +329,14 @@ def fitgaussian_for_coregistration(data):
     p, success = scipy.optimize.leastsq(errorfunction, params)
     return p
 
+
 #
 # Lifted from http://stackoverflow.com/questions/7997152/python-3d-polynomial-surface-fit-order-dependent
 #
 # The strategy here is to pick a small region around the peak of correlation
 # coefficient and fit to that, instead of the full correlation peak
 #
-def polyfit2d(x, y, z, order=3):
+def polyfit2d(x, y, z, order=2):
     ncols = (order + 1) ** 2
     G = np.zeros((x.size, ncols))
     ij = itertools.product(range(order + 1), range(order + 1))
