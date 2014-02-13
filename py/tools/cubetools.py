@@ -99,7 +99,7 @@ def visualize(datacube, delay=0.1):
 
     for z in np.arange(1, nt - 1):
         m = datacube[:, :, z]
-        #axes.set_title("%i" % (i))
+        axes.set_title("%i" % (z))
         img.set_data(m)
         plt.pause(delay)
     return None
@@ -127,46 +127,6 @@ def get_datacube(path, derotate=False, correlate=False):
         if correlate:
             dc = coregister_datacube(dc)
         return dc, maps
-
-
-def coregister_datacube(dc, register_index=0, diff_limit=0.01):
-    """
-    Co-register a series of layers in a datacube
-    """
-    # data cube shape
-    ny = dc.shape[0]
-    nx = dc.shape[1]
-    nt = dc.shape[2]
-
-    # Define a template at the registration layer
-    center = [ny / 2, nx / 2]
-    template_y = [center[0] - ny / 4, center[0] + ny / 4]
-    template_x = [center[1] - nx / 4, center[1] + nx / 4]
-    template = dc[template_y[0]:template_y[1],
-                  template_x[0]:template_x[1],
-                  register_index]
-
-    # Go through each layer and perform the matching
-    for t in range(0, nt):
-        # Get the layer
-        layer = dc[:, :, t]
-
-        # Get the cross correlation function
-        result = match_template(layer, template)
-
-        # Fit a 2-dimensional Gaussian to the correlation peak and get the
-        # displacement
-        gaussian_parameters = fitgaussian(result)
-        ydiff = gaussian_parameters[2] - center[0]
-        xdiff = gaussian_parameters[1] - center[1]
-
-        # Shift the layer
-        if np.abs(ydiff) >= diff_limit and np.abs(xdiff) >= diff_limit:
-            shifted = shift(layer, [-ydiff, -xdiff])
-        else:
-            shifted = layer
-        dc[..., t] = shifted
-    return dc
 
 
 def sum_over_space(dc, remove_mean=False):
@@ -228,119 +188,140 @@ def makedirs(output):
 
 
 #
-# 2d Gaussian fitting code
+# Shift a datacube according to calculated co-registration displacements
 #
-# Based on http://wiki.scipy.org/Cookbook/FittingData
-#
-#
-def gaussian(height, center_x, center_y, width_x, width_y, rotation):
-    """Returns a gaussian function with the given parameters"""
-    width_x = np.float(width_x)
-    width_y = np.float(width_y)
-    return lambda x, y: height * np.exp(
-                                  -(((center_x - x) / width_x) ** 2
-                                    + ((center_y - y) / width_y) ** 2) / 2)
-
-
-def moments(data):
+def coregister_datacube(template, datacube, register_index=0):
     """
-    Returns (height, x, y, width_x, width_y) the gaussian parameters of a 2D
-    distribution by calculating its moments.
+    
     """
-    total = np.abs(data).sum()
+    # Number of layers
+    nt = datacube.shape[2]
+    
+    # Calculate the displacements of each layer in the datacube relative to the
+    # known position of a template
+    x_displacement, y_displacement = calculate_coregistration_displacements(template, datacube)
 
-    # Indices.... basically the arrays below are like this
-    # Y[i, :] = i and X[:, j] = j
-    Y, X = np.indices(data.shape)
+    # Shift each layer of the datacube the required amounts
+    for i in range(0, nt-1):
+        layer = datacube[:, :, i]
+        y_diff = y_displacement[i] - y_displacement[register_index]
+        x_diff = x_displacement[i] - x_displacement[register_index]
+        shifted = shift(layer, [-y_diff, -x_diff])
+        datacube[:, :, i] = shifted
 
-    # Sum over the y-axis, and then find the index locating the maximum
-    x = np.argmax((Y * np.abs(data)).sum(axis=0) / total)
-
-    # Sum over the x-axis, and then find the index locating the maximum
-    y = np.argmax((X * np.abs(data)).sum(axis=1) / total)
-
-    # Having located were the moment maximum is in the x and y locations,
-    # derive widths in the x and y directions.
-    col = data[int(y), :]
-    width_x = np.sqrt(abs((np.arange(col.size) - y) ** 2 * col).sum() / col.sum())
-    row = data[:, int(x)]
-    width_y = np.sqrt(abs((np.arange(row.size) - x) ** 2 * row).sum() / row.sum())
-
-    # Maximum height of the data
-    height = data.max()
-
-    # Return the moments.  The last entry 0.0 is the rotation of the Gaussian,
-    # which is assumed to be zero at the moment
-    return [height, x, y, width_x, width_y, 0.0]
-
-
-def fitgaussian(data, estimate=None):
-    """
-    Returns (height, x, y, width_x, width_y) the gaussian parameters of a 2D
-    distribution found by a fit.
-    """
-
-    # Get an estimate of the parameters of the Gaussian
-    params = moments(data)
-
-    # Replace the moment-estimated parameters with parameters passed from the
-    # the calling routine.
-    for i, gvalue in enumerate(estimate):
-        if gvalue is not None:
-            params[i] = gvalue
-    # Calculate the error function
-    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
-
-    # Do the fit and return the answer
-    p, success = scipy.optimize.leastsq(errorfunction, params)
-    return p
-
-
-def fitgaussian_for_coregistration(data):
-    """
-    Returns (height, x, y, width_x, width_y) the gaussian parameters of a 2D
-    distribution found by a fit.
-    """
-    ij = np.unravel_index(np.argmax(data), data.shape)
-    x, y = ij[::-1]
-
-    # Having located were the moment maximum is in the x and y locations,
-    # derive widths in the x and y directions.
-    col = data[int(y), :]
-    width_x = np.sqrt(abs((np.arange(col.size) - y) ** 2 * col).sum() / col.sum())
-    row = data[:, int(x)]
-    width_y = np.sqrt(abs((np.arange(row.size) - x) ** 2 * row).sum() / row.sum())
-
-    # Maximum height of the data
-    height = data.max()
-
-    # Return the moments.  The last entry 0.0 is the rotation of the Gaussian,
-    # which is assumed to be zero at the moment
-    params = [height, 1.0 * x, 1.0 * y, width_x, width_y, 0.0]
-    # Replace the moment-estimated parameters with parameters passed from the
-    # the calling routine.
-    #for i, gvalue in enumerate(estimate):
-    #    if gvalue is not None:
-    #        params[i] = gvalue
-    # Calculate the error function
-    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
-
-    # Do the fit and return the answer
-    p, success = scipy.optimize.leastsq(errorfunction, params)
-    return p
+    return datacube, x_displacement - x_displacement[register_index], y_displacement - y_displacement[register_index]
 
 
 #
-# Lifted from http://stackoverflow.com/questions/7997152/python-3d-polynomial-surface-fit-order-dependent
+# Calculate the co-registration displacements for a datacube
 #
-# The strategy here is to pick a small region around the peak of correlation
-# coefficient and fit to that, instead of the full correlation peak
-#
-def polyfit2d(x, y, z, order=2):
-    ncols = (order + 1) ** 2
-    G = np.zeros((x.size, ncols))
-    ij = itertools.product(range(order + 1), range(order + 1))
-    for k, (i, j) in enumerate(ij):
-        G[:, k] = x ** i * y ** j
-    m, _, _, _ = np.linalg.lstsq(G, z)
-    return m
+def calculate_coregistration_displacements(template, datacube):
+    """
+    Calculate the coregistration of a (nx, ny, nt) datacube against a chosen
+    template.
+    
+    Inputs
+    ------
+    
+    
+    Outputs
+    -------
+    
+    
+    """
+    nt = datacube.shape[2]
+
+    # Storage for the results
+    keep_x = []
+    keep_y = []
+
+    # Go through each layer and perform the matching
+    for t in range(0, nt):
+        # The previous layer is the reference layer
+        layer = datacube[:, :, t]
+    
+        # get a template for the current layer
+        #current_layer = dc[:, :, t]
+        #template = current_layer[template_y[0]:template_y[1],
+        #                         template_x[0]:template_x[1]]
+    
+        # Match the current template to the previous layer
+        result = match_template(layer, template)
+    
+        # Get the index of the maximum in the correlation function
+        ij = np.unravel_index(np.argmax(result), result.shape)
+        cor_max_x, cor_max_y = ij[::-1]
+    
+        array_around_maximum = result[np.max([0, cor_max_y - 1]): np.min([cor_max_y + 2, result.shape[0] - 1]), 
+                                      np.max([0, cor_max_x - 1]): np.min([cor_max_x + 2, result.shape[1] - 1])]
+        y_shift_relative_to_maximum, x_shift_relative_to_maximum = \
+        get_correlation_shifts(array_around_maximum)
+    
+        # Get shift relative to correlation array
+        y_shift_relative_to_correlation_array = y_shift_relative_to_maximum + cor_max_y
+        x_shift_relative_to_correlation_array = x_shift_relative_to_maximum + cor_max_x
+        
+        # Store the results
+        keep_x.append(x_shift_relative_to_correlation_array)
+        keep_y.append(y_shift_relative_to_correlation_array)
+
+    return np.asarray(keep_x), np.asarray(keep_y)
+
+
+def get_correlation_shifts(array):
+    """
+    Estimate the location of the maximum of a fit to the input array.  The
+    estimation in the x and y directions are done separately. The location
+    estimates can be used to implement subpixel shifts between two different
+    images.
+
+    Inputs
+    ------
+    array : an array with at least one dimension that has three elements.  The
+            input array is at most a 3 x 3 array of correlation values
+            calculated by matching a template to an image.
+    
+    
+    Outputs
+    -------
+    y, x : the location of the peak of a parabolic fit.
+    
+    """
+    # Check input shape
+    ny = array.shape[0]
+    nx = array.shape[1]
+    if nx > 3 or ny > 3:
+        print 'Input array is too big in at least one dimension. Returning Nones'
+        return None, None
+
+    # Find where the maximum of the input array is
+    ij = np.unravel_index(np.argmax(array), array.shape)
+    x_max_location, y_max_location = ij[::-1]
+
+    # Estimate the location of the parabolic peak if there is enough data.
+    # Otherwise, just return the location of the maximum in a particular
+    # direction.
+    if ny == 3:
+        y_location = parabolic_turning_point(array[:, x_max_location])
+    else:
+        y_location = 1.0 * y_max_location
+    
+    if nx == 3:
+        x_location = parabolic_turning_point(array[y_max_location, :])
+    else:
+        x_location = 1.0 * x_max_location
+    
+    return y_location, x_location
+
+
+def parabolic_turning_point(y):
+    """
+    Find the location of the turning point for a parabola f(x) = ax^2 + bx + c
+    The maximum is located at x0 = -b / 2a .  Assumes that the input array
+    represents an equally spaced sampling at the locations f(-1), f(0) and f(1)
+    # 
+    """
+    numerator = -0.5 * y.dot([-1, 0, 1])
+    denominator = y.dot([1, -2, 1])
+    return numerator / denominator
+

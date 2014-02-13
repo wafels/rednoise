@@ -3,14 +3,8 @@
 #
 import numpy as np
 import pickle
-from cubetools import fitgaussian_for_coregistration
+from cubetools import coregister_datacube
 from matplotlib import pyplot as plt
-# For image co-registration
-# match a sample area in a larger area
-from skimage.feature import match_template
-
-# shift an array
-from scipy.ndimage.interpolation import shift
 
 # Interactive plotting
 plt.ion()
@@ -23,6 +17,9 @@ def plot_square(x, y, **kwargs):
     plt.plot([x[1], x[1]], [y[0], y[1]], **kwargs)
     plt.plot([x[0], x[1]], [y[0], y[0]], **kwargs)
 
+region = 'sunspot'
+#region = 'qs'
+region = 'loopfootpoints'
 region = 'moss'
 
 # data
@@ -32,7 +29,7 @@ region + '/20120923_0000__20120923_0100_disk_1.5_171_' + region + '.datacube.pic
 #filename = '/Users/ireland/ts/pickle/20120923_0000__20120923_0100/disk/1.5/171/qs/20120923_0000__20120923_0100_disk_1.5_171_qs.datacube.pickle'
 #filename = '/Users/ireland/ts/pickle/20120923_0000__20120923_0100/disk/1.5/171/sunspot/20120923_0000__20120923_0100_disk_1.5_171_sunspot.datacube.pickle'
 #filename = '/Users/ireland/ts/pickle/20120923_0000__20120923_0100/disk/1.5/171/loopfootpoints/20120923_0000__20120923_0100_disk_1.5_171_loopfootpoints.datacube.pickle'
-filename = '/home/ireland/ts/pickle/shutdownfun3_6hr/disk/1.5/171/qs/shutdownfun3_6hr_disk_1.5_171_qs.datacube.pickle'
+#filename = '/home/ireland/ts/pickle/shutdownfun3_6hr/disk/1.5/171/qs/shutdownfun3_6hr_disk_1.5_171_qs.datacube.pickle'
 
 register_index = 0
 diff_limit = 0.01
@@ -72,60 +69,14 @@ template = np.log(np.median(dc[template_y[0]:template_y[1],
 template = np.mean(np.log(dc[template_y[0]:template_y[1],
                                template_x[0]:template_x[1], :]), axis= 2)
 
-#template = np.log(dc[template_y[0]:template_y[1],
-#                               template_x[0]:template_x[1], register_index])
-
-keep_x = []
-keep_y = []
-
-# Go through each layer and perform the matching
-for t in range(1, nt):
-    print ' '
-    print 'Layer ' + str(t)
-    # The previous layer is the reference layer
-    layer = np.log(dc[:, :, t])
-
-    # get a template for the current layer
-    #current_layer = dc[:, :, t]
-    #template = current_layer[template_y[0]:template_y[1],
-    #                         template_x[0]:template_x[1]]
-
-    # Match the current template to the previous layer
-    result = match_template(layer, template)
-
-    # Get the index of the maximum in the correlation function
-    ij = np.unravel_index(np.argmax(result), result.shape)
-    cor_max_x, cor_max_y = ij[::-1]
-    print 'Maximum cross correlation ', cor_max_x, cor_max_y, result[cor_max_y, cor_max_x]
-
-    # Fit a 2-dimensional Gaussian to the correlation peak.  Use only
-    # the positively correlated parts of the cross-correlation
-    # function.  We also ensure that the initial estimate of the location
-    # of the Gaussian peak is right on top of the maximum of the cross-
-    # correlation function.  This ensures that the final fit will not wander
-    # too far from the peak of the cross-correlation function, which is what we
-    # expect for image data that has already been corrected for solar rotation.
-    res = result[cor_max_y - 1: cor_max_y + 2, cor_max_x - 1: cor_max_x + 2]
-    gaussian_parameters = fitgaussian_for_coregistration(result * (result > 0))
-
-    # Calculate the offset - could be less than one pixel.
-    ydiff = 0
-    xdiff = 0
-    print 'Gaussian parameters : ' + str(gaussian_parameters)
-    #keep_x.append(gaussian_parameters[1])
-    #keep_y.append(gaussian_parameters[2])
-    keep_x.append(cor_max_x + gaussian_parameters[1])
-    keep_y.append(cor_max_y + gaussian_parameters[2])
+# Template at a particular time
+#template = dc[template_y[0]:template_y[1],
+#                               template_x[0]:template_x[1], register_index]
 
 
-    # Shift the current layer
-    #if np.abs(ydiff) >= diff_limit and np.abs(xdiff) >= diff_limit:
-    #    shifted = shift(current_layer, [-ydiff, -xdiff])
-    #else:
-    #    shifted = current_layer
+dc, keep_x, keep_y = coregister_datacube(template, dc, register_index=register_index)
 
-    # Store it back in the datacube.
-    #dc[..., t] = shifted
+
 
 plt.figure(1)
 plt.imshow(dc[:, :, register_index])
@@ -136,12 +87,14 @@ plt.title(region)
 
 
 plt.figure(2)
-kx = np.asarray(keep_x - keep_x[0])
-ky = np.asarray(keep_y - keep_y[0])
+kx = np.asarray(keep_x)
+ky = np.asarray(keep_y)
 plt.plot(kx, label='x displacement')
 plt.plot(ky, label='y displacement')
 plt.plot(np.sqrt(kx ** 2 + ky ** 2), label ='total displacement')
 plt.xlabel('time index')
-plt.ylabel('pixel displacement (relative to initial)')
+plt.ylabel('pixel displacement (relative to register layer)')
+plt.axvline(register_index, color='k', linestyle=':', linewidth=3, label='register layer')
+plt.axhline(0, color='k')
 plt.title(region)
 plt.legend()
