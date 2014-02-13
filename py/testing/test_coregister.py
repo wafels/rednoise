@@ -19,8 +19,8 @@ def plot_square(x, y, **kwargs):
 
 region = 'sunspot'
 #region = 'qs'
-region = 'loopfootpoints'
-region = 'moss'
+#region = 'loopfootpoints'
+#region = 'moss'
 
 # data
 #filename = '/home/ireland/ts/pickle/shutdownfun3_1hr/disk/1.0/171/moss.171.datacube.pickle'
@@ -31,7 +31,7 @@ region + '/20120923_0000__20120923_0100_disk_1.5_171_' + region + '.datacube.pic
 #filename = '/Users/ireland/ts/pickle/20120923_0000__20120923_0100/disk/1.5/171/loopfootpoints/20120923_0000__20120923_0100_disk_1.5_171_loopfootpoints.datacube.pickle'
 #filename = '/home/ireland/ts/pickle/shutdownfun3_6hr/disk/1.5/171/qs/shutdownfun3_6hr_disk_1.5_171_qs.datacube.pickle'
 
-register_index = 0
+register_index = 150
 diff_limit = 0.01
 
 print 'Loading ' + filename
