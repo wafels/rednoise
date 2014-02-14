@@ -217,12 +217,14 @@ def coregister_datacube(template, datacube, register_index=0):
 #
 def calculate_coregistration_displacements(template, datacube):
     """
-    Calculate the coregistration of a (nx, ny, nt) datacube against a chosen
-    template.
+    Calculate the coregistration of (nx, ny) layers in a (nx, ny, nt) datacube
+    against a chosen template.
     
     Inputs
     ------
-    
+    template : 
+
+    datacube :
     
     Outputs
     -------
@@ -237,21 +239,17 @@ def calculate_coregistration_displacements(template, datacube):
 
     # Go through each layer and perform the matching
     for t in range(0, nt):
-        # The previous layer is the reference layer
+        # Get the layer
         layer = datacube[:, :, t]
     
-        # get a template for the current layer
-        #current_layer = dc[:, :, t]
-        #template = current_layer[template_y[0]:template_y[1],
-        #                         template_x[0]:template_x[1]]
-    
-        # Match the current template to the previous layer
+        # Match the template to the layer
         result = match_template(layer, template)
     
         # Get the index of the maximum in the correlation function
         ij = np.unravel_index(np.argmax(result), result.shape)
         cor_max_x, cor_max_y = ij[::-1]
-    
+
+        # Get the correlation function around the maximum
         array_around_maximum = result[np.max([0, cor_max_y - 1]): np.min([cor_max_y + 2, result.shape[0] - 1]), 
                                       np.max([0, cor_max_x - 1]): np.min([cor_max_x + 2, result.shape[1] - 1])]
         y_shift_relative_to_maximum, x_shift_relative_to_maximum = \
@@ -280,8 +278,7 @@ def get_correlation_shifts(array):
     array : an array with at least one dimension that has three elements.  The
             input array is at most a 3 x 3 array of correlation values
             calculated by matching a template to an image.
-    
-    
+
     Outputs
     -------
     y, x : the location of the peak of a parabolic fit.
@@ -319,9 +316,7 @@ def parabolic_turning_point(y):
     Find the location of the turning point for a parabola f(x) = ax^2 + bx + c
     The maximum is located at x0 = -b / 2a .  Assumes that the input array
     represents an equally spaced sampling at the locations f(-1), f(0) and f(1)
-    # 
     """
     numerator = -0.5 * y.dot([-1, 0, 1])
     denominator = y.dot([1, -2, 1])
     return numerator / denominator
-
