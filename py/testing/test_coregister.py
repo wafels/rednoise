@@ -20,7 +20,7 @@ def plot_square(x, y, **kwargs):
 region = 'sunspot'
 #region = 'qs'
 #region = 'loopfootpoints'
-#region = 'moss'
+region = 'moss'
 
 # data
 #filename = '/home/ireland/ts/pickle/shutdownfun3_1hr/disk/1.0/171/moss.171.datacube.pickle'
@@ -59,19 +59,19 @@ template_x = [center[1] - len_x, center[1] + len_x]
 # get rid of the extreme values?
 
 # Median template
-template = np.log(np.median(dc[template_y[0]:template_y[1],
-                               template_x[0]:template_x[1], :], axis= 2))
+#template = np.log(np.median(dc[template_y[0]:template_y[1],
+#                               template_x[0]:template_x[1], :], axis= 2))
 # Mean template
 #template = np.mean(dc[template_y[0]:template_y[1],
 #                      template_x[0]:template_x[1], :], axis= 2)
 
 # Geometric mean template
-template = np.mean(np.log(dc[template_y[0]:template_y[1],
-                               template_x[0]:template_x[1], :]), axis= 2)
+#template = np.mean(np.log(dc[template_y[0]:template_y[1],
+#                               template_x[0]:template_x[1], :]), axis= 2)
 
 # Template at a particular time
-#template = dc[template_y[0]:template_y[1],
-#                               template_x[0]:template_x[1], register_index]
+template = dc[template_y[0]:template_y[1],
+              template_x[0]:template_x[1], register_index]
 
 
 dc, keep_x, keep_y = coregister_datacube(template, dc, register_index=register_index)
