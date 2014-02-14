@@ -213,15 +213,17 @@ def coregister_datacube(template, datacube, register_index=0):
 #
 def calculate_coregistration_displacements(template, datacube):
     """
-    Calculate the coregistration of (nx, ny) layers in a (nx, ny, nt) datacube
-    against a chosen template.
+    Calculate the coregistration of (ny, nx) layers in a (ny, nx, nt) datacube
+    against a chosen template.  All inputs are assumed to be numpy arrays.
     
     Inputs
     ------
-    template : 
+    template : a numpy array of size (N, M) where N < ny and M < nx .
 
-    datacube :
-    
+    datacube : a numpy array of size (ny, nx, nt), where the first two
+               dimensions are spatial dimensions, and the third dimension is
+               time.
+
     Outputs
     -------
     
