@@ -18,7 +18,7 @@ def plot_square(x, y, **kwargs):
     plt.plot([x[0], x[1]], [y[0], y[0]], **kwargs)
 
 region = 'sunspot'
-#region = 'qs'
+region = 'qs'
 #region = 'loopfootpoints'
 #region = 'moss'
 
