@@ -3,7 +3,7 @@
 #
 import numpy as np
 import pickle
-from cubetools import coregister_datacube
+from cubetools import coregister_datacube, shave_edges
 from matplotlib import pyplot as plt
 
 # Interactive plotting
@@ -54,19 +54,21 @@ len_x = nx / 2.5
 template_y = [center[0] - len_y, center[0] + len_y]
 template_x = [center[1] - len_x, center[1] + len_x]
 
-
-dc, keep_x, keep_y = coregister_datacube(np.log(dc),
+# Do the co-registration
+dc, keep_y, keep_x = coregister_datacube(np.log(dc),
                                          layer_index=nt / 2,
                                          template_index=[template_y, template_x])
 
+# Shave the cube at the edges to get the final data to analyze
+# dc = shave_edges(dc, keep_y, keep_x)
 
 #
 # The data at the layer_index
 #
 plt.figure(1)
-plt.imshow(dc[:, :, layer_index])
-plot_square(template_x, template_y, color='w', linewidth=3)
-plot_square(template_x, template_y, color='k', linewidth=1)
+plt.imshow(dc[:, :, layer_index], origin='lower')
+#plot_square(template_x, template_y, color='w', linewidth=3)
+#plot_square(template_x, template_y, color='k', linewidth=1)
 plt.title(region)
 
 

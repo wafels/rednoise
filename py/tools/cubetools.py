@@ -13,10 +13,8 @@ from skimage.feature import match_template
 # Shift an image by a given amount - subpixel shifts are permitted
 from scipy.ndimage.interpolation import shift
 
-# Used in the fitting of Gaussians
 
-
-def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
+def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
     """Return a datacube from a set of maps"""
 
     # get the dimensions of the datacube
@@ -31,9 +29,9 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
     # Output datacube
     datacube = np.zeros((ny, nx, nt))
 
-    # maximum differences found so far
-    max_abs_xdiff = 0.0
-    max_abs_ydiff = 0.0
+    # Values of the displacements
+    ydiff = np.zeros(nt)
+    xdiff = np.zeros(nt)
 
     # Assume all the maps have the same pointing and the Sun rotates in the
     # field of view.  The center of the field of view at the start time gives
@@ -41,37 +39,35 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, diff_limit=0.01):
     # location has to be rotated forward to get the correct center of the FOV
     # for the next maps.
     for t, m in enumerate(maps):
+
+        # Store all the data in a 3-d numpy array
+        datacube[..., t] = m.data
+        
+        # Find the center of the field of view
         newx, newy = rot_hpc(ref_center['x'], ref_center['y'], ref_time,
                                           m.date)
+
+        # Calculate the displacements in tems of pixels
         if newx is None:
-            xdiff = 0
+            xdiff[t] = 0.0
         else:
-            xdiff = (newx - ref_center['x']) / m.scale['x']
+            xdiff[t] = (newx - ref_center['x']) / m.scale['x']
         if newy is None:
-            ydiff = 0
+            ydiff[t] = 0.0
         else:
-            ydiff = (newy - ref_center['y']) / m.scale['y']
+            ydiff[t] = (newy - ref_center['y']) / m.scale['y']
 
-        if np.abs(xdiff) > max_abs_xdiff:
-            max_abs_xdiff = np.ceil(np.abs(xdiff))
 
-        if np.abs(ydiff) > max_abs_ydiff:
-            max_abs_ydiff = np.ceil(np.abs(ydiff))
+    # shift the data cube according to the calculated displacements due to
+    # solar rotation
+    datacube = shift_datacube_layers(datacube, ydiff, xdiff)
 
-        # In matplotlib, the origin of the image is in the top right of the
-        # the array.  Therefore, shifting in the y direction has to be reversed
-        # Also, the first dimension in the numpy array refers to what a solar
-        # physicist refers to as the north-south (i.e., 'y') direction.
-        if np.abs(ydiff) >= diff_limit and np.abs(xdiff) >= diff_limit:
-            shifted = shift(m.data, [-ydiff, -xdiff])
-        else:
-            shifted = m.data
-
-        # Store all the shifted data.
-        datacube[..., t] = shifted
-
-    # Zero out the edges where the data has been moved
-    return datacube[0:ny - max_abs_ydiff - 1, 0:nx - max_abs_xdiff - 1:, :]
+    # Optionally shave the datacube to remove data that may be affected by edge
+    # effects due to solar derotation.
+    if shave:
+        return shave_edges(datacube, ydiff, xdiff)
+    else:
+        return datacube
 
 
 def visualize(datacube, delay=0.1):
@@ -184,9 +180,54 @@ def makedirs(output):
 
 
 #
+# Remove the edges of a datacube 
+#
+def shave_edges(datacube, y, x):
+    """
+    Shaves off the y and x edges of a datacube according to a list of pixel
+    values.  Positive pixel values will shave off the datacube at the upper end
+    of the range.  Negative values will shave off values at the lower end of
+    the  range.  This function is useful for removing data at the edge of
+    datacubes that may be affected by shifts from solar de-rotation and
+    layer co-registration, leaving a datacube unaffected by edge effects.
+
+    Input
+    -----
+    datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
+               layers in the datacube.
+
+    y : a numpy array of pixel values that correspond to how much to pixel
+        shave values in the x-direction.
+
+    x : a numpy array of pixel values that correspond to how much to pixel
+        shave values in the y-direction.
+
+    Output
+    ------
+    A datacube with edges shaved off according to the positive and negative
+    ceiling values in the y and x arrays.
+    """
+    
+    # Datacube shape
+    ny = datacube.shape[0]
+    nx = datacube.shape[1]
+    nt = datacube.shape[2]
+
+    # maximum to shave off in the x-direction  
+    xupper = np.max(np.ceil(x[x >= 0]))
+    xlower = np.max(np.ceil(-x[x <= 0]))
+
+    # maximum to shave off in the y direction
+    yupper = np.max(np.ceil(y[y >= 0]))
+    ylower = np.max(np.ceil(-y[y <= 0]))
+
+    return datacube[ylower: ny - yupper - 1, xlower: nx - xupper - 1, 0: nt]
+
+#
 # Shift a datacube according to calculated co-registration displacements
 #
-def coregister_datacube(datacube, layer_index=0, template_index=None):
+def coregister_datacube(datacube, layer_index=0, template_index=None,
+                        shave=False):
     """
     Co-register the layers in a datacube according to a template taken from
     that datacube.
@@ -202,6 +243,9 @@ def coregister_datacube(datacube, layer_index=0, template_index=None):
     template_index : a array-like set of co-ordinates of the bottom left hand
                      cornor and the top right cornor of the template.  If set
                      to None, then the default template is used.
+
+    shave : shave off x, y edges in the datacube that are potentially affected
+            by edges effects.
 
     Output
     ------
@@ -242,7 +286,10 @@ def coregister_datacube(datacube, layer_index=0, template_index=None):
     # Shift each layer of the datacube the required amounts
     datacube = shift_datacube_layers(datacube, y_displacement, x_displacement)
 
-    return datacube, y_displacement, x_displacement
+    if shave:
+        return shave_edges(datacube, y_displacement, x_displacement), y_displacement, x_displacement
+    else:
+        return datacube, y_displacement, x_displacement
 
 #
 # Shift layers in a datacube according to some displacements
