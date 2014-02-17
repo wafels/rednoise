@@ -18,7 +18,7 @@ def plot_square(x, y, **kwargs):
     plt.plot([x[0], x[1]], [y[0], y[0]], **kwargs)
 
 region = 'sunspot'
-region = 'qs'
+#region = 'qs'
 #region = 'loopfootpoints'
 #region = 'moss'
 
@@ -31,7 +31,7 @@ region + '/20120923_0000__20120923_0100_disk_1.5_171_' + region + '.datacube.pic
 #filename = '/Users/ireland/ts/pickle/20120923_0000__20120923_0100/disk/1.5/171/loopfootpoints/20120923_0000__20120923_0100_disk_1.5_171_loopfootpoints.datacube.pickle'
 #filename = '/home/ireland/ts/pickle/shutdownfun3_6hr/disk/1.5/171/qs/shutdownfun3_6hr_disk_1.5_171_qs.datacube.pickle'
 
-register_index = 150
+layer_index = 150
 diff_limit = 0.01
 
 print 'Loading ' + filename
@@ -55,31 +55,16 @@ template_y = [center[0] - len_y, center[0] + len_y]
 template_x = [center[1] - len_x, center[1] + len_x]
 
 
-# use the log of the data
-# get rid of the extreme values?
-
-# Median template
-#template = np.log(np.median(dc[template_y[0]:template_y[1],
-#                               template_x[0]:template_x[1], :], axis= 2))
-# Mean template
-#template = np.mean(dc[template_y[0]:template_y[1],
-#                      template_x[0]:template_x[1], :], axis= 2)
-
-# Geometric mean template
-#template = np.mean(np.log(dc[template_y[0]:template_y[1],
-#                               template_x[0]:template_x[1], :]), axis= 2)
-
-# Template at a particular time
-template = np.log(dc[template_y[0]:template_y[1],
-              template_x[0]:template_x[1], register_index])
+dc, keep_x, keep_y = coregister_datacube(np.log(dc),
+                                         layer_index=nt / 2,
+                                         template_index=[template_y, template_x])
 
 
-dc, keep_x, keep_y = coregister_datacube(template, np.log(dc), register_index=register_index)
-
-
-
+#
+# The data at the layer_index
+#
 plt.figure(1)
-plt.imshow(dc[:, :, register_index])
+plt.imshow(dc[:, :, layer_index])
 plot_square(template_x, template_y, color='w', linewidth=3)
 plot_square(template_x, template_y, color='k', linewidth=1)
 plt.title(region)
@@ -93,8 +78,8 @@ plt.plot(kx, label='x displacement')
 plt.plot(ky, label='y displacement')
 plt.plot(np.sqrt(kx ** 2 + ky ** 2), label ='total displacement')
 plt.xlabel('time index')
-plt.ylabel('pixel displacement (relative to register layer)')
-plt.axvline(register_index, color='k', linestyle=':', linewidth=3, label='register layer')
+plt.ylabel('pixel displacement (relative to template layer index)')
+plt.axvline(layer_index, color='k', linestyle=':', linewidth=3, label='template layer index')
 plt.axhline(0, color='k')
 plt.title(region)
 plt.legend()

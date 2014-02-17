@@ -186,27 +186,98 @@ def makedirs(output):
 #
 # Shift a datacube according to calculated co-registration displacements
 #
-def coregister_datacube(template, datacube, register_index=0):
+def coregister_datacube(datacube, layer_index=0, template_index=None):
     """
+    Co-register the layers in a datacube according to a template taken from
+    that datacube.
+    
+    Input
+    -----
+    datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
+               layers in the datacube.
+               
+    layer_index : the layer in the datacube from which the template will be
+                  extracted.
+    
+    template_index : a array-like set of co-ordinates of the bottom left hand
+                     cornor and the top right cornor of the template.  If set
+                     to None, then the default template is used.
+
+    Output
+    ------
+    datacube : the input datacube each layer having been co-registered against
+               the template.
+
+    y_displacement : a one dimensional array of length nt with the pixel
+                     y-displacements relative position of the template at the
+                     value layer_index.  Note that y_displacement[layer_index]
+                     is zero by definition.
+
+    x_displacement : a one dimensional array of length nt with the pixel
+                     x-displacements relative position of the template at the
+                     value layer_index.  Note that x_displacement[layer_index]
+                     is zero by definition.
+    """
+
+    # Calculate the template
+    if template_index == None:
+        ny = datacube.shape[0]
+        nx = datacube.shape[1]
+        template = datacube[ny / 4: 3 * ny / 4,
+                            nx / 4: 3 * nx / 4,
+                            layer_index]
+    else:
+        template = datacube[template_index[0][0]:template_index[0][1],
+                            template_index[1][0]:template_index[1][1],
+                            layer_index]
+
+    # Calculate the displacements of each layer in the datacube relative to the
+    # known position of a template
+    y_displacement, x_displacement = calculate_coregistration_displacements(template, datacube)
+
+    # Displacement relative to the layer_index
+    y_displacement = y_displacement - y_displacement[layer_index]
+    x_displacement = x_displacement - x_displacement[layer_index]
+
+    # Shift each layer of the datacube the required amounts
+    datacube = shift_datacube_layers(datacube, y_displacement, x_displacement)
+
+    return datacube, y_displacement, x_displacement
+
+#
+# Shift layers in a datacube according to some displacements
+#
+def shift_datacube_layers(datacube, y_displacement, x_displacement):
+    """
+    Shifts the layers of a datacube by given amounts
+    
+    Input
+    -----
+    datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
+               layers in the datacube
+    
+    y_displacement : how much to shift each layer in the y - direction.  An
+                     one-dimensional array of length nt.
+    
+    x_displacement : how much to shift each layer in the x - direction.  An
+                     one-dimensional array of length nt.
+    
+    
+    Output
+    ------
+    A numpy array of shape (ny, nx, nt).  All layers have been shifted
+    according to the displacement amounts.
     
     """
     # Number of layers
     nt = datacube.shape[2]
     
-    # Calculate the displacements of each layer in the datacube relative to the
-    # known position of a template
-    x_displacement, y_displacement = calculate_coregistration_displacements(template, datacube)
-
     # Shift each layer of the datacube the required amounts
     for i in range(0, nt-1):
         layer = datacube[:, :, i]
-        y_diff = y_displacement[i] - y_displacement[register_index]
-        x_diff = x_displacement[i] - x_displacement[register_index]
-        shifted = shift(layer, [-y_diff, -x_diff])
+        shifted = shift(layer, [-y_displacement[i], -x_displacement[i]])
         datacube[:, :, i] = shifted
-
-    return datacube, x_displacement - x_displacement[register_index], y_displacement - y_displacement[register_index]
-
+    return datacube
 
 #
 # Calculate the co-registration displacements for a datacube
@@ -226,7 +297,12 @@ def calculate_coregistration_displacements(template, datacube):
 
     Outputs
     -------
+    The (y, x) position of the template in each layer in the datacube.  Output
+    is two numpy arrays.
     
+    Requires
+    --------
+    This function requires the "match_template" function in scikit image.
     
     """
     nt = datacube.shape[2]
@@ -261,7 +337,7 @@ def calculate_coregistration_displacements(template, datacube):
         keep_x.append(x_shift_relative_to_correlation_array)
         keep_y.append(y_shift_relative_to_correlation_array)
 
-    return np.asarray(keep_x), np.asarray(keep_y)
+    return np.asarray(keep_y), np.asarray(keep_x)
 
 
 def get_correlation_shifts(array):
@@ -313,7 +389,17 @@ def parabolic_turning_point(y):
     """
     Find the location of the turning point for a parabola f(x) = ax^2 + bx + c
     The maximum is located at x0 = -b / 2a .  Assumes that the input array
-    represents an equally spaced sampling at the locations f(-1), f(0) and f(1)
+    represents an equally spaced sampling at the locations f(-1), f(0) and
+    f(1).
+    
+    Input
+    -----
+    An one dimensional numpy array of shape 3
+    
+    Output
+    ------
+    A digit, the location of the parabola maximum.
+    
     """
     numerator = -0.5 * y.dot([-1, 0, 1])
     denominator = y.dot([1, -2, 1])
