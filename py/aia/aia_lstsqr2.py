@@ -427,15 +427,18 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.legend(loc=1, fontsize=10)
                 plt.savefig(savefig + '.geometric_mean_power_spectra.png')
 
-                # plot some histograms of the log power at a small number of equally spaced
-                # frequencies
-                findex = [0, 11, 19, 38, 76]
+                # plot some histograms of the log power at a small number of
+                # frequencies.
+                findex = []
+                f_of_interest = [0.5 * five_min, five_min, three_min, 2 * three_min, 3 * three_min]
+                for thisf in f_of_interest:
+                    findex.append(np.unravel_index(np.argmin(np.abs(thisf - freqs)), freqs.shape)[0])
                 plt.figure(3)
                 plt.xlabel('$\log_{10}(power)$')
                 plt.ylabel('proportion found at given frequency')
                 plt.title(data_name + ' - power distributions')
                 for f in findex:
-                    plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f Hz' % (freqs[f]))
+                    plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.5f mHz' % (1000 * freqs[f]))
                 plt.legend(loc=3, fontsize=10)
                 plt.savefig(savefig + '.power_spectra_distributions.png')
 
@@ -555,7 +558,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 ###############################################################
 
-
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
           sfigroot='~/ts/img/',
@@ -567,7 +570,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['highlimb', 'crosslimb', 'lowlimb', 'moss', 'loopfootpoints1', 'loopfootpoints2'],
           windows=['hanning'],
           manip='relative')
-
+"""
 """
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle/',
@@ -581,6 +584,21 @@ do_lstsqr(dataroot='~/Data/AIA/',
           windows=['hanning'],
           manip='relative')
 """
+
+do_lstsqr(dataroot='~/Data/AIA/',
+          ldirroot='~/ts/pickle',
+          sfigroot='~/ts/img/',
+          scsvroot='~/ts/csv/',
+          corename='20120923_0000__20120923_0100',
+          sunlocation='disk',
+          fits_level='1.5',
+          waves=['171'],
+          regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
+          windows=['hanning'],
+          manip='relative')
+
+
+
 
 """
 
