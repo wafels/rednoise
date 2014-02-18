@@ -16,7 +16,7 @@ from scipy.optimize import curve_fit
 import csv
 import cPickle as pickle
 import aia_specific
-import aia_plaw_fit
+import aia_plaw
 
 font = {'family': 'normal',
         'weight': 'bold',
@@ -304,12 +304,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Logarithmic power: standard deviation over all pixels
                 logsigma = np.std(logpwr, axis=(0, 1))
 
-                # Fit all the data with a bump
-                #bump_ans_all, bump_err_all = aia_plaw_fit.fit_using_bump(freqs, pwr)
-
-                # Fit all the data with a simple model
-                #simple_ans_all, simple_err_all = aia_plaw_fit.fit_using_simple(freqs, pwr)
-
                 ###############################################################
                 # Power spectrum analysis: arithmetic mean approach
                 # Normalize the frequency.
@@ -320,14 +314,14 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Fourier power
 
                 #answer = curve_fit(aia_plaw_fit.PowerLawPlusConstant, x, iobs, sigma=sigma, p0=pguess)
-                answer, error = aia_plaw_fit.fit_PowerLawPlusConstant(x, iobs, sigma=sigma)
+                answer, error = aia_plaw.fit_PowerLawPlusConstant(x, iobs, sigma=sigma)
 
                 # Get the fit parameters out and calculate the best fit
                 param = answer[0, 0, :]
-                bf = aia_plaw_fit.PowerLawPlusConstant(x,
-                                                       answer[0, 0, 0],
-                                                       answer[0, 0, 1],
-                                                       answer[0, 0, 2])
+                bf = aia_plaw.PowerLawPlusConstant(x,
+                                                   answer[0, 0, 0],
+                                                   answer[0, 0, 1],
+                                                   answer[0, 0, 2])
 
                 # Error estimate for the power law index
                 nerr = np.sqrt(error[0, 0, 1])
@@ -344,22 +338,19 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, then apply the
-                # manipulation and the window. find the Fourier power
-                # and do the fit
+                # manipulation and the window. Find the Fourier power
+                # and do the fit.
                 doriginal_ts_iobs = doriginal_ts.PowerSpectrum.ppower
-                answer_doriginal_ts = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, np.log(doriginal_ts_iobs), p0=answer[0])
+                answer_doriginal_ts = curve_fit(aia_plaw.LogPowerLawPlusConstant, x, np.log(doriginal_ts_iobs), p0=answer[0])
                 param_dts = answer_doriginal_ts[0]
-                bf_dts = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param_dts[0], param_dts[1], param_dts[2]))
+                bf_dts = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param_dts[0], param_dts[1], param_dts[2]))
                 nerr_dts = np.sqrt(answer_doriginal_ts[1][1, 1])
 
                 # Plots of power spectra: arithmetic means of summed emission
                 # and summed power spectra
                 plt.figure(1)
-                # Average all the individual analyzed data
-                #plt.loglog(freqs, full_ts_iobs, color='r', label='power spectrum from summed emission (exponential distributed)')
-                #plt.loglog(freqs, bf_fts, color='r', linestyle="--", label='fit to power spectrum of summed emission n=%4.2f +/- %4.2f' % (param_fts[1], nerr_fts))
 
-                # Sum all the original data, then apply manipulation, then apply window
+                # Arithmetic mean of all the time series, then analysis
                 plt.loglog(freqs, doriginal_ts_iobs, color='r', label='sum over region')
                 plt.loglog(freqs, bf_dts, color='r', linestyle="--", label='fit to sum over region n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
 
@@ -376,21 +367,20 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title(data_name + ' - aPS')
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.text(freqs[0], 500, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
-                #plt.ylim(0.0001, 1000.0)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.png')
 
                 ###############################################################
                 # Power spectrum analysis: geometric mean approach
                 # ------------------------------------------------------------------------
                 # Do the same thing over again, this time working with the log of the
-                # normalized power.  This is effectively the geometric mean
+                # normalized power.  This is the geometric mean
 
                 # Fit the function to the log of the mean power
-                answer2 = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
+                answer2 = curve_fit(aia_plaw.LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
 
                 # Get the fit parameters out and calculate the best fit
                 param2 = answer2[0]
-                bf2 = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
+                bf2 = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
 
                 # Error estimate for the power law index
                 nerr2 = np.sqrt(answer2[1][1, 1])
@@ -421,8 +411,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         lim[i, 0, f] = np.exp(h[1][lo])
                         lim[i, 1, f] = np.exp(h[1][hi])
 
-                # Give the best plot we can under the circumstances.  Since we have been
-                # looking at the log of the power, plots are slightly different
+                # Geometric mean of power spectra at each pixel
                 plt.figure(2)
                 plt.loglog(freqs, np.exp(logiobs), label='geometric mean of power spectra at each pixel')
                 plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
@@ -455,6 +444,14 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 full_ts.peek()
                 plt.savefig(savefig + '.full_ts_timeseries.png')
                 plt.close('all')
+
+
+                ###############################################################
+                # Power spectrum analysis: trying to fit a spectrum with a bump
+                # -------------------------------------------------------------
+                # Trying to fit the data with a bump.  We can use the answers
+                # found with a fit without a bump, as an initial estimate
+
 
                 ###############################################################
                 # Time series plots

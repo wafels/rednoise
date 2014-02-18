@@ -16,6 +16,16 @@ def LogPowerLawPlusConstant(freq, a, n, c):
     return np.log(PowerLawPlusConstant(freq, a, n, c))
 
 
+# A power law function with a Gaussian bump
+def PowerLawPlusConstantGaussian(freq, a, n, c, ga, gc, gsigma):
+    return PowerLawPlusConstant(freq, a, n, c) + GaussianShape(freq, ga, gc, gsigma)
+
+
+# Log of the power law with bump
+def LogPowerLawPlusConstantGaussian(freq, a, n, c, ga, gc, gsigma):
+    return np.log(PowerLawPlusConstant(freq, a, n, c) + GaussianShape(freq, ga, gc, gsigma))
+
+
 def fit_PowerLawPlusConstant(freqs, pwrinput, sigma=None):
     """
     Assumes that the data consists of a power law with a constant.
