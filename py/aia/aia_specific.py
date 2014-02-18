@@ -9,7 +9,7 @@ import cubetools
 plt.ion()
 
 
-def rn4(location, derotate=False, Xrange=None, Yrange=None, correlate=False):
+def rn4(location, derotate=False, Xrange=None, Yrange=None):
     # Main directory where the data is
     directory = os.path.expanduser(location)
     # Which wavelength to look at
@@ -18,7 +18,7 @@ def rn4(location, derotate=False, Xrange=None, Yrange=None, correlate=False):
     # the region quite dramatically
     print('Loading data from ' + directory)
 
-    dc, maps = get_datacube(directory, derotate=derotate, correlate=correlate)
+    dc, maps = get_datacube(directory, derotate=derotate)
     # Get some properties of the datacube
     ny = dc.shape[0]
     nx = dc.shape[1]
@@ -37,7 +37,9 @@ def rn4(location, derotate=False, Xrange=None, Yrange=None, correlate=False):
 
     return dc[yr[0]:yr[1], xr[0]:xr[1], :], maps
 
-
+###############################################################################
+# Random location genetars
+#
 def get_pixel_locations(iput=None, nsample=100):
     """
     Define a set of pixel locations or load them in from file.
@@ -72,7 +74,9 @@ def get_tslist(dc, pixel_locations, name=''):
 
     return tslist
 
-
+###############################################################################
+# Save location calculators
+#
 def location_branch(location_root, branches):
     """Recursively adds a branch to a directory listing"""
     loc = os.path.expanduser(location_root)
@@ -88,15 +92,18 @@ def save_location_calculator(roots, branches):
         loc = location_branch(roots[k], branches)
         cubetools.makedirs(loc)
         locations[k] = loc
-
     return locations
 
 
 def ident_creator(branches):
     return '_'.join(branches)
 
+##############################################################################
+# Plotting helpers
 
+#
 # Plot an image of the regions
+#
 def plot_square(x, y, **kwargs):
     plt.plot([x[0], x[0]], [y[0], y[1]], **kwargs)
     plt.plot([x[0], x[1]], [y[1], y[1]], **kwargs)

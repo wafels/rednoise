@@ -116,7 +116,7 @@ def visualize(datacube, delay=0.1):
     #fig.colorbar(img)
     fig.show()
 
-    for z in np.arange(1, nt - 1):
+    for z in np.arange(0, nt):
         m = datacube[:, :, z]
         axes.set_title("%i" % (z))
         img.set_data(m)
@@ -124,7 +124,7 @@ def visualize(datacube, delay=0.1):
     return None
 
 
-def get_datacube(path, derotate=False, correlate=False):
+def get_datacube(path, derotate=False):
     """
     Function that goes to a directory and returns a datacube
     """
@@ -143,8 +143,6 @@ def get_datacube(path, derotate=False, correlate=False):
             dc = np.zeros((ny, nx, nt))
             for i, m in enumerate(maps):
                 dc[:, :, i] = m.data[:, :]
-        if correlate:
-            dc = coregister_datacube(dc)
         return dc, maps
 
 
@@ -347,7 +345,7 @@ def shift_datacube_layers(datacube, y_displacement, x_displacement):
     nt = datacube.shape[2]
     
     # Shift each layer of the datacube the required amounts
-    for i in range(0, nt-1):
+    for i in range(0, nt):
         layer = datacube[:, :, i]
         shifted = shift(layer, [-y_displacement[i], -x_displacement[i]])
         datacube[:, :, i] = shifted

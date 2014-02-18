@@ -12,16 +12,18 @@ import os
 from sunpy.time import parse_time
 from sunpy.cm import cm
 import numpy as np
+import cubetools
 
 
 # input data
 dataroot = '~/Data/AIA/'
-#corename = '20120923_0000__20120923_0100'
-corename = 'shutdownfun6_6hr'
-sunlocation = 'disk5'
-fits_level = '1.0'
-wave = '131'
-correlate = False
+corename = '20120923_0000__20120923_0100'
+#corename = 'shutdownfun6_6hr'
+sunlocation = 'disk'
+fits_level = '1.5'
+wave = '171'
+cross_correlate = True
+
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]
@@ -30,9 +32,8 @@ branches = [corename, sunlocation, fits_level, wave]
 aia_data_location = aia_specific.save_location_calculator({"aiadata": dataroot},
                                              branches)
 
-# Create the locations of where we will store output
-if correlate:
-    extension = '_correlated'
+if cross_correlate:
+    extension = '_cc'
 else:
     extension = ''
 
@@ -45,7 +46,14 @@ ident = aia_specific.ident_creator(branches)
 
 # Load in the derotated data into a datacube
 dc, original_mapcube = aia_specific.rn4(aia_data_location["aiadata"],
-                                        derotate=True, correlate=correlate)
+                                        derotate=True)
+
+# Cross-correlation - remove edges
+if cross_correlate:
+    print('Performing cross-correlation')
+    nt = dc.shape[2]
+    dc, xdisp, ydisp = cubetools.coregister_datacube(dc, layer_index=nt/2, shave=True)
+
 
 # Shape of the datacube
 nt = dc.shape[2]
