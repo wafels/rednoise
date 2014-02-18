@@ -5,7 +5,7 @@ from scipy.io import readsav
 import os
 from sunpy.coords.util import rot_hpc
 import tsutils
-import pickle
+import pickle 
 
 # For image co-registration
 from skimage.feature import match_template
@@ -68,6 +68,33 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
         return shave_edges(datacube, ydiff, xdiff)
     else:
         return datacube
+
+
+def get_datacube_from_mapcube(mapcube):
+    """
+    Extract the image data from a mapcube.
+    """
+    # get the dimensions of the datacube
+    nt = len(mapcube[:])
+    ny = mapcube[0].shape[0]
+    nx = mapcube[0].shape[1]
+
+    # Output datacube
+    datacube = np.zeros((ny, nx, nt))
+    for t, m in enumerate(mapcube):
+
+        # Store all the data in a 3-d numpy array
+        datacube[..., t] = m.data
+
+    # Return the datacube
+    return datacube
+
+
+def get_properties_from_mapcube(mapcube):
+    """
+    Extract the mapcube properties out of the mapcube.
+    """
+    pass
 
 
 def visualize(datacube, delay=0.1):
