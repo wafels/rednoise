@@ -314,7 +314,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Fourier power
 
                 #answer = curve_fit(aia_plaw_fit.PowerLawPlusConstant, x, iobs, sigma=sigma, p0=pguess)
-                answer, error = aia_plaw.fit_PowerLawPlusConstant(x, iobs, sigma=sigma)
+                answer, error = aia_plaw.do_fit(x, iobs, aia_plaw.PowerLawPlusConstant, sigma=sigma)
 
                 # Get the fit parameters out and calculate the best fit
                 param = answer[0, 0, :]
@@ -326,10 +326,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Error estimate for the power law index
                 nerr = np.sqrt(error[0, 0, 1])
 
-
-                AAA, EEE = aia_plaw.do_fit(x, iobs, aia_plaw.PowerLawPlusConstant, sigma=sigma)
-                print answer[0, 0, :], AAA[0, 0, :]
-                
                 ###############################################################
                 # Power spectrum analysis: trying to fit a spectrum with a bump
                 # -------------------------------------------------------------
@@ -572,20 +568,20 @@ do_lstsqr(dataroot='~/Data/AIA/',
           windows=['hanning'],
           manip='relative')
 """
-"""
+
 do_lstsqr(dataroot='~/Data/AIA/',
-          ldirroot='~/ts/pickle/',
-          sfigroot='~/ts/img/',
-          scsvroot='~/ts/csv/',
+          ldirroot='~/ts/pickle_cc/',
+          sfigroot='~/ts/img_cc/',
+          scsvroot='~/ts/csv_cc/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['171', '193', '211', '131'],
-          regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
+          waves=['193'],
+          regions=['moss', 'loopfootpoints', 'sunspot', 'qs'],
           windows=['hanning'],
           manip='relative')
-"""
 
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle',
           sfigroot='~/ts/img/',
@@ -597,7 +593,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
-
+"""
 
 
 

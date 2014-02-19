@@ -14,8 +14,35 @@ from skimage.feature import match_template
 from scipy.ndimage.interpolation import shift
 
 
+#
+# From a directory full of FITS files, return a datacube and a mapcube
+#
+def get_datacube(path, derotate=False, shave=False):
+    """
+    Function that goes to a directory and returns a datacube
+    """
+    if os.path.isfile(path):
+        idl = readsav(path)
+        return np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
+    else:
+        # Get a mapcube
+        maps = sunpy.Map(path, cube=True)
+        if derotate:
+            dc, ysrdisp, xsrdisp = derotated_datacube_from_mapcube(maps, shave=shave)
+        else:
+            ysrdisp = None
+            xsrdisp = None
+            nt = len(maps[:])
+            ny = maps[0].shape[0]
+            nx = maps[0].shape[1]
+            dc = np.zeros((ny, nx, nt))
+            for i, m in enumerate(maps):
+                dc[:, :, i] = m.data[:, :]
+        return dc, ysrdisp, xsrdisp, maps
+
+
 def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
-    """Return a datacube from a set of maps"""
+    """Return a derotated datacube from a set of maps"""
 
     # get the dimensions of the datacube
     nt = len(maps[:])
@@ -42,7 +69,7 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
 
         # Store all the data in a 3-d numpy array
         datacube[..., t] = m.data
-        
+
         # Find the center of the field of view
         newx, newy = rot_hpc(ref_center['x'], ref_center['y'], ref_time,
                                           m.date)
@@ -57,7 +84,6 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
         else:
             ydiff[t] = (newy - ref_center['y']) / m.scale['y']
 
-
     # shift the data cube according to the calculated displacements due to
     # solar rotation
     datacube = shift_datacube_layers(datacube, ydiff, xdiff)
@@ -65,7 +91,7 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
     # Optionally shave the datacube to remove data that may be affected by edge
     # effects due to solar derotation.
     if shave:
-        return shave_edges(datacube, ydiff, xdiff)
+        return shave_edges(datacube, ydiff, xdiff), ydiff, xdiff
     else:
         return datacube
 
@@ -122,28 +148,6 @@ def visualize(datacube, delay=0.1):
         img.set_data(m)
         plt.pause(delay)
     return None
-
-
-def get_datacube(path, derotate=False):
-    """
-    Function that goes to a directory and returns a datacube
-    """
-    if os.path.isfile(path):
-        idl = readsav(path)
-        return np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
-    else:
-        # Get a mapcube
-        maps = sunpy.Map(path, cube=True)
-        if derotate:
-            dc = derotated_datacube_from_mapcube(maps)
-        else:
-            nt = len(maps[:])
-            ny = maps[0].shape[0]
-            nx = maps[0].shape[1]
-            dc = np.zeros((ny, nx, nt))
-            for i, m in enumerate(maps):
-                dc[:, :, i] = m.data[:, :]
-        return dc, maps
 
 
 def sum_over_space(dc, remove_mean=False):
@@ -205,7 +209,7 @@ def makedirs(output):
 
 
 #
-# Remove the edges of a datacube 
+# Remove the edges of a datacube
 #
 def shave_edges(datacube, y, x):
     """
@@ -232,21 +236,41 @@ def shave_edges(datacube, y, x):
     A datacube with edges shaved off according to the positive and negative
     ceiling values in the y and x arrays.
     """
-    
+
     # Datacube shape
     ny = datacube.shape[0]
     nx = datacube.shape[1]
     nt = datacube.shape[2]
 
-    # maximum to shave off in the x-direction  
-    xupper = np.max(np.ceil(x[x >= 0]))
-    xlower = np.max(np.ceil(-x[x <= 0]))
+    # maximum to shave off in the x-direction
+    xupper = _upper_shave(x)
+    xlower = _lower_shave(x)
 
     # maximum to shave off in the y direction
-    yupper = np.max(np.ceil(y[y >= 0]))
-    ylower = np.max(np.ceil(-y[y <= 0]))
+    yupper = _upper_shave(y)
+    ylower = _lower_shave(y)
 
     return datacube[ylower: ny - yupper - 1, xlower: nx - xupper - 1, 0: nt]
+
+
+#
+# Helper functions for shaving edges
+#
+def _upper_shave(z):
+    zupper = 0
+    zcond = z >= 0
+    if np.any(zcond):
+        zupper = np.max(np.ceil(z[zcond]))
+    return zupper
+
+
+def _lower_shave(z):
+    zlower = 0
+    zcond = z <= 0
+    if np.any(zcond):
+        zlower = np.max(np.ceil(-z[zcond]))
+    return zlower
+
 
 #
 # Shift a datacube according to calculated co-registration displacements
@@ -256,18 +280,19 @@ def coregister_datacube(datacube, layer_index=0, template_index=None,
     """
     Co-register the layers in a datacube according to a template taken from
     that datacube.
-    
+
     Input
     -----
     datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
                layers in the datacube.
-               
+
     layer_index : the layer in the datacube from which the template will be
                   extracted.
-    
+
     template_index : a array-like set of co-ordinates of the bottom left hand
                      cornor and the top right cornor of the template.  If set
-                     to None, then the default template is used.
+                     to None, then the default template is used. The
+                     template_index is defined as [ [y1, x1], [y2, x2] ].
 
     shave : shave off x, y edges in the datacube that are potentially affected
             by edges effects.
@@ -296,8 +321,8 @@ def coregister_datacube(datacube, layer_index=0, template_index=None,
                             nx / 4: 3 * nx / 4,
                             layer_index]
     else:
-        template = datacube[template_index[0][0]:template_index[0][1],
-                            template_index[1][0]:template_index[1][1],
+        template = datacube[template_index[0][0]:template_index[1][0],
+                            template_index[0][1]:template_index[1][1],
                             layer_index]
 
     # Calculate the displacements of each layer in the datacube relative to the
@@ -316,40 +341,42 @@ def coregister_datacube(datacube, layer_index=0, template_index=None,
     else:
         return datacube, y_displacement, x_displacement
 
+
 #
 # Shift layers in a datacube according to some displacements
 #
 def shift_datacube_layers(datacube, y_displacement, x_displacement):
     """
     Shifts the layers of a datacube by given amounts
-    
+
     Input
     -----
     datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
                layers in the datacube
-    
+
     y_displacement : how much to shift each layer in the y - direction.  An
                      one-dimensional array of length nt.
-    
+
     x_displacement : how much to shift each layer in the x - direction.  An
                      one-dimensional array of length nt.
-    
-    
+
+
     Output
     ------
     A numpy array of shape (ny, nx, nt).  All layers have been shifted
     according to the displacement amounts.
-    
+
     """
     # Number of layers
     nt = datacube.shape[2]
-    
+
     # Shift each layer of the datacube the required amounts
     for i in range(0, nt):
         layer = datacube[:, :, i]
         shifted = shift(layer, [-y_displacement[i], -x_displacement[i]])
         datacube[:, :, i] = shifted
     return datacube
+
 
 #
 # Calculate the co-registration displacements for a datacube
@@ -358,7 +385,7 @@ def calculate_coregistration_displacements(template, datacube):
     """
     Calculate the coregistration of (ny, nx) layers in a (ny, nx, nt) datacube
     against a chosen template.  All inputs are assumed to be numpy arrays.
-    
+
     Inputs
     ------
     template : a numpy array of size (N, M) where N < ny and M < nx .
@@ -371,11 +398,11 @@ def calculate_coregistration_displacements(template, datacube):
     -------
     The (y, x) position of the template in each layer in the datacube.  Output
     is two numpy arrays.
-    
+
     Requires
     --------
     This function requires the "match_template" function in scikit image.
-    
+
     """
     nt = datacube.shape[2]
 
@@ -387,10 +414,10 @@ def calculate_coregistration_displacements(template, datacube):
     for t in range(0, nt):
         # Get the layer
         layer = datacube[:, :, t]
-    
+
         # Match the template to the layer
         result = match_template(layer, template)
-    
+
         # Get the index of the maximum in the correlation function
         ij = np.unravel_index(np.argmax(result), result.shape)
         cor_max_x, cor_max_y = ij[::-1]
@@ -400,11 +427,11 @@ def calculate_coregistration_displacements(template, datacube):
                                       np.max([0, cor_max_x - 1]): np.min([cor_max_x + 2, result.shape[1] - 1])]
         y_shift_relative_to_maximum, x_shift_relative_to_maximum = \
         get_correlation_shifts(array_around_maximum)
-    
+
         # Get shift relative to correlation array
         y_shift_relative_to_correlation_array = y_shift_relative_to_maximum + cor_max_y
         x_shift_relative_to_correlation_array = x_shift_relative_to_maximum + cor_max_x
-        
+
         # Store the results
         keep_x.append(x_shift_relative_to_correlation_array)
         keep_y.append(y_shift_relative_to_correlation_array)
@@ -428,7 +455,7 @@ def get_correlation_shifts(array):
     Outputs
     -------
     y, x : the location of the peak of a parabolic fit.
-    
+
     """
     # Check input shape
     ny = array.shape[0]
@@ -448,12 +475,12 @@ def get_correlation_shifts(array):
         y_location = parabolic_turning_point(array[:, x_max_location])
     else:
         y_location = 1.0 * y_max_location
-    
+
     if nx == 3:
         x_location = parabolic_turning_point(array[y_max_location, :])
     else:
         x_location = 1.0 * x_max_location
-    
+
     return y_location, x_location
 
 
@@ -463,15 +490,15 @@ def parabolic_turning_point(y):
     The maximum is located at x0 = -b / 2a .  Assumes that the input array
     represents an equally spaced sampling at the locations f(-1), f(0) and
     f(1).
-    
+
     Input
     -----
     An one dimensional numpy array of shape 3
-    
+
     Output
     ------
     A digit, the location of the parabola maximum.
-    
+
     """
     numerator = -0.5 * y.dot([-1, 0, 1])
     denominator = y.dot([1, -2, 1])

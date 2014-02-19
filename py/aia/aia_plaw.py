@@ -61,6 +61,8 @@ def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None):
             # Guess
             if guessfunc is not None:
                 pguess = guessfunc(y, p0)
+            else:
+                pguess = [y[0], 1.8, y[-1]]
 
             # Do the fit
             try:

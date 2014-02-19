@@ -8,8 +8,8 @@ import numpy as np
 import cubetools
 plt.ion()
 
-
-def rn4(location, derotate=False, Xrange=None, Yrange=None):
+"""
+def rn4(location, derotate=False, Xrange=None, Yrange=None, shave=False):
     # Main directory where the data is
     directory = os.path.expanduser(location)
     # Which wavelength to look at
@@ -18,7 +18,7 @@ def rn4(location, derotate=False, Xrange=None, Yrange=None):
     # the region quite dramatically
     print('Loading data from ' + directory)
 
-    dc, maps = get_datacube(directory, derotate=derotate)
+    dc, maps = get_datacube(directory, derotate=derotate, shave=shave)
     # Get some properties of the datacube
     ny = dc.shape[0]
     nx = dc.shape[1]
@@ -36,6 +36,7 @@ def rn4(location, derotate=False, Xrange=None, Yrange=None):
         #yrname = 'y' + str(yr[0]) + '_' + str(yr[1])
 
     return dc[yr[0]:yr[1], xr[0]:xr[1], :], maps
+"""
 
 ###############################################################################
 # Generate random locations in a datacube, return time-series
@@ -50,7 +51,7 @@ def get_pixel_locations(iput=None, nsample=100):
     else:
         pixel_locations = zip(np.random.randint(0, high=iput[0], size=nsample),
                               np.random.randint(0, high=iput[1], size=nsample))
-         
+
     return pixel_locations
 
 
@@ -73,6 +74,7 @@ def get_tslist(dc, pixel_locations, name=''):
         tslist.append(ts)
 
     return tslist
+
 
 ###############################################################################
 # Save location calculators
@@ -100,6 +102,7 @@ def ident_creator(branches):
 
 ##############################################################################
 # Plotting helpers
+
 
 #
 # Plot a square

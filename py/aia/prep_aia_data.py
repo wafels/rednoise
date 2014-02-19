@@ -17,12 +17,12 @@ import cubetools
 
 # input data
 dataroot = '~/Data/AIA/'
-corename = '20120923_0000__20120923_0100'
-#corename = 'shutdownfun6_6hr'
+#corename = '20120923_0000__20120923_0100'
+corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-wave = '171'
-cross_correlate = True
+wave = '193'
+cross_correlate = False
 
 
 # Create the branches in order
@@ -45,20 +45,10 @@ save_locations = aia_specific.save_location_calculator(roots, branches)
 ident = aia_specific.ident_creator(branches)
 
 # Load in the derotated data into a datacube
-dc, original_mapcube = aia_specific.rn4(aia_data_location["aiadata"],
-                                        derotate=True)
-
-# Cross-correlation - remove edges
-if cross_correlate:
-    print('Performing cross-correlation')
-    nt = dc.shape[2]
-    dc, xdisp, ydisp = cubetools.coregister_datacube(dc, layer_index=nt/2, shave=True)
-
-
-# Shape of the datacube
-nt = dc.shape[2]
-ny = dc.shape[0]
-nx = dc.shape[1]
+print('Loading' + aia_data_location["aiadata"])
+dc, ysrdisp, xsrdisp, original_mapcube = cubetools.get_datacube(aia_data_location["aiadata"],
+                                              derotate=True,
+                                              shave=True)
 
 # Get the date and times from the original mapcube
 date_obs = []
@@ -67,6 +57,49 @@ for m in original_mapcube:
     date_obs.append(parse_time(m.header['date_obs']))
     time_in_seconds.append((date_obs[-1] - date_obs[0]).total_seconds())
 times = {"date_obs": date_obs, "time_in_seconds": time_in_seconds}
+
+# Cross-correlate the datacube and shave the edges
+if cross_correlate:
+    print('Performing cross-correlation')
+    ny = dc.shape[0]
+    nx = dc.shape[1]
+    nt = dc.shape[2]
+    layer_index = nt / 2
+    ind = layer_index
+    template = [[ny / 4, nx / 4], [3 * ny / 4, 3 * nx / 4]]
+
+    # Show an image of where the cross-correlation template is
+    plt.imshow(np.log(dc[:, :, layer_index]), origin='bottom', cmap=cm.get_cmap(name='sdoaia' + wave))
+    plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
+    plt.ylabel('y pixel (%i images)' % (nt))
+    plt.xlabel('x pixel (%s)' % (str(times["date_obs"][layer_index])))
+    aia_specific.plot_square([template[0][1], template[1][1]],
+                             [template[0][0], template[1][0]],
+                             color='w', linewidth=3)
+    aia_specific.plot_square([template[0][1], template[1][1]],
+                             [template[0][0], template[1][0]],
+                             color='k', linewidth=1)
+    plt.text(template[1][1], template[1][0], 'template', color='k', bbox=dict(facecolor='white', alpha=0.5))
+    plt.xlim(0, nx)
+    plt.ylim(0, ny)
+    plt.savefig(os.path.join(save_locations["image"], ident + '_cross_cor_template.png'))
+    plt.close('all')
+
+    # Do the cross correlation.  Using shave=False ensures that this output
+    # datacube is the same size as the input datacube and so the locations of
+    # the regions will be the same relative to the size of the datacube.
+    dc, xccdisp, yccdisp = cubetools.coregister_datacube(dc,
+                                                         template_index=template,
+                                                         layer_index=layer_index,
+                                                         shave=False)
+else:
+    layer_index = None
+    ind = 0
+
+# Shape of the datacube
+nt = dc.shape[2]
+ny = dc.shape[0]
+nx = dc.shape[1]
 
 
 # Define regions in the datacube
@@ -89,9 +122,8 @@ if corename == 'shutdownfun3_6hr' or corename == '20120923_0000__20120923_0100':
 # Plot an image of the data with the subregions overlaid and labeled
 #
 plt.figure(1)
-ind = 0
 plt.imshow(np.log(dc[:, :, ind]), origin='bottom', cmap=cm.get_cmap(name='sdoaia' + wave))
-plt.title(ident)
+plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
 plt.ylabel('y pixel (%i images)' % (nt))
 plt.xlabel('x pixel (%s)' % (str(times["date_obs"][ind])))
 for region in regions:
@@ -105,6 +137,34 @@ plt.xlim(0, nx)
 plt.ylim(0, ny)
 plt.savefig(os.path.join(save_locations["image"], ident + '.png'))
 plt.close('all')
+
+#
+# Plot the displacements in pixels
+#
+plt.figure(2)
+plt.xlabel('time index')
+plt.ylabel('displacement (pixel)')
+plt.title(ident)
+plt.plot(xsrdisp, label='solar rot., x')
+plt.plot(ysrdisp, label='solar rot., y')
+plt.plot(np.sqrt(xsrdisp ** 2 + ysrdisp ** 2), label='solar rot., D')
+plt.axhline(0, color='k', linestyle='--', label='no displacement')
+plt.legend(framealpha=0.3)
+plt.savefig(os.path.join(save_locations["image"], ident + '_solarrotation.png'))
+
+if cross_correlate:
+    plt.figure(3)
+    plt.xlabel('time index')
+    plt.ylabel('displacement (pixel)')
+    plt.title(ident)
+    plt.plot(xccdisp, label='cross corr., x')
+    plt.plot(yccdisp, label='cross corr., y')
+    plt.plot(np.sqrt(xccdisp ** 2 + yccdisp ** 2), label='cross corr., D')
+    plt.axvline(layer_index, label='cross corr. layer', color='k', linestyle="-")
+    plt.axhline(0, color='k', linestyle='--', label='no displacement')
+    plt.legend(framealpha=0.3)
+    plt.savefig(os.path.join(save_locations["image"], ident + '_crosscorrelation.png'))
+
 
 #
 # Save all regions
