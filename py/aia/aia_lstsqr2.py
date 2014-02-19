@@ -326,15 +326,22 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Error estimate for the power law index
                 nerr = np.sqrt(error[0, 0, 1])
 
-                # Fourier power: get a Time series from the arithmetic sum of
-                # all the analyzed time-series at every pixel, find the Fourier power
-                # and do the fit
-                #full_ts_iobs = full_ts.PowerSpectrum.ppower
-                #answer_full_ts = curve_fit(aia_plaw_fit.LogPowerLawPlusConstant, x, np.log(full_ts_iobs), p0=answer[0])
 
-                #param_fts = answer_full_ts[0]
-                #bf_fts = np.exp(aia_plaw_fit.LogPowerLawPlusConstant(x, param_fts[0], param_fts[1], param_fts[2]))
-                #nerr_fts = np.sqrt(answer_full_ts[1][1, 1])
+                AAA, EEE = aia_plaw.do_fit(x, iobs, aia_plaw.PowerLawPlusConstant, sigma=sigma)
+                print answer[0, 0, :], AAA[0, 0, :]
+                
+                ###############################################################
+                # Power spectrum analysis: trying to fit a spectrum with a bump
+                # -------------------------------------------------------------
+                # Trying to fit the data with a bump.  We can use the answers
+                # found with a fit without a bump, as an initial estimate
+                #bf_diff = iobs - bf
+                #bf_diff_pos = bf_diff > 0.0
+                #gauss_estimate = aia_plaw.fit_Gaussian(np.log(x[bf_diff_pos]),
+                #                                       np.log(bf_diff[bf_diff_pos]))
+
+                #with_gauss_full, error = aia_plaw.fit_PowerLawPlusConstant()
+
 
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, then apply the
@@ -448,12 +455,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.savefig(savefig + '.full_ts_timeseries.png')
                 plt.close('all')
 
-
-                ###############################################################
-                # Power spectrum analysis: trying to fit a spectrum with a bump
-                # -------------------------------------------------------------
-                # Trying to fit the data with a bump.  We can use the answers
-                # found with a fit without a bump, as an initial estimate
 
 
                 ###############################################################
