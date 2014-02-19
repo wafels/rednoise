@@ -577,7 +577,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           sunlocation='disk',
           fits_level='1.5',
           waves=['193'],
-          regions=['moss', 'loopfootpoints', 'sunspot', 'qs'],
+          regions=['loopfootpoints'],
           windows=['hanning'],
           manip='relative')
 

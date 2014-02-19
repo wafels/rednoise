@@ -21,8 +21,8 @@ dataroot = '~/Data/AIA/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-wave = '193'
-cross_correlate = False
+wave = '171'
+cross_correlate = True
 
 
 # Create the branches in order
@@ -49,7 +49,6 @@ print('Loading' + aia_data_location["aiadata"])
 dc, ysrdisp, xsrdisp, original_mapcube = cubetools.get_datacube(aia_data_location["aiadata"],
                                               derotate=True,
                                               shave=True)
-
 # Get the date and times from the original mapcube
 date_obs = []
 time_in_seconds = []
@@ -83,7 +82,6 @@ if cross_correlate:
     plt.xlim(0, nx)
     plt.ylim(0, ny)
     plt.savefig(os.path.join(save_locations["image"], ident + '_cross_cor_template.png'))
-    plt.close('all')
 
     # Do the cross correlation.  Using shave=False ensures that this output
     # datacube is the same size as the input datacube and so the locations of
@@ -117,7 +115,7 @@ if corename == 'shutdownfun3_6hr' or corename == '20120923_0000__20120923_0100':
     regions = {'moss': [[175, 210], [115, 180]],
                'sunspot': [[125, 200], [270, 370]],
                'qs': [[150, 200], [520, 570]],
-               'loopfootpoints': [[165, 245], [0, 50]]}
+               'loopfootpoints': [[165, 245], [10, 50]]}
 #
 # Plot an image of the data with the subregions overlaid and labeled
 #
@@ -136,7 +134,6 @@ for region in regions:
 plt.xlim(0, nx)
 plt.ylim(0, ny)
 plt.savefig(os.path.join(save_locations["image"], ident + '.png'))
-plt.close('all')
 
 #
 # Plot the displacements in pixels
