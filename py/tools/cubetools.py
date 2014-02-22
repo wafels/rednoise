@@ -5,6 +5,7 @@ from scipy.io import readsav
 import os
 from sunpy.coords.util import rot_hpc
 from sunpy.map import Map
+from copy import deepcopy
 import tsutils
 import pickle 
 
@@ -216,21 +217,25 @@ def coalign_mapcube(mc, layer_index=0):
     
     """
     # Size of the data
-    nt = len(mc)
-    ny = mc.maps[layer_index].shape[0]
-    nx = mc.maps[layer_index].shape[1]
+    nt = len(mc._maps)
+    ny = mc._maps[layer_index].shape[0]
+    nx = mc._maps[layer_index].shape[1]
 
 
     # Storage for the new datacube
     new_cube = []
 
     # Calculate a template
-    template = mc.maps[layer_index].data[ny / 4: 3 * ny / 4,
+    template = mc._maps[layer_index].data[ny / 4: 3 * ny / 4,
                                          nx / 4: 3 * nx / 4]
+    
+    # All layers should have the same value of xcen and ycen after
+    template_xcen = mc._maps[layer_index].meta['xcen']
+    template_ycen = mc._maps[layer_index].meta['ycen']
 
-    for i in range(0, nt):
+    for m in mc._maps:
         # Get the next 2-d data array
-        this_layer = mc.maps[i].data
+        this_layer = m.data
         
         # Calculate the correlation array matching the template to this layer
         corr = match_template_to_layer(this_layer, template)
@@ -242,7 +247,7 @@ def coalign_mapcube(mc, layer_index=0):
         new_data = shift(this_layer, [-yshift, -xshift])
 
         # Create a new map.  Adjust the positioning information accordingly.
-        new_map = Map(new_data, new_meta)
+        new_map = Map(new_data, m.meta)
 
         # Store the new map in a list
         new_cube.append(new_map)
