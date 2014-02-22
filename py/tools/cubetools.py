@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.io import readsav
 import os
 from sunpy.coords.util import rot_hpc
+from sunpy.map import Map
 import tsutils
 import pickle 
 
@@ -203,6 +204,46 @@ def makedirs(output):
     if not os.path.isdir(output):
         os.makedirs(output)
 
+#
+# Coalign a mapcube
+#
+def coalign_mapcube(mc, layer_index=0):
+    """
+    
+    """
+    # Size of the data
+    nt = len(mc)
+    ny = mc.maps[layer_index].shape[0]
+    nx = mc.maps[layer_index].shape[1]
+
+
+    # Storage for the new datacube
+    new_cube = []
+
+    # Calculate a template
+    template = mc.maps[layer_index].data[ny / 4: 3 * ny / 4,
+                                         nx / 4: 3 * nx / 4]
+
+    for i in range(0, nt):
+        # Get the next 2-d data array
+        this_layer = mc.maps[i].data
+        
+        # Calculate the correlation array matching the template to this layer
+        corr = match_template_to_layer(this_layer, template)
+        
+        # Calculate the y and x shifts
+        yshift, xshift = find_best_match_location(corr)
+        
+        # Shift the layer
+        new_data = shift(this_layer, [-yshift, -xshift])
+
+        # Create a new map.  Adjust the positioning information accordingly.
+        new_map = Map(new_data, new_meta)
+
+        # Store the new map in a list
+        new_cube.append(new_map)
+
+    return Map(new_cube, cube=True)
 
 #
 # Remove the edges of a datacube 
@@ -351,6 +392,7 @@ def shift_datacube_layers(datacube, y_displacement, x_displacement):
         datacube[:, :, i] = shifted
     return datacube
 
+
 #
 # Calculate the co-registration displacements for a datacube
 #
@@ -389,27 +431,73 @@ def calculate_coregistration_displacements(template, datacube):
         layer = datacube[:, :, t]
     
         # Match the template to the layer
-        result = match_template(layer, template)
+        correlation_result = match_template_to_layer(layer, template)
     
-        # Get the index of the maximum in the correlation function
-        ij = np.unravel_index(np.argmax(result), result.shape)
-        cor_max_x, cor_max_y = ij[::-1]
+        # Get the sub pixel shift of the correlation array
+        y_shift_relative_to_correlation_array, \
+        x_shift_relative_to_correlation_array = find_best_match_location(correlation_result)
 
-        # Get the correlation function around the maximum
-        array_around_maximum = result[np.max([0, cor_max_y - 1]): np.min([cor_max_y + 2, result.shape[0] - 1]), 
-                                      np.max([0, cor_max_x - 1]): np.min([cor_max_x + 2, result.shape[1] - 1])]
-        y_shift_relative_to_maximum, x_shift_relative_to_maximum = \
-        get_correlation_shifts(array_around_maximum)
-    
-        # Get shift relative to correlation array
-        y_shift_relative_to_correlation_array = y_shift_relative_to_maximum + cor_max_y
-        x_shift_relative_to_correlation_array = x_shift_relative_to_maximum + cor_max_x
-        
         # Store the results
         keep_x.append(x_shift_relative_to_correlation_array)
         keep_y.append(y_shift_relative_to_correlation_array)
 
     return np.asarray(keep_y), np.asarray(keep_x)
+
+
+def match_template_to_layer(layer, template):
+    """
+    Calculate the correlation array that describes how well the template
+    matches the layer.
+    All inputs are assumed to be numpy arrays.
+    
+    Inputs
+    ------
+    template : a numpy array of size (N, M) where N < ny and M < nx .
+
+    layer : a numpy array of size (ny, nx), where the first two
+               dimensions are spatial dimensions.
+
+    Outputs
+    -------
+    A cross-correlation array.  The values in the array range between 0 and 1.
+    
+    Requires
+    --------
+    This function requires the "match_template" function in scikit image.
+    
+    """
+    return match_template(layer, template)
+
+
+def find_best_match_location(corr):
+    """
+    Calculate an estimate of the location of the peak of the correlation
+    result.
+    
+    Inputs
+    ------
+    corr : a 2-d correlation array.
+    
+    Output
+    ------
+    y, x : the shift amounts.  Subpixel values are possible.
+    
+    """
+    # Get the index of the maximum in the correlation function
+    ij = np.unravel_index(np.argmax(corr), corr.shape)
+    cor_max_x, cor_max_y = ij[::-1]
+
+    # Get the correlation function around the maximum
+    array_around_maximum = corr[np.max([0, cor_max_y - 1]): np.min([cor_max_y + 2, corr.shape[0] - 1]), 
+                                  np.max([0, cor_max_x - 1]): np.min([cor_max_x + 2, corr.shape[1] - 1])]
+    y_shift_relative_to_maximum, x_shift_relative_to_maximum = \
+    get_correlation_shifts(array_around_maximum)
+
+    # Get shift relative to correlation array
+    y_shift_relative_to_correlation_array = y_shift_relative_to_maximum + cor_max_y
+    x_shift_relative_to_correlation_array = x_shift_relative_to_maximum + cor_max_x
+
+    return y_shift_relative_to_correlation_array, x_shift_relative_to_correlation_array
 
 
 def get_correlation_shifts(array):
