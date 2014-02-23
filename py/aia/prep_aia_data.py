@@ -47,7 +47,7 @@ ident = aia_specific.ident_creator(branches)
 # Load in the derotated data into a datacube
 print('Loading' + aia_data_location["aiadata"])
 dc, ysrdisp, xsrdisp, original_mapcube = cubetools.get_datacube(aia_data_location["aiadata"],
-                                              derotate=False,
+                                              derotate=True,
                                               shave=True)
 # Get the date and times from the original mapcube
 date_obs = []
@@ -56,7 +56,7 @@ for m in original_mapcube:
     date_obs.append(parse_time(m.header['date_obs']))
     time_in_seconds.append((date_obs[-1] - date_obs[0]).total_seconds())
 times = {"date_obs": date_obs, "time_in_seconds": time_in_seconds}
-jahflkhs = alhalk
+
 # Cross-correlate the datacube and shave the edges
 if cross_correlate:
     print('Performing cross-correlation')

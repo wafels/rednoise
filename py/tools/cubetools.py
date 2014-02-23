@@ -9,8 +9,11 @@ from copy import deepcopy
 import tsutils
 import pickle 
 
-# For image co-registration
+# For faster image co-registration
 from skimage.feature import match_template
+
+# For slower image co-registration that does not rely on an extra package
+from scipy.signal import fftconvolve
 
 # Shift an image by a given amount - subpixel shifts are permitted
 from scipy.ndimage.interpolation import shift
@@ -497,7 +500,8 @@ def match_template_to_layer(layer, template):
     This function requires the "match_template" function in scikit image.
     
     """
-    return match_template(layer, template)
+    return fftconvolve(layer, template, mode='same')
+    #return match_template(layer, template)
 
 
 def find_best_match_location(corr):
