@@ -118,7 +118,7 @@ def get_datacube_from_mapcube(mapcube):
         datacube[..., t] = m.data
 
     # Return the datacube
-    return datacube
+    return datacube + datacube.min() + 1.0
 
 
 def get_properties_from_mapcube(mapcube):
@@ -212,18 +212,17 @@ def makedirs(output):
     if not os.path.isdir(output):
         os.makedirs(output)
 
+
 #
 # Coalign a mapcube
 #
-def coalign_mapcube(mc, layer_index=0):
+def coregister_mapcube(mc, layer_index=0):
     """
-    
+
     """
     # Size of the data
-    nt = len(mc._maps)
     ny = mc._maps[layer_index].shape[0]
     nx = mc._maps[layer_index].shape[1]
-
 
     # Storage for the new datacube
     new_cube = []
@@ -235,18 +234,21 @@ def coalign_mapcube(mc, layer_index=0):
     for m in mc._maps:
         # Get the next 2-d data array
         this_layer = m.data
-        
+
+        # Repair any NANs, Infs, etc in the layer
+        this_layer = repair_nonfinite(this_layer)
+
         # Calculate the correlation array matching the template to this layer
         corr = match_template_to_layer(this_layer, template)
-        
+
         # Calculate the y and x shifts
         yshift, xshift = find_best_match_location(corr)
-        
+
         # Shift the layer
         new_data = shift(this_layer, [-yshift, -xshift])
 
         # Create a new map.  Adjust the positioning information accordingly.
-        new_meta = m.meta
+        new_meta = m.meta.copy()
         new_meta['xcen'] = new_meta['xcen'] + xshift * m.scale['x']
         new_meta['ycen'] = new_meta['ycen'] + yshift * m.scale['y']
         new_map = Map(new_data, new_meta)
@@ -255,6 +257,7 @@ def coalign_mapcube(mc, layer_index=0):
         new_cube.append(new_map)
 
     return Map(new_cube, cube=True)
+
 
 #
 # Remove the edges of a datacube
@@ -458,15 +461,20 @@ def calculate_coregistration_displacements(template, datacube):
     keep_x = []
     keep_y = []
 
+    # Repair the template if need be
+    template = repair_nonfinite(template)
+
     # Go through each layer and perform the matching
     for t in range(0, nt):
         # Get the layer
         layer = datacube[:, :, t]
 
-        # Match the template to the layer
+        # Repair the layer for nonfinites
+        layer = repair_nonfinite(layer)
 
+        # Match the template to the layer
         correlation_result = match_template_to_layer(layer, template)
-    
+
         # Get the sub pixel shift of the correlation array
         y_shift_relative_to_correlation_array, \
         x_shift_relative_to_correlation_array = find_best_match_location(correlation_result)
@@ -483,7 +491,7 @@ def match_template_to_layer(layer, template):
     Calculate the correlation array that describes how well the template
     matches the layer.
     All inputs are assumed to be numpy arrays.
-    
+
     Inputs
     ------
     template : a numpy array of size (N, M) where N < ny and M < nx .
@@ -494,29 +502,29 @@ def match_template_to_layer(layer, template):
     Outputs
     -------
     A cross-correlation array.  The values in the array range between 0 and 1.
-    
+
     Requires
     --------
     This function requires the "match_template" function in scikit image.
-    
+
     """
-    return fftconvolve(layer, template, mode='same')
-    #return match_template(layer, template)
+    #return fftconvolve(layer, template * hanning2d(template.shape[0], template.shape[1]), mode='same')
+    return match_template(layer, template)
 
 
 def find_best_match_location(corr):
     """
     Calculate an estimate of the location of the peak of the correlation
     result.
-    
+
     Inputs
     ------
     corr : a 2-d correlation array.
-    
+
     Output
     ------
     y, x : the shift amounts.  Subpixel values are possible.
-    
+
     """
     # Get the index of the maximum in the correlation function
     ij = np.unravel_index(np.argmax(corr), corr.shape)
@@ -599,3 +607,50 @@ def parabolic_turning_point(y):
     numerator = -0.5 * y.dot([-1, 0, 1])
     denominator = y.dot([1, -2, 1])
     return numerator / denominator
+
+
+def repair_nonfinite(z):
+    """
+    Replace all the nonfinite entries in a layer with the local mean.  There is
+    probably a much smarter way of doing this.
+    """
+    nx = z.shape[1]
+    ny = z.shape[0]
+    bad_index = np.where(np.logical_not(np.isfinite(z)))
+    while bad_index[0].size != 0:
+        by = bad_index[0][0]
+        bx = bad_index[1][0]
+
+        # x locations taking in to account the boundary
+        x = bx
+        if bx == 0:
+            x = 1
+        if bx == nx - 1:
+            x = nx - 2
+
+        # y locations taking in to account the boundary
+        y = by
+        if by == 0:
+            y = 1
+        if by == ny - 1:
+            y = ny - 2
+
+        # Get the sub array around the bad index, and find the local mean
+        # ignoring nans
+        subarray = z[y - 1: y + 2, x - 1: x + 2]
+        z[by, bx] = np.nanmean(subarray * np.isfinite(subarray))
+        bad_index = np.where(np.logical_not(np.isfinite(z)))
+
+
+def hanning2d(M, N):
+    """
+    A 2D hanning window, as per IDL's hanning function.  See numpy.hanning for
+    the 1d description.  Copied from http://code.google.com/p/agpy/source/browse/trunk/agpy/psds.py?r=343
+    """
+    # scalar unity; don't window if dims are too small
+    if N <= 1:
+        return np.hanning(M)
+    elif M <= 1:
+        return np.hanning(N)
+    else:
+        return np.outer(np.hanning(M), np.hanning(N))

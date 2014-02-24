@@ -17,8 +17,8 @@ import cubetools
 
 # input data
 dataroot = '~/Data/AIA/'
-corename = '20120923_0000__20120923_0100'
-#corename = 'shutdownfun3_6hr'
+#corename = '20120923_0000__20120923_0100'
+corename = 'shutdownfun3_1hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 wave = '171'
@@ -63,7 +63,7 @@ if cross_correlate:
     ny = dc.shape[0]
     nx = dc.shape[1]
     nt = dc.shape[2]
-    layer_index = nt / 2
+    layer_index = 0
     ind = layer_index
     template = [[ny / 4, nx / 4], [3 * ny / 4, 3 * nx / 4]]
 
@@ -94,47 +94,6 @@ else:
     layer_index = None
     ind = 0
 
-# Shape of the datacube
-nt = dc.shape[2]
-ny = dc.shape[0]
-nx = dc.shape[1]
-
-
-# Define regions in the datacube
-# y locations are first, x locations second
-
-if corename == 'shutdownfun6_6hr':
-    regions = {'highlimb': [[100, 150], [50, 150]],
-               'lowlimb': [[100, 150], [200, 250]],
-               'crosslimb': [[100, 150], [285, 340]],
-               'loopfootpoints1': [[90, 155], [515, 620]],
-               'loopfootpoints2': [[20, 90], [793, 828]],
-               'moss': [[45, 95], [888, 950]]}
-
-if corename == 'shutdownfun3_6hr' or corename == '20120923_0000__20120923_0100':
-    regions = {'moss': [[175, 210], [115, 180]],
-               'sunspot': [[125, 200], [270, 370]],
-               'qs': [[150, 200], [520, 570]],
-               'loopfootpoints': [[165, 245], [10, 50]]}
-#
-# Plot an image of the data with the subregions overlaid and labeled
-#
-plt.figure(1)
-plt.imshow(np.log(dc[:, :, ind]), origin='bottom', cmap=cm.get_cmap(name='sdoaia' + wave))
-plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
-plt.ylabel('y pixel (%i images)' % (nt))
-plt.xlabel('x pixel (%s)' % (str(times["date_obs"][ind])))
-for region in regions:
-    pixel_index = regions[region]
-    y = pixel_index[0]
-    x = pixel_index[1]
-    aia_specific.plot_square(x, y, color='w', linewidth=3)
-    aia_specific.plot_square(x, y, color='k', linewidth=1)
-    plt.text(x[1], y[1], region, color='k', bbox=dict(facecolor='white', alpha=0.5))
-plt.xlim(0, nx)
-plt.ylim(0, ny)
-plt.savefig(os.path.join(save_locations["image"], ident + '.png'))
-
 #
 # Plot the displacements in pixels
 #
@@ -157,10 +116,58 @@ if cross_correlate:
     plt.plot(xccdisp, label='cross corr., x')
     plt.plot(yccdisp, label='cross corr., y')
     plt.plot(np.sqrt(xccdisp ** 2 + yccdisp ** 2), label='cross corr., D')
-    plt.axvline(layer_index, label='cross corr. layer', color='k', linestyle="-")
+    plt.axvline(layer_index, label='cross corr. layer [%i]' % (layer_index), color='k', linestyle="-")
     plt.axhline(0, color='k', linestyle='--', label='no displacement')
     plt.legend(framealpha=0.3)
     plt.savefig(os.path.join(save_locations["image"], ident + '_crosscorrelation.png'))
+
+
+# Define regions in the datacube
+# y locations are first, x locations second
+
+if corename == 'shutdownfun6_6hr':
+    regions = {'highlimb': [[100, 150], [50, 150]],
+               'lowlimb': [[100, 150], [200, 250]],
+               'crosslimb': [[100, 150], [285, 340]],
+               'loopfootpoints1': [[90, 155], [515, 620]],
+               'loopfootpoints2': [[20, 90], [793, 828]],
+               'moss': [[45, 95], [888, 950]]}
+
+if corename == 'shutdownfun3_6hr' and layer_index == nt / 2:
+        regions = {'moss': [[175, 210], [140, 200]],
+               'sunspot': [[125, 200], [250, 350]],
+               'qs': [[60, 110], [500, 550]],
+               'loopfootpoints': [[110, 160], [10, 50]]}
+
+if corename == '20120923_0000__20120923_0100' or corename == 'shutdownfun3_1hr' :
+    regions = {'moss': [[175, 210], [115, 180]],
+               'sunspot': [[125, 200], [320, 420]],
+               'qs': [[60, 110], [600, 650]],
+               'loopfootpoints': [[165, 245], [10, 50]]}
+#
+# Plot an image of the data with the subregions overlaid and labeled
+#
+
+# Shape of the datacube
+nt = dc.shape[2]
+ny = dc.shape[0]
+nx = dc.shape[1]
+
+plt.figure(1)
+plt.imshow(np.log(dc[:, :, ind]), origin='bottom', cmap=cm.get_cmap(name='sdoaia' + wave))
+plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
+plt.ylabel('y pixel (%i images)' % (nt))
+plt.xlabel('x pixel (%s)' % (str(times["date_obs"][ind])))
+for region in regions:
+    pixel_index = regions[region]
+    y = pixel_index[0]
+    x = pixel_index[1]
+    aia_specific.plot_square(x, y, color='w', linewidth=3)
+    aia_specific.plot_square(x, y, color='k', linewidth=1)
+    plt.text(x[1], y[1], region, color='k', bbox=dict(facecolor='white', alpha=0.5))
+plt.xlim(0, nx)
+plt.ylim(0, ny)
+plt.savefig(os.path.join(save_locations["image"], ident + '.png'))
 
 
 #
