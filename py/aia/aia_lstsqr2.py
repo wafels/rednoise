@@ -331,10 +331,17 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # -------------------------------------------------------------
                 # Trying to fit the data with a bump.  We can use the answers
                 # found with a fit without a bump, as an initial estimate
-                #bf_diff = iobs - bf
-                #bf_diff_pos = bf_diff > 0.0
-                #gauss_estimate = aia_plaw.fit_Gaussian(np.log(x[bf_diff_pos]),
-                #                                       np.log(bf_diff[bf_diff_pos]))
+                bf_diff = iobs - bf
+                bf_diff_pos = bf_diff > 0.0
+                ga_est, ga_est_error = aia_plaw.do_fit(np.log(x[bf_diff_pos]),
+                                          np.log(bf_diff[bf_diff_pos]),
+                                          aia_plaw.GaussianShape)
+
+                gwb = aia_plaw.do_fit(x, iobs,
+                                      aia_plaw.PowerLawPlusConstantGaussian)
+                print gwb
+
+                bf_gwb = aia_plaw.PowerLawPlusConstantGaussian(x, gwb[0,0,0], gwb[0,0,1], gwb[0,0,2], gwb[0,0,3], gwb[0,0,4], gwb[0,0,5])
 
                 #with_gauss_full, error = aia_plaw.fit_PowerLawPlusConstant()
 
@@ -360,6 +367,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Arithmetic mean of the power spectra from each pixel
                 plt.loglog(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
                 plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
+                plt.loglog(freqs, bf_gwb, color='b', linestyle='-.', label = 'bf_gwb')
 
                 # Extra information for the plot
                 plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
@@ -582,7 +590,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           windows=['hanning'],
           manip='relative')
 """
-
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle_cc/',
           sfigroot='~/ts/img_cc/',
@@ -594,8 +602,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['sunspot', 'qs', 'loopfootpoints', 'moss'],
           windows=['hanning'],
           manip='relative')
-
 """
+
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle',
           sfigroot='~/ts/img/',
@@ -607,7 +615,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
-"""
+
 
 
 

@@ -33,6 +33,10 @@ def GaussianShape(x, a, xc, sigma):
     return a * np.exp(-0.5 * z ** 2)
 
 
+# Guess a Gaussian Bump
+def guess_bump(y, p0):
+    return p0
+
 # Do the fit
 def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None):
     """
@@ -62,7 +66,7 @@ def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None):
             if guessfunc is not None:
                 pguess = guessfunc(y, p0)
             else:
-                pguess = [y[0], 1.8, y[-1]]
+                pguess = None
 
             # Do the fit
             try:
