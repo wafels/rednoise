@@ -118,7 +118,7 @@ def get_datacube_from_mapcube(mapcube):
         datacube[..., t] = m.data
 
     # Return the datacube
-    return datacube + datacube.min() + 1.0
+    return datacube
 
 
 def get_properties_from_mapcube(mapcube):
