@@ -156,21 +156,7 @@ phenomena.
 
 
 
-\section{Observations}
-
-%% In a manner similar to \objectname authors can provide links to dataset
-%% hosted at participating data centers via the \dataset{} command.  The
-%% second curly bracket argument is printed in the text while the first
-%% parentheses argument serves as the valid data set identifier.  Large
-%% lists of data set are best provided in a table (see Table 3 for an example).
-%% Valid data set identifiers should be obtained from the data center that
-%% is currently hosting the data.
-%%
-%% Note that AASTeX interprets everything between the curly braces in the 
-%% macro as regular text, so any special characters, e.g. "#" or "_," must be 
-%% preceded by a backslash. Otherwise, you will get a LaTeX error when you 
-%% compile your manuscript.  Special characters do not 
-%% need to be escaped in the optional, square-bracket argument.
+\section{Observations}\label{sec:obs}
 
 Data was obtained from SDO-AIA using the Lockheed Martin Solar
 Astrophysics cutout service (http://lmsal.com/get\_aia\_data/).  Six
@@ -210,123 +196,87 @@ the time-series in each region.  A third power spectrum was created by
 first summing all the data in a region, applying the
 normalization/apodization procedure described above, and then
 calculating the Fourier power spectrum.  These three power spectra
-then summarize the Fourier power in each region, for each wavebad studied.
-
-
-%% In this section, we use  the \subsection command to set off
-%% a subsection.  \footnote is used to insert a footnote to the text.
-
-%% Observe the use of the LaTeX \label
-%% command after the \subsection to give a symbolic KEY to the
-%% subsection for cross-referencing in a \ref command.
-%% You can use LaTeX's \ref and \label commands to keep track of
-%% cross-references to sections, equations, tables, and figures.
-%% That way, if you change the order of any elements, LaTeX will
-%% automatically renumber them.
-
-%% This section also includes several of the displayed math environments
-%% mentioned in the Author Guide.
-
-\section{Helicity Amplitudes}
-
-It has been realized that helicity amplitudes provide a convenient means
-for Feynman diagram\footnote{Footnotes can be inserted like this.}
-evaluations.  These amplitude-level techniques
-are particularly convenient for calculations involving many Feynman
-diagrams, where the usual trace techniques for the amplitude
-squared becomes unwieldy.  Our calculations use the helicity techniques
-developed by other authors \cite[]{hag86}; we briefly summarize below.
-
-\subsection{Formalism} \label{bozomath}
-
-%% The equation environment wil produce a numbered display equation.
-
-A tree-level amplitude in $e^+e^-$ collisions can be expressed in
-terms of fermion strings of the form
+then summarize the Fourier power in each region, for each wavebad
+studied.  Figures \ref{fig:arith171} and \ref{fig:geom171} shows the
+arithmetic and geometric mean power spectra for each region in AIA
+171\AA.  Figures \ref{fig:arith193} and \ref{fig:geom193} show the
+arithmetic and geometric mean power spectra for each region in AIA
+193\AA.  Each mean power spectrum is also fit with a power spectrum of
+the form
 \begin{equation}
-\bar v(p_2,\sigma_2)P_{-\tau}\hat a_1\hat a_2\cdots
-\hat a_nu(p_1,\sigma_1) ,
+\label{eq:pwrlaw}
+P(f) = Af^{-n} + C
 \end{equation}
-where $p$ and $\sigma$ label the initial $e^{\pm}$ four-momenta
-and helicities $(\sigma = \pm 1)$, $\hat a_i=a^\mu_i\gamma_\nu$
-and $P_\tau=\frac{1}{2}(1+\tau\gamma_5)$ is a chirality projection
-operator $(\tau = \pm1)$.  The $a^\mu_i$ may be formed from particle
-four-momenta, gauge-boson polarization vectors or fermion strings with
-an uncontracted Lorentz index associated with final-state fermions.
+where $f$ is the frequency, $n$ is the power law index, $A$ a
+normalization constant and $C$ is a background power.  Note that in
+these plots, a least-squares fitting algorithm is used to fit this
+model to the data.  The fit here is intended to show the approximate
+power-law nature of the observed Fourier power spectrum.
 
-%% The \notetoeditor{TEXT} command allows the author to communicate
-%% information to the copy editor.  This information will appear as a
-%% footnote on the printed copy for the manuscript style file.  Nothing will
-%% appear on the printed copy if the preprint or
-%% preprint2 style files are used.
+\begin{figure}
+\label{fig:arith171}
 
-%% The eqnarray environment produces multi-line display math. The end of
-%% each line is marked with a \\. Lines will be numbered unless the \\
-%% is preceded by a \nonumber command.
-%% Alignment points are marked by ampersands (&). There should be two
-%% ampersands (&) per line.
+\caption{}
+\end{figure}
 
-In the chiral \notetoeditor{Figures 1 and 2 should appear side-by-side in
-print} representation the $\gamma$ matrices are expressed
-in terms of $2\times 2$ Pauli matrices $\sigma$ and the unit matrix 1 as
-\begin{eqnarray}
-\gamma^\mu  & = &
- \left(
-\begin{array}{cc}
-0 & \sigma^\mu_+ \\
-\sigma^\mu_- & 0
-\end{array}     \right) ,
- \gamma^5= \left(
-\begin{array}{cc}
--1 &   0\\
-0 &   1
-\end{array}     \right)  , \nonumber \\
-\sigma^\mu_{\pm}  & = &   ({\bf 1} ,\pm \sigma) , \nonumber
-\end{eqnarray}
-giving
-\begin{equation}
-\hat a= \left(
-\begin{array}{cc}
-0 & (\hat a)_+\\
-(\hat a)_- & 0
-\end{array}\right), (\hat a)_\pm=a_\mu\sigma^\mu_\pm ,
-\end{equation}
-The spinors are expressed in terms of two-component Weyl spinors as
-\begin{equation}
-u=\left(
-\begin{array}{c}
-(u)_-\\
-(u)_+
-\end{array}\right), v={\bf (}\vdag_+{\bf ,}   \vdag_-{\bf )} .
-\end{equation}
+\begin{figure}
+\label{fig:geom171}
 
-%% Putting eqnarrays or equations inside the mathletters environment groups
-%% the enclosed equations by letter. For instance, the eqnarray below, instead
-%% of being numbered, say, (4) and (5), would be numbered (4a) and (4b).
-%% LaTeX the paper and look at the output to see the results.
+\caption{}
+\end{figure}
 
-The Weyl spinors are given in terms of helicity eigenstates
-$\chi_\lambda(p)$ with $\lambda=\pm1$ by
-\begin{mathletters}
-\begin{eqnarray}
-u(p,\lambda)_\pm & = & (E\pm\lambda|{\bf p}|)^{1/2}\chi_\lambda(p) , \\
-v(p,\lambda)_\pm & = & \pm\lambda(E\mp\lambda|{\bf p}|)^{1/2}\chi
-_{-\lambda}(p)
-\end{eqnarray}
-\end{mathletters}
+\begin{figure}
+\label{fig:arith193}
+
+\caption{}
+\end{figure}
+
+\begin{figure}
+\label{fig:geom193}
+
+\caption{}
+\end{figure}
 
 
-\section{Results}
-\label{sec:results}
-Figure \ref{}
+\subsection{Initial inspection of the power spectra}\label{ssec:init}
 
 
-%% This section contains more display math examples, including unnumbered
-%% equations (displaymath environment). The last paragraph includes some
-%% examples of in-line math featuring a couple of the AASTeX symbol macros.
 
-\section{Coronal seismology and the effect of background assumptions}
-\label{sec:corseis}
+\subsection{Comparing power spectra models}\label{ssec:twomodels}
+
+
+
+
+\section{Discussion}
+The presence of a power law Fourier spectrum in coronal emission poses
+questions about how that emission is formed.  The power law power
+spectrum also has implications for the detection of narrow frequency
+band oscillations against such a background emission, which is the
+purview of coronal seismology.  We discuss these two topics in the
+sections below.
+
+
+\subsection{Coronal seismology and the effect of background assumptions}
+\label{ssec:corseis}
+
+Section \ref{sec:results} demonstrates the presence of a red
+noise-like signal in two of the most commonly used wavebands for
+coronal seismology, SDO-AIA 171\AA\ and 193\AA.  The observed spectra
+generally show a power law-like behavior at time-scales of interest in
+coronal seismology, and longer.  Coronal moss regions seem to show
+slightly higher emission than a background power-law at a limited
+range of frequencies.  However, this does not change the power-law
+like nature of the emission - the power spectrum is essentially scale
+free on average.  Therefore, on average, there is little guidance to
+be had from coronal Fourier power spectra that can be used to pick a
+time-scale that can be used to remove a background trend.
+
+If there is no time-scale that can be used to remove a background
+trend, then the time-series has to be analyzed without this processing
+step.  Here too, the red-noise nature of the emission can cause
+problems in attempting to analyze for the presence of narrow frequency
+band oscillations.  Such oscillations are thought to be indicative of
+waves in the solar atmosphere.
 
 \begin{figure}
 \epsscale{.80}
@@ -343,10 +293,6 @@ Figure \ref{}
   and (c) under the assumption of a red-noise background.\label{fig:comparison}}
 \end{figure}
 
-Section \ref{sec:results} demonstrates the presence of a red
-noise-like signal in two of the most commonly used wavebands for
-coronal seismology, SDO-AIA 171\AA\ and 193\AA.
-
 Figure \ref{fig:comparison} shows how a red-noise power spectrum can
 be mistakenly thought to contain an oscillatory signal.  The time
 series (Figure \ref{fig:comparison}(a)) is constructed from a power
@@ -359,48 +305,26 @@ of significant oscillatory power in this time series. Figure
 background with the same confidence level significantly reduces the
 area for which a detection may be claimed.  This simulated data, along
 with the results of Section \ref{sec:results}, suggest that when
-examining the wavelet transforms of time-seris for wave packets, a
+examining the wavelet transforms of time-series for wave packets, a
 background red-noise power spectrum should be assumed, along with
 higher confidence levels, in order to minimize the effects of
 mistakenly identifying red-noise as evidence for an oscillatory
 signal.
 
+The foregoing discusses the implications of red-noise power spectra
+for the detection of narrow-frequency band oscillations when looking
+at single time-series.  The advantage of AIA is that there is more
+than one time-series to consider.  Evidence for the presence of a wave
+in the corona is much stronger if it can be shown that a narrow
+frequency-band oscillation occurs is significantly above a red-noise
+background signal in several neighboring pixels.
 
-%% The displaymath environment will produce the same sort of equation as
-%% the equation environment, except that the equation will not be numbered
-%% by LaTeX.
 
-Consider a task that computes profile parameters for a modified
-Lorentzian of the form
-\begin{equation}
-I = \frac{1}{1 + d_{1}^{P (1 + d_{2} )}}
-\end{equation}
-where
-\begin{displaymath}
-d_{1} = \sqrt{ \left( \begin{array}{c} \frac{x_{1}}{R_{maj}}
-\end{array} \right) ^{2} +
-\left( \begin{array}{c} \frac{y_{1}}{R_{min}} \end{array} \right) ^{2} }
-\end{displaymath}
-\begin{displaymath}
-d_{2} = \sqrt{ \left( \begin{array}{c} \frac{x_{1}}{P R_{maj}}
-\end{array} \right) ^{2} +
-\left( \begin{array}{c} \case{y_{1}}{P R_{min}} \end{array} \right) ^{2} }
-\end{displaymath}
-\begin{displaymath}
-x_{1} = (x - x_{0}) \cos \Theta + (y - y_{0}) \sin \Theta
-\end{displaymath}
-\begin{displaymath}
-y_{1} = -(x - x_{0}) \sin \Theta + (y - y_{0}) \cos \Theta
-\end{displaymath}
+\subsection{Nature of the power law power spectrum}\label{ssec:nplps}
 
-In these expressions $x_{0}$,$y_{0}$ is the star center, and $\Theta$ is the
-angle with the $x$ axis.  Results of this task are shown in table~\ref{tbl-1}.
-It is not clear how these sorts of analyses may affect determination of
- $M_{\sun}$, but the assumption is that the alternate results
-should be less than 90\degr\ out of phase with previous values.
-We have no observations of \ion{Ca}{2}.
-Roughly \slantfrac{4}{5} of the electronically submitted abstracts
-for AAS meetings are error-free.
+
+\section{Conclusions}\label{sec:conc}
+
 
 %% If you wish to include an acknowledgments section in your paper,
 %% separate it off from the body of the text using the \acknowledgments
@@ -414,12 +338,10 @@ for AAS meetings are error-free.
 
 \acknowledgments
 
-We are grateful to V. Barger, T. Han, and R. J. N. Phillips for
-doing the math in section~\ref{bozomath}.
-More information on the AASTeX macros package is available \\ at
-\url{http://www.aas.org/publications/aastex}.
-For technical support, please write to
-\email{aastex-help@aas.org}.
+We are grateful to the developers of SSWIDL \cite{}, SunPy \cite{},
+PyMC \cite{} and matplotlib \cite{} for providing data preparation,
+manipulation, analysis and display packages.  This work was supported
+by the NASA....
 
 %% To help institutions obtain information on the effectiveness of their
 %% telescopes, the AAS Journals has created a group of keywords for telescope
