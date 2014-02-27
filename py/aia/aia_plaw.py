@@ -23,12 +23,11 @@ def PowerLawPlusConstantGaussian(freq, a, n, c, ga, gc, gsigma):
 
 # Log of the power law with bump
 def LogPowerLawPlusConstantGaussian(freq, a, n, c, ga, gc, gsigma):
-    return np.log(PowerLawPlusConstant(freq, a, n, c) + GaussianShape(freq, ga, gc, gsigma))
+    return np.log(PowerLawPlusConstant(freq, a, n, c)) + GaussianShape(np.log(freq), ga, gc, gsigma)
 
 
 # A Gaussian shape
 def GaussianShape(x, a, xc, sigma):
-    #constant = (1.0 / np.sqrt(2.0 * np.pi))
     z = (x - xc) / sigma
     return a * np.exp(-0.5 * z ** 2)
 

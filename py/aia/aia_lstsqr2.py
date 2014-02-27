@@ -331,14 +331,19 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # -------------------------------------------------------------
                 # Trying to fit the data with a bump.  We can use the answers
                 # found with a fit without a bump, as an initial estimate
-                bf_diff = iobs - bf
-                bf_diff_pos = bf_diff > 0.0
-                ga_est, ga_est_error = aia_plaw.do_fit(np.log(x[bf_diff_pos]),
-                                          np.log(bf_diff[bf_diff_pos]),
-                                          aia_plaw.GaussianShape)
-
+                bf_diff = iobs / bf
+                ga_est, ga_est_error = aia_plaw.do_fit(np.log(x),
+                                                       np.log(bf_diff),
+                                                       aia_plaw.GaussianShape, p0 = [1.0, 1.9, 0.6])
+                GA = aia_plaw.GaussianShape(np.log(x), ga_est[0,0,0], ga_est[0,0,1], ga_est[0,0,2])
+                plt.loglog(freqs, np.exp(GA) * bf)
+                plt.loglog(freqs, bf)
+                plt.loglog(freqs, iobs)
+                plt.show()
+                print ga_est
+                print ga_est_error
                 gwb = aia_plaw.do_fit(x, iobs,
-                                      aia_plaw.PowerLawPlusConstantGaussian)
+                                      aia_plaw.LogPowerLawPlusConstantGaussian)
                 print gwb
 
                 bf_gwb = aia_plaw.PowerLawPlusConstantGaussian(x, gwb[0,0,0], gwb[0,0,1], gwb[0,0,2], gwb[0,0,3], gwb[0,0,4], gwb[0,0,5])
