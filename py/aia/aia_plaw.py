@@ -37,7 +37,7 @@ def guess_bump(y, p0):
     return p0
 
 # Do the fit
-def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None):
+def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None, nvar=3):
     """
     Fit an arbitrary function, starting from a guess function that has also
     been supplied.  Fit over all the values in the input pwrinput.
@@ -53,8 +53,8 @@ def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None):
     nx = pwr.shape[1]
 
     # Answer array - 3 variables for the power law with a constant
-    answer = np.zeros((ny, nx, 3))
-    error = np.zeros((ny, nx, 3))
+    answer = np.zeros((ny, nx, nvar))
+    error = np.zeros((ny, nx, nvar))
 
     for i in range(0, nx):
         for j in range(0, ny):

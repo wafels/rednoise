@@ -331,22 +331,57 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # -------------------------------------------------------------
                 # Trying to fit the data with a bump.  We can use the answers
                 # found with a fit without a bump, as an initial estimate
+                #
+                # Without the bump: power = kf ** -n + c
+                #
+                # loglog plots of the power seem to show a bump
+                #
+                # log(power) = log( kf ** -n + c ) + GaussianShape
+                #
+                # Note that
+                #
+                # log(power/ (kf ** -n + c)) = GaussianShape
+                #
+                # This suggests a two stage fitting process.  First, fit the
+                # background power spectrum.  Secondly, fit the Gaussian shape
+                #
+                # Also,
+                #
+                # power = (kf ** -n + c) * exp(GaussianShape)
+                #
+                # What does this mean physically?
+                #
+                # A better fit is probably obtainable by fitting both the power law and
+                # the Gaussian shape simultaneously.
+                #
                 bf_diff = iobs / bf
                 ga_est, ga_est_error = aia_plaw.do_fit(np.log(x),
                                                        np.log(bf_diff),
                                                        aia_plaw.GaussianShape, p0 = [1.0, 1.9, 0.6])
                 GA = aia_plaw.GaussianShape(np.log(x), ga_est[0,0,0], ga_est[0,0,1], ga_est[0,0,2])
-                plt.loglog(freqs, np.exp(GA) * bf)
-                plt.loglog(freqs, bf)
-                plt.loglog(freqs, iobs)
-                plt.show()
-                print ga_est
-                print ga_est_error
-                gwb = aia_plaw.do_fit(x, iobs,
-                                      aia_plaw.LogPowerLawPlusConstantGaussian)
-                print gwb
+                #plt.loglog(freqs, np.exp(GA) * bf)
+                #plt.loglog(freqs, bf)
+                #plt.loglog(freqs, iobs)
+                #plt.show()
+                gwb, gwb_error = aia_plaw.do_fit(x, np.log(iobs),
+                                      aia_plaw.LogPowerLawPlusConstantGaussian, nvar= 6,p0 = [answer[0, 0, 0],
+                                                   answer[0, 0, 1],
+                                                   answer[0, 0, 2],
+                                                   ga_est[0,0,0], ga_est[0,0,1], ga_est[0,0,2]],)
 
-                bf_gwb = aia_plaw.PowerLawPlusConstantGaussian(x, gwb[0,0,0], gwb[0,0,1], gwb[0,0,2], gwb[0,0,3], gwb[0,0,4], gwb[0,0,5])
+                bf_gwb = aia_plaw.LogPowerLawPlusConstantGaussian(x, gwb[0,0,0], gwb[0,0,1], gwb[0,0,2], gwb[0,0,3], gwb[0,0,4], gwb[0,0,5])
+
+                plt.loglog(freqs, np.exp(GA) * bf, label='fit separately')
+                plt.loglog(freqs, bf, label='power law like')
+                plt.loglog(freqs, iobs, label='data')
+                plt.loglog(freqs, np.exp(bf_gwb), label='fit together')
+                plt.legend()
+                plt.show()
+                print answer
+                print ga_est
+                print gwb
+                sldkfjslk = dflajf
+
 
                 #with_gauss_full, error = aia_plaw.fit_PowerLawPlusConstant()
 
