@@ -128,6 +128,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
               regions=['qs', 'loopfootpoints'],
               windows=['no window'],
               manip='none',
+              savefig_format='eps',
               freqfactor=[1000.0, 'mHz'],
               sunday_name={"qs": "quiet Sun", "loopfootpoints": "loop footpoints"}):
 
@@ -442,7 +443,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title(data_name + ' - arithmetic mean')
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 #plt.text(freqs[0], 1.0, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
-                plt.savefig(savefig + '.arithmetic_mean_power_spectra.png')
+                plt.savefig(savefig + '.arithmetic_mean_power_spectra.%s' % (savefig_format))
 
                 ###############################################################
                 # Power spectrum analysis: geometric mean approach
@@ -501,8 +502,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' - geometric mean')
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.geometric_mean_power_spectra.png')
-
+                plt.savefig(savefig + '.geometric_mean_power_spectra.%s' % (savefig_format))
                 # plot some histograms of the log power at a small number of
                 # frequencies.
                 findex = []
@@ -516,12 +516,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 for f in findex:
                     plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.2f %s' % (freqs[f], freqfactor[1]))
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.power_spectra_distributions.png')
+                plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
 
                 # plot out the time series
                 plt.figure(4)
                 full_ts.peek()
-                plt.savefig(savefig + '.full_ts_timeseries.png')
+                plt.savefig(savefig + '.full_ts_timeseries.%s' % (savefig_format))
                 plt.close('all')
 
                 ###############################################################
@@ -536,7 +536,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title(data_name)
                 plt.ylim(dc_analysed_minmax)
                 plt.xlim((t[0], t[-1]))
-                plt.savefig(savefig + '.all_analyzed_ts.png')
+                plt.savefig(savefig + '.all_analyzed_ts.%s' % (savefig_format))
 
                 # Plot a histogram of the studied data at each time
                 bins = 50
@@ -551,7 +551,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                            extent=(t[0], t[-1], dc_analysed_minmax[0], dc_analysed_minmax[1]))
                 plt.colorbar()
                 plt.title(data_name)
-                plt.savefig(savefig + '.all_analyzed_ts_histogram.png')
+                plt.savefig(savefig + '.all_analyzed_ts_histogram.%s' % (savefig_format))
 
                 ###############################################################
                 # Fourier power plots
@@ -567,7 +567,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('FFT power ' + tsdetails)
                 plt.title(data_name)
-                plt.savefig(savefig + '.all_analyzed_fft.png')
+                plt.savefig(savefig + '.all_analyzed_fft.%s' % (savefig_format))
 
                 # Plot a histogram of the studied FFTs at each time
                 bins = 50
@@ -584,7 +584,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.semilogy()
                 plt.colorbar()
                 plt.title(data_name)
-                plt.savefig(savefig + '.all_analyzed_fft_histogram.png')
+                plt.savefig(savefig + '.all_analyzed_fft_histogram.%s' % (savefig_format))
 
                 ###############################################################
                 # Save various data products

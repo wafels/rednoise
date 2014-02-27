@@ -174,24 +174,44 @@ phenomena.
 
 Data was obtained from SDO-AIA using the Lockheed Martin Solar
 Astrophysics cutout service (http://lmsal.com/get\_aia\_data/).  Six
-hours of image data at 12 second cadence was selected in the 171\AA,
-193\AA, 211\AA\ and 131\AA\ wavebands (2012-09-22 00:00 - 06:00 UT,
-1800 images per waveband).  These wavebands were selected in order to
-obtain a wide range of approximate temperatures in the solar corona.
+hours of image data at 12 second cadence was selected in the 171\AA
+and 193\AA\ wavebands (2012-09-23 00:00 - 06:00 UT, 1800 images per
+waveband).  These wavebands were selected in order to obtain a wide
+range of approximate temperatures in the solar corona.
 
 The downloaded cutout data was prepared for analysis using the
 SolarSoft / IDL routines READ\_SDO and AIA\_PREP.  These procedures
 move the downloaded level 1.0 FITS files to level 1.5 FITS files.  All
 further processing from this point was performed in the SunPy 0.4
-(http://www.sunpy.org) data analysis environment.  
+(http://www.sunpy.org) data analysis environment.  Images were
+de-rotated to compensate for solar rotation, based on the center of
+the field of view of each image.  After de-rotation, each image layer
+was co-registered with the image half way through the dataset, at
+approximately 03:00 UT.
 
-Datacubes were formed in each waveband.  The data were
-de-rotated using fractional pixel offsets relative to the first image
-in the data, with the amount of offset calculated based on solar
-rotation (Howard et
-al. http://adsabs.harvard.edu/abs/1990SoPh..130..295H).
+\section{Analysis}\label{sec:anal}
 
-\section{Analysis}
+We wish to analyze the frequency content of these resulting datacubes
+as a function of spatial location.  Four locations were chosen in the
+data representing four different types of physical locations in the
+solar atmosphere.  These were a quiet Sun region, a region that lies
+on top of a sunspot, a footpoint region, and a coronal moss region.
+
+Consider the emission from a single pixel, $I(t)$.  The Fourier power
+spectrum for this emission was calculated as follows.  First, the
+time-series was normalized by calculating $(I(t) - <I(t)>)/<I(t)>$.
+This normalizes the emission.  Secondly, the normalized time-series
+was apodized using the Hanning window, reducing ringing effects.  This
+results in a time-series from which its Fourier power spectrum was
+analyzed. 
+
+The arithmetic and geometric mean power spectra were formed from all
+the time-series in each region.  A third power spectrum was created by
+first summing all the data in a region, applying the
+normalization/apodization procedure described above, and then
+calculating the Fourier power spectrum.  These three power spectra
+then summarize the Fourier power in each region, for each wavebad studied.
+
 
 %% In this section, we use  the \subsection command to set off
 %% a subsection.  \footnote is used to insert a footnote to the text.
