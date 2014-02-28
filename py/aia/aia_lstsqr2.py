@@ -57,10 +57,21 @@ This is what we do with the data and how we do it:
 (c)
 """
 
+
 def log_10_product(x, pos):
     """The two args are the value and tick position.
-    Label ticks with the product of the exponentiation"""
-    return '%5.1f' % (x)
+    Label ticks with the product of the exponentiation.
+    The algorithm plots out nicely formatted explicit numbers for values
+    greater and less then 1.0."""
+    if x >= 1.0:
+        return '%i' % (x)
+    else:
+        n = 0
+        while x * (10 ** n) <= 1:
+            n = n + 1
+        fmt = '%.' + str(n - 1) + 'f'
+        return fmt % (x)
+
 
 # String defining the basics number of time series
 def tsDetails(nx, ny, nt):
@@ -337,18 +348,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Error estimate for the power law index
                 nerr = np.sqrt(error[0, 0, 1])
 
-                """
-                # Set up the plot with the x axis playing nice
-                ax = plt.subplot(111)
-                ax.set_xscale('log')
-                ax.set_yscale('log')
-                xformatter = plt.FuncFormatter(log_10_product)
-                ax.xaxis.set_major_formatter(xformatter)
-
-                ax.plot(freqs, iobs)
-                plt.xlabel('frequency (%s)' % (freqfactor[1]))
-                plt.savefig(savefig + '.data.png')
-                """
                 ###############################################################
                 # Power spectrum analysis: trying to fit a spectrum with a bump
                 # -------------------------------------------------------------
@@ -437,21 +436,26 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 bf_dts = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param_dts[0], param_dts[1], param_dts[2]))
                 nerr_dts = np.sqrt(answer_doriginal_ts[1][1, 1])
 
-
-
+                # -------------------------------------------------------------
+                # Plots of power spectra: arithmetic means of summed emission
+                # and summed power spectra
                 ax = plt.subplot(111)
+
+                # Set the scale type on each axis
                 ax.set_xscale('log')
                 ax.set_yscale('log')
+
+                # Set the formatting of the tick labels
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
-                
+
+                # Arithmetic mean of all the time series, then analysis
                 ax.plot(freqs, doriginal_ts_iobs, color='r', label='sum over region')
                 ax.plot(freqs, bf_dts, color='r', linestyle="--", label='fit to sum over region n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
 
                 # Arithmetic mean of the power spectra from each pixel
                 ax.plot(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
                 ax.plot(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
-                #plt.loglog(freqs, bf_gwb, color='b', linestyle='-.', label = 'bf_gwb')
 
                 # Extra information for the plot
                 ax.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
@@ -460,37 +464,13 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' - arithmetic mean')
-                plt.grid()
+                #plt.grid()
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 #plt.text(freqs[0], 1.0, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.%s' % (savefig_format))
-                
+                plt.close('all')
+                # -------------------------------------------------------------
 
-                """
-                # Plots of power spectra: arithmetic means of summed emission
-                # and summed power spectra
-                plt.figure(1)
-
-                # Arithmetic mean of all the time series, then analysis
-                plt.loglog(freqs, doriginal_ts_iobs, color='r', label='sum over region')
-                plt.loglog(freqs, bf_dts, color='r', linestyle="--", label='fit to sum over region n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
-
-                # Arithmetic mean of the power spectra from each pixel
-                plt.loglog(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
-                plt.loglog(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
-                #plt.loglog(freqs, bf_gwb, color='b', linestyle='-.', label = 'bf_gwb')
-
-                # Extra information for the plot
-                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
-                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
-                #plt.axhline(1.0, color='k', label='average power')
-                plt.xlabel('frequency (%s)' % (freqfactor[1]))
-                plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
-                plt.title(data_name + ' - arithmetic mean')
-                plt.legend(loc=3, fontsize=10, framealpha=0.5)
-                #plt.text(freqs[0], 1.0, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
-                plt.savefig(savefig + '.arithmetic_mean_power_spectra.%s' % (savefig_format))
-                """
                 ###############################################################
                 # Power spectrum analysis: geometric mean approach
                 # ------------------------------------------------------------------------
@@ -533,22 +513,40 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         lim[i, 0, f] = np.exp(h[1][lo])
                         lim[i, 1, f] = np.exp(h[1][hi])
 
-                # Geometric mean of power spectra at each pixel
-                plt.figure(2)
-                plt.loglog(freqs, np.exp(logiobs), label='geometric mean of power spectra at each pixel')
-                plt.loglog(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
-                plt.loglog(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
-                plt.loglog(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
-                plt.loglog(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
-                plt.loglog(freqs, lim[1, 1, :], linestyle=':', label='upper 95%')
-                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
-                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
-                plt.xlabel('frequency (%s)' % (freqfactor[1]))
+                # -------------------------------------------------------------
+                # Plots of power spectra: geometric mean of power spectra at
+                # each pixel
+                ax = plt.subplot(111)
 
+                # Set the scale type on each axis
+                ax.set_xscale('log')
+                ax.set_yscale('log')
+
+                # Set the formatting of the tick labels
+                xformatter = plt.FuncFormatter(log_10_product)
+                ax.xaxis.set_major_formatter(xformatter)
+
+                # Geometric mean
+                ax.plot(freqs, np.exp(logiobs), label='geometric mean of power spectra at each pixel')
+                ax.plot(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
+
+                # Power at each freuqnecy - distributions
+                ax.plot(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
+                ax.plot(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
+                ax.plot(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
+                ax.plot(freqs, lim[1, 1, :], linestyle=':', label='upper 95%')
+
+                # Extra information for the plot
+                ax.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
+                ax.axvline(three_min, color='k', linestyle='--', label='3 mins.')
+                plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' - geometric mean')
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.geometric_mean_power_spectra.%s' % (savefig_format))
+                plt.close('all')
+                # -------------------------------------------------------------
+
                 # plot some histograms of the log power at a small number of
                 # frequencies.
                 findex = []
@@ -638,7 +636,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 ofilename = region_id
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.fourier_power.pickle',
-                          (freqs, pwr))
+                          (freqs / freqfactor[0], pwr))
 
                 # Analyzed data
                 pkl_write(pkl_location,
@@ -648,7 +646,17 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Fourier transform
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.fft_transform.pickle',
-                          (freqs, fft_transform))
+                          (freqs / freqfactor[0], fft_transform))
+
+                # Arithmetic mean of power spectra
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.iobs.pickle',
+                          (freqs / freqfactor[0], iobs))
+
+                # Geometric mean of power spectra
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.logiobs.pickle',
+                          (freqs / freqfactor[0], logiobs))
 
                 # Bump fit
                 #pkl_write(pkl_location,
@@ -699,7 +707,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           windows=['hanning'],
           manip='relative')
 """
-"""
+
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle_cc/',
           sfigroot='~/ts/img_cc/',
@@ -708,11 +716,11 @@ do_lstsqr(dataroot='~/Data/AIA/',
           sunlocation='disk',
           fits_level='1.5',
           waves=['193'],
-          regions=['moss', 'sunspot', 'loopfootpoints', 'qs'],
+          regions=['moss'],
           windows=['hanning'],
           manip='relative')
-"""
 
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle',
           sfigroot='~/ts/img/',
@@ -725,7 +733,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           windows=['hanning'],
           manip='relative',
           savefig_format='png')
-
+"""
 
 
 

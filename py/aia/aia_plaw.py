@@ -32,11 +32,6 @@ def GaussianShape(x, a, xc, sigma):
     return a * np.exp(-0.5 * z ** 2)
 
 
-# Guess a Gaussian Bump
-def guess_bump(y, p0):
-    return p0
-
-
 # Do the fit
 def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None, nvar=3):
     """

@@ -86,3 +86,26 @@ def broken_power_law(f, a):
     out[f < fbreak] = A * (fn[f < fbreak] ** (-a[1]))
     out[f >= fbreak] = A * (fn[f >= fbreak] ** (-a[2])) * (fbreak ** (a[2] - a[1]))
     return out
+
+
+def splwc_GaussianBump(f, a):
+    """Simple power law with a constant, and a Gaussian shaped bump.  This model assumes that the power
+    spectrum is made up of a power law and a constant background.  At high
+    frequencies the power spectrum is dominated by the constant background.
+
+    Parameters
+    ----------
+    f : ndarray
+        frequencies
+
+    a : ndarray[2]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index
+        a[2] : the natural logarithm of the constant background
+    """
+    return power_law_with_constant(f, a[0:3]) * np.exp(GaussianBump(np.log(f), a[3:6]))
+
+
+def GaussianBump(x, a):
+    z = (x - a[1]) / a[2]
+    return a[0] * np.exp(-0.5 * z ** 2)
