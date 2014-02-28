@@ -79,7 +79,7 @@ for iwave, wave in enumerate(waves):
             x = freqs / xnorm
 
             # Set up the first model power law
-            pymcmodel = pymcmodels.single_power_law_with_constant(freqs, pwr)
+            pymcmodel = pymcmodels.single_power_law_with_constant(freqs, pwr, likelihood_type='normal', sigma=0.5)
 
             # Initiate the sampler
             M = pymc.MCMC(pymcmodel)
@@ -87,6 +87,7 @@ for iwave, wave in enumerate(waves):
             # Run the sampler
             M.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
 
+            """
             # Set up the second model - single power law with constant and Gaussian bump
             pymcmodel2 = pymcmodels.splwc_GaussianBump(x, pwr)
 
@@ -95,7 +96,7 @@ for iwave, wave in enumerate(waves):
 
             # Run the sampler
             M2.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
-
+            """
 plt.figure(1)
 plt.loglog(freqs, pwr, label='data', color='k')
 plt.loglog(freqs, M.stats()['fourier_power_spectrum']['mean'], label='M, mean', color = 'b')

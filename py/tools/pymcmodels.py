@@ -35,7 +35,15 @@ import rnspectralmodels
 import rnsimulation
 
 
-def single_power_law_with_constant(analysis_frequencies, analysis_power):
+#
+# Fit a power law with a constant using PyMC.  The original application for
+# this was to fit power laws to Fourier power spectra which are exponentially
+# distributed
+#
+def single_power_law_with_constant(analysis_frequencies,
+                                   analysis_power,
+                                   likelihood_type='Exponential',
+                                   **kwargs):
     """Set up a PyMC model: power law for the power spectrum"""
 
     # PyMC definitions
@@ -66,12 +74,50 @@ def single_power_law_with_constant(analysis_frequencies, analysis_power):
         out = rnspectralmodels.power_law_with_constant(f, [a, p, b])
         return out
 
-    spectrum = pymc.Exponential('spectrum',
-                           beta=1.0 / fourier_power_spectrum,
-                           value=analysis_power,
-                           observed=True)
+    #
+    # Exponential distribution
+    #
+    if likelihood_type == 'Exponential':
+        spectrum = pymc.Exponential('spectrum',
+                               beta=1.0 / fourier_power_spectrum,
+                               value=analysis_power,
+                               observed=True)
 
-    predictive = pymc.Exponential('predictive', beta=1.0 / fourier_power_spectrum)
+        predictive = pymc.Exponential('predictive', beta=1.0 / fourier_power_spectrum)
+
+    #
+    # Assumes that the input data is normally distributed
+    #
+    if likelihood_type == 'Normal':
+        if "sigma" not in kwargs:
+            raise ValueError
+        else:
+            print('Likelihood=' + likelihood_type)
+            spectrum = pymc.Normal('spectrum',
+                                   tau=1.0 / (kwargs['sigma'] ** 2),
+                                   mu=fourier_power_spectrum,
+                                   value=analysis_power,
+                                   observed=True)
+            predictive = pymc.Normal('predictive',
+                                     tau=1.0 / (kwargs['sigma'] ** 2),
+                                     mu=fourier_power_spectrum)
+
+    #
+    # Assumes that the input data is lognormally distributed
+    #
+    if likelihood_type == 'Lognormal':
+        if "sigma" not in kwargs:
+            raise ValueError
+        else:
+            print('Likelihood=' + likelihood_type)
+            spectrum = pymc.Lognormal('spectrum',
+                                   tau=1.0 / (kwargs['sigma'] ** 2),
+                                   mu=fourier_power_spectrum,
+                                   value=analysis_power,
+                                   observed=True)
+            predictive = pymc.lognormal('predictive',
+                                     tau=1.0 / (kwargs['sigma'] ** 2),
+                                     mu=fourier_power_spectrum)
 
     # MCMC model
     return locals()
