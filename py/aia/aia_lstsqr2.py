@@ -460,6 +460,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' - arithmetic mean')
+                plt.grid()
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 #plt.text(freqs[0], 1.0, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.%s' % (savefig_format))
