@@ -9,6 +9,26 @@ All the models have two objects in common:
     the model.
 """
 
+"""
+Notes
+
+By observation, it seems that the power laws for the AIA data are distributed
+approximately as follows
+
+iobs - (average power spectra, averaged over all the pixels)
+ - lognormally dsitributed
+
+logiobs
+ - normally distributed.
+
+Hence we set up PyMC models that implement these distributions.
+
+
+
+
+"""
+
+
 import numpy as np
 import pymc
 import rnspectralmodels
