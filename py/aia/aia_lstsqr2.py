@@ -57,6 +57,10 @@ This is what we do with the data and how we do it:
 (c)
 """
 
+def log_10_product(x, pos):
+    """The two args are the value and tick position.
+    Label ticks with the product of the exponentiation"""
+    return '%5.1f' % (x)
 
 # String defining the basics number of time series
 def tsDetails(nx, ny, nt):
@@ -333,6 +337,18 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Error estimate for the power law index
                 nerr = np.sqrt(error[0, 0, 1])
 
+                """
+                # Set up the plot with the x axis playing nice
+                ax = plt.subplot(111)
+                ax.set_xscale('log')
+                ax.set_yscale('log')
+                xformatter = plt.FuncFormatter(log_10_product)
+                ax.xaxis.set_major_formatter(xformatter)
+
+                ax.plot(freqs, iobs)
+                plt.xlabel('frequency (%s)' % (freqfactor[1]))
+                plt.savefig(savefig + '.data.png')
+                """
                 ###############################################################
                 # Power spectrum analysis: trying to fit a spectrum with a bump
                 # -------------------------------------------------------------
@@ -421,6 +437,35 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 bf_dts = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param_dts[0], param_dts[1], param_dts[2]))
                 nerr_dts = np.sqrt(answer_doriginal_ts[1][1, 1])
 
+
+
+                ax = plt.subplot(111)
+                ax.set_xscale('log')
+                ax.set_yscale('log')
+                xformatter = plt.FuncFormatter(log_10_product)
+                ax.xaxis.set_major_formatter(xformatter)
+                
+                ax.plot(freqs, doriginal_ts_iobs, color='r', label='sum over region')
+                ax.plot(freqs, bf_dts, color='r', linestyle="--", label='fit to sum over region n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
+
+                # Arithmetic mean of the power spectra from each pixel
+                ax.plot(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
+                ax.plot(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
+                #plt.loglog(freqs, bf_gwb, color='b', linestyle='-.', label = 'bf_gwb')
+
+                # Extra information for the plot
+                ax.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
+                ax.axvline(three_min, color='k', linestyle='--', label='3 mins.')
+                #plt.axhline(1.0, color='k', label='average power')
+                plt.xlabel('frequency (%s)' % (freqfactor[1]))
+                plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
+                plt.title(data_name + ' - arithmetic mean')
+                plt.legend(loc=3, fontsize=10, framealpha=0.5)
+                #plt.text(freqs[0], 1.0, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
+                plt.savefig(savefig + '.arithmetic_mean_power_spectra.%s' % (savefig_format))
+                
+
+                """
                 # Plots of power spectra: arithmetic means of summed emission
                 # and summed power spectra
                 plt.figure(1)
@@ -444,7 +489,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 #plt.text(freqs[0], 1.0, 'note: least-squares fit used, but data is not Gaussian distributed', fontsize=8)
                 plt.savefig(savefig + '.arithmetic_mean_power_spectra.%s' % (savefig_format))
-
+                """
                 ###############################################################
                 # Power spectrum analysis: geometric mean approach
                 # ------------------------------------------------------------------------
@@ -653,7 +698,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           windows=['hanning'],
           manip='relative')
 """
-
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle_cc/',
           sfigroot='~/ts/img_cc/',
@@ -665,8 +710,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['moss', 'sunspot', 'loopfootpoints', 'qs'],
           windows=['hanning'],
           manip='relative')
-
 """
+
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle',
           sfigroot='~/ts/img/',
@@ -677,8 +722,9 @@ do_lstsqr(dataroot='~/Data/AIA/',
           waves=['171'],
           regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
-          manip='relative')
-"""
+          manip='relative',
+          savefig_format='png')
+
 
 
 
