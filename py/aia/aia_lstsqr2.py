@@ -58,6 +58,30 @@ This is what we do with the data and how we do it:
 """
 
 
+def calculate_histograms(nposfreq, pwr):
+    # number of histogram bins
+    bins = 100
+    hpwr = np.zeros((nposfreq, bins))
+    for f in range(0, nposfreq):
+        h = np.histogram(pwr[:, :, f], bins=bins, range=[np.min(pwr), np.max(pwr)])
+        hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
+
+    # Calculate the probability density in each frequency bin.
+    p = [0.68, 0.95]
+    lim = np.zeros((len(p), 2, nposfreq))
+    for i, thisp in enumerate(p):
+        tailp = 0.5 * (1.0 - thisp)
+        for f in range(0, nposfreq):
+            lo = 0
+            while np.sum(hpwr[f, 0:lo]) <= tailp:
+                lo = lo + 1
+            hi = 0
+            while np.sum(hpwr[f, 0:hi]) <= 1.0 - tailp:
+                hi = hi + 1
+            lim[i, 0, f] = np.exp(h[1][lo])
+            lim[i, 1, f] = np.exp(h[1][hi])
+    return h[1], hpwr, lim
+
 def log_10_product(x, pos):
     """The two args are the value and tick position.
     Label ticks with the product of the exponentiation.
@@ -492,26 +516,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # of power in all frequencies
 
                 # number of histogram bins
-                bins = 100
-                hpwr = np.zeros((nposfreq, bins))
-                for f in range(0, nposfreq):
-                    h = np.histogram(logpwr[:, :, f], bins=bins, range=[np.min(logpwr), np.max(logpwr)])
-                    hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
-
                 # Calculate the probability density in each frequency bin.
-                p = [0.68, 0.95]
-                lim = np.zeros((len(p), 2, nposfreq))
-                for i, thisp in enumerate(p):
-                    tailp = 0.5 * (1.0 - thisp)
-                    for f in range(0, nposfreq):
-                        lo = 0
-                        while np.sum(hpwr[f, 0:lo]) <= tailp:
-                            lo = lo + 1
-                        hi = 0
-                        while np.sum(hpwr[f, 0:hi]) <= 1.0 - tailp:
-                            hi = hi + 1
-                        lim[i, 0, f] = np.exp(h[1][lo])
-                        lim[i, 1, f] = np.exp(h[1][hi])
+                histogram_loc, hpwr, lim = calculate_histograms(nposfreq, logpwr)
 
                 # -------------------------------------------------------------
                 # Plots of power spectra: geometric mean of power spectra at
@@ -547,6 +553,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.close('all')
                 # -------------------------------------------------------------
 
+                # -------------------------------------------------------------
                 # plot some histograms of the log power at a small number of
                 # frequencies.
                 findex = []
@@ -558,7 +565,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('proportion found at given frequency')
                 plt.title(data_name + ' - power distributions')
                 for f in findex:
-                    plt.plot(h[1][1:] / np.log(10.0), hpwr[f, :], label='%7.2f %s' % (freqs[f], freqfactor[1]))
+                    xx = histogram_loc[1:] / np.log(10.0)
+                    yy = hpwr[f, :]
+                    gfit = curve_fit(aia_plaw.GaussianShape, xx, yy)
+                    plt.plot(xx, yy, label='%7.2f %s, $\sigma=$ %f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
 
@@ -567,6 +577,34 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 full_ts.peek()
                 plt.savefig(savefig + '.full_ts_timeseries.%s' % (savefig_format))
                 plt.close('all')
+
+                # -------------------------------------------------------------
+                # plot some histograms of the power at a small number of
+                # frequencies.
+                histogram_loc2, hpwr2, lim2 = calculate_histograms(nposfreq, pwr)
+
+                findex = []
+                f_of_interest = [0.5 * five_min, five_min, three_min, 2 * three_min, 3 * three_min]
+                for thisf in f_of_interest:
+                    findex.append(np.unravel_index(np.argmin(np.abs(thisf - freqs)), freqs.shape)[0])
+                plt.figure(3)
+                plt.xlabel('power')
+                plt.ylabel('proportion found at given frequency')
+                plt.title(data_name + ' - power distributions')
+                for f in findex:
+                    xx = histogram_loc2[1:] / np.log(10.0)
+                    yy = hpwr2[f, :]
+                    plt.loglog(xx, yy, label='%7.2f %s' % (freqs[f], freqfactor[1]))
+                plt.legend(loc=3, fontsize=10, framealpha=0.5)
+                plt.savefig(savefig + '.notlog_power_spectra_distributions.%s' % (savefig_format))
+
+                # plot out the time series
+                plt.figure(4)
+                full_ts.peek()
+                plt.savefig(savefig + '.full_ts_timeseries.%s' % (savefig_format))
+                plt.close('all')
+
+
 
                 ###############################################################
                 # Time series plots
@@ -651,7 +689,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Arithmetic mean of power spectra
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.iobs.pickle',
-                          (freqs / freqfactor[0], iobs))
+                          (freqs / freqfactor[0], np.log(iobs)))
 
                 # Geometric mean of power spectra
                 pkl_write(pkl_location,
@@ -708,6 +746,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           manip='relative')
 """
 
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle_cc/',
           sfigroot='~/ts/img_cc/',
@@ -719,8 +758,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           regions=['moss'],
           windows=['hanning'],
           manip='relative')
-
 """
+
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle',
           sfigroot='~/ts/img/',
@@ -729,65 +768,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           sunlocation='disk',
           fits_level='1.5',
           waves=['171'],
-          regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
+          regions=['moss'],
           windows=['hanning'],
           manip='relative',
           savefig_format='png')
-"""
-
-
-
-"""
-
-#
-# Make maps of the Fourier power
-#
-fmap = []
-franges = [[1.0/360.0, 1.0/240.0], [1.0/240.0, 1.0/120.0]]
-for fr in franges:
-    ind = []
-    for i, testf in enumerate(freqs):
-        if testf >= fr[0] and testf <= fr[1]:
-            ind.append(i)
-    fmap.append(np.sum(pwr[:,:,ind[:]], axis=2))
-
-#
-# Do the MCMC stuff
-#
-# Normalize the frequency so that the first element is equal to 1 and
-# all higher frequencies are multiples of the first non-zero frequency.  This
-# makes calculation slightly easier.
-
-# Form the input for the MCMC algorithm.
-this = ([freqs, full_ts_iobs],)
-
-
-norm_estimate = np.zeros((3,))
-norm_estimate[0] = iobs[0]
-norm_estimate[1] = norm_estimate[0] / 1000.0
-norm_estimate[2] = norm_estimate[0] * 1000.0
-
-background_estimate = np.zeros_like(norm_estimate)
-background_estimate[0] = np.mean(iobs[-10:-1])
-background_estimate[1] = background_estimate[0] / 1000.0
-background_estimate[2] = background_estimate[0] * 1000.0
-
-estimate = {"norm_estimate": norm_estimate,
-            "background_estimate": background_estimate}
-
-# _____________________________________________________________________________
-# -----------------------------------------------------------------------------
-# Analyze using MCMC
-# -----------------------------------------------------------------------------
-analysis = Do_MCMC(this).okgo(single_power_law_with_constant_not_normalized,
-                              estimate=estimate,
-                              seed=None,
-                              iter=50000,
-                              burn=10000,
-                              thin=5,
-                              progress_bar=True)
-
-analysis.showfit(figure=5, show_simulated=[0], show_1=True,
-                 title=data_name + ' - '+ 'Bayesian/MCMC fit')
-plt.savefig(savefig + '.mcmc_fit_with_stochastic_estimate.png')
-"""

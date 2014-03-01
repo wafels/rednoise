@@ -11,18 +11,18 @@ from matplotlib import pyplot as plt
 import aia_specific
 import pymcmodels
 
-
+plt.ion()
 #
 # Set up which data to look at
 #
 dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle_cc/'
-sfigroot = '~/ts/img_cc/'
-scsvroot = '~/ts/csv_cc/'
-corename = 'shutdownfun3_6hr'
+ldirroot = '~/ts/pickle/'
+sfigroot = '~/ts/img/'
+scsvroot = '~/ts/csv/'
+corename = '20120923_0000__20120923_0100'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193']
+waves = ['171']
 regions = ['moss']
 windows = ['hanning']
 manip = 'relative'
@@ -64,48 +64,95 @@ for iwave, wave in enumerate(waves):
             # Update the region identifier
             region_id = '.'.join((ident, window, manip))
 
-            # Load the data
-            pkl_location = locations['pickle']
-            ifilename = 'OUT.' + region_id + '.logiobs'
-            pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
-            print('Loading ' + pkl_file_location)
-            pkl_file = open(pkl_file_location, 'rb')
-            freqs = pickle.load(pkl_file)
-            pwr = pickle.load(pkl_file)
-            pkl_file.close()
+            # Create a location to save the figures
+            savefig = os.path.join(os.path.expanduser(sfig), window, manip)
+            if not(os.path.isdir(savefig)):
+                os.makedirs(savefig)
+            savefig = os.path.join(savefig, region_id)
 
-            # Normalize the frequency
-            xnorm = freqs[0]
-            x = freqs / xnorm
+            for obstype in ['.logiobs', '.iobs']:
+                #
+                print('Analyzing ' + obstype)
 
-            # Set up the first model power law
-            pymcmodel = pymcmodels.single_power_law_with_constant(freqs, pwr, likelihood_type='normal', sigma=0.5)
+                # Load the data
+                pkl_location = locations['pickle']
+                ifilename = 'OUT.' + region_id + obstype
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
+                print('Loading ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'rb')
+                freqs = pickle.load(pkl_file)
+                pwr = pickle.load(pkl_file)
+                pkl_file.close()
+    
+                # Normalize the frequency
+                xnorm = freqs[0]
+                x = freqs / xnorm
+    
+                if obstype == '.logiobs':
+                    # Set the Gaussian width
+                    sigma = 0.5 * np.log(10.0)
 
-            # Initiate the sampler
-            M = pymc.MCMC(pymcmodel)
+                    # Set up the first model power law
+                    pymcmodel = pymcmodels.Log_splwc(x, pwr, sigma)
+        
+                    # Initiate the sampler
+                    M = pymc.MCMC(pymcmodel)
+        
+                    # Run the sampler
+                    print('Running simple power law model')
+                    M.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
 
-            # Run the sampler
-            M.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
+                    # Set up the second model - single power law with constant and Gaussian bump
+                    pymcmodel2 = pymcmodels.Log_splwc_GaussianBump(x, pwr, sigma)
+        
+                    # Initiate the sampler
+                    M2 = pymc.MCMC(pymcmodel2)
+        
+                    # Run the sampler
+                    print('Running power law plus Gaussian model')
+                    M2.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
 
-            """
-            # Set up the second model - single power law with constant and Gaussian bump
-            pymcmodel2 = pymcmodels.splwc_GaussianBump(x, pwr)
+   
+                if obstype == '.iobs':
+                    # Set the Gaussian width
+                    sigma = 0.5 * np.log(10.0)
 
-            # Initiate the sampler
-            M2 = pymc.MCMC(pymcmodel2)
+                    # Set up the first model power law
+                    pymcmodel = pymcmodels.Log_splwc_lognormal(x, np.exp(pwr), sigma)
+        
+                    # Initiate the sampler
+                    M = pymc.MCMC(pymcmodel)
+        
+                    # Run the sampler
+                    print('Running simple power law model')
+                    M.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
 
-            # Run the sampler
-            M2.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
-            """
-plt.figure(1)
-plt.loglog(freqs, pwr, label='data', color='k')
-plt.loglog(freqs, M.stats()['fourier_power_spectrum']['mean'], label='M, mean', color = 'b')
-plt.loglog(freqs, M.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M, 95% low', color = 'b', linestyle='-.')
-plt.loglog(freqs, M.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M, 95% high', color = 'b', linestyle='--')
+                    # Set up the second model - single power law with constant and Gaussian bump
+                    pymcmodel2 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, np.exp(pwr), sigma)
+        
+                    # Initiate the sampler
+                    M2 = pymc.MCMC(pymcmodel2)
+        
+                    # Run the sampler
+                    print('Running power law plus Gaussian model')
+                    M2.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
 
-plt.loglog(freqs, M2.stats()['fourier_power_spectrum']['mean'], label='M, mean', color = 'r')
-plt.loglog(freqs, M2.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M2, 95% low', color = 'r', linestyle='-.')
-plt.loglog(freqs, M2.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M2, 95% high', color = 'r', linestyle='--')
-plt.legend(loc=3, framealpha=0.5, fontsize=10)
-plt.xlabel('frequency (Hz)')
-plt.ylabel('power')
+                # Plot
+                plt.figure(1)
+                plt.loglog(freqs, np.exp(pwr), label='data', color='k')
+                
+                # Plot the power law fit
+                plt.loglog(freqs, np.exp(M.stats()['fourier_power_spectrum']['mean']), label='M, mean', color = 'b')
+                plt.loglog(freqs, np.exp(M.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='M, 95% low', color = 'b', linestyle='-.')
+                plt.loglog(freqs, np.exp(M.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='M, 95% high', color = 'b', linestyle='--')
+                
+                # Plot the power law and bump fit
+                plt.loglog(freqs, np.exp(M2.stats()['fourier_power_spectrum']['mean']), label='M2, mean', color = 'r')
+                plt.loglog(freqs, np.exp(M2.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='M2, 95% low', color = 'r', linestyle='-.')
+                plt.loglog(freqs, np.exp(M2.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='M2, 95% high', color = 'r', linestyle='--')
+                plt.legend(loc=3, framealpha=0.5, fontsize=10)
+                plt.xlabel('frequency (Hz)')
+                plt.ylabel('power')
+                plt.title(obstype)
+                plt.savefig(savefig + obstype + '.model_fit_compare.pymc.png')
+                plt.close('all')

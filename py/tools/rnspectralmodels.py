@@ -109,3 +109,15 @@ def splwc_GaussianBump(f, a):
 def GaussianBump(x, a):
     z = (x - a[1]) / a[2]
     return a[0] * np.exp(-0.5 * z ** 2)
+
+def Log_splwc_GaussianBump(f, a):
+    """
+    
+    """
+    return np.log(power_law_with_constant(f, a[0:3])) + GaussianBump(np.log(f), a[3:6])
+
+def Log_splwc(f, a):
+    """
+    
+    """
+    return np.log(power_law_with_constant(f, a))
