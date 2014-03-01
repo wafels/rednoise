@@ -1,6 +1,8 @@
 #
 # Code to fit power laws to some data from the region analysis
 #
+# Also do posterior predictive checking to find which model fits best.
+#
 import os
 import pickle
 import numpy as np
@@ -23,9 +25,11 @@ corename = '20120923_0000__20120923_0100'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171']
-regions = ['moss']
+regions = ['moss', 'qs', 'loopfootpoints', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
+
+nsample = 1000
 
 for iwave, wave in enumerate(waves):
     # Which wavelength?
@@ -156,3 +160,34 @@ for iwave, wave in enumerate(waves):
                 plt.title(obstype)
                 plt.savefig(savefig + obstype + '.model_fit_compare.pymc.png')
                 plt.close('all')
+
+                #
+                # Do the posterior predictive comparison
+                #
+                t_lrt_distribution = []
+                for r in range(0, nsample):
+                    # Data for the first model
+                    M_data = M.trace("predictive")[r]
+                    
+                    # Perform the fit
+                    
+                    # Get the likelihood at the best fit
+                    
+                    
+                    # Data for the second model
+                    M2_data = M2.trace("predictive")[r]
+                    
+                    # Perform the fit
+                    
+                    # Get the likelihood at the best fit
+                    
+                    # Calculate the T_lrt statistic and keep it
+                    t_lrt_distribution.append()
+                    
+                #
+                # Plot the T_lrt distribution along with the the value of this
+                # statistic
+                
+                plt.savefig(savefig + obstype + '.t_lrt.png')
+
+                    
