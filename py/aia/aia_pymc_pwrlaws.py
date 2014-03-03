@@ -63,15 +63,37 @@ def curve_fit_LogPowerLawConstant(x, y, sigma, p0=None):
     return A, best_fit, likelihood
 """
 
+
+#
+# Hypothesis 0 functions
+#
 def get_variables_M0(m):
     A = [m.value.power_law_norm, m.value.power_law_index, m.value.background]
     return A
 
+def curve_fit_M0(x, y, p0):
+    answer = curve_fit(rnspectralmodels.Log_splwc, x, p0[0], p0[1], p0[2])
+    return answer[0]
 
+def get_spectrum_M0(x, A):
+    return rnspectralmodels.Log_splwc(x, A)
+
+#
+# Hypothesis 1 functions
+#
 def get_variables_M1(m):
     A = [m.value.power_law_norm, m.value.power_law_index, m.value.background,
          m.value.gaussian_amplitude, m.value.gaussian_position, m.value.gaussian_width]
     return A
+
+def curve_fit_M1(x, y, p0):
+    answer = curve_fit(rnspectralmodels.Log_splwc_GaussianBump, x, y, p0=p0)
+    return answer[0]
+
+def get_spectrum_M1(x, A):
+    return rnspectralmodels.Log_splwc_GaussianBump(x, A)
+
+
 
 
 plt.ion()
