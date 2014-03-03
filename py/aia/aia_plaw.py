@@ -32,6 +32,12 @@ def GaussianShape(x, a, xc, sigma):
     return a * np.exp(-0.5 * z ** 2)
 
 
+# A Gaussian shape
+def GaussianShape2(x, a, xc, sigma):
+    z = (x - xc) / sigma
+    return a * (1.0 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * z ** 2)
+
+
 # Do the fit
 def do_fit(freqs, pwrinput, func, guessfunc=None, p0=None, sigma=None, nvar=3):
     """

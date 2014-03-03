@@ -567,8 +567,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 for f in findex:
                     xx = histogram_loc[1:] / np.log(10.0)
                     yy = hpwr[f, :]
-                    gfit = curve_fit(aia_plaw.GaussianShape, xx, yy)
+                    gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
+                    #print gfit[0]
                     plt.plot(xx, yy, label='%7.2f %s, $\sigma=$ %f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
+                    #plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]))
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
 
