@@ -12,7 +12,6 @@ from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 
 import aia_specific
-import aia_plaw
 import pymcmodels
 import rnspectralmodels
 
@@ -216,89 +215,78 @@ for iwave, wave in enumerate(waves):
                 xnorm = freqs[0]
                 x = freqs / xnorm
 
-                if obstype == '.iobs' or obstype == '.logiobs':
-                    # Set the Gaussian width
-                    sigma = 0.5 * np.log(10.0)
-                    tau = 1.0 / (sigma ** 2)
+                # Set the Gaussian width
+                sigma = 0.5 * np.log(10.0)
+                tau = 1.0 / (sigma ** 2)
 
-                    # Set up the first model power law
+                #
+                # Model 0 - the power law
+                #
+                # Geometric mean
+                if obstype == '.logiobs':
                     pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma)
+                # Arithmetic mean
+                if obstype == '.iobs':
+                    pymcmodel0 = pymcmodels.Log_splwc_lognormal(x, np.exp(pwr), sigma)
 
-                    # Initiate the sampler
-                    M0 = pymc.MCMC(pymcmodel0)
+                # Initiate the sampler
+                M0 = pymc.MCMC(pymcmodel0)
 
-                    # Run the sampler
-                    print('Running simple power law model')
-                    M0.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
+                # Run the sampler
+                print('Running simple power law model')
+                M0.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
 
-                    # Now run the MAP
-                    map_M0 = pymc.MAP(pymcmodel0)
-                    map_M0.fit(method='fmin_powell')
+                # Now run the MAP
+                map_M0 = pymc.MAP(pymcmodel0)
+                map_M0.fit(method='fmin_powell')
 
-                    # Plot the traces
-                    get_M0_plots(M0, region_id, obstype, savefig, bins=40)
+                # Plot the traces
+                get_M0_plots(M0, region_id, obstype, savefig, bins=40)
 
-                    # Get the likelihood at the maximum
-                    #likelihood0_data = map_M0.logp_at_max
-                    l0_data2 = get_likelihood_M0(map_M0, x, pwr, sigma, tau)
-                    print l0_data2
-                    # Get the variables
-                    #A0 = get_variables_model0(map_M0)
-                    # Set up the second model - single power law with constant and Gaussian bump
+                # Get the likelihood at the maximum
+                #likelihood0_data = map_M0.logp_at_max
+                l0_data2 = get_likelihood_M0(map_M0, x, pwr, sigma, tau)
+                print l0_data2
+
+                #
+                # Second model - power law with Gaussian bumps
+                #
+                # Geometric mean
+                if obstype == '.logiobs':
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump(x, pwr, sigma)
+                # Arithmetic mean
+                if obstype == '.iobs':
+                    pymcmodel1 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, np.exp(pwr), sigma)
 
-                    # Initiate the sampler
-                    M1 = pymc.MCMC(pymcmodel1)
+                # Initiate the sampler
+                M1 = pymc.MCMC(pymcmodel1)
 
-                    # Run the sampler
-                    print('Running power law plus Gaussian model')
-                    M1.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
+                # Run the sampler
+                print('Running power law plus Gaussian model')
+                M1.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
 
-                    # Now run the MAP
-                    map_M1 = pymc.MAP(pymcmodel1)
-                    map_M1.fit(method='fmin_powell')
+                # Now run the MAP
+                map_M1 = pymc.MAP(pymcmodel1)
+                map_M1.fit(method='fmin_powell')
 
-                    # Plot the traces
-                    get_M1_plots(M1, region_id, obstype, savefig, bins=40)
+                # Plot the traces
+                get_M1_plots(M1, region_id, obstype, savefig, bins=40)
 
-                    # Get the likelihood at the maximum
-                    likelihood1_data = map_M1.logp_at_max
-                    A1 = get_variables_M1(map_M1)
-                    A1[3] = 0.0
-                    A1 = curve_fit_M1(x, pwr, A1, sigma)
-                    l1_data2 = get_likelihood_M1(map_M1, x, pwr, sigma, tau)
-                    print l1_data2
+                # Get the likelihood at the maximum
+                likelihood1_data = map_M1.logp_at_max
+                A1 = get_variables_M1(map_M1)
+                A1[3] = 0.0
+                A1 = curve_fit_M1(x, pwr, A1, sigma)
+                l1_data2 = get_likelihood_M1(map_M1, x, pwr, sigma, tau)
+                print l1_data2
 
-                    # Get the T_lrt statistic for the data
-                    t_lrt_data = -2 * (l0_data2 - l1_data2)
-                    print ' '
-                    print 'T_lrt for the initial data = %f' % (t_lrt_data)
+                # Get the T_lrt statistic for the data
+                t_lrt_data = -2 * (l0_data2 - l1_data2)
+                print ' '
+                print 'T_lrt for the initial data = %f' % (t_lrt_data)
                 """
                 if obstype == '.iobs':
-                    # Set the Gaussian width
-                    sigma = 0.5 * np.log(10.0)
 
-                    # Set up the first model power law
-                    pymcmodel = pymcmodels.Log_splwc_lognormal(x, np.exp(pwr), sigma)
-
-                    # Initiate the sampler
-                    M = pymc.MCMC(pymcmodel)
-
-                    # Run the sampler
-                    print('Running simple power law model')
-                    M.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
-
-                    # Get some mean paramters
-
-                    # Set up the second model - single power law with constant and Gaussian bump
-                    pymcmodel2 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, np.exp(pwr), sigma)
-
-                    # Initiate the sampler
-                    M1 = pymc.MCMC(pymcmodel2)
-
-                    # Run the sampler
-                    print('Running power law plus Gaussian model')
-                    M1.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
                 """
                 # Plot
                 plt.figure(1)

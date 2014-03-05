@@ -54,7 +54,7 @@ def single_power_law_with_constant(analysis_frequencies,
                                    doc='power law index')
 
     power_law_norm = pymc.Uniform('power_law_norm',
-                                  lower=-10.0,
+                                  lower=-20.0,
                                   upper=10.0,
                                   doc='power law normalization')
 
@@ -140,7 +140,7 @@ def splwc_GaussianBump(analysis_frequencies, analysis_power):
 
     background = pymc.Uniform('background',
                                   #value=np.mean(np.log(analysis_power[-10:-1])),
-                                  lower=-10.0,
+                                  lower=-20.0,
                                   upper=10.0,
                                   doc='background')
 
@@ -200,7 +200,7 @@ def Log_splwc_GaussianBump(analysis_frequencies, analysis_power, sigma):
 
     background = pymc.Uniform('background',
                                   #value=np.mean(np.log(analysis_power[-10:-1])),
-                                  lower=-10.0,
+                                  lower=-20.0,
                                   upper=10.0,
                                   doc='background')
 
@@ -216,7 +216,7 @@ def Log_splwc_GaussianBump(analysis_frequencies, analysis_power, sigma):
 
     gaussian_width = pymc.Uniform('gaussian_width',
                                   lower=0.001,
-                                  upper=1.0,
+                                  upper=1.0 * np.log(10.0),
                                   doc='gaussian_width')
 
     # Model for the power law spectrum
@@ -233,7 +233,7 @@ def Log_splwc_GaussianBump(analysis_frequencies, analysis_power, sigma):
         return out
 
     spectrum = pymc.Normal('spectrum',
-                           tau = 1.0 / (sigma ** 2),
+                           tau=1.0 / (sigma ** 2),
                            mu=fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
@@ -263,7 +263,7 @@ def Log_splwc(analysis_frequencies, analysis_power, sigma):
 
     background = pymc.Uniform('background',
                                   #value=np.mean(np.log(analysis_power[-10:-1])),
-                                  lower=-10.0,
+                                  lower=-20.0,
                                   upper=10.0,
                                   doc='background')
 
@@ -311,7 +311,7 @@ def Log_splwc_lognormal(analysis_frequencies, analysis_power, sigma):
 
     background = pymc.Uniform('background',
                                   #value=np.mean(np.log(analysis_power[-10:-1])),
-                                  lower=-10.0,
+                                  lower=-20.0,
                                   upper=10.0,
                                   doc='background')
 
@@ -326,13 +326,13 @@ def Log_splwc_lognormal(analysis_frequencies, analysis_power, sigma):
         return out
 
     spectrum = pymc.Lognormal('spectrum',
-                           tau = 1.0 / (sigma ** 2),
+                           tau=1.0 / (sigma ** 2),
                            mu=fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
 
     predictive = pymc.Lognormal('predictive',
-                             tau = 1.0 / (sigma ** 2),
+                             tau=1.0 / (sigma ** 2),
                              mu=fourier_power_spectrum)
 
     # MCMC model
@@ -356,7 +356,7 @@ def Log_splwc_GaussianBump_lognormal(analysis_frequencies, analysis_power, sigma
 
     background = pymc.Uniform('background',
                                   #value=np.mean(np.log(analysis_power[-10:-1])),
-                                  lower=-10.0,
+                                  lower=-20.0,
                                   upper=10.0,
                                   doc='background')
 
@@ -372,7 +372,7 @@ def Log_splwc_GaussianBump_lognormal(analysis_frequencies, analysis_power, sigma
 
     gaussian_width = pymc.Uniform('gaussian_width',
                                   lower=0.001,
-                                  upper=1.0,
+                                  upper=1.0 * np.log(10.0),
                                   doc='gaussian_width')
 
     # Model for the power law spectrum
@@ -389,13 +389,13 @@ def Log_splwc_GaussianBump_lognormal(analysis_frequencies, analysis_power, sigma
         return out
 
     spectrum = pymc.Lognormal('spectrum',
-                           tau = 1.0 / (sigma ** 2),
+                           tau=1.0 / (sigma ** 2),
                            mu=fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
 
     predictive = pymc.Lognormal('predictive',
-                             tau = 1.0 / (sigma ** 2),
+                             tau=1.0 / (sigma ** 2),
                              mu=fourier_power_spectrum)
 
     # MCMC model
