@@ -62,6 +62,7 @@ def curve_fit_LogPowerLawConstant(x, y, sigma, p0=None):
 
     return A, best_fit, likelihood
 """
+np.random.seed(seed=1)
 
 
 #
@@ -71,12 +72,32 @@ def get_variables_M0(m):
     A = [m.value.power_law_norm, m.value.power_law_index, m.value.background]
     return A
 
-def curve_fit_M0(x, y, p0):
-    answer = curve_fit(rnspectralmodels.Log_splwc, x, p0[0], p0[1], p0[2])
+
+def curve_fit_M0(x, y, p0, sigma):
+    answer = curve_fit(rnspectralmodels.Log_splwc_CF, x, y, p0=p0, sigma=sigma)
     return answer[0]
+
 
 def get_spectrum_M0(x, A):
     return rnspectralmodels.Log_splwc(x, A)
+
+
+def get_likelihood_M0(map_M0, x, pwr, sigma, tau):
+    A0 = get_variables_M0(map_M0)
+    A0 = curve_fit_M0(x, pwr, A0, sigma)
+    return pymc.normal_like(pwr, get_spectrum_M0(x, A0), tau)
+
+
+def get_M0_plots(M, region_id, obstype, savefig, bins=100, savetype='.png'):
+    variables = ['power_law_norm', 'power_law_index', 'background']
+    for v in variables:
+        plt.hist(M.trace(v)[:], normed=True, bins=bins)
+        plt.xlabel(v)
+        plt.ylabel('p.d.f.')
+        plt.title(region_id + ' ' + obstype + ' M0')
+        plt.savefig(savefig + obstype + '_M0_' + v + savetype)
+        plt.close('all')
+
 
 #
 # Hypothesis 1 functions
@@ -86,33 +107,53 @@ def get_variables_M1(m):
          m.value.gaussian_amplitude, m.value.gaussian_position, m.value.gaussian_width]
     return A
 
-def curve_fit_M1(x, y, p0):
-    answer = curve_fit(rnspectralmodels.Log_splwc_GaussianBump, x, y, p0=p0)
+
+def curve_fit_M1(x, y, p0, sigma):
+    answer = curve_fit(rnspectralmodels.Log_splwc_GaussianBump_CF, x, y, p0=p0, sigma=sigma)
     return answer[0]
+
 
 def get_spectrum_M1(x, A):
     return rnspectralmodels.Log_splwc_GaussianBump(x, A)
 
 
+def get_likelihood_M1(map_M1, x, pwr, sigma, tau):
+    A1 = get_variables_M1(map_M1)
+    A1 = curve_fit_M1(x, pwr, A1, sigma)
+    return pymc.normal_like(pwr, get_spectrum_M1(x, A1), tau)
 
 
-plt.ion()
+def get_M1_plots(M, region_id, obstype, savefig, bins=100, savetype='.png'):
+    variables = ['power_law_norm', 'power_law_index', 'background',
+                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
+    for v in variables:
+        norm = 1.0
+        if v == 'gaussian_position':
+            norm = np.log(10.0)
+        plt.hist(M.trace(v)[:] / norm, bins=bins)
+        plt.xlabel(v)
+        plt.ylabel('number')
+        plt.title(region_id + ' ' + obstype + ' M1')
+        plt.savefig(savefig + obstype + '_M1_' + v + savetype)
+        plt.close('all')
+
+plt.ioff()
 #
 # Set up which data to look at
 #
 dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle/'
-sfigroot = '~/ts/img/'
-scsvroot = '~/ts/csv/'
-corename = '20120923_0000__20120923_0100'
+ldirroot = '~/ts/pickle_cc/'
+sfigroot = '~/ts/img_cc/'
+scsvroot = '~/ts/csv_cc/'
+corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171']
-regions = ['moss']
+waves = ['171', '193']
+regions = ['moss', 'sunspot', 'loopfootpoints', 'qs']
 windows = ['hanning']
 manip = 'relative'
 
-nsample = 10
+nsample = 100
 
 for iwave, wave in enumerate(waves):
     # Which wavelength?
@@ -157,7 +198,7 @@ for iwave, wave in enumerate(waves):
                 os.makedirs(savefig)
             savefig = os.path.join(savefig, region_id)
 
-            for obstype in ['.logiobs']:
+            for obstype in ['.iobs', '.logiobs']:
                 #
                 print('Analyzing ' + obstype)
 
@@ -170,96 +211,104 @@ for iwave, wave in enumerate(waves):
                 freqs = pickle.load(pkl_file)
                 pwr = pickle.load(pkl_file)
                 pkl_file.close()
-    
+
                 # Normalize the frequency
                 xnorm = freqs[0]
                 x = freqs / xnorm
-    
-                if obstype == '.logiobs':
+
+                if obstype == '.iobs' or obstype == '.logiobs':
                     # Set the Gaussian width
                     sigma = 0.5 * np.log(10.0)
                     tau = 1.0 / (sigma ** 2)
 
                     # Set up the first model power law
                     pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma)
-        
+
                     # Initiate the sampler
                     M0 = pymc.MCMC(pymcmodel0)
-        
+
                     # Run the sampler
                     print('Running simple power law model')
                     M0.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
-                    
+
                     # Now run the MAP
                     map_M0 = pymc.MAP(pymcmodel0)
                     map_M0.fit(method='fmin_powell')
-                    
+
+                    # Plot the traces
+                    get_M0_plots(M0, region_id, obstype, savefig, bins=40)
+
                     # Get the likelihood at the maximum
-                    likelihood0_data = map_M0.logp_at_max
-                    A0 = get_variables_M0(map_M0)
-                    l0_data2 = pymc.normal_like(pwr, rnspectralmodels.Log_splwc(x, A0), tau)
-                    print likelihood0_data, l0_data2
+                    #likelihood0_data = map_M0.logp_at_max
+                    l0_data2 = get_likelihood_M0(map_M0, x, pwr, sigma, tau)
+                    print l0_data2
                     # Get the variables
                     #A0 = get_variables_model0(map_M0)
-
                     # Set up the second model - single power law with constant and Gaussian bump
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump(x, pwr, sigma)
-        
+
                     # Initiate the sampler
                     M1 = pymc.MCMC(pymcmodel1)
-        
+
                     # Run the sampler
                     print('Running power law plus Gaussian model')
                     M1.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
-                    
+
                     # Now run the MAP
                     map_M1 = pymc.MAP(pymcmodel1)
                     map_M1.fit(method='fmin_powell')
-                    
+
+                    # Plot the traces
+                    get_M1_plots(M1, region_id, obstype, savefig, bins=40)
+
                     # Get the likelihood at the maximum
                     likelihood1_data = map_M1.logp_at_max
                     A1 = get_variables_M1(map_M1)
-                    l1_data2 = pymc.normal_like(pwr, rnspectralmodels.Log_splwc_GaussianBump(x, A1), tau)
-                    print likelihood1_data, l1_data2
+                    A1[3] = 0.0
+                    A1 = curve_fit_M1(x, pwr, A1, sigma)
+                    l1_data2 = get_likelihood_M1(map_M1, x, pwr, sigma, tau)
+                    print l1_data2
 
                     # Get the T_lrt statistic for the data
-                    t_lrt_data = likelihood0_data - likelihood1_data
-    
+                    t_lrt_data = -2 * (l0_data2 - l1_data2)
+                    print ' '
+                    print 'T_lrt for the initial data = %f' % (t_lrt_data)
+                """
                 if obstype == '.iobs':
                     # Set the Gaussian width
                     sigma = 0.5 * np.log(10.0)
 
                     # Set up the first model power law
                     pymcmodel = pymcmodels.Log_splwc_lognormal(x, np.exp(pwr), sigma)
-        
+
                     # Initiate the sampler
                     M = pymc.MCMC(pymcmodel)
-        
+
                     # Run the sampler
                     print('Running simple power law model')
                     M.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
-                    
+
                     # Get some mean paramters
 
                     # Set up the second model - single power law with constant and Gaussian bump
                     pymcmodel2 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, np.exp(pwr), sigma)
-        
+
                     # Initiate the sampler
                     M1 = pymc.MCMC(pymcmodel2)
-        
+
                     # Run the sampler
                     print('Running power law plus Gaussian model')
                     M1.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
-
+                """
                 # Plot
                 plt.figure(1)
                 plt.loglog(freqs, np.exp(pwr), label='data', color='k')
-                
+
                 # Plot the power law fit
                 plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='power law, mean', color = 'b')
                 plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='power law, 95% low', color = 'b', linestyle='-.')
                 plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='power law, 95% high', color = 'b', linestyle='--')
-                
+
                 # Plot the power law and bump fit
                 plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='power law + Gaussian, mean', color = 'r')
                 plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='power law + Gaussian, 95% low', color = 'r', linestyle='-.')
@@ -270,7 +319,7 @@ for iwave, wave in enumerate(waves):
                 plt.title(obstype)
                 plt.savefig(savefig + obstype + '.model_fit_compare.pymc.png')
                 plt.close('all')
-
+                """
                 #
                 # Do the posterior predictive comparison
                 #
@@ -278,47 +327,37 @@ for iwave, wave in enumerate(waves):
                 M0_logp = []
                 M1_logp = []
                 for r in range(0, nsample):
-                    # 
-                    print r, nsample
+                    #
+                    rthis = np.random.randint(0, high=8000)
+                    print ' '
+                    print r, nsample, rthis, ' (Positive numbers favor hypothesis 1 over 0)'
                     if obstype == '.logiobs':
-                        #
-                        # Do the first model
-                        #
-                        np.random.seed(seed=1)
-                        rthis = np.random.randint(0, high=8000)
-
                         # Generate test data under hypothesis 0
                         pred = M0.trace('predictive')[rthis]
-                        
+
                         # Fit the test data using hypothesis 0 and calculate a likelihood
+
                         M0_pp = pymcmodels.Log_splwc(x, pred, sigma)
                         map_M0_pp = pymc.MAP(M0_pp)
                         map_M0_pp.fit(method='fmin_powell')
-                        A0 = get_variables_M0(map_M0_pp)
-                        l0_pred2 = pymc.normal_like(pwr, rnspectralmodels.Log_splwc(x, A0), tau)
-                        print '**', l0_pred2
-                        #bf = rnspectralmodels.Log_splwc(x,
-                        #                                [map_M0_pp.value.power_law_norm,
-                        #                                map_M0_pp.value.power_law_index,
-                        #                                map_M0_pp.value.background])
+                        l0_pred2 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau)
 
                         # Fit the test data using hypothesis 1 and calculate a likelihood
                         M1_pp = pymcmodels.Log_splwc_GaussianBump(x, pred, sigma)
                         map_M1_pp = pymc.MAP(M1_pp)
                         map_M1_pp.fit(method='fmin_powell')
-                        A1 = get_variables_M1(map_M1_pp)
-                        l1_pred2 = pymc.normal_like(pwr, rnspectralmodels.Log_splwc_GaussianBump(x, A1), tau)
-                        print '**', l1_pred2
+                        l1_pred2 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau)
 
-                    M0_logp.append(map_M0_pp.logp_at_max)
-                    M1_logp.append(map_M1_pp.logp_at_max)
-                    print map_M0_pp.logp_at_max, map_M1_pp.logp_at_max, map_M0_pp.logp_at_max - map_M1_pp.logp_at_max
-                    t_lrt_distribution.append(map_M0_pp.logp_at_max - map_M1_pp.logp_at_max)
-                    
+                    M0_logp.append(l0_pred2)
+                    M1_logp.append(l1_pred2)
+                    t_lrt_pred = -2 * (l0_pred2 - l1_pred2)
+                    print l0_pred2, l1_pred2,  t_lrt_pred
+                    t_lrt_distribution.append(t_lrt_pred)
+
                 #
                 # Plot the T_lrt distribution along with the the value of this
                 # statistic
-                
+
                 #plt.savefig(savefig + obstype + '.t_lrt.png')
 
 t_lrt_distribution = np.asarray(t_lrt_distribution)
@@ -331,3 +370,4 @@ plt.hist(t_lrt_distribution, bins=100)
 plt.axvline(t_lrt_data, color='k')
 plt.text(t_lrt_data, 1000, 'p=%4.3f' % (pvalue))
 plt.legend()
+                """

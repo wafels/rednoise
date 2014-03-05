@@ -748,7 +748,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           manip='relative')
 """
 
-"""
+
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle_cc/',
           sfigroot='~/ts/img_cc/',
@@ -756,12 +756,12 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['193'],
-          regions=['moss'],
+          waves=['193', '171'],
+          regions=['moss', 'loopfootpoints', 'sunspot', 'qs'],
           windows=['hanning'],
           manip='relative')
-"""
 
+"""
 do_lstsqr(dataroot='~/Data/AIA/',
           ldirroot='~/ts/pickle',
           sfigroot='~/ts/img/',
@@ -774,3 +774,4 @@ do_lstsqr(dataroot='~/Data/AIA/',
           windows=['hanning'],
           manip='relative',
           savefig_format='png')
+"""

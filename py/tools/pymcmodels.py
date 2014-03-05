@@ -156,7 +156,7 @@ def splwc_GaussianBump(analysis_frequencies, analysis_power):
 
     gaussian_width = pymc.Uniform('gaussian_width',
                                   lower=0.001,
-                                  upper=1.0,
+                                  upper=1.0 * np.log(10.0),
                                   doc='gaussian_width')
 
     # Model for the power law spectrum
