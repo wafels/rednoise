@@ -90,32 +90,55 @@ def get_likelihood_M0(map_M0, x, pwr, sigma, tau, obstype):
         return pymc.lognormal_like(pwr, get_spectrum_M0(x, A0), tau)
 
 
-def get_M0_plots(M, region_id, obstype, savefig, bins=100, savetype='.png'):
-    variables = ['power_law_norm', 'power_law_index', 'background']
+def write_plots(M, region_id, obstype, savefig, model,
+                bins=100, savetype='.png', extra_factors=None):
+    if model == 'M0':
+        variables = ['power_law_norm', 'power_law_index', 'background']
+    if model == 'M1':
+        variables = ['power_law_norm', 'power_law_index', 'background',
+                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
+
     s = M.stats()
     fontsize = 10
     alpha = 0.75
     facecolor = 'white'
     bbox = dict(facecolor=facecolor, alpha=alpha)
+
     for v in variables:
-        h, _ = np.histogram(M.trace(v)[:], bins)
-        ypos = 0.9 * np.max(h)
-        plt.hist(M.trace(v)[:], bins=bins)
-        plt.xlabel(v)
+        # Fix the data, and get better labels
+        data, mean, v95_lo, v95_hi, vlabel = fix_variables(v,
+                                                           M.trace(v)[:],
+                                                           s[v],
+                                                           extra_factors=extra_factors)
+
+        # Save file name
+        info = '_%s_%s' % (model, v)
+        filename = savefig + obstype + info + savetype
+
+        # Find the histogram
+        h, _ = np.histogram(data, bins)
+
+        # Y position for labels
+        ypos = np.max(h)
+
+        # Plot the histogram and label it
+        plt.hist(data, bins=bins)
+        plt.xlabel(v + vlabel)
         plt.ylabel('p.d.f.')
-        plt.title(region_id + ' ' + obstype + ' M0')
+        plt.title(region_id + ' ' + obstype + ' %s' % (model))
 
-        # values
-        plt.axvline(s[v]['mean'], color='k', label='mean', linewidth=2)
-        plt.axvline(s[v]['95% HPD interval'][0], color='k', linestyle='-.', linewidth=2, label='95%, lower')
-        plt.axvline(s[v]['95% HPD interval'][1], color='k', linestyle='--', linewidth=2, label='95%, upper')
+        # Summary statistics of the measurement
+        plt.axvline(mean, color='k', label='mean', linewidth=2)
+        plt.axvline(v95_lo, color='k', linestyle='-.', linewidth=2, label='95%, lower')
+        plt.axvline(v95_hi, color='k', linestyle='--', linewidth=2, label='95%, upper')
 
-        plt.text(s[v]['mean'], ypos, ' %f' % (s[v]['mean']), fontsize=fontsize, bbox=bbox)
-        plt.text(s[v]['95% HPD interval'][0], ypos, ' %f' % (s[v]['95% HPD interval'][0]), fontsize=fontsize, bbox=bbox)
-        plt.text(s[v]['95% HPD interval'][1], ypos, ' %f' % (s[v]['95% HPD interval'][1]), fontsize=fontsize, bbox=bbox)
+        plt.text(mean, 0.90 * ypos, ' %f' % (mean), fontsize=fontsize, bbox=bbox)
+        plt.text(v95_lo, 0.25 * ypos, ' %f' % (v95_lo), fontsize=fontsize, bbox=bbox)
+        plt.text(v95_hi, 0.75 * ypos, ' %f' % (v95_hi), fontsize=fontsize, bbox=bbox)
 
-        plt.legend(framealpha=0.5, fontsize=10)
-        plt.savefig(savefig + obstype + '_M0_' + v + savetype)
+        # Define the legend
+        plt.legend(framealpha=alpha, fontsize=fontsize, loc=3)
+        plt.savefig(filename)
         plt.close('all')
 
 
@@ -157,83 +180,14 @@ def get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype):
         return pymc.lognormal_like(pwr, get_spectrum_M1(x, A1), tau)
 
 
-def get_M1_plots(M, region_id, obstype, savefig, bins=100, savetype='.png'):
-    variables = ['power_law_norm', 'power_law_index', 'background',
-                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
-
-    s = M.stats()
-    for v in variables:
-        # Fix the data, and get better labels
-        data, xlabel = fix_variables(v, M.trace(v)[:])
-
-        # Find the histogram
-        h, _ = np.histogram(data, bins)
-
-        # Y position for labels
-        ypos = 0.9 * np.max(h)
-
-        # Plot the histogram and label it
-        plt.hist(data, bins=bins)
-        plt.xlabel(v + xlabel)
-        plt.ylabel('p.d.f.')
-        plt.title(region_id + ' ' + obstype + ' M0')
-
-        # Summary statistics of the measurement
-        plt.axvline(s[v]['mean'], color='k', label='mean', linewidth=2)
-        plt.axvline(s[v]['95% HPD interval'][0], color='k', linestyle='-.', linewidth=2, label='95%, lower')
-        plt.axvline(s[v]['95% HPD interval'][1], color='k', linestyle='--', linewidth=2, label='95%, upper')
-
-        plt.text(s[v]['mean'], ypos, ' %f' % (s[v]['mean']), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
-        plt.text(s[v]['95% HPD interval'][0], ypos, ' %f' % (s[v]['95% HPD interval'][0]), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
-        plt.text(s[v]['95% HPD interval'][1], ypos, ' %f' % (s[v]['95% HPD interval'][1]), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
-
-        # Define the legend
-        plt.legend(framealpha=0.5, fontsize=10, loc=3)
-        plt.savefig(savefig + obstype + '_M1_' + v + savetype)
-        plt.close('all')
-
-
-def do_summary_histogram(variables, region_id, obstype, savefig, M, bins=100, savetype='.png'):
-    s = M.stats()
-    for v in variables:
-        # Fix the data, and get better labels
-        data, mean, v95_up, v95_lo, vlabel = fix_variables(v, M.trace(v)[:], s)
-
-        # Find the histogram
-        h, _ = np.histogram(data, bins)
-
-        # Y position for labels
-        ypos = 0.9 * np.max(h)
-
-        # Plot the histogram and label it
-        plt.hist(data, bins=bins)
-        plt.xlabel(v + vlabel)
-        plt.ylabel('p.d.f.')
-        plt.title(region_id + ' ' + obstype + ' M0')
-
-        # Summary statistics of the measurement
-        plt.axvline(mean, color='k', label='mean', linewidth=2)
-        plt.axvline(v95_lo, color='k', linestyle='-.', linewidth=2, label='95%, lower')
-        plt.axvline(v95_up, color='k', linestyle='--', linewidth=2, label='95%, upper')
-
-        plt.text(mean, ypos, ' %f' % (mean), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
-        plt.text(v95_lo, ypos, ' %f' % (v95_lo), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
-        plt.text(v95_up, ypos, ' %f' % (v95_up), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
-
-        # Define the legend
-        plt.legend(framealpha=0.5, fontsize=10, loc=3)
-        plt.savefig(savefig + obstype + '_M1_' + v + savetype)
-        plt.close('all')
-
-
 #
 # The variables as used in the fitting algorithm are not exactly those used
 # when the equation is written down.  We transform them back to variables
 # that make sense when plotting
 #
-def fix_variables(variable, data, s):
-    def f1(d):
-        return d / np.log(10.0)
+def fix_variables(variable, data, s, extra_factors):
+    def f1(d, norm=1.0):
+        return np.log10(norm * np.exp(d))
 
     def f2(d):
         return (d ** 2) / np.log(10.0)
@@ -243,16 +197,16 @@ def fix_variables(variable, data, s):
     v95_hi = s['95% HPD interval'][1]
 
     if variable == 'power_law_norm' or variable == 'background':
-        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), '$[\log_{10}(power)]$'
+        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' $[\log_{10}(power)]$'
 
     if variable == 'gaussian_amplitude':
         return f2(data), f2(mean), f2(v95_lo), f2(v95_hi), ' $[\log_{10}(power)]$'
 
     if variable == 'gaussian_position':
-        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' $[\log_{10}(frequency)]$'
+        return f1(data, norm=extra_factors[0]), f1(mean, norm=extra_factors[0]), f1(v95_lo, norm=extra_factors[0]), f1(v95_hi, norm=extra_factors[0]), ' $[\log_{10}(frequency)]$'
 
     if variable == 'gaussian_width':
-        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' $[\log_{10}(frequency)]$'
+        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' [decades of frequency]'
 
     return data, mean, v95_lo, v95_hi, ''
 
@@ -274,11 +228,20 @@ regions = ['loopfootpoints', 'moss', 'sunspot', 'qs']
 windows = ['hanning']
 manip = 'relative'
 
+#
+# Number of posterior predictive samples to calulcate
+#
 nsample = 100
 
-itera = 50000
-burn = 1000
+# PyMC control
+itera = 100000
+burn = 20000
 thin = 5
+
+# Set the Gaussian width for the data
+sigma = 0.5 * np.log(10.0)
+tau = 1.0 / (sigma ** 2)
+
 
 for iwave, wave in enumerate(waves):
     # Which wavelength?
@@ -323,7 +286,8 @@ for iwave, wave in enumerate(waves):
                 os.makedirs(savefig)
             savefig = os.path.join(savefig, region_id)
 
-            for obstype in ['.iobs', '.logiobs']:
+            #for obstype in ['.iobs', '.logiobs']:
+            for obstype in ['.logiobs']:
                 #
                 print('Analyzing ' + obstype)
                 if obstype == '.iobs':
@@ -344,10 +308,6 @@ for iwave, wave in enumerate(waves):
                 # Normalize the frequency
                 xnorm = freqs[0]
                 x = freqs / xnorm
-
-                # Set the Gaussian width
-                sigma = 0.5 * np.log(10.0)
-                tau = 1.0 / (sigma ** 2)
 
                 #
                 # Model 0 - the power law
@@ -373,7 +333,7 @@ for iwave, wave in enumerate(waves):
                 map_M0.fit(method='fmin_powell')
 
                 # Plot the traces
-                get_M0_plots(M0, region_id, obstype, savefig, bins=40)
+                write_plots(M0, region_id, obstype, savefig, 'M0', bins=40, extra_factors=[xnorm])
 
                 # Get the likelihood at the maximum
                 #likelihood0_data = map_M0.logp_at_max
@@ -404,7 +364,7 @@ for iwave, wave in enumerate(waves):
                 map_M1.fit(method='fmin_powell')
 
                 # Plot the traces
-                get_M1_plots(M1, region_id, obstype, savefig, bins=40)
+                write_plots(M1, region_id, obstype, savefig, 'M1', bins=40, extra_factors=[xnorm])
 
                 # Get the likelihood at the maximum
                 likelihood1_data = map_M1.logp_at_max
