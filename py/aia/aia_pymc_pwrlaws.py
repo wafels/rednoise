@@ -21,7 +21,7 @@ import rnspectralmodels
 #
 def curve_fit_LogPowerLawPlusConstantGaussian(x, y, sigma, p0=None):
     A = curve_fit(aia_plaw.LogPowerLawPlusConstantGaussian, x, y, p0=p0)
-    best_fit, likelihood = calc_LogPowerLawPlusConstantGaussian(x, 
+    best_fit, likelihood = calc_LogPowerLawPlusConstantGaussian(x,
                                                    A[0][0],
                                                    A[0][1],
                                                    A[0][2],
@@ -81,19 +81,40 @@ def get_spectrum_M0(x, A):
     return rnspectralmodels.Log_splwc(x, A)
 
 
-def get_likelihood_M0(map_M0, x, pwr, sigma, tau):
+def get_likelihood_M0(map_M0, x, pwr, sigma, tau, obstype):
     A0 = get_variables_M0(map_M0)
     A0 = curve_fit_M0(x, pwr, A0, sigma)
-    return pymc.normal_like(pwr, get_spectrum_M0(x, A0), tau)
+    if obstype == '.logiobs':
+        return pymc.normal_like(pwr, get_spectrum_M0(x, A0), tau)
+    else:
+        return pymc.lognormal_like(pwr, get_spectrum_M0(x, A0), tau)
 
 
 def get_M0_plots(M, region_id, obstype, savefig, bins=100, savetype='.png'):
     variables = ['power_law_norm', 'power_law_index', 'background']
+    s = M.stats()
+    fontsize = 10
+    alpha = 0.75
+    facecolor = 'white'
+    bbox = dict(facecolor=facecolor, alpha=alpha)
     for v in variables:
-        plt.hist(M.trace(v)[:], normed=True, bins=bins)
+        h, _ = np.histogram(M.trace(v)[:], bins)
+        ypos = 0.9 * np.max(h)
+        plt.hist(M.trace(v)[:], bins=bins)
         plt.xlabel(v)
         plt.ylabel('p.d.f.')
         plt.title(region_id + ' ' + obstype + ' M0')
+
+        # values
+        plt.axvline(s[v]['mean'], color='k', label='mean', linewidth=2)
+        plt.axvline(s[v]['95% HPD interval'][0], color='k', linestyle='-.', linewidth=2, label='95%, lower')
+        plt.axvline(s[v]['95% HPD interval'][1], color='k', linestyle='--', linewidth=2, label='95%, upper')
+
+        plt.text(s[v]['mean'], ypos, ' %f' % (s[v]['mean']), fontsize=fontsize, bbox=bbox)
+        plt.text(s[v]['95% HPD interval'][0], ypos, ' %f' % (s[v]['95% HPD interval'][0]), fontsize=fontsize, bbox=bbox)
+        plt.text(s[v]['95% HPD interval'][1], ypos, ' %f' % (s[v]['95% HPD interval'][1]), fontsize=fontsize, bbox=bbox)
+
+        plt.legend(framealpha=0.5, fontsize=10)
         plt.savefig(savefig + obstype + '_M0_' + v + savetype)
         plt.close('all')
 
@@ -107,8 +128,19 @@ def get_variables_M1(m):
     return A
 
 
-def curve_fit_M1(x, y, p0, sigma):
-    answer = curve_fit(rnspectralmodels.Log_splwc_GaussianBump_CF, x, y, p0=p0, sigma=sigma)
+def curve_fit_M1(x, y, p0, sigma, n_attempt_limit=10):
+    p_in = p0
+    n_attempt = 0
+    success = False
+    while (not success) and (n_attempt <= n_attempt_limit):
+        try:
+            answer = curve_fit(rnspectralmodels.Log_splwc_GaussianBump_CF, x, y, p0=p_in, sigma=sigma)
+            success = True
+        except RuntimeError:
+            print 'Model M1 curve fit did not work - try varying parameters a tiny bit'
+            p_in = p0 + 0.0001 * np.random.random(size=(6))
+            n_attempt = n_attempt + 1
+            print 'Attempt number: %i' % (n_attempt)
     return answer[0]
 
 
@@ -116,27 +148,117 @@ def get_spectrum_M1(x, A):
     return rnspectralmodels.Log_splwc_GaussianBump(x, A)
 
 
-def get_likelihood_M1(map_M1, x, pwr, sigma, tau):
+def get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype):
     A1 = get_variables_M1(map_M1)
     A1 = curve_fit_M1(x, pwr, A1, sigma)
-    return pymc.normal_like(pwr, get_spectrum_M1(x, A1), tau)
+    if obstype == '.logiobs':
+        return pymc.normal_like(pwr, get_spectrum_M1(x, A1), tau)
+    else:
+        return pymc.lognormal_like(pwr, get_spectrum_M1(x, A1), tau)
 
 
 def get_M1_plots(M, region_id, obstype, savefig, bins=100, savetype='.png'):
     variables = ['power_law_norm', 'power_law_index', 'background',
                  'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
+
+    s = M.stats()
     for v in variables:
-        norm = 1.0
-        if v == 'gaussian_position':
-            norm = np.log(10.0)
-        plt.hist(M.trace(v)[:] / norm, bins=bins)
-        plt.xlabel(v)
-        plt.ylabel('number')
-        plt.title(region_id + ' ' + obstype + ' M1')
+        # Fix the data, and get better labels
+        data, xlabel = fix_variables(v, M.trace(v)[:])
+
+        # Find the histogram
+        h, _ = np.histogram(data, bins)
+
+        # Y position for labels
+        ypos = 0.9 * np.max(h)
+
+        # Plot the histogram and label it
+        plt.hist(data, bins=bins)
+        plt.xlabel(v + xlabel)
+        plt.ylabel('p.d.f.')
+        plt.title(region_id + ' ' + obstype + ' M0')
+
+        # Summary statistics of the measurement
+        plt.axvline(s[v]['mean'], color='k', label='mean', linewidth=2)
+        plt.axvline(s[v]['95% HPD interval'][0], color='k', linestyle='-.', linewidth=2, label='95%, lower')
+        plt.axvline(s[v]['95% HPD interval'][1], color='k', linestyle='--', linewidth=2, label='95%, upper')
+
+        plt.text(s[v]['mean'], ypos, ' %f' % (s[v]['mean']), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
+        plt.text(s[v]['95% HPD interval'][0], ypos, ' %f' % (s[v]['95% HPD interval'][0]), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
+        plt.text(s[v]['95% HPD interval'][1], ypos, ' %f' % (s[v]['95% HPD interval'][1]), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
+
+        # Define the legend
+        plt.legend(framealpha=0.5, fontsize=10, loc=3)
         plt.savefig(savefig + obstype + '_M1_' + v + savetype)
         plt.close('all')
 
+
+def do_summary_histogram(variables, region_id, obstype, savefig, M, bins=100, savetype='.png'):
+    s = M.stats()
+    for v in variables:
+        # Fix the data, and get better labels
+        data, mean, v95_up, v95_lo, vlabel = fix_variables(v, M.trace(v)[:], s)
+
+        # Find the histogram
+        h, _ = np.histogram(data, bins)
+
+        # Y position for labels
+        ypos = 0.9 * np.max(h)
+
+        # Plot the histogram and label it
+        plt.hist(data, bins=bins)
+        plt.xlabel(v + vlabel)
+        plt.ylabel('p.d.f.')
+        plt.title(region_id + ' ' + obstype + ' M0')
+
+        # Summary statistics of the measurement
+        plt.axvline(mean, color='k', label='mean', linewidth=2)
+        plt.axvline(v95_lo, color='k', linestyle='-.', linewidth=2, label='95%, lower')
+        plt.axvline(v95_up, color='k', linestyle='--', linewidth=2, label='95%, upper')
+
+        plt.text(mean, ypos, ' %f' % (mean), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
+        plt.text(v95_lo, ypos, ' %f' % (v95_lo), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
+        plt.text(v95_up, ypos, ' %f' % (v95_up), fontsize=10, bbox=dict(facecolor='white', alpha=0.75))
+
+        # Define the legend
+        plt.legend(framealpha=0.5, fontsize=10, loc=3)
+        plt.savefig(savefig + obstype + '_M1_' + v + savetype)
+        plt.close('all')
+
+
+#
+# The variables as used in the fitting algorithm are not exactly those used
+# when the equation is written down.  We transform them back to variables
+# that make sense when plotting
+#
+def fix_variables(variable, data, s):
+    def f1(d):
+        return d / np.log(10.0)
+
+    def f2(d):
+        return (d ** 2) / np.log(10.0)
+
+    mean = s['mean']
+    v95_lo = s['95% HPD interval'][0]
+    v95_hi = s['95% HPD interval'][1]
+
+    if variable == 'power_law_norm' or variable == 'background':
+        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), '$[\log_{10}(power)]$'
+
+    if variable == 'gaussian_amplitude':
+        return f2(data), f2(mean), f2(v95_lo), f2(v95_hi), ' $[\log_{10}(power)]$'
+
+    if variable == 'gaussian_position':
+        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' $[\log_{10}(frequency)]$'
+
+    if variable == 'gaussian_width':
+        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' $[\log_{10}(frequency)]$'
+
+    return data, mean, v95_lo, v95_hi, ''
+
+
 plt.ioff()
+plt.close('all')
 #
 # Set up which data to look at
 #
@@ -148,11 +270,15 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss', 'sunspot', 'loopfootpoints', 'qs']
+regions = ['loopfootpoints', 'moss', 'sunspot', 'qs']
 windows = ['hanning']
 manip = 'relative'
 
 nsample = 100
+
+itera = 50000
+burn = 1000
+thin = 5
 
 for iwave, wave in enumerate(waves):
     # Which wavelength?
@@ -200,6 +326,10 @@ for iwave, wave in enumerate(waves):
             for obstype in ['.iobs', '.logiobs']:
                 #
                 print('Analyzing ' + obstype)
+                if obstype == '.iobs':
+                    print('Data is lognormally distributed.')
+                else:
+                    print('Data is normally distributed.')
 
                 # Load the data
                 pkl_location = locations['pickle']
@@ -208,7 +338,7 @@ for iwave, wave in enumerate(waves):
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
-                pwr = pickle.load(pkl_file)
+                pwr_ff = pickle.load(pkl_file)
                 pkl_file.close()
 
                 # Normalize the frequency
@@ -224,17 +354,19 @@ for iwave, wave in enumerate(waves):
                 #
                 # Geometric mean
                 if obstype == '.logiobs':
+                    pwr = pwr_ff
                     pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma)
                 # Arithmetic mean
                 if obstype == '.iobs':
-                    pymcmodel0 = pymcmodels.Log_splwc_lognormal(x, np.exp(pwr), sigma)
+                    pwr = np.exp(pwr_ff)
+                    pymcmodel0 = pymcmodels.Log_splwc_lognormal(x, pwr, sigma)
 
                 # Initiate the sampler
                 M0 = pymc.MCMC(pymcmodel0)
 
                 # Run the sampler
-                print('Running simple power law model')
-                M0.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
+                print('M0: Running simple power law model')
+                M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
 
                 # Now run the MAP
                 map_M0 = pymc.MAP(pymcmodel0)
@@ -245,25 +377,27 @@ for iwave, wave in enumerate(waves):
 
                 # Get the likelihood at the maximum
                 #likelihood0_data = map_M0.logp_at_max
-                l0_data2 = get_likelihood_M0(map_M0, x, pwr, sigma, tau)
-                print l0_data2
+                l0_data = get_likelihood_M0(map_M0, x, pwr, sigma, tau, obstype)
 
                 #
                 # Second model - power law with Gaussian bumps
                 #
                 # Geometric mean
                 if obstype == '.logiobs':
+                    pwr = pwr_ff
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump(x, pwr, sigma)
                 # Arithmetic mean
                 if obstype == '.iobs':
-                    pymcmodel1 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, np.exp(pwr), sigma)
+                    pwr = np.exp(pwr_ff)
+                    pymcmodel1 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, pwr, sigma)
 
                 # Initiate the sampler
                 M1 = pymc.MCMC(pymcmodel1)
 
                 # Run the sampler
-                print('Running power law plus Gaussian model')
-                M1.sample(iter=50000, burn=10000, thin=5, progress_bar=True)
+                print ' '
+                print('M1: Running power law plus Gaussian model')
+                M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
 
                 # Now run the MAP
                 map_M1 = pymc.MAP(pymcmodel1)
@@ -277,20 +411,18 @@ for iwave, wave in enumerate(waves):
                 A1 = get_variables_M1(map_M1)
                 A1[3] = 0.0
                 A1 = curve_fit_M1(x, pwr, A1, sigma)
-                l1_data2 = get_likelihood_M1(map_M1, x, pwr, sigma, tau)
-                print l1_data2
+                l1_data = get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype)
+                print l1_data
 
                 # Get the T_lrt statistic for the data
-                t_lrt_data = -2 * (l0_data2 - l1_data2)
+                t_lrt_data = -2 * (l0_data - l1_data)
                 print ' '
+                print('M0 likelihood = %f, M1 likelihood = %f' % (l0_data, l1_data))
                 print 'T_lrt for the initial data = %f' % (t_lrt_data)
-                """
-                if obstype == '.iobs':
 
-                """
                 # Plot
                 plt.figure(1)
-                plt.loglog(freqs, np.exp(pwr), label='data', color='k')
+                plt.loglog(freqs, np.exp(pwr_ff), label='data', color='k')
 
                 # Plot the power law fit
                 plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='power law, mean', color = 'b')
