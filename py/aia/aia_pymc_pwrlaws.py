@@ -224,7 +224,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'sunspot', 'qs']
+regions = ['moss', 'loopfootpoints', 'sunspot', 'qs']
 windows = ['hanning']
 manip = 'relative'
 
@@ -234,8 +234,8 @@ manip = 'relative'
 nsample = 100
 
 # PyMC control
-itera = 100000
-burn = 20000
+itera = 100000 / 50
+burn = 20000 / 50
 thin = 5
 
 # Set the Gaussian width for the data
@@ -405,10 +405,16 @@ for iwave, wave in enumerate(waves):
                 plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='M1: power law + Gaussian, 95% high', color = 'r', linestyle='--')
                 plt.loglog(freqs, np.exp(M1_bf), label='M1: power law + Gaussian, best fit', color = 'r', linestyle=':')
 
-                # Fitness criteria - should really put this in a separate function
-                #plt.text(xpos, ypos, '$AIC_{0} - AIC_{1}$ = %f' % (map_M0.AIC - map_M1.AIC))
-                #plt.text(xpos, ypos, '$BIC_{0} - BIC_{1}$ = %f' % (map_M0.BIC - map_M1.BIC))
-                #plt.text(xpos, ypos, '$T_{LRT}$ = %f' % (t_lrt_data))
+                # Plot the fitness criteria - should really put this in a separate function
+                ypos = np.zeros((3))
+                yrange = np.max(pwr) - np.min(pwr)
+                ypos_min = np.min(pwr) + 0.1 * yrange
+                for yyy in range(0, ypos.size):
+                    ypos[yyy] = ypos_min + yyy * (yrange - ypos_min) / (1.0 * (np.size(ypos)))
+                print ypos
+                plt.text(0.01, np.exp(ypos[0]), '$AIC_{0} - AIC_{1}$ = %f' % (map_M0.AIC - map_M1.AIC))
+                plt.text(0.01, np.exp(ypos[1]), '$BIC_{0} - BIC_{1}$ = %f' % (map_M0.BIC - map_M1.BIC))
+                plt.text(0.01, np.exp(ypos[2]), '$T_{LRT}$ = %f' % (t_lrt_data))
 
                 # Complete the plot and save it
                 plt.legend(loc=3, framealpha=0.5, fontsize=8)
