@@ -234,8 +234,8 @@ manip = 'relative'
 nsample = 100
 
 # PyMC control
-itera = 100000 / 50
-burn = 20000 / 50
+itera = 100000
+burn = 20000
 thin = 5
 
 # Set the Gaussian width for the data
