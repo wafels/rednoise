@@ -332,6 +332,9 @@ for iwave, wave in enumerate(waves):
                 map_M0 = pymc.MAP(pymcmodel0)
                 map_M0.fit(method='fmin_powell')
 
+                A0 = get_variables_M0(map_M0)
+                M0_bf = get_spectrum_M0(x, A0)
+
                 # Plot the traces
                 write_plots(M0, region_id, obstype, savefig, 'M0', bins=40, extra_factors=[xnorm])
 
@@ -368,7 +371,12 @@ for iwave, wave in enumerate(waves):
 
                 # Get the likelihood at the maximum
                 likelihood1_data = map_M1.logp_at_max
+
+                # Get the best fit spectrum under M1
                 A1 = get_variables_M1(map_M1)
+                M1_bf = get_spectrum_M1(x, A1)
+
+                # Fit using M1 assuming the Gaussian has zero amplitude
                 A1[3] = 0.0
                 A1 = curve_fit_M1(x, pwr, A1, sigma)
                 l1_data = get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype)
@@ -379,21 +387,31 @@ for iwave, wave in enumerate(waves):
                 print ' '
                 print('M0 likelihood = %f, M1 likelihood = %f' % (l0_data, l1_data))
                 print 'T_lrt for the initial data = %f' % (t_lrt_data)
-
+                print 'AIC_{0} - AIC_{1} = %f' % (map_M0.AIC - map_M1.AIC)
+                print 'BIC_{0} - BIC_{1} = %f' % (map_M0.BIC - map_M1.BIC)
                 # Plot
                 plt.figure(1)
                 plt.loglog(freqs, np.exp(pwr_ff), label='data', color='k')
 
                 # Plot the power law fit
-                plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='power law, mean', color = 'b')
-                plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='power law, 95% low', color = 'b', linestyle='-.')
-                plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='power law, 95% high', color = 'b', linestyle='--')
+                plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='M0: power law, average', color = 'b')
+                plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='M0: power law, 95% low', color = 'b', linestyle='-.')
+                plt.loglog(freqs, np.exp(M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='M0: power law, 95% high', color = 'b', linestyle='--')
+                plt.loglog(freqs, np.exp(M0_bf), label='M0: power law, best fit', color = 'b', linestyle=':')
 
                 # Plot the power law and bump fit
-                plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='power law + Gaussian, mean', color = 'r')
-                plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='power law + Gaussian, 95% low', color = 'r', linestyle='-.')
-                plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='power law + Gaussian, 95% high', color = 'r', linestyle='--')
-                plt.legend(loc=3, framealpha=0.5, fontsize=10)
+                plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='M1: power law + Gaussian, average', color = 'r')
+                plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label='M1: power law + Gaussian, 95% low', color = 'r', linestyle='-.')
+                plt.loglog(freqs, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), label='M1: power law + Gaussian, 95% high', color = 'r', linestyle='--')
+                plt.loglog(freqs, np.exp(M1_bf), label='M1: power law + Gaussian, best fit', color = 'r', linestyle=':')
+
+                # Fitness criteria - should really put this in a separate function
+                #plt.text(xpos, ypos, '$AIC_{0} - AIC_{1}$ = %f' % (map_M0.AIC - map_M1.AIC))
+                #plt.text(xpos, ypos, '$BIC_{0} - BIC_{1}$ = %f' % (map_M0.BIC - map_M1.BIC))
+                #plt.text(xpos, ypos, '$T_{LRT}$ = %f' % (t_lrt_data))
+
+                # Complete the plot and save it
+                plt.legend(loc=3, framealpha=0.5, fontsize=8)
                 plt.xlabel('frequency (Hz)')
                 plt.ylabel('power')
                 plt.title(obstype)
