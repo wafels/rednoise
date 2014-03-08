@@ -231,7 +231,7 @@ def hanning2d(M, N):
 # Shift a datacube according to calculated co-registration displacements
 #
 def coregister_datacube(datacube, layer_index=0, template_index=None,
-                        clip=False):
+                        clip=False, func=default_map_manipulation_function):
     """
     Co-register the layers in a datacube according to a template taken from
     that datacube.
@@ -251,6 +251,14 @@ def coregister_datacube(datacube, layer_index=0, template_index=None,
 
     clip : clip off x, y edges in the datacube that are potentially affected
             by edges effects.
+
+    func: a function which is applied to the data values before the
+          coalignment method is applied.  This can be useful in coalignment,
+          because it is sometimes better to co-align on a function of the data
+          rather than the data itself.  The calculated shifts are applied to
+          the original data.  Useful functions to consider are the log of the
+          image data, or 1 / data. The function is of the form func = F(data).  
+          The default function ensures that the data are floats.
 
     Output
     ------
@@ -282,7 +290,7 @@ def coregister_datacube(datacube, layer_index=0, template_index=None,
 
     # Calculate the displacements of each layer in the datacube relative to the
     # known position of a template
-    y_displacement, x_displacement = calculate_coregistration_displacements(template, datacube)
+    y_displacement, x_displacement = calculate_coregistration_displacements(template, datacube, func)
 
     # Displacement relative to the layer_index
     y_displacement = y_displacement - y_displacement[layer_index]
@@ -336,7 +344,7 @@ def shift_datacube_layers(datacube, y_displacement, x_displacement):
 #
 # Calculate the co-registration displacements for a datacube
 #
-def calculate_coregistration_displacements(template, datacube):
+def calculate_coregistration_displacements(template, datacube, func):
     """
     Calculate the coregistration of (ny, nx) layers in a (ny, nx, nt) datacube
     against a chosen template.  All inputs are assumed to be numpy arrays.
@@ -348,6 +356,14 @@ def calculate_coregistration_displacements(template, datacube):
     datacube : a numpy array of size (ny, nx, nt), where the first two
                dimensions are spatial dimensions, and the third dimension is
                time.
+
+    func: a function which is applied to the data values before the
+          coalignment method is applied.  This can be useful in coalignment,
+          because it is sometimes better to co-align on a function of the data
+          rather than the data itself.  The calculated shifts are applied to
+          the original data.  Useful functions to consider are the log of the
+          image data, or 1 / data. The function is of the form func = F(data).  
+          The default function ensures that the data are floats.
 
     Outputs
     -------
@@ -366,7 +382,7 @@ def calculate_coregistration_displacements(template, datacube):
     keep_y = []
 
     # Repair the template if need be
-    template = repair_nonfinite(template)
+    template = repair_nonfinite(func(template))
 
     # Go through each layer and perform the matching
     for t in range(0, nt):
@@ -374,7 +390,7 @@ def calculate_coregistration_displacements(template, datacube):
         layer = datacube[:, :, t]
 
         # Repair the layer for nonfinites
-        layer = repair_nonfinite(layer)
+        layer = repair_nonfinite(func(layer))
 
         # Match the template to the layer
         correlation_result = match_template_to_layer(layer, template)
@@ -466,7 +482,12 @@ def coalign_mapcube(mc,
         yshift_keep[i] = -yshift
         xshift_keep[i] = -xshift
 
-        # Keep the shifted data
+    # Calculate shifts relative to the template layer
+    yshift_keep = yshift_keep - yshift_keep[layer_index]
+    xshift_keep = xshift_keep - xshift_keep[layer_index]
+    
+    # Shift the data
+    for i, m in mc._maps:
         shifted_datacube[:, :, i] = shift(m.data, [-yshift, -xshift])
 
     # Clip the data if requested
