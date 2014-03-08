@@ -574,6 +574,17 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
 
+                # Fit all the histogram curves to find the Gaussian width
+                #logiobs_distrib_width = np.zeros((nfreq))
+                #for f in np.arange(0, nfreq):
+                #    xx = histogram_loc[1:] / np.log(10.0)
+                #    yy = hpwr[f, :]
+                #    try:
+                #        gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
+                #        logiobs_distrib_width[f] = np.abs(gfit[0][2])
+                #    except:
+                #        logiobs_distrib_width[f] = None
+
                 # plot out the time series
                 plt.figure(4)
                 full_ts.peek()
@@ -697,6 +708,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
                           (freqs / freqfactor[0], logiobs))
+                          #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
 
                 # Bump fit
                 #pkl_write(pkl_location,
