@@ -12,9 +12,6 @@ import pickle
 # For faster image co-registration
 from skimage.feature import match_template
 
-# For slower image co-registration that does not rely on an extra package
-from scipy.signal import fftconvolve
-
 # Shift an image by a given amount - subpixel shifts are permitted
 from scipy.ndimage.interpolation import shift
 
@@ -22,7 +19,7 @@ from scipy.ndimage.interpolation import shift
 #
 # From a directory full of FITS files, return a datacube and a mapcube
 #
-def get_datacube(path, derotate=False, shave=False):
+def get_datacube(path, derotate=False, clip=False):
     """
     Function that goes to a directory and returns a datacube
     """
@@ -33,7 +30,7 @@ def get_datacube(path, derotate=False, shave=False):
         # Get a mapcube
         maps = sunpy.Map(path, cube=True)
         if derotate:
-            dc, ysrdisp, xsrdisp = derotated_datacube_from_mapcube(maps, shave=shave)
+            dc, ysrdisp, xsrdisp = derotated_datacube_from_mapcube(maps, clip=clip)
         else:
             ysrdisp = None
             xsrdisp = None
@@ -46,7 +43,7 @@ def get_datacube(path, derotate=False, shave=False):
         return dc, ysrdisp, xsrdisp, maps
 
 
-def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
+def derotated_datacube_from_mapcube(maps, ref_index=0, clip=False):
     """Return a derotated datacube from a set of maps"""
 
     # get the dimensions of the datacube
@@ -93,10 +90,10 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, shave=False):
     # solar rotation
     datacube = shift_datacube_layers(datacube, ydiff, xdiff)
 
-    # Optionally shave the datacube to remove data that may be affected by edge
+    # Optionally clip the datacube to remove data that may be affected by edge
     # effects due to solar derotation.
-    if shave:
-        return shave_edges(datacube, ydiff, xdiff), ydiff, xdiff
+    if clip:
+        return clip_edges(datacube, ydiff, xdiff), ydiff, xdiff
     else:
         return datacube
 
@@ -213,121 +210,28 @@ def makedirs(output):
         os.makedirs(output)
 
 
-#
-# Coalign a mapcube
-#
-def coregister_mapcube(mc, layer_index=0):
+def hanning2d(M, N):
     """
-
+    A 2D hanning window, as per IDL's hanning function.  See numpy.hanning for
+    the 1d description.  Copied from http://code.google.com/p/agpy/source/browse/trunk/agpy/psds.py?r=343
     """
-    # Size of the data
-    ny = mc._maps[layer_index].shape[0]
-    nx = mc._maps[layer_index].shape[1]
-
-    # Storage for the new datacube
-    new_cube = []
-
-    # Calculate a template
-    template = mc._maps[layer_index].data[ny / 4: 3 * ny / 4,
-                                         nx / 4: 3 * nx / 4]
-
-    for m in mc._maps:
-        # Get the next 2-d data array
-        this_layer = m.data
-
-        # Repair any NANs, Infs, etc in the layer
-        this_layer = repair_nonfinite(this_layer)
-
-        # Calculate the correlation array matching the template to this layer
-        corr = match_template_to_layer(this_layer, template)
-
-        # Calculate the y and x shifts
-        yshift, xshift = find_best_match_location(corr)
-
-        # Shift the layer
-        new_data = shift(this_layer, [-yshift, -xshift])
-
-        # Create a new map.  Adjust the positioning information accordingly.
-        new_meta = m.meta.copy()
-        new_meta['xcen'] = new_meta['xcen'] + xshift * m.scale['x']
-        new_meta['ycen'] = new_meta['ycen'] + yshift * m.scale['y']
-        new_map = Map(new_data, new_meta)
-
-        # Store the new map in a list
-        new_cube.append(new_map)
-
-    return Map(new_cube, cube=True)
+    # scalar unity; don't window if dims are too small
+    if N <= 1:
+        return np.hanning(M)
+    elif M <= 1:
+        return np.hanning(N)
+    else:
+        return np.outer(np.hanning(M), np.hanning(N))
 
 
 #
-# Remove the edges of a datacube
+# Coalign a datacube
 #
-def shave_edges(datacube, y, x):
-    """
-    Shaves off the y and x edges of a datacube according to a list of pixel
-    values.  Positive pixel values will shave off the datacube at the upper end
-    of the range.  Negative values will shave off values at the lower end of
-    the  range.  This function is useful for removing data at the edge of
-    datacubes that may be affected by shifts from solar de-rotation and
-    layer co-registration, leaving a datacube unaffected by edge effects.
-
-    Input
-    -----
-    datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
-               layers in the datacube.
-
-    y : a numpy array of pixel values that correspond to how much to pixel
-        shave values in the x-direction.
-
-    x : a numpy array of pixel values that correspond to how much to pixel
-        shave values in the y-direction.
-
-    Output
-    ------
-    A datacube with edges shaved off according to the positive and negative
-    ceiling values in the y and x arrays.
-    """
-
-    # Datacube shape
-    ny = datacube.shape[0]
-    nx = datacube.shape[1]
-    nt = datacube.shape[2]
-
-    # maximum to shave off in the x-direction
-    xupper = _upper_shave(x)
-    xlower = _lower_shave(x)
-
-    # maximum to shave off in the y direction
-    yupper = _upper_shave(y)
-    ylower = _lower_shave(y)
-
-    return datacube[ylower: ny - yupper - 1, xlower: nx - xupper - 1, 0: nt]
-
-
-#
-# Helper functions for shaving edges
-#
-def _upper_shave(z):
-    zupper = 0
-    zcond = z >= 0
-    if np.any(zcond):
-        zupper = np.max(np.ceil(z[zcond]))
-    return zupper
-
-
-def _lower_shave(z):
-    zlower = 0
-    zcond = z <= 0
-    if np.any(zcond):
-        zlower = np.max(np.ceil(-z[zcond]))
-    return zlower
-
-
 #
 # Shift a datacube according to calculated co-registration displacements
 #
 def coregister_datacube(datacube, layer_index=0, template_index=None,
-                        shave=False):
+                        clip=False):
     """
     Co-register the layers in a datacube according to a template taken from
     that datacube.
@@ -345,7 +249,7 @@ def coregister_datacube(datacube, layer_index=0, template_index=None,
                      to None, then the default template is used. The
                      template_index is defined as [ [y1, x1], [y2, x2] ].
 
-    shave : shave off x, y edges in the datacube that are potentially affected
+    clip : clip off x, y edges in the datacube that are potentially affected
             by edges effects.
 
     Output
@@ -387,8 +291,8 @@ def coregister_datacube(datacube, layer_index=0, template_index=None,
     # Shift each layer of the datacube the required amounts
     datacube = shift_datacube_layers(datacube, y_displacement, x_displacement)
 
-    if shave:
-        return shave_edges(datacube, y_displacement, x_displacement), y_displacement, x_displacement
+    if clip:
+        return clip_edges(datacube, y_displacement, x_displacement), y_displacement, x_displacement
     else:
         return datacube, y_displacement, x_displacement
 
@@ -486,6 +390,176 @@ def calculate_coregistration_displacements(template, datacube):
     return np.asarray(keep_y), np.asarray(keep_x)
 
 
+#
+# Coalign a mapcube
+#
+def coalign_mapcube(mc,
+                    layer_index=0,
+                    func=default_data_manipulation_function,
+                    clip=False):
+    """
+    Co-register the layers in a mapcube according to a template taken from
+    that mapcube.
+
+    Input
+    -----
+    mc : a mapcube of shape (ny, nx, nt), where nt is the number of
+         layers in the mapcube.
+
+    layer_index : the layer in the mapcube from which the template will be
+                  extracted.
+
+    func: a function which is applied to the data values before the
+          coalignment method is applied.  This can be useful in coalignment,
+          because it is sometimes better to co-align on a function of the data
+          rather than the data itself.  The calculated shifts are applied to
+          the original data.  Useful functions to consider are the log of the
+          image data, or 1 / data. The function is of the form func = F(data).  
+          The default function ensures that the data are floats.
+
+    clip : clip off x, y edges in the datacube that are potentially affected
+            by edges effects.
+
+    Output
+    ------
+    datacube : the input datacube each layer having been co-registered against
+               the template.
+
+    y_shift_keep : a one dimensional array of length nt with the pixel
+                     y-displacements relative position of the template at the
+                     value layer_index.  Note that y_displacement[layer_index]
+                     is zero by definition.
+
+    x_shift_keep: a one dimensional array of length nt with the pixel
+                     x-displacements relative position of the template at the
+                     value layer_index.  Note that x_displacement[layer_index]
+                     is zero by definition.
+    """
+    # Size of the data
+    ny = mc._maps[layer_index].shape[0]
+    nx = mc._maps[layer_index].shape[1]
+    nt = len(mc._maps)
+
+    # Storage for the shifted data and the pixel shifts
+    shifted_datacube = np.zeros((ny, nx, nt))
+    xshift_keep = np.zeros((nt))
+    yshift_keep = np.zeros((nt))
+
+    # Calculate a template
+    template = repair_nonfinite(func(mc._maps[layer_index].data[ny / 4: 3 * ny / 4,
+                                         nx / 4: 3 * nx / 4]))
+
+    for i, m in enumerate(mc._maps):
+        # Get the next 2-d data array
+        this_layer = func(m.data)
+
+        # Repair any NANs, Infs, etc in the layer
+        this_layer = repair_nonfinite(this_layer)
+
+        # Calculate the correlation array matching the template to this layer
+        corr = match_template_to_layer(this_layer, template)
+
+        # Calculate the y and x shifts in pixels
+        yshift, xshift = find_best_match_location(corr)
+
+        # Keep shifts in pixels
+        yshift_keep[i] = -yshift
+        xshift_keep[i] = -xshift
+
+        # Keep the shifted data
+        shifted_datacube[:, :, i] = shift(m.data, [-yshift, -xshift])
+
+    # Clip the data if requested
+    if clip:
+        shifted_datacube = clip_edges(shifted_datacube, yshift_keep, xshift_keep)
+
+    # Create a new mapcube.  Adjust the positioning information accordingly.
+    new_cube = []
+    for i, m in mc._maps:
+        new_meta = m.meta.copy()
+        new_meta['xcen'] = new_meta['xcen'] + xshift_keep[i] * m.scale['x']
+        new_meta['ycen'] = new_meta['ycen'] + yshift_keep[i] * m.scale['y']
+        new_map = Map(shifted_datacube[:, :, i], new_meta)
+
+        # Store the new map in a list
+        new_cube.append(new_map)
+
+    # Return the cube and the pixel displacements
+    return Map(new_cube, cube=True), yshift_keep, xshift_keep
+
+
+def default_data_manipulation_function(data):
+    """
+    This function ensures that the data are floats.  It is the default data
+    manipulation function for the coalignment method.
+    """
+    return 1.0 * data
+
+
+#
+# Remove the edges of a datacube
+#
+def clip_edges(datacube, y, x):
+    """
+    Clips off the y and x edges of a datacube according to a list of pixel
+    values.  Positive pixel values will clip off the datacube at the upper end
+    of the range.  Negative values will clip off values at the lower end of
+    the  range.  This function is useful for removing data at the edge of
+    datacubes that may be affected by shifts from solar de-rotation and
+    layer co-registration, leaving a datacube unaffected by edge effects.
+
+    Input
+    -----
+    datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
+               layers in the datacube.
+
+    y : a numpy array of pixel values that correspond to how much to pixel
+        clip values in the x-direction.
+
+    x : a numpy array of pixel values that correspond to how much to pixel
+        clip values in the y-direction.
+
+    Output
+    ------
+    A datacube with edges clipd off according to the positive and negative
+    ceiling values in the y and x arrays.
+    """
+
+    # Datacube shape
+    ny = datacube.shape[0]
+    nx = datacube.shape[1]
+    nt = datacube.shape[2]
+
+    # maximum to clip off in the x-direction
+    xupper = _upper_clip(x)
+    xlower = _lower_clip(x)
+
+    # maximum to clip off in the y direction
+    yupper = _upper_clip(y)
+    ylower = _lower_clip(y)
+
+    return datacube[ylower: ny - yupper - 1, xlower: nx - xupper - 1, 0: nt]
+
+
+#
+# Helper functions for clipping edges
+#
+def _upper_clip(z):
+    zupper = 0
+    zcond = z >= 0
+    if np.any(zcond):
+        zupper = np.max(np.ceil(z[zcond]))
+    return zupper
+
+
+def _lower_clip(z):
+    zlower = 0
+    zcond = z <= 0
+    if np.any(zcond):
+        zlower = np.max(np.ceil(-z[zcond]))
+    return zlower
+
+
 def match_template_to_layer(layer, template):
     """
     Calculate the correlation array that describes how well the template
@@ -508,7 +582,6 @@ def match_template_to_layer(layer, template):
     This function requires the "match_template" function in scikit image.
 
     """
-    #return fftconvolve(layer, template * hanning2d(template.shape[0], template.shape[1]), mode='same')
     return match_template(layer, template)
 
 
@@ -642,15 +715,16 @@ def repair_nonfinite(z):
         bad_index = np.where(np.logical_not(np.isfinite(z)))
 
 
-def hanning2d(M, N):
-    """
-    A 2D hanning window, as per IDL's hanning function.  See numpy.hanning for
-    the 1d description.  Copied from http://code.google.com/p/agpy/source/browse/trunk/agpy/psds.py?r=343
-    """
-    # scalar unity; don't window if dims are too small
-    if N <= 1:
-        return np.hanning(M)
-    elif M <= 1:
-        return np.hanning(N)
-    else:
-        return np.outer(np.hanning(M), np.hanning(N))
+#
+# Test functions for the coalignment code
+#
+def test_parabolic_turning_point():
+    pass
+
+
+def test_repair_nonfinite():
+    pass
+
+
+def test_get_correlation_shifts():
+    pass
