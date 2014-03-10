@@ -40,7 +40,7 @@ def coalign_mapcube(mc,
           because it is sometimes better to co-align on a function of the data
           rather than the data itself.  The calculated shifts are applied to
           the original data.  Useful functions to consider are the log of the
-          image data, or 1 / data. The function is of the form func = F(data).  
+          image data, or 1 / data. The function is of the form func = F(data).
           The default function ensures that the data are floats.
 
     clip : clip off x, y edges in the datacube that are potentially affected
