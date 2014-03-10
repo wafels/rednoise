@@ -7,7 +7,10 @@ from sunpy.coords.util import rot_hpc
 from sunpy.map import Map
 from copy import deepcopy
 import tsutils
-import pickle 
+import pickle
+from coalign_datacube import shift_datacube_layers
+from coalign_mapcube import clip_edges
+
 
 #
 # From a directory full of FITS files, return a datacube and a mapcube
@@ -69,7 +72,7 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, clip=False):
         newx, newy = rot_hpc(ref_center['x'], ref_center['y'], ref_time,
                                           m.date)
 
-        # Calculate the displacements in tems of pixels
+        # Calculate the displacements in terms of pixels
         if newx is None:
             xdiff[t] = 0.0
         else:
@@ -81,7 +84,7 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, clip=False):
 
     # shift the data cube according to the calculated displacements due to
     # solar rotation
-    datacube = shift_datacube_layers(datacube, ydiff, xdiff)
+    datacube = shift_datacube_layers(datacube, -ydiff, -xdiff)
 
     # Optionally clip the datacube to remove data that may be affected by edge
     # effects due to solar derotation.

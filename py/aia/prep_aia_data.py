@@ -12,13 +12,14 @@ import os
 from sunpy.time import parse_time
 from sunpy.cm import cm
 import numpy as np
+import coalign_datacube
 import cubetools
 
 
 # input data
 dataroot = '~/Data/AIA/'
 #corename = '20120923_0000__20120923_0100'
-corename = 'shutdownfun3_1hr'
+corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 wave = '171'
@@ -48,7 +49,7 @@ ident = aia_specific.ident_creator(branches)
 print('Loading' + aia_data_location["aiadata"])
 dc, ysrdisp, xsrdisp, original_mapcube = cubetools.get_datacube(aia_data_location["aiadata"],
                                               derotate=True,
-                                              shave=True)
+                                              clip=True)
 # Get the date and times from the original mapcube
 date_obs = []
 time_in_seconds = []
@@ -63,7 +64,7 @@ if cross_correlate:
     ny = dc.shape[0]
     nx = dc.shape[1]
     nt = dc.shape[2]
-    layer_index = 0
+    layer_index = nt / 2
     ind = layer_index
     template = [[ny / 4, nx / 4], [3 * ny / 4, 3 * nx / 4]]
 
@@ -86,10 +87,10 @@ if cross_correlate:
     # Do the cross correlation.  Using shave=False ensures that this output
     # datacube is the same size as the input datacube and so the locations of
     # the regions will be the same relative to the size of the datacube.
-    dc, xccdisp, yccdisp = cubetools.coregister_datacube(dc,
+    dc, xccdisp, yccdisp = coalign_datacube.coalign_datacube(dc,
                                                          template_index=template,
                                                          layer_index=layer_index,
-                                                         shave=False)
+                                                         clip=True)
 else:
     layer_index = None
     ind = 0

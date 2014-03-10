@@ -3,8 +3,9 @@ import numpy as np
 # Shift an image by a given amount - subpixel shifts are permitted
 from scipy.ndimage.interpolation import shift
 
-# 
-from coalign_mapcube import default_data_manipulation_function, clip_edges, repair_nonfinite, match_template_to_layer, find_best_match_location
+#
+from coalign_mapcube import default_data_manipulation_function, clip_edges, calculate_shift
+
 
 #
 # Coalign a datacube.  Can be useful to have this functionality when you just
@@ -57,6 +58,14 @@ def coalign_datacube(datacube, layer_index=0, template_index=None,
                      value layer_index.  Note that x_displacement[layer_index]
                      is zero by definition.
     """
+    # Size of the data
+    ny = datacube.shape[0]
+    nx = datacube.shape[1]
+    nt = datacube.shape[2]
+
+    # Storage for the shifted data and the pixel shifts
+    xshift_keep = np.zeros((nt))
+    yshift_keep = np.zeros((nt))
 
     # Calculate the template
     if template_index == None:
@@ -70,119 +79,43 @@ def coalign_datacube(datacube, layer_index=0, template_index=None,
                             template_index[0][1]:template_index[1][1],
                             layer_index]
 
-    # Calculate the displacements of each layer in the datacube relative to the
-    # known position of a template
-    y_displacement, x_displacement = calculate_coregistration_displacements(template, datacube, func)
+    # Apply the data manipulation function
+    template = func(template)
 
-    # Displacement relative to the layer_index
-    y_displacement = y_displacement - y_displacement[layer_index]
-    x_displacement = x_displacement - x_displacement[layer_index]
+    for i in range(0, nt):
+        # Get the next 2-d data array
+        this_layer = func(datacube[:, :, i])
 
-    # Shift each layer of the datacube the required amounts
-    datacube = shift_datacube_layers(datacube, y_displacement, x_displacement)
+        # Calculate the y and x shifts in pixels
+        yshift, xshift = calculate_shift(this_layer, template)
+
+        # Keep shifts in pixels
+        yshift_keep[i] = yshift
+        xshift_keep[i] = xshift
+
+    # Calculate shifts relative to the template layer
+    yshift_keep = yshift_keep - yshift_keep[layer_index]
+    xshift_keep = xshift_keep - xshift_keep[layer_index]
+
+    # Shift the data
+    shifted_datacube = shift_datacube_layers(datacube, -yshift_keep, -xshift_keep)
 
     if clip:
-        return clip_edges(datacube, y_displacement, x_displacement), y_displacement, x_displacement
+        return clip_edges(shifted_datacube, yshift_keep, xshift_keep), yshift_keep, xshift_keep
     else:
-        return datacube, y_displacement, x_displacement
+        return shifted_datacube, yshift_keep, xshift_keep
 
 
 #
-# Shift layers in a datacube according to some displacements
+# Shift a datacube.  Useful for coaligning images and performing solar
+# derotation.
 #
-def shift_datacube_layers(datacube, y_displacement, x_displacement):
-    """
-    Shifts the layers of a datacube by given amounts
-
-    Input
-    -----
-    datacube : a numpy array of shape (ny, nx, nt), where nt is the number of
-               layers in the datacube
-
-    y_displacement : how much to shift each layer in the y - direction.  An
-                     one-dimensional array of length nt.
-
-    x_displacement : how much to shift each layer in the x - direction.  An
-                     one-dimensional array of length nt.
-
-
-    Output
-    ------
-    A numpy array of shape (ny, nx, nt).  All layers have been shifted
-    according to the displacement amounts.
-
-    """
-    # Number of layers
+def shift_datacube_layers(datacube, yshift, xshift):
+    ny = datacube.shape[0]
+    nx = datacube.shape[1]
     nt = datacube.shape[2]
-
-    # Shift each layer of the datacube the required amounts
+    shifted_datacube = np.zeros((ny, nx, nt))
     for i in range(0, nt):
-        layer = datacube[:, :, i]
-        shifted = shift(layer, [-y_displacement[i], -x_displacement[i]])
-        datacube[:, :, i] = shifted
-    return datacube
+        shifted_datacube[:, :, i] = shift(datacube[:, :, i], [yshift[i], xshift[i]])
 
-
-#
-# Calculate the co-registration displacements for a datacube
-#
-def calculate_coregistration_displacements(template, datacube, func):
-    """
-    Calculate the coregistration of (ny, nx) layers in a (ny, nx, nt) datacube
-    against a chosen template.  All inputs are assumed to be numpy arrays.
-
-    Inputs
-    ------
-    template : a numpy array of size (N, M) where N < ny and M < nx .
-
-    datacube : a numpy array of size (ny, nx, nt), where the first two
-               dimensions are spatial dimensions, and the third dimension is
-               time.
-
-    func: a function which is applied to the data values before the
-          coalignment method is applied.  This can be useful in coalignment,
-          because it is sometimes better to co-align on a function of the data
-          rather than the data itself.  The calculated shifts are applied to
-          the original data.  Useful functions to consider are the log of the
-          image data, or 1 / data. The function is of the form func = F(data).  
-          The default function ensures that the data are floats.
-
-    Outputs
-    -------
-    The (y, x) position of the template in each layer in the datacube.  Output
-    is two numpy arrays.
-
-    Requires
-    --------
-    This function requires the "match_template" function in scikit image.
-
-    """
-    nt = datacube.shape[2]
-
-    # Storage for the results
-    keep_x = []
-    keep_y = []
-
-    # Repair the template if need be
-    template = repair_nonfinite(func(template))
-
-    # Go through each layer and perform the matching
-    for t in range(0, nt):
-        # Get the layer
-        layer = datacube[:, :, t]
-
-        # Repair the layer for nonfinites
-        layer = repair_nonfinite(func(layer))
-
-        # Match the template to the layer
-        correlation_result = match_template_to_layer(layer, template)
-
-        # Get the sub pixel shift of the correlation array
-        y_shift_relative_to_correlation_array, \
-        x_shift_relative_to_correlation_array = find_best_match_location(correlation_result)
-
-        # Store the results
-        keep_x.append(x_shift_relative_to_correlation_array)
-        keep_y.append(y_shift_relative_to_correlation_array)
-
-    return np.asarray(keep_y), np.asarray(keep_x)
+    return shifted_datacube

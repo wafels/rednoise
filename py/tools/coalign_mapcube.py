@@ -15,6 +15,7 @@ def default_data_manipulation_function(data):
     """
     return 1.0 * data
 
+
 #
 # Coalign a mapcube
 #
@@ -71,33 +72,27 @@ def coalign_mapcube(mc,
     yshift_keep = np.zeros((nt))
 
     # Calculate a template
-    template = repair_nonfinite(func(mc._maps[layer_index].data[ny / 4: 3 * ny / 4,
-                                         nx / 4: 3 * nx / 4]))
+    template = func(mc._maps[layer_index].data[ny / 4: 3 * ny / 4,
+                                         nx / 4: 3 * nx / 4])
 
     for i, m in enumerate(mc._maps):
         # Get the next 2-d data array
         this_layer = func(m.data)
 
-        # Repair any NANs, Infs, etc in the layer
-        this_layer = repair_nonfinite(this_layer)
-
-        # Calculate the correlation array matching the template to this layer
-        corr = match_template_to_layer(this_layer, template)
-
         # Calculate the y and x shifts in pixels
-        yshift, xshift = find_best_match_location(corr)
+        yshift, xshift = calculate_shift(this_layer, template)
 
         # Keep shifts in pixels
-        yshift_keep[i] = -yshift
-        xshift_keep[i] = -xshift
+        yshift_keep[i] = yshift
+        xshift_keep[i] = xshift
 
     # Calculate shifts relative to the template layer
     yshift_keep = yshift_keep - yshift_keep[layer_index]
     xshift_keep = xshift_keep - xshift_keep[layer_index]
-    
+
     # Shift the data
-    for i, m in mc._maps:
-        shifted_datacube[:, :, i] = shift(m.data, [-yshift, -xshift])
+    for i, m in enumerate(mc._maps):
+        shifted_datacube[:, :, i] = shift(m.data, [-yshift_keep[i], -xshift_keep[i]])
 
     # Clip the data if requested
     if clip:
@@ -105,10 +100,12 @@ def coalign_mapcube(mc,
 
     # Create a new mapcube.  Adjust the positioning information accordingly.
     new_cube = []
-    for i, m in mc._maps:
+    for i, m in enumerate(mc._maps):
+        print i
         new_meta = m.meta.copy()
         new_meta['xcen'] = new_meta['xcen'] + xshift_keep[i] * m.scale['x']
         new_meta['ycen'] = new_meta['ycen'] + yshift_keep[i] * m.scale['y']
+        print new_meta['xcen'], new_meta['ycen']
         new_map = Map(shifted_datacube[:, :, i], new_meta)
 
         # Store the new map in a list
@@ -116,6 +113,34 @@ def coalign_mapcube(mc,
 
     # Return the cube and the pixel displacements
     return Map(new_cube, cube=True), yshift_keep, xshift_keep
+
+
+def calculate_shift(this_layer, template):
+    """
+    Calculates the pixel shift required to put the template in the "best"
+    position on a layer.
+
+    Inputs
+    ------
+    template : a numpy array of size (N, M) where N < ny and M < nx .
+
+    this_layer : a numpy array of size (ny, nx), where the first two
+               dimensions are spatial dimensions.
+
+    Outputs
+    -------
+    yshift, xshift : pixel shifts relative to the offset of the template to
+                     the input array.
+    """
+    # Repair any NANs, Infs, etc in the layer and the template
+    this_layer = repair_nonfinite(this_layer)
+    template = repair_nonfinite(template)
+
+    # Calculate the correlation array matching the template to this layer
+    corr = match_template_to_layer(this_layer, template)
+
+    # Calculate the y and x shifts in pixels
+    return find_best_match_location(corr)
 
 
 #
@@ -335,6 +360,7 @@ def repair_nonfinite(z):
         subarray = z[y - 1: y + 2, x - 1: x + 2]
         z[by, bx] = np.nanmean(subarray * np.isfinite(subarray))
         bad_index = np.where(np.logical_not(np.isfinite(z)))
+    return z
 
 
 #
