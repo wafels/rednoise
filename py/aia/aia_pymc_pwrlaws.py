@@ -327,10 +327,16 @@ for iwave, wave in enumerate(waves):
                 # Run the sampler
                 print('M0: Running simple power law model')
                 M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
+                
+                # Save the PYMC data
+                ???
 
                 # Now run the MAP
                 map_M0 = pymc.MAP(pymcmodel0)
                 map_M0.fit(method='fmin_powell')
+                
+                # Save the MAP data
+                ???
 
                 A0 = get_variables_M0(map_M0)
                 M0_bf = get_spectrum_M0(x, A0)
@@ -361,10 +367,16 @@ for iwave, wave in enumerate(waves):
                 print ' '
                 print('M1: Running power law plus Gaussian model')
                 M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
+                
+                # Save the PYMC data
+                ???
 
                 # Now run the MAP
                 map_M1 = pymc.MAP(pymcmodel1)
                 map_M1.fit(method='fmin_powell')
+                
+                # Save the MAP data
+                ???
 
                 # Plot the traces
                 write_plots(M1, region_id, obstype, savefig, 'M1', bins=40, extra_factors=[xnorm])
@@ -389,6 +401,15 @@ for iwave, wave in enumerate(waves):
                 print 'T_lrt for the initial data = %f' % (t_lrt_data)
                 print 'AIC_{0} - AIC_{1} = %f' % (map_M0.AIC - map_M1.AIC)
                 print 'BIC_{0} - BIC_{1} = %f' % (map_M0.BIC - map_M1.BIC)
+                
+                # Store these results
+                M0_fit_summary = (map_M0.AIC, map_M0.BIC, l0_data)
+                M1_fit_summary = (map_M0.AIC, map_M0.BIC, l1_data)
+                M01_fit_summary = (t_lrt_data, M0_fit_summary, M1_fit_summary)
+                
+                # Save the fit summaries
+                ???
+                
                 # Plot
                 plt.figure(1)
                 plt.loglog(freqs, np.exp(pwr_ff), label='data', color='k')
@@ -423,40 +444,64 @@ for iwave, wave in enumerate(waves):
                 plt.title(obstype)
                 plt.savefig(savefig + obstype + '.model_fit_compare.pymc.png')
                 plt.close('all')
-                """
+
                 #
                 # Do the posterior predictive comparison
                 #
+                # Results Storage
                 t_lrt_distribution = []
                 M0_logp = []
                 M1_logp = []
-                for r in range(0, nsample):
-                    #
-                    rthis = np.random.randint(0, high=8000)
+                good_results = []
+                bad_results = []
+                
+                # Number of successful comparisons
+                nfound = 0
+
+                # Number of posterior samples available
+                ntrace = np.size(M0.trace('power_law_index')[:])
+
+                # main loop
+                while nfound <= nsample:
+
+                    rthis = np.random.randint(0, high=ntrace)
                     print ' '
-                    print r, nsample, rthis, ' (Positive numbers favor hypothesis 1 over 0)'
+                    print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
                     if obstype == '.logiobs':
                         # Generate test data under hypothesis 0
                         pred = M0.trace('predictive')[rthis]
 
                         # Fit the test data using hypothesis 0 and calculate a likelihood
-
                         M0_pp = pymcmodels.Log_splwc(x, pred, sigma)
                         map_M0_pp = pymc.MAP(M0_pp)
-                        map_M0_pp.fit(method='fmin_powell')
-                        l0_pred2 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau)
+                        try:
+                            map_M0_pp.fit(method='fmin_powell')
+                            l0_pred2 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau)
+                        except:
+                            print 'Error fitting M0 to sample.'
+                            l0_pred2 = None
 
                         # Fit the test data using hypothesis 1 and calculate a likelihood
                         M1_pp = pymcmodels.Log_splwc_GaussianBump(x, pred, sigma)
                         map_M1_pp = pymc.MAP(M1_pp)
-                        map_M1_pp.fit(method='fmin_powell')
-                        l1_pred2 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau)
+                        try:
+                            map_M1_pp.fit(method='fmin_powell')
+                            l1_pred2 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau)
+                        except:
+                            print 'Error fitting M0 to sample.'
+                            l1_pred2 = None
 
-                    M0_logp.append(l0_pred2)
-                    M1_logp.append(l1_pred2)
-                    t_lrt_pred = -2 * (l0_pred2 - l1_pred2)
-                    print l0_pred2, l1_pred2,  t_lrt_pred
-                    t_lrt_distribution.append(t_lrt_pred)
+                    # Sort the results into good and bad.
+                    if (l0_pred2 != None) and (l1_pred2 != None):
+                        t_lrt_pred = -2 * (l0_pred2 - l1_pred2)
+                        if t_lrt_pred >= 0.0:
+                            good_results.append((rthis, l0_pred2, l1_pred2, t_lrt_pred))
+                            nfound = nfound + 1
+                            print l0_pred2, l1_pred2,  " T_LRT = " + str(t_lrt_pred)
+                        else:
+                            bad_results.append((rthis, l0_pred2, l1_pred2))
+                    else:
+                        bad_results.append((rthis, l0_pred2, l1_pred2))
 
                 #
                 # Plot the T_lrt distribution along with the the value of this
@@ -464,6 +509,10 @@ for iwave, wave in enumerate(waves):
 
                 #plt.savefig(savefig + obstype + '.t_lrt.png')
 
+# Save the good and bad results
+???
+                
+"""
 t_lrt_distribution = np.asarray(t_lrt_distribution)
 
 
@@ -474,4 +523,4 @@ plt.hist(t_lrt_distribution, bins=100)
 plt.axvline(t_lrt_data, color='k')
 plt.text(t_lrt_data, 1000, 'p=%4.3f' % (pvalue))
 plt.legend()
-                """
+"""
