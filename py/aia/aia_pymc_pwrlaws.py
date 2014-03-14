@@ -219,7 +219,7 @@ manip = 'relative'
 #
 # Number of posterior predictive samples to calulcate
 #
-nsample = 1000
+nsample = 500
 
 # PyMC control
 itera = 100000
@@ -451,8 +451,7 @@ for iwave, wave in enumerate(waves):
                         map_M0_pp = pymc.MAP(M0_pp)
                         try:
                             print('M0: fitting to find the maximum likelihood')
-                            #map_M0_pp.fit(method='fmin_powell')
-                            map_M0_pp.fit()
+                            map_M0_pp.fit(method='fmin_powell')
                             l0 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau, obstype)
                         except:
                             print('Error fitting M0 to sample.')
@@ -463,8 +462,7 @@ for iwave, wave in enumerate(waves):
                         map_M1_pp = pymc.MAP(M1_pp)
                         try:
                             print('M1: fitting to find the maximum likelihood')
-                            #map_M1_pp.fit(method='fmin_powell')
-                            map_M1_pp.fit()
+                            map_M1_pp.fit(method='fmin_powell')
                             l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
                         except:
                             print('Error fitting M1 to sample.')
