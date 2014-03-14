@@ -16,6 +16,8 @@ import pymcmodels
 import rnspectralmodels
 
 np.random.seed(seed=1)
+
+
 #
 # Functions to calculate and store results
 #
@@ -34,7 +36,18 @@ def FitSummary(M0, l0_data, M1, l1_data):
                   "M1": fit_summary(M1, l1_data)}
     fitsummary["dAIC"] = fitsummary["M0"]["AIC"] - fitsummary["M1"]["AIC"]
     fitsummary["dBIC"] = fitsummary["M0"]["BIC"] - fitsummary["M1"]["BIC"]
-return fitsummary
+    return fitsummary
+
+
+# Write out a pickle file
+def pkl_write(location, fname, a):
+    pkl_file_location = os.path.join(location, fname)
+    print('Writing ' + pkl_file_location)
+    pkl_file = open(pkl_file_location, 'wb')
+    for element in a:
+        pickle.dump(element, pkl_file)
+    pkl_file.close()
+
 
 #
 # Hypothesis 0 functions
@@ -133,10 +146,13 @@ def curve_fit_M1(x, y, p0, sigma, n_attempt_limit=10):
             success = True
         except RuntimeError:
             print 'Model M1 curve fit did not work - try varying parameters a tiny bit'
-            p_in = p0 + 0.0001 * np.random.random(size=(6))
+            p_in = p0 + 0.1 * np.random.random(size=(6))
             n_attempt = n_attempt + 1
             print 'Attempt number: %i' % (n_attempt)
-    return answer[0]
+    if success:
+        return answer[0]
+    else:
+        return p0
 
 
 def get_spectrum_M1(x, A):
@@ -203,7 +219,7 @@ manip = 'relative'
 #
 # Number of posterior predictive samples to calulcate
 #
-nsample = 100
+nsample = 1000
 
 # PyMC control
 itera = 100000
@@ -294,21 +310,20 @@ for iwave, wave in enumerate(waves):
                     pymcmodel0 = pymcmodels.Log_splwc_lognormal(x, pwr, sigma)
 
                 # Initiate the sampler
-                M0 = pymc.MCMC(pymcmodel0)
+                dbname0 = os.path.join(pkl_location, 'MCMC.M0.' + region_id + obstype)
+                M0 = pymc.MCMC(pymcmodel0, db='pickle', dbname=dbname0)
 
                 # Run the sampler
                 print('M0: Running simple power law model')
-                M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True,
-                          db='pickle', dbname=???)
+                M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
                 M0.db.close()
 
                 # Now run the MAP
                 map_M0 = pymc.MAP(pymcmodel0)
+                print('M0: fitting to find the maximum likelihood')
                 map_M0.fit(method='fmin_powell')
 
-                # Save the MAP data
-                zzz = 1
-
+                # Get the variables and the best fit
                 A0 = get_variables_M0(map_M0)
                 M0_bf = get_spectrum_M0(x, A0)
 
@@ -332,21 +347,19 @@ for iwave, wave in enumerate(waves):
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, pwr, sigma)
 
                 # Initiate the sampler
-                M1 = pymc.MCMC(pymcmodel1)
+                dbname1 = os.path.join(pkl_location, 'MCMC.M1.'+ region_id + obstype)
+                M1 = pymc.MCMC(pymcmodel1, db='pickle', dbname=dbname1)
 
                 # Run the sampler
                 print ' '
                 print('M1: Running power law plus Gaussian model')
-                M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True,
-                          db='pickle', dbname=???)
+                M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
                 M1.db.close()
 
                 # Now run the MAP
                 map_M1 = pymc.MAP(pymcmodel1)
+                print('M1: fitting to find the maximum likelihood')
                 map_M1.fit(method='fmin_powell')
-
-                # Save the MAP data
-                zzz = 1
 
                 # Plot the traces
                 write_plots(M1, region_id, obstype, savefig, 'M1', bins=40, extra_factors=[xnorm])
@@ -374,7 +387,6 @@ for iwave, wave in enumerate(waves):
                 print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
 
                 # Save the fit summaries
-                
 
                 # Plot
                 plt.figure(1)
@@ -401,7 +413,7 @@ for iwave, wave in enumerate(waves):
                 print ypos
                 plt.text(0.01, np.exp(ypos[0]), '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
                 plt.text(0.01, np.exp(ypos[1]), '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
-                plt.text(0.01, np.exp(ypos[2]), '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"])
+                plt.text(0.01, np.exp(ypos[2]), '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
 
                 # Complete the plot and save it
                 plt.legend(loc=3, framealpha=0.5, fontsize=8)
@@ -425,7 +437,7 @@ for iwave, wave in enumerate(waves):
                 ntrace = np.size(M0.trace('power_law_index')[:])
 
                 # main loop
-                while nfound <= nsample:
+                while nfound < nsample:
 
                     rthis = np.random.randint(0, high=ntrace)
                     print ' '
@@ -438,8 +450,10 @@ for iwave, wave in enumerate(waves):
                         M0_pp = pymcmodels.Log_splwc(x, pred, sigma)
                         map_M0_pp = pymc.MAP(M0_pp)
                         try:
-                            map_M0_pp.fit(method='fmin_powell')
-                            l0 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau)
+                            print('M0: fitting to find the maximum likelihood')
+                            #map_M0_pp.fit(method='fmin_powell')
+                            map_M0_pp.fit()
+                            l0 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau, obstype)
                         except:
                             print('Error fitting M0 to sample.')
                             l0 = None
@@ -448,8 +462,10 @@ for iwave, wave in enumerate(waves):
                         M1_pp = pymcmodels.Log_splwc_GaussianBump(x, pred, sigma)
                         map_M1_pp = pymc.MAP(M1_pp)
                         try:
-                            map_M1_pp.fit(method='fmin_powell')
-                            l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau)
+                            print('M1: fitting to find the maximum likelihood')
+                            #map_M1_pp.fit(method='fmin_powell')
+                            map_M1_pp.fit()
+                            l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
                         except:
                             print('Error fitting M1 to sample.')
                             l1 = None
@@ -462,28 +478,36 @@ for iwave, wave in enumerate(waves):
                                                  FitSummary(map_M0_pp, l0,
                                                             map_M1_pp, l1)))
                             nfound = nfound + 1
+                            print('    T_lrt = %f' % (good_results[-1][1]['t_lrt']))
                         else:
+                            print('! T_lrt = %f <0 ! - must be a bad fit' % (t_lrt_pred))
                             bad_results.append((rthis,
                                                 FitSummary(map_M0_pp, l0,
                                                            map_M1_pp, l1)))
                     else:
+                        print('! Fitting algorithm fell down !')
                         bad_results.append((rthis,
                                             FitSummary(map_M0_pp, l0,
                                                        map_M1_pp, l1)))
 
+                # Save the good and bad results and use a different program to plot the results
+                pkl_write(pkl_location,
+                          'posterior_predictive.' + region_id + '.good.pickle',
+                          good_results)
 
-# Save the good and bad results and use a different program to plot the results
-???
+                pkl_write(pkl_location,
+                          'posterior_predictive.' + region_id + '.bad.pickle',
+                          bad_results)
 
-"""
-t_lrt_distribution = np.asarray(t_lrt_distribution)
+                # Quick summary plots
+                t_lrt_data = fitsummarydata["t_lrt"]
+                t_lrt_distribution = np.asarray([z[1]["t_lrt"] for z in good_results])
 
+                pvalue = np.sum(t_lrt_distribution >= t_lrt_data) / (1.0 * nsample)
+                print('Posterior predictive p-value = %f' % (pvalue))
 
-pvalue = np.sum(t_lrt_distribution >= t_lrt_data) / (1.0 * nsample)
-
-plt.figure(2)
-plt.hist(t_lrt_distribution, bins=100)
-plt.axvline(t_lrt_data, color='k')
-plt.text(t_lrt_data, 1000, 'p=%4.3f' % (pvalue))
-plt.legend()
-"""
+                plt.figure(2)
+                plt.hist(t_lrt_distribution, bins=100)
+                plt.axvline(t_lrt_data, color='k', label='p=%4.3f' % (pvalue))
+                plt.legend()
+                plt.savefig(savefig + obstype + '.posterior_predictive.png')

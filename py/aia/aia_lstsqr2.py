@@ -82,6 +82,7 @@ def calculate_histograms(nposfreq, pwr):
             lim[i, 1, f] = np.exp(h[1][hi])
     return h[1], hpwr, lim
 
+
 def log_10_product(x, pos):
     """The two args are the value and tick position.
     Label ticks with the product of the exponentiation.
