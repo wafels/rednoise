@@ -205,42 +205,63 @@ was apodized using the Hanning window, reducing ringing effects.  This
 results in a time-series from which its Fourier power spectrum was
 analyzed. 
 
-The arithmetic and geometric mean power spectra were formed from all
-the time-series in each region.  A third power spectrum was created by
-first summing all the data in a region, applying the
-normalization/apodization procedure described above, and then
-calculating the Fourier power spectrum.  These three power spectra
-then summarize the Fourier power in each region, for each wavebad
-studied.  Figures \ref{fig:arith171} and \ref{fig:geom171} shows the
-arithmetic and geometric mean power spectra for each region in AIA
-171\AA.  Figures \ref{fig:arith193} and \ref{fig:geom193} show the
-arithmetic and geometric mean power spectra for each region in AIA
-193\AA.  Each mean power spectrum is also fit with a power spectrum of
-the form
-\begin{equation}
-\label{eq:pwrlaw}
-P(f) = Af^{-n} + C
-\end{equation}
-where $f$ is the frequency, $n$ is the power law index, $A$ a
-normalization constant and $C$ is a background power.  Note that in
-these plots, a least-squares fitting algorithm is used to fit this
-model to the data.  The fit here is intended to show the approximate
-power-law nature of the observed Fourier power spectrum.
+Figures \ref{fig:demo171} and \ref{fig:demo193} show example power
+spectra, plotted using a log-log scale from individual pixels inside
+each of the regions shown in Figures \ref{fig:loc171} and
+\ref{fig:loc193}.  The shape of the power spectra indicate that the
+Fourier power follows a power law approximately.
 
 \begin{figure}
-\label{fig:arith171}
+\label{fig:demo171}
+
+\caption{Log-log plot of the Fourier power of a time-series at the AIA
+  pixel overlying a randomly chosen pixel in each of the regions
+  considered (Figure \protect\ref{fig:loc171}).  The vertical black lines
+  indicate the 3 and 5 minute frequencies. The equivalent plot in the
+  AIA 193\AA\ waveband is shown in Figure \protect\ref{fig:demo193}.}
+\end{figure}
+
+\begin{figure}
+\label{fig:demo193}
+
+\caption{Log-log plot of the Fourier power of a time-series at the AIA
+  pixel overlying a randomly chosen pixel in each of the regions
+  considered (Figure \protect\ref{fig:loc193}).  The vertical black lines
+  indicate the 3 and 5 minute frequencies. The equivalent plot in the
+  AIA 171\AA\ waveband is shown in Figure \protect\ref{fig:demo171}.}
+\end{figure}
+
+Figures \ref{fig:dist171} and \ref{fig:dist193} show the distributions
+of the logarithm of the Fourier power for certain frequencies in the
+spectrum.  The distributions all approximately follow a normal
+distribution.  This indicates that the power in each each at each
+frequency is approximately log-normally distributed.  This observation
+guides the choice of how to average the power spectrum over each of
+the selected physical regions.  Since the Fourier power is
+log-normally distributed, the arithmetic mean of the Fourier power is
+biased by the very largest powers.  Hence the mean of the logarithm of
+the Fourier power is considered, which is equivalent to the geometric
+mean of the Fourier power.
+
+\begin{figure}
+\label{fig:dist171}
 
 \caption{}
 \end{figure}
+
+\begin{figure}
+\label{fig:dist193}
+
+\caption{}
+\end{figure}
+
+These geometric mean Fourier power spectra are shown in Figures
+\ref{fig:geom171} and \ref{fig:geom193}, for each of the physical
+regions considered.  It is clear that the Fourier power spectra
+exhibit power-law like characteristics.  
 
 \begin{figure}
 \label{fig:geom171}
-
-\caption{}
-\end{figure}
-
-\begin{figure}
-\label{fig:arith193}
 
 \caption{}
 \end{figure}
@@ -251,10 +272,28 @@ power-law nature of the observed Fourier power spectrum.
 \caption{}
 \end{figure}
 
+The results for the quiet Sun, loop footpoints and sunspot regions
+suggest a power-law power spectrum.  This can be modeled as
+\begin{equation}
+\label{eq:pwrlaw}
+P_{0}(f) = Af^{-n} + C,
+\end{equation}
+where $A>0$ is a proportionality constant, $n>0$ is the power law
+index, and $C>0$ describes the high-frequency Fourier power.
 
-\subsection{Initial inspection of the power spectra}\label{ssec:init}
-
-
+The moss results for 171\AA\ and 193\AA\ are notably different from
+the other results.  In comparison to the general trend observed in
+other regions, there appears to be excess Fourier power in the range
+1-10 mHz.  Previous studies (???) have shown that the moss is a source
+of uncorrelated and incoherent Fourier power.  This suggests that a
+second model for these regions should be considered.  The spectrum
+$P_{1}$ where
+\begin{equation}
+\label{eq:pwrlawbunp}
+\ln P_{1}(f) = P_{0} + \alpha\exp\left[-\frac{(\ln(f)-\beta)^{2}}{2\sigma^{2}}
+\end{equation}
+contains the previous power law dependence, plus the second term,
+modelling the excess power.  
 
 \subsection{Comparing power spectra models}\label{ssec:twomodels}
 
