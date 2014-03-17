@@ -18,11 +18,11 @@ import cubetools
 
 # input data
 dataroot = '~/Data/AIA/'
-#corename = '20120923_0000__20120923_0100'
-corename = 'shutdownfun3_6hr'
+corename = '20120923_0000__20120923_0100'
+#corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-wave = '171'
+wave = '193'
 cross_correlate = True
 
 
