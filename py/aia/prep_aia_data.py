@@ -133,18 +133,36 @@ if corename == 'shutdownfun6_6hr':
                'loopfootpoints1': [[90, 155], [515, 620]],
                'loopfootpoints2': [[20, 90], [793, 828]],
                'moss': [[45, 95], [888, 950]]}
+#    regions_central = define_central_data(regions)
 
 if corename == 'shutdownfun3_6hr' and layer_index == nt / 2:
-        regions = {'moss': [[175, 210], [140, 200]],
+    regions = {'moss': [[175, 210], [140, 200]],
                'sunspot': [[125, 200], [250, 350]],
                'qs': [[60, 110], [500, 550]],
                'loopfootpoints': [[110, 160], [10, 50]]}
+#    regions_central = define_central_data(regions)
 
 if corename == '20120923_0000__20120923_0100' or corename == 'shutdownfun3_1hr' :
     regions = {'moss': [[175, 210], [115, 180]],
                'sunspot': [[125, 200], [320, 420]],
                'qs': [[60, 110], [600, 650]],
                'loopfootpoints': [[165, 245], [10, 50]]}
+#    regions_central = define_central_data(regions)
+
+"""
+def define_central_data(regions):
+    # For each of the regions, calculate the location in the middle of the region
+    new_regions = {}
+    keys = regions.keys()
+    for k in keys:
+        yloc = regions[k][0]
+        xloc = regions[k][1]
+        y = np.rint( 0.5 * (yloc[0] + yloc[1]))
+        x = np.rint( 0.5 * (xloc[0] + xloc[1]))
+        new_key = 'k' + '_central'
+        new_regions[new_key] = [[y, y], [x, x]]
+    return new_regions
+"""
 #
 # Plot an image of the data with the subregions overlaid and labeled
 #
@@ -173,9 +191,8 @@ plt.savefig(os.path.join(save_locations["image"], ident + '.png'))
 
 #
 # Save all regions
-# Used to be cubetools.save_region(dc, output, regions, wave, times)
-# but that took up too much memory
 #
+#regions = dict(regions.items() + regions_central.items())
 keys = regions.keys()
 for region in keys:
     # Get the location of the region we are interested in.

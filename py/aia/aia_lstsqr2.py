@@ -17,6 +17,7 @@ import csv
 import cPickle as pickle
 import aia_specific
 import aia_plaw
+from paper1 import log_10_product
 
 font = {'family': 'normal',
         'weight': 'bold',
@@ -81,21 +82,6 @@ def calculate_histograms(nposfreq, pwr):
             lim[i, 0, f] = np.exp(h[1][lo])
             lim[i, 1, f] = np.exp(h[1][hi])
     return h[1], hpwr, lim
-
-
-def log_10_product(x, pos):
-    """The two args are the value and tick position.
-    Label ticks with the product of the exponentiation.
-    The algorithm plots out nicely formatted explicit numbers for values
-    greater and less then 1.0."""
-    if x >= 1.0:
-        return '%i' % (x)
-    else:
-        n = 0
-        while x * (10 ** n) <= 1:
-            n = n + 1
-        fmt = '%.' + str(n - 1) + 'f'
-        return fmt % (x)
 
 
 # String defining the basics number of time series
@@ -706,10 +692,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                           (freqs / freqfactor[0], np.log(iobs)))
 
                 # Geometric mean of power spectra
+                #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
                           (freqs / freqfactor[0], logiobs))
-                          #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
 
                 # Bump fit
                 #pkl_write(pkl_location,
