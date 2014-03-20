@@ -53,3 +53,12 @@ s3min.linestyle = "--"
 #
 def tsDetails(nx, ny, nt):
     return '[%i t.s., %i samples]' % (nx * ny, nt)
+
+#
+# Nicer names for printing
+#
+sunday_name = {'moss': 'moss',
+               'qs': 'quiet Sun',
+               'loopfootpoints': 'loop footpoints',
+               'sunspot': 'sunspot'}
+

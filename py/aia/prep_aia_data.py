@@ -14,12 +14,13 @@ from sunpy.cm import cm
 import numpy as np
 import coalign_datacube
 import cubetools
+from paper1 import sunday_name
 
 
 # input data
 dataroot = '~/Data/AIA/'
-corename = '20120923_0000__20120923_0100'
-#corename = 'shutdownfun3_6hr'
+#corename = '20120923_0000__20120923_0100'
+corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 wave = '193'
@@ -172,21 +173,69 @@ nt = dc.shape[2]
 ny = dc.shape[0]
 nx = dc.shape[1]
 
+omap = original_mapcube[0]
+cXY = [omap.meta['xcen'], omap.meta['ycen']]
+dXY = [omap.meta['cdelt1'], omap.meta['cdelt2']]
+nXY = [omap.data.shape[1], omap.data.shape[0]]
+
+Q = {'cen': cXY, 'd': dXY, 'n': nXY}
+
+
+def px2arcsec(Q, A):
+
+    cen = Q['cen']
+    d = Q['d']
+    n = Q['n']
+
+    xcen = cen[0]
+    ycen = cen[1]
+
+    dx = d[0]
+    dy = d[1]
+
+    nx = n[0]
+    ny = n[1]
+
+    llx = xcen - 0.5 * dx * nx
+    lly = ycen - 0.5 * dy * ny
+
+    xpixel = A[0]
+    ypixel = A[1]
+
+    x_arcsec = llx + dx * xpixel
+    y_arcsec = lly + dy * ypixel
+
+    return [x_arcsec, y_arcsec]
+
+lower_left = px2arcsec(Q, [0, 0])
+upper_right = px2arcsec(Q, [nx - 1, ny - 1])
+extent = [lower_left[0], upper_right[0], lower_left[1], upper_right[1]]
+
+
 plt.figure(1)
-plt.imshow(np.log(dc[:, :, ind]), origin='bottom', cmap=cm.get_cmap(name='sdoaia' + wave))
-plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
-plt.ylabel('y pixel (%i images)' % (nt))
-plt.xlabel('x pixel (%s)' % (str(times["date_obs"][ind])))
+plt.imshow(np.log(dc[:, :, ind]),
+           origin='bottom',
+           cmap=cm.get_cmap(name='sdoaia' + wave),
+           extent=extent)
+#plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
+plt.title('AIA ' + wave + ' (%s)' % (times["date_obs"][ind].strftime('%Y/%m/%d %H:%M:%S')))
+plt.ylabel('y (arcseconds)')
+plt.xlabel('x (arcseconds)')
 for region in regions:
     pixel_index = regions[region]
+
     y = pixel_index[0]
     x = pixel_index[1]
-    aia_specific.plot_square(x, y, color='w', linewidth=3)
-    aia_specific.plot_square(x, y, color='k', linewidth=1)
-    plt.text(x[1], y[1], region, color='k', bbox=dict(facecolor='white', alpha=0.5))
-plt.xlim(0, nx)
-plt.ylim(0, ny)
-plt.savefig(os.path.join(save_locations["image"], ident + '.png'))
+
+    loc1 = px2arcsec(Q, [x[0], y[0]])
+    loc2 = px2arcsec(Q, [x[1], y[1]])
+
+    aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='w', linewidth=3)
+    aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='k', linewidth=1)
+    plt.text(loc2[0], loc2[1], sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5))
+plt.xlim(lower_left[0], upper_right[0])
+plt.ylim(lower_left[1], upper_right[1])
+plt.savefig(os.path.join(save_locations["image"], ident + '.eps'))
 
 
 #
