@@ -66,8 +66,8 @@
 %% one line. However, you may use \\ to force a line break if
 %% you desire.
 
-\title{Collapsed Cores in Globular Clusters, \\
-    Gauge-Boson Couplings, and AAS\TeX\ Examples}
+\title{Power law properties of Fourier power spectra and their
+  implications for coronal seismology and coronal heating.}
 
 %% Use \author, \affil, and the \and command to format
 %% author and affiliation information.
@@ -76,32 +76,20 @@
 %% anywhere in the paper, not just in the front matter.
 %% As in the title, use \\ to force line breaks.
 
-\author{S. Djorgovski\altaffilmark{1,2,3} and Ivan R. King\altaffilmark{1}}
-\affil{Astronomy Department, University of California,
-    Berkeley, CA 94720}
+\author{J. Ireland}
+\affil{ADNET Systems, Inc.,NASA Goddard Space Flight Center, MC. 671.1 Greenbelt, MD
+  20771, USA. }
+\email{jack.ireland@nasa.gov}
 
-\author{C. D. Biemesderfer\altaffilmark{4,5}}
-\affil{National Optical Astronomy Observatories, Tucson, AZ 85719}
-\email{aastex-help@aas.org}
+\author{R. T. J. McAteer}
+\affil{Department of Astronomy, New Mexico State University, Las
+  Cruces, NM}
 
 \and
 
-\author{R. J. Hanisch\altaffilmark{5}}
-\affil{Space Telescope Science Institute, Baltimore, MD 21218}
-
-%% Notice that each of these authors has alternate affiliations, which
-%% are identified by the \altaffilmark after each name.  Specify alternate
-%% affiliation information with \altaffiltext, with one command per each
-%% affiliation.
-
-\altaffiltext{1}{Visiting Astronomer, Cerro Tololo Inter-American Observatory.
-CTIO is operated by AURA, Inc.\ under contract to the National Science
-Foundation.}
-\altaffiltext{2}{Society of Fellows, Harvard University.}
-\altaffiltext{3}{present address: Center for Astrophysics,
-    60 Garden Street, Cambridge, MA 02138}
-\altaffiltext{4}{Visiting Programmer, Space Telescope Science Institute}
-\altaffiltext{5}{Patron, Alonso's Bar and Grill}
+\author{A. R. Inglis}
+\affil{Catholic University of America / NASA Goddard Space Flight Center, MC. 671.1 Greenbelt, MD
+  20771, USA.}
 
 %% Mark off your abstract in the ``abstract'' environment. In the manuscript
 %% style, abstract will output a Received/Accepted line after the
@@ -110,10 +98,17 @@ Foundation.}
 %% editorial office after submission.
 
 \begin{abstract}
-This is a preliminary report on surface photometry of the major
-fraction of known globular clusters, to see which of them show the signs
-of a collapsed core.
-We also explore some diversionary mathematics and recreational tables.
+The Fourier power spectra of regions of the solar corona are
+investigated using AIA 171\AA\ and 193\AA\ data.  It is shown that the
+Fourier power spectra in all the regions show a power law behaviour
+approximately.  This suggests that in many parts of the corona a
+background model consisting of white noise and a trend cannot be
+assumed when analyzing for the presence of oscillations in the corona.
+Further, it is shown that the observed power law power spectrum is
+consistent with that expected from summing a distribution of
+exponentially decaying emission events along the line of sight.  This
+is consistent with the notion that the corona is heated everywhere by
+small energy deposition events, such as nanoflares.
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. The uncommented
@@ -121,8 +116,7 @@ We also explore some diversionary mathematics and recreational tables.
 %% for the journal to which you are submitting your paper to determine
 %% what keyword punctuation is appropriate.
 
-\keywords{globular clusters: general --- globular clusters: individual(NGC 6397,
-NGC 6624, NGC 7078, Terzan 8}
+\keywords{???}
 
 %% From the front matter, we move on to the body of the paper.
 %% In the first two sections, notice the use of the natbib \citep
@@ -182,19 +176,13 @@ as a function of spatial location.  Four locations were chosen in the
 data representing four different types of physical locations in the
 solar atmosphere.  These were a quiet Sun region, a region that lies
 on top of a sunspot, a footpoint region, and a coronal moss region.
-Figures \ref{fig:loc171} and \ref{fig:loc193} show the location of the
-regions on sample images from the time range considered.
+Figures \ref{fig:loc171193} show the location of the regions on sample
+images from the time range considered.
 
 \begin{figure}
 \label{fig:loc171}
-
-\caption{}
-\end{figure}
-
-\begin{figure}
-\label{fig:loc193}
-
-\caption{}
+\plottwo{shutdownfun3_6hr_disk_1.5_171.eps}{shutdownfun3_6hr_disk_1.5_171.eps}
+\caption{171 and 193}
 \end{figure}
 
 Consider the emission from a single pixel, $I(t)$.  The Fourier power
@@ -205,31 +193,24 @@ was apodized using the Hanning window, reducing ringing effects.  This
 results in a time-series from which its Fourier power spectrum was
 analyzed. 
 
-Figures \ref{fig:demo171} and \ref{fig:demo193} show example power
-spectra, plotted using a log-log scale from individual pixels inside
-each of the regions shown in Figures \ref{fig:loc171} and
-\ref{fig:loc193}.  The shape of the power spectra indicate that the
-Fourier power follows a power law approximately.
+Figures \ref{fig:compare171193} show example power spectra, plotted using
+a log-log scale, from a single location inside each of the regions
+shown in Figures \ref{fig:loc171} and \ref{fig:loc193}.  The shape of
+the power spectra indicate that the Fourier power approximately
+follows a power law at lower frequencies and flattens out at higher
+frequencies.
 
 \begin{figure}
-\label{fig:demo171}
-
+\label{fig:compare171193}
+\plottwo{loopfootpoints.centralpower.eps}{qs.centralpower.eps}
+\plottwo{sunspot.centralpower.eps}{moss.centralpower.eps}
 \caption{Log-log plot of the Fourier power of a time-series at the AIA
   pixel overlying a randomly chosen pixel in each of the regions
-  considered (Figure \protect\ref{fig:loc171}).  The vertical black lines
-  indicate the 3 and 5 minute frequencies. The equivalent plot in the
-  AIA 193\AA\ waveband is shown in Figure \protect\ref{fig:demo193}.}
+  considered (see Figures \protect\ref{fig:loc171} and
+  \protect\ref{fig:loc193}).  The vertical black lines indicate the 3
+  and 5 minute frequencies.}
 \end{figure}
 
-\begin{figure}
-\label{fig:demo193}
-
-\caption{Log-log plot of the Fourier power of a time-series at the AIA
-  pixel overlying a randomly chosen pixel in each of the regions
-  considered (Figure \protect\ref{fig:loc193}).  The vertical black lines
-  indicate the 3 and 5 minute frequencies. The equivalent plot in the
-  AIA 171\AA\ waveband is shown in Figure \protect\ref{fig:demo171}.}
-\end{figure}
 
 Figures \ref{fig:dist171} and \ref{fig:dist193} show the distributions
 of the logarithm of the Fourier power for certain frequencies in the
@@ -290,7 +271,7 @@ second model for these regions should be considered.  The spectrum
 $P_{1}$ where
 \begin{equation}
 \label{eq:pwrlawbunp}
-\ln P_{1}(f) = P_{0} + \alpha\exp\left[-\frac{(\ln(f)-\beta)^{2}}{2\sigma^{2}}
+\ln P_{1}(f) = P_{0} + \alpha\exp\left[-\frac{(\ln(f)-\beta)^{2}}{2\sigma^{2}}\right]
 \end{equation}
 contains the previous power law dependence, plus the second term,
 modelling the excess power.  

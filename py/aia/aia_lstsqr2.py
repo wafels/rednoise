@@ -17,7 +17,7 @@ import csv
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product
+from paper1 import log_10_product, tsDetails
 
 font = {'family': 'normal',
         'weight': 'bold',
@@ -82,11 +82,6 @@ def calculate_histograms(nposfreq, pwr):
             lim[i, 0, f] = np.exp(h[1][lo])
             lim[i, 1, f] = np.exp(h[1][hi])
     return h[1], hpwr, lim
-
-
-# String defining the basics number of time series
-def tsDetails(nx, ny, nt):
-    return '[%i t.s., %i samples]' % (nx * ny, nt)
 
 
 # Apply the manipulation function
@@ -603,8 +598,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 full_ts.peek()
                 plt.savefig(savefig + '.full_ts_timeseries.%s' % (savefig_format))
                 plt.close('all')
-
-
 
                 ###############################################################
                 # Time series plots
