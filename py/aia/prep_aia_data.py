@@ -35,7 +35,7 @@ aia_data_location = aia_specific.save_location_calculator({"aiadata": dataroot},
                                              branches)
 
 if cross_correlate:
-    extension = '_cc'
+    extension = '_cc_final'
 else:
     extension = ''
 
@@ -128,6 +128,7 @@ if cross_correlate:
 # y locations are first, x locations second
 
 if corename == 'shutdownfun6_6hr':
+    print('Using %s and %f' % (corename, layer_index))
     regions = {'highlimb': [[100, 150], [50, 150]],
                'lowlimb': [[100, 150], [200, 250]],
                'crosslimb': [[100, 150], [285, 340]],
@@ -137,6 +138,7 @@ if corename == 'shutdownfun6_6hr':
 #    regions_central = define_central_data(regions)
 
 if corename == 'shutdownfun3_6hr' and layer_index == nt / 2:
+    print('Using %s and %f' % (corename, layer_index))
     regions = {'moss': [[175, 210], [140, 200]],
                'sunspot': [[125, 200], [250, 350]],
                'qs': [[60, 110], [500, 550]],
@@ -182,29 +184,21 @@ Q = {'cen': cXY, 'd': dXY, 'n': nXY}
 
 
 def px2arcsec(Q, A):
-
     cen = Q['cen']
     d = Q['d']
     n = Q['n']
-
     xcen = cen[0]
     ycen = cen[1]
-
     dx = d[0]
     dy = d[1]
-
     nx = n[0]
     ny = n[1]
-
     llx = xcen - 0.5 * dx * nx
     lly = ycen - 0.5 * dy * ny
-
     xpixel = A[0]
     ypixel = A[1]
-
     x_arcsec = llx + dx * xpixel
     y_arcsec = lly + dy * ypixel
-
     return [x_arcsec, y_arcsec]
 
 lower_left = px2arcsec(Q, [0, 0])
@@ -223,13 +217,10 @@ plt.ylabel('y (arcseconds)')
 plt.xlabel('x (arcseconds)')
 for region in regions:
     pixel_index = regions[region]
-
     y = pixel_index[0]
     x = pixel_index[1]
-
     loc1 = px2arcsec(Q, [x[0], y[0]])
     loc2 = px2arcsec(Q, [x[1], y[1]])
-
     aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='w', linewidth=3)
     aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='k', linewidth=1)
     plt.text(loc2[0], loc2[1], sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5))
@@ -248,19 +239,14 @@ for region in keys:
     pixel_index = regions[region]
     y = pixel_index[0]
     x = pixel_index[1]
-
     # Region identifier name
     region_id = ident + '_' + region
-
     # branch location
     b = [corename, sunlocation, fits_level, wave, region]
-
     # Output location
     output = aia_specific.save_location_calculator(roots, b)["pickle"]
-
     # Output filename
     ofilename = os.path.join(output, region_id + '.datacube.pickle')
-
     # Open the file and write it out
     outputfile = open(ofilename, 'wb')
     pickle.dump(dc[y[0]: y[1], x[0]:x[1], :], outputfile)
