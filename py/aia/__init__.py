@@ -7,3 +7,4 @@ __email__ = "jack.ireland@nasa.gov"
 import aia_lstsqr2
 import aia_plaw_fit
 import aia_specific
+import timeseries

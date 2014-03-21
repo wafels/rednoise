@@ -23,7 +23,7 @@ dataroot = '~/Data/AIA/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-wave = '193'
+wave = '171'
 cross_correlate = True
 
 
