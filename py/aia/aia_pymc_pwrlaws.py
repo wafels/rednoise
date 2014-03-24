@@ -293,6 +293,18 @@ for iwave, wave in enumerate(waves):
                 pwr_ff = pickle.load(pkl_file)
                 pkl_file.close()
 
+                # Load the widths
+                ifilename = 'OUT.' + region_id + obstype
+                pkl_file_location = os.path.join(pkl_location, ifilename + 'distribution_widths.pickle')
+                print('Loading ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'rb')
+                freqs = pickle.load(pkl_file)
+                sigma = pickle.load(pkl_file)
+                pkl_file.close()
+
+                # Fix any any non-finite widths
+                sigma = fix_nonfinte(sigma)
+
                 # Normalize the frequency
                 xnorm = freqs[0]
                 x = freqs / xnorm

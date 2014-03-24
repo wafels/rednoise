@@ -17,7 +17,7 @@ import csv
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product, tsDetails
+from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
 
 font = {'family': 'normal',
         'weight': 'bold',
@@ -219,9 +219,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #data_name = wave + ' (' + fits_level + winname + ', ' + manip + '), ' + region
                 #data_name = region_id
                 if region in sunday_name:
-                    data_name = 'AIA ' + str(wave) + ' : ' + sunday_name[region]
+                    data_name = 'AIA ' + str(wave) + ', ' + sunday_name[region]
                 else:
-                    data_name = 'AIA ' + str(wave) + ' : ' + region
+                    data_name = 'AIA ' + str(wave) + ', ' + region
 
                 # Create a location to save the figures
                 savefig = os.path.join(os.path.expanduser(sfig), window, manip)
@@ -464,8 +464,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 ax.plot(freqs, bf, color='b', linestyle="--", label='fit to arithmetic mean of power spectra from each pixel n=%4.2f +/- %4.2f' % (param[1], nerr))
 
                 # Extra information for the plot
-                ax.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
-                ax.axvline(three_min, color='k', linestyle='--', label='3 mins.')
+                ax.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
+                ax.axvline(three_min, color=s3min.color, linestyle=s3min.linestyle, label=s3min.label)
                 #plt.axhline(1.0, color='k', label='average power')
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
@@ -515,21 +515,21 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 ax.xaxis.set_major_formatter(xformatter)
 
                 # Geometric mean
-                ax.plot(freqs, np.exp(logiobs), label='geometric mean of power spectra at each pixel')
-                ax.plot(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
+                ax.plot(freqs, np.exp(logiobs),  color='k', label='geometric mean of power spectra at each pixel')
+                #ax.plot(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
 
-                # Power at each freuqnecy - distributions
-                ax.plot(freqs, lim[0, 0, :], linestyle='--', label='lower 68%')
-                ax.plot(freqs, lim[0, 1, :], linestyle='--', label='upper 68%')
-                ax.plot(freqs, lim[1, 0, :], linestyle=':', label='lower 95%')
-                ax.plot(freqs, lim[1, 1, :], linestyle=':', label='upper 95%')
+                # Power at each frequency - distributions
+                ax.plot(freqs, lim[0, 0, :], label=s_L68.label, color=s_L68.color, linewidth=s_L68.linewidth, linestyle=s_L68.linestyle)
+                ax.plot(freqs, lim[1, 0, :], label=s_L95.label, color=s_L95.color, linewidth=s_L95.linewidth, linestyle=s_L95.linestyle)
+                ax.plot(freqs, lim[0, 1, :], label=s_U68.label, color=s_U68.color, linewidth=s_U68.linewidth, linestyle=s_U68.linestyle)
+                ax.plot(freqs, lim[1, 1, :], label=s_U95.label, color=s_U95.color, linewidth=s_U95.linewidth, linestyle=s_U95.linestyle)
 
                 # Extra information for the plot
-                ax.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
-                ax.axvline(three_min, color='k', linestyle='--', label='3 mins.')
+                ax.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
+                ax.axvline(three_min, color=s3min.color, linestyle=s3min.linestyle, label=s3min.label)
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
-                plt.title(data_name + ' - geometric mean')
+                plt.title(data_name + ' : geometric mean')
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.geometric_mean_power_spectra.%s' % (savefig_format))
                 plt.close('all')
@@ -545,28 +545,30 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.figure(3)
                 plt.xlabel('$\log_{10}(power)$')
                 plt.ylabel('proportion found at given frequency')
-                plt.title(data_name + ' - power distributions')
+                plt.title(data_name + ' : power distributions')
                 for f in findex:
                     xx = histogram_loc[1:] / np.log(10.0)
                     yy = hpwr[f, :]
                     gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
                     #print gfit[0]
-                    plt.plot(xx, yy, label='%7.2f %s, $\sigma=$ %f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
+                    plt.plot(xx, yy, label='%7.2f %s, $\sigma=$ %3.2f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
                     #plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]))
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
 
                 # Fit all the histogram curves to find the Gaussian width
-                #logiobs_distrib_width = np.zeros((nfreq))
-                #for f in np.arange(0, nfreq):
-                #    xx = histogram_loc[1:] / np.log(10.0)
-                #    yy = hpwr[f, :]
-                #    try:
-                #        gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
-                #        logiobs_distrib_width[f] = np.abs(gfit[0][2])
-                #    except:
-                #        logiobs_distrib_width[f] = None
-
+                logiobs_distrib_width = np.zeros((nposfreq))
+                error_logiobs_distrib_width = np.zeros((nposfreq))
+                for jj, f in enumerate(freqs):
+                    xx = histogram_loc[1:] / np.log(10.0)
+                    yy = hpwr[jj, :]
+                    try:
+                        gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
+                        logiobs_distrib_width[jj] = np.abs(gfit[0][2])
+                        error_logiobs_distrib_width[jj] = np.sqrt(np.abs(gfit[1][2, 2]))
+                    except:
+                        logiobs_distrib_width[jj] = None
+                        error_logiobs_distrib_width[jj] = None
                 # plot out the time series
                 plt.figure(4)
                 full_ts.peek()
@@ -637,8 +639,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         ts = TimeSeries(t, dc_analysed[j, i, :])
                         plt.loglog(freqs, ts.PowerSpectrum.ppower)
                 plt.loglog()
-                plt.axvline(five_min, color='k', linestyle='-.', label='5 mins.')
-                plt.axvline(three_min, color='k', linestyle='--', label='3 mins.')
+                plt.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
+                plt.axvline(three_min, color=s3min.color, linestyle=s3min.linestyle, label=s3min.label)
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('FFT power ' + tsdetails)
                 plt.title(data_name)
@@ -660,6 +662,18 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.colorbar()
                 plt.title(data_name)
                 plt.savefig(savefig + '.all_analyzed_fft_histogram.%s' % (savefig_format))
+
+                ###############################################################
+                # Plot of the widths as a function of the frequency.
+                plt.figure(14)
+                plt.xlabel('frequency (%s)' % (freqfactor[1]))
+                plt.ylabel('decades of frequency')
+                plt.semilogx(freqs, logiobs_distrib_width + error_logiobs_distrib_width, label='+ error', linestyle='.')
+                plt.semilogx(freqs, logiobs_distrib_width - error_logiobs_distrib_width, label='- error', linestyle='.')
+                plt.semilogx(freqs, logiobs_distrib_width, label='estimated width')
+                plt.title(data_name + ' - distribution widths')
+                plt.legend(loc=3, framealpha=0.3, fontsize=10)
+                plt.savefig(savefig + '.logiobs_distribution_width.%s' % (savefig_format))
 
                 ###############################################################
                 # Save various data products
@@ -689,6 +703,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
                           (freqs / freqfactor[0], logiobs))
+
+                # Widths of the power distributions
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.distribution_widths.pickle',
+                          (freqs / freqfactor[0], logiobs_distrib_width))
 
                 # Bump fit
                 #pkl_write(pkl_location,
@@ -742,14 +761,14 @@ do_lstsqr(dataroot='~/Data/AIA/',
 
 
 do_lstsqr(dataroot='~/Data/AIA/',
-          ldirroot='~/ts/pickle_cc/',
-          sfigroot='~/ts/img_cc/',
-          scsvroot='~/ts/csv_cc/',
+          ldirroot='~/ts/pickle_cc_final/',
+          sfigroot='~/ts/img_cc_final/',
+          scsvroot='~/ts/csv_cc_final/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['193', '171'],
-          regions=['moss', 'loopfootpoints', 'sunspot', 'qs'],
+          waves=['171', '193'],
+          regions=['moss', 'qs', 'loopfootpoints', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 
