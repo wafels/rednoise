@@ -9,6 +9,7 @@ import numpy as np
 
 import pymc
 from matplotlib import pyplot as plt
+from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
 import aia_specific
@@ -16,6 +17,15 @@ import pymcmodels
 import rnspectralmodels
 
 np.random.seed(seed=1)
+
+
+def fix_nonfinite(data):
+    bad_indexes = np.logical_not(np.isfinite(data))
+    good_indexes = np.logical_not(bad_indexes)
+    good_data = data[good_indexes]
+    interpolated = np.interp(bad_indexes.nonzero()[0], good_indexes.nonzero()[0], good_data)
+    data[bad_indexes] = interpolated
+    return data
 
 
 #
@@ -89,6 +99,10 @@ def write_plots(M, region_id, obstype, savefig, model,
     facecolor = 'white'
     bbox = dict(facecolor=facecolor, alpha=alpha)
 
+    # Storage to track the 2-d plots
+    vpairs = []
+
+    # Go through all the variables
     for v in variables:
         # Fix the data, and get better labels
         data, mean, v95_lo, v95_hi, vlabel = fix_variables(v,
@@ -97,8 +111,7 @@ def write_plots(M, region_id, obstype, savefig, model,
                                                            extra_factors=extra_factors)
 
         # Save file name
-        info = '_%s_%s' % (model, v)
-        filename = savefig + obstype + info + savetype
+        filename = '%s_%s_%s__%s__%s_%s' % (savefig, model, obstype, '1d', v, savetype)
 
         # Find the histogram
         h, _ = np.histogram(data, bins)
@@ -125,6 +138,46 @@ def write_plots(M, region_id, obstype, savefig, model,
         plt.legend(framealpha=alpha, fontsize=fontsize, loc=3)
         plt.savefig(filename)
         plt.close('all')
+
+        #
+        # Do the 2-d variables
+        #
+        for v2 in variables:
+            if (v2 != v) and not(v2 + v in vpairs):
+
+                # Update the list of variable pairs
+                vpairs.append(v2 + v)
+                vpairs.append(v + v2)
+
+                # Fix the data, and get better labels
+                data2, mean2, v95_lo2, v95_hi2, vlabel2 = fix_variables(v2,
+                                                               M.trace(v2)[:],
+                                                               s[v2],
+                                                               extra_factors=extra_factors)
+                # Scatter plot : save file name
+                filename = '%s_%s_%s__%s__%s_%s_%s' % (savefig, model, obstype, 'scatter', v, v2, savetype)
+
+                plt.scatter(data, data2, alpha=0.02)
+                plt.xlabel(v + vlabel)
+                plt.ylabel(v2 + vlabel2)
+                plt.title(region_id + ' ' + obstype + ' %s' % (model))
+                plt.plot([mean], [mean2], 'go')
+                plt.text(mean, mean2, '%4.2f, %4.2f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
+                plt.savefig(filename)
+                plt.close('all')
+
+                # 2-D histogram
+                filename = '%s_%s_%s__%s__%s_%s_%s' % (savefig, model, obstype, '2dhistogram', v, v2, savetype)
+
+                plt.hist2d(data, data2, bins=bins, norm=LogNorm())
+                plt.colorbar()
+                plt.xlabel(v + vlabel)
+                plt.ylabel(v2 + vlabel2)
+                plt.plot([mean], [mean2], 'wo')
+                plt.text(mean, mean2, '%4.2f, %4.2f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
+                plt.title(region_id + ' ' + obstype + ' %s' % (model))
+                plt.savefig(filename)
+                plt.close('all')
 
 
 #
@@ -205,9 +258,9 @@ plt.close('all')
 # Set up which data to look at
 #
 dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle_cc/'
-sfigroot = '~/ts/img_cc/'
-scsvroot = '~/ts/csv_cc/'
+ldirroot = '~/ts/pickle_cc_final/'
+sfigroot = '~/ts/img_cc_final/'
+scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
@@ -219,7 +272,7 @@ manip = 'relative'
 #
 # Number of posterior predictive samples to calulcate
 #
-nsample = 500
+nsample = 5#00
 
 # PyMC control
 itera = 100000
@@ -294,8 +347,8 @@ for iwave, wave in enumerate(waves):
                 pkl_file.close()
 
                 # Load the widths
-                ifilename = 'OUT.' + region_id + obstype
-                pkl_file_location = os.path.join(pkl_location, ifilename + 'distribution_widths.pickle')
+                ifilename = 'OUT.' + region_id
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.distribution_widths.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
@@ -303,7 +356,7 @@ for iwave, wave in enumerate(waves):
                 pkl_file.close()
 
                 # Fix any any non-finite widths
-                sigma = fix_nonfinte(sigma)
+                sigma = fix_nonfinite(sigma)
 
                 # Normalize the frequency
                 xnorm = freqs[0]
