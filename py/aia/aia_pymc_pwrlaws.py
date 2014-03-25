@@ -272,7 +272,7 @@ manip = 'relative'
 #
 # Number of posterior predictive samples to calulcate
 #
-nsample = 5#00
+nsample = 1000
 
 # PyMC control
 itera = 100000
@@ -471,11 +471,11 @@ for iwave, wave in enumerate(waves):
 
                 # Plot the fitness criteria - should really put this in a separate function
                 ypos = np.zeros((3))
-                yrange = np.max(pwr) - np.min(pwr)
-                ypos_min = np.min(pwr) + 0.1 * yrange
+                ypos_max = np.min(np.asarray([np.max(pwr_ff), np.log(10.0)]))
+                ypos_min = np.max(np.asarray([np.min(pwr_ff), np.log(0.01)]))
+                yrange = np.max(pwr_ff) - ypos_min
                 for yyy in range(0, ypos.size):
-                    ypos[yyy] = ypos_min + yyy * (yrange - ypos_min) / (1.0 * (np.size(ypos)))
-                print ypos
+                    ypos[yyy] = ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0))
                 plt.text(0.01, np.exp(ypos[0]), '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
                 plt.text(0.01, np.exp(ypos[1]), '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
                 plt.text(0.01, np.exp(ypos[2]), '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
