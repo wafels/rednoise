@@ -308,7 +308,8 @@ purview of coronal seismology.  We discuss these two topics in the
 sections below.
 
 
-\subsection{Coronal seismology and the effect of background assumptions}
+\subsection{Effect of background power spectrum assumptions on the
+  detection of oscillatory power}
 \label{ssec:corseis}
 
 Section \ref{sec:results} demonstrates the presence of a red
@@ -363,17 +364,23 @@ higher confidence levels, in order to minimize the effects of
 mistakenly identifying red-noise as evidence for an oscillatory
 signal.
 
-The foregoing discusses the implications of red-noise power spectra
-for the detection of narrow-frequency band oscillations when looking
-at single time-series.  The advantage of AIA is that there is more
-than one time-series to consider.  Evidence for the presence of a wave
-in the corona is much stronger if it can be shown that narrow
-frequency-band oscillations occur significantly above a red-noise
-background signal in several neighboring pixels.
+\subsection{Implications for coronal seismology and automated
+  oscillation detection algorithms}\label{sec:oscdetect}
+
+The discussion of Section \ref{ssec:corseis} shows that red-noise
+power spectra has a powerful effect on the claims of a detection of
+narrow-frequency band oscillations in time-series.  When looking at
+extended regions of coronal imaging data, evidence for the presence of
+an oscillation in the corona is strengthened if it can be shown that
+narrow frequency-band oscillations occur significantly above a
+red-noise background signal in several neighboring pixels.  Coronal
+seismology derives its observational evidence from such detections,
+and automated detection algorithms hold out the hope of greatly
+increasing the number of oscillating regions detected.
 
 Figure \ref{fig:compare171193} shows that time series from individual
-pixels have power-law like power spectra.  This implications for the
-design of automated oscillation detection algorithms.  Such an
+pixels have power-law like power spectra.  This has implications for
+the design of automated oscillation detection algorithms.  Such an
 algorithm must somehow take into account the nature of the power
 spectrum.  The power-law power spectrum itself lacks an easily
 definable time-scale at or below which a background trend can be
@@ -387,19 +394,34 @@ too low a confidence level, can lead to misleading results when
 looking for oscillatory signals.  Many detection algorithms do make
 this assumption, for example \cite{2004SoPh..223....1D},
 \cite{2007SoPh..241..397N}, \cite{2008SoPh..248..395S} and
-\cite{2010SoPh..264..403I}.  Such approaches {\it may} have yet to be
-tested assuming a red-noise background power spectrum, and so their
-efficacy is unknown.
+\cite{2010SoPh..264..403I}.  Such approaches have yet to be tested
+assuming a red-noise background power spectrum, and so their efficacy
+is unknown.  \cite{2004SoPh..223....1D} and \cite{2008SoPh..248..395S}
+are wavelet-based approaches, and Figure \ref{fig:comparison} does
+suggest that a red-noise background spectrum will make a significant
+difference. 
 
 All the automated detection algorithms described above attempt to find
-pixels that are obviously oscillating at some frequency.  Hence, the
-strength of the oscillation at that frequency, compared to some
-assumption of the background, is the key quantity to measure.
-Detection algorithms based on wave coherence, such as
-\cite{2008SoPh..252..321M}, implement wave detection through finding
-spatially contiguous regions of the corona which are coherent in a
-given frequency range.  The frequency range searched is based on
-previous experience.  These
+individual pixels that are obviously oscillating at some frequency,
+using the strength of the oscillation at that frequency (compared to
+some assumption of the background) as the key quantity to measure.
+These pixels are then clumped together and the quality of the signal
+is then assessed.  Detection algorithms based on wave coherence, such
+as \cite{2008SoPh..252..321M}, implement wave detection through
+finding spatially contiguous regions of the corona which are coherent
+in a given frequency range.  The frequency range searched is based on
+previous experience.  Oscillations that are detected propagating along
+loops are often found by considering distance-time plots
+\cite{demoortel2000} and looking for alternating brightening/darkening
+in those plots as a indicator of a propagating wave.  This is
+essentially a coherence-based approach, as the user is assessing the
+likelihood that an oscillation has been detected based on the observed
+signal in multiple contiguous pixels.  However, each pixel in these
+plots probably has a red-noise background power spectrum, and so the
+discussion of Section \ref{ssec:corseis} suggests that the
+significance of any claimed oscillation is much reduced.  The effect
+of a red-noise background signal on these coherence-based approaches
+is not known.
 
 
 

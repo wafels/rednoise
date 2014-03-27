@@ -259,8 +259,8 @@ plt.close('all')
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
-scsvroot = '~/ts/csv_cc_final/'
+sfigroot = '~/ts/img_cc_final_test/'
+scsvroot = '~/ts/csv_cc_final_test/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
@@ -516,7 +516,8 @@ for iwave, wave in enumerate(waves):
                         map_M0_pp = pymc.MAP(M0_pp)
                         try:
                             print('M0: fitting to find the maximum likelihood')
-                            map_M0_pp.fit(method='fmin_powell')
+                            #map_M0_pp.fit(method='fmin_powell')
+                            map_M0_pp.fit()
                             l0 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau, obstype)
                         except:
                             print('Error fitting M0 to sample.')
@@ -527,7 +528,8 @@ for iwave, wave in enumerate(waves):
                         map_M1_pp = pymc.MAP(M1_pp)
                         try:
                             print('M1: fitting to find the maximum likelihood')
-                            map_M1_pp.fit(method='fmin_powell')
+                            #map_M1_pp.fit(method='fmin_powell')
+                            map_M1_pp.fit()
                             l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
                         except:
                             print('Error fitting M1 to sample.')
@@ -570,7 +572,7 @@ for iwave, wave in enumerate(waves):
                 print('Posterior predictive p-value = %f' % (pvalue))
 
                 plt.figure(2)
-                plt.hist(t_lrt_distribution, bins=100)
+                plt.hist(t_lrt_distribution, bins=30)
                 plt.axvline(t_lrt_data, color='k', label='p=%4.3f' % (pvalue))
                 plt.legend()
                 plt.savefig(savefig + obstype + '.posterior_predictive.png')
