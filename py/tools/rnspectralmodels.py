@@ -145,3 +145,26 @@ def splwc_AddGaussianBump(f, a):
         a[2] : the natural logarithm of the constant background
     """
     return power_law_with_constant(f, a[0:3]) + GaussianBump(f, a[3:6])
+
+
+def Log_splwc_AddGaussianBump(f, a):
+    """Simple power law with a constant, plus a Gaussian shaped bump.
+    This model assumes that the powe spectrum is made up of a power law and a
+    constant background.  At high frequencies the power spectrum is dominated
+    by the constant background.
+
+    Parameters
+    ----------
+    f : ndarray
+        frequencies
+
+    a : ndarray[2]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index
+        a[2] : the natural logarithm of the constant background
+    """
+    return np.log(splwc_AddGaussianBump(f, a))
+
+
+def Log_splwc_AddGaussianBump_CF(f, a0, a1, a2, a3, a4, a5):
+    return np.log(power_law_with_constant(f, [a0, a1, a2]) + GaussianBump(f, [a3, a4, a5]))
