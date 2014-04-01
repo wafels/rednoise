@@ -92,6 +92,9 @@ def write_plots(M, region_id, obstype, savefig, model,
     if model == 'M1':
         variables = ['power_law_norm', 'power_law_index', 'background',
                  'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
+    if model == 'M2':
+        variables = ['power_law_norm', 'power_law_index', 'background',
+                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
 
     s = M.stats()
     fontsize = 10
@@ -222,6 +225,47 @@ def get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype):
 
 
 #
+# Hypothesis 2 functions
+#
+def get_variables_M2(m):
+    A = [m.value.power_law_norm, m.value.power_law_index, m.value.background,
+         m.value.gaussian_amplitude, m.value.gaussian_position, m.value.gaussian_width]
+    return A
+
+
+def curve_fit_M2(x, y, p0, sigma, n_attempt_limit=10):
+    p_in = p0
+    n_attempt = 0
+    success = False
+    while (not success) and (n_attempt <= n_attempt_limit):
+        try:
+            answer = curve_fit(rnspectralmodels.Log_splwc_AddGaussianBump_CF, x, y, p0=p_in, sigma=sigma)
+            success = True
+        except RuntimeError:
+            print 'Model M2 curve fit did not work - try varying parameters a tiny bit'
+            p_in = p0 + 0.1 * np.random.random(size=(6))
+            n_attempt = n_attempt + 1
+            print 'Attempt number: %i' % (n_attempt)
+    if success:
+        return answer[0]
+    else:
+        return p0
+
+
+def get_spectrum_M2(x, A):
+    return rnspectralmodels.Log_splwc_AddGaussianBump(x, A)
+
+
+def get_likelihood_M2(map_M2, x, pwr, sigma, tau, obstype):
+    A2 = get_variables_M2(map_M2)
+    A2 = curve_fit_M2(x, pwr, A2, sigma)
+    if obstype == '.logiobs':
+        return pymc.normal_like(pwr, get_spectrum_M2(x, A2), tau)
+    else:
+        return pymc.lognormal_like(pwr, get_spectrum_M2(x, A2), tau)
+
+
+#
 # The variables as used in the fitting algorithm are not exactly those used
 # when the equation is written down.  We transform them back to variables
 # that make sense when plotting
@@ -275,8 +319,8 @@ manip = 'relative'
 nsample = 1000
 
 # PyMC control
-itera = 100000
-burn = 20000
+itera = 1000#00
+burn = 200#00
 thin = 5
 
 # Set the Gaussian width for the data
@@ -406,15 +450,19 @@ for iwave, wave in enumerate(waves):
                 if obstype == '.logiobs':
                     pwr = pwr_ff
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump(x, pwr, sigma)
+                    pymcmodel2 = pymcmodels.Log_splwc_AddGaussianBump2(x, pwr, sigma)
                 # Arithmetic mean
                 if obstype == '.iobs':
                     pwr = np.exp(pwr_ff)
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, pwr, sigma)
 
+                kaflkaj = lkjafslka
+
                 # Initiate the sampler
                 dbname1 = os.path.join(pkl_location, 'MCMC.M1.'+ region_id + obstype)
                 M1 = pymc.MCMC(pymcmodel1, db='pickle', dbname=dbname1)
-
+                M2 = pymc.MCMC(pymcmodel2)
+                M2.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
                 # Run the sampler
                 print ' '
                 print('M1: Running power law plus Gaussian model')

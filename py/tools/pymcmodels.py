@@ -239,7 +239,141 @@ def Log_splwc_GaussianBump(analysis_frequencies, analysis_power, sigma):
                            observed=True)
 
     predictive = pymc.Normal('predictive',
-                             tau = 1.0 / (sigma ** 2),
+                             tau=1.0 / (sigma ** 2),
+                             mu=fourier_power_spectrum)
+
+    # MCMC model
+    return locals()
+
+
+#
+# The model here is a power law plus some Gaussian emission.  Then take the
+# log of that
+#
+def Log_splwc_AddGaussianBump2(analysis_frequencies, analysis_power, sigma):
+    """Set up a PyMC model: power law for the power spectrum"""
+
+    # PyMC definitions
+    # Define data and stochastics
+    power_law_index = pymc.Uniform('power_law_index',
+                                   lower=-1.0,
+                                   upper=6.0,
+                                   doc='power law index')
+
+    power_law_norm = pymc.Uniform('power_law_norm',
+                                  lower=-10.0,
+                                  upper=10.0,
+                                  doc='power law normalization')
+
+    background = pymc.Uniform('background',
+                                  #value=np.mean(np.log(analysis_power[-10:-1])),
+                                  lower=-20.0,
+                                  upper=10.0,
+                                  doc='background')
+
+    gaussian_amplitude = pymc.Uniform('gaussian_amplitude',
+                                  lower=-5.0,
+                                  upper=5.0,
+                                  doc='gaussian_amplitude')
+
+    gaussian_position = pymc.Uniform('gaussian_position',
+                                  lower=2.0,
+                                  upper=6.0,
+                                  doc='gaussian_position')
+
+    gaussian_width = pymc.Uniform('gaussian_width',
+                                  lower=0.001,
+                                  upper=3.0 * np.log(10.0),
+                                  doc='gaussian_width')
+
+    # Model for the power law spectrum
+    @pymc.deterministic(plot=False)
+    def fourier_power_spectrum(p=power_law_index,
+                               a=power_law_norm,
+                               b=background,
+                               ga=gaussian_amplitude,
+                               gc=gaussian_position,
+                               gs=gaussian_width,
+                               f=analysis_frequencies):
+        """A pure and simple power law model"""
+        out = rnspectralmodels.Log_splwc_AddGaussianBump2(f, [a, p, b, ga, gc, gs])
+        return out
+
+    spectrum = pymc.Normal('spectrum',
+                           tau=1.0 / (sigma ** 2),
+                           mu=fourier_power_spectrum,
+                           value=analysis_power,
+                           observed=True)
+
+    predictive = pymc.Normal('predictive',
+                             tau=1.0 / (sigma ** 2),
+                             mu=fourier_power_spectrum)
+
+    # MCMC model
+    return locals()
+
+
+#
+# The model here is a power law plus some Gaussian emission.  Then take the
+# log of that
+#
+def Log_splwc_AddGaussianBump3(analysis_frequencies, analysis_power, sigma):
+    """Set up a PyMC model: power law for the power spectrum"""
+
+    # PyMC definitions
+    # Define data and stochastics
+    power_law_index = pymc.Uniform('power_law_index',
+                                   lower=-1.0,
+                                   upper=6.0,
+                                   doc='power law index')
+
+    power_law_norm = pymc.Uniform('power_law_norm',
+                                  lower=-10.0,
+                                  upper=10.0,
+                                  doc='power law normalization')
+
+    background = pymc.Uniform('background',
+                                  #value=np.mean(np.log(analysis_power[-10:-1])),
+                                  lower=-20.0,
+                                  upper=10.0,
+                                  doc='background')
+
+    gaussian_amplitude = pymc.Uniform('gaussian_amplitude',
+                                  lower=-5.0,
+                                  upper=5.0,
+                                  doc='gaussian_amplitude')
+
+    gaussian_position = pymc.Uniform('gaussian_position',
+                                  lower=20,
+                                  upper=200,
+                                  doc='gaussian_position')
+
+    gaussian_width = pymc.Uniform('gaussian_width',
+                                  lower=0.001,
+                                  upper=150.0,
+                                  doc='gaussian_width')
+
+    # Model for the power law spectrum
+    @pymc.deterministic(plot=False)
+    def fourier_power_spectrum(p=power_law_index,
+                               a=power_law_norm,
+                               b=background,
+                               ga=gaussian_amplitude,
+                               gc=gaussian_position,
+                               gs=gaussian_width,
+                               f=analysis_frequencies):
+        """A pure and simple power law model"""
+        out = rnspectralmodels.Log_splwc_AddGaussianBump3(f, [a, p, b, ga, gc, gs])
+        return out
+
+    spectrum = pymc.Normal('spectrum',
+                           tau=1.0 / (sigma ** 2),
+                           mu=fourier_power_spectrum,
+                           value=analysis_power,
+                           observed=True)
+
+    predictive = pymc.Normal('predictive',
+                             tau=1.0 / (sigma ** 2),
                              mu=fourier_power_spectrum)
 
     # MCMC model
