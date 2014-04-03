@@ -272,8 +272,8 @@ def Log_splwc_AddGaussianBump2(analysis_frequencies, analysis_power, sigma):
                                   doc='background')
 
     gaussian_amplitude = pymc.Uniform('gaussian_amplitude',
-                                  lower=-5.0,
-                                  upper=5.0,
+                                  lower=-5.0 * np.log(10.0),
+                                  upper=-1.0 * np.log(10.0),
                                   doc='gaussian_amplitude')
 
     gaussian_position = pymc.Uniform('gaussian_position',
@@ -283,7 +283,7 @@ def Log_splwc_AddGaussianBump2(analysis_frequencies, analysis_power, sigma):
 
     gaussian_width = pymc.Uniform('gaussian_width',
                                   lower=0.001,
-                                  upper=3.0 * np.log(10.0),
+                                  upper=3.0,
                                   doc='gaussian_width')
 
     # Model for the power law spectrum

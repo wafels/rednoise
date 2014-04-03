@@ -59,9 +59,8 @@ This is what we do with the data and how we do it:
 """
 
 
-def calculate_histograms(nposfreq, pwr):
+def calculate_histograms(nposfreq, pwr, bins):
     # number of histogram bins
-    bins = 100
     hpwr = np.zeros((nposfreq, bins))
     for f in range(0, nposfreq):
         h = np.histogram(pwr[:, :, f], bins=bins, range=[np.min(pwr), np.max(pwr)])
@@ -499,7 +498,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # number of histogram bins
                 # Calculate the probability density in each frequency bin.
-                histogram_loc, hpwr, lim = calculate_histograms(nposfreq, logpwr)
+                bins = 100
+                bin_edges, hpwr, lim = calculate_histograms(nposfreq, logpwr, bins)
+                histogram_loc = np.zeros(shape=(bins))
+                for kk in range(0, bins):
+                    histogram_loc[kk] = 0.5 * (bin_edges[kk] + bin_edges[kk + 1])
 
                 # -------------------------------------------------------------
                 # Plots of power spectra: geometric mean of power spectra at
@@ -547,7 +550,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('proportion found at given frequency')
                 plt.title(data_name + ' : power distributions')
                 for f in findex:
-                    xx = histogram_loc[1:] # / np.log(10.0)
+                    xx = histogram_loc / np.log(10.0)
                     yy = hpwr[f, :]
                     gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
                     #print gfit[0]
@@ -556,12 +559,16 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
 
-                # Fit all the histogram curves to find the Gaussian width
+                # Fit all the histogram curves to find the Gaussian width.
+                # Stick with natural units to get the fit values which are
+                # passed along to other programs
                 logiobs_distrib_width = np.zeros((nposfreq))
-                error_logiobs_distrib_width = np.zeros((nposfreq))
+                error_logiobs_distrib_width = np.zeros_like(logiobs_distrib_width)
+                iobs_peak = np.zeros_like(logiobs_distrib_width)
                 for jj, f in enumerate(freqs):
-                    xx = histogram_loc[1:] # / np.log(10.0)
+                    xx = histogram_loc
                     yy = hpwr[jj, :]
+                    iobs_peak[jj] = xx[np.argmax(yy)]
                     try:
                         gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
                         logiobs_distrib_width[jj] = np.abs(gfit[0][2])
@@ -569,6 +576,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     except:
                         logiobs_distrib_width[jj] = None
                         error_logiobs_distrib_width[jj] = None
+
                 # plot out the time series
                 plt.figure(4)
                 full_ts.peek()
@@ -578,7 +586,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # -------------------------------------------------------------
                 # plot some histograms of the power at a small number of
                 # frequencies.
-                histogram_loc2, hpwr2, lim2 = calculate_histograms(nposfreq, pwr)
+                histogram_loc2, hpwr2, lim2 = calculate_histograms(nposfreq, pwr, 100)
 
                 findex = []
                 f_of_interest = [0.5 * five_min, five_min, three_min, 2 * three_min, 3 * three_min]
@@ -702,12 +710,17 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
-                          (freqs / freqfactor[0], logiobs))
+                          (freqs / freqfactor[0], logiobs, iobs_peak, nx * ny))
 
                 # Widths of the power distributions
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.distribution_widths.pickle',
                           (freqs / freqfactor[0], logiobs_distrib_width))
+
+                # Error in the Widths of the power distributions
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.distribution_widths_error.pickle',
+                          (freqs / freqfactor[0], error_logiobs_distrib_width))
 
                 # Bump fit
                 #pkl_write(pkl_location,
