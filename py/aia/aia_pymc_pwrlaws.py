@@ -239,7 +239,7 @@ def curve_fit_M2(x, y, p0, sigma, n_attempt_limit=10):
     success = False
     while (not success) and (n_attempt <= n_attempt_limit):
         try:
-            answer = curve_fit(rnspectralmodels.Log_splwc_AddGaussianBump_CF, x, y, p0=p_in, sigma=sigma)
+            answer = curve_fit(rnspectralmodels.Log_splwc_AddGaussianBump2_CF, x, y, p0=p_in, sigma=sigma)
             success = True
         except RuntimeError:
             print 'Model M2 curve fit did not work - try varying parameters a tiny bit'
@@ -253,7 +253,7 @@ def curve_fit_M2(x, y, p0, sigma, n_attempt_limit=10):
 
 
 def get_spectrum_M2(x, A):
-    return rnspectralmodels.Log_splwc_AddGaussianBump(x, A)
+    return rnspectralmodels.Log_splwc_AddGaussianBump2(x, A)
 
 
 def get_likelihood_M2(map_M2, x, pwr, sigma, tau, obstype):
@@ -449,20 +449,22 @@ for iwave, wave in enumerate(waves):
                 # Geometric mean
                 if obstype == '.logiobs':
                     pwr = pwr_ff
+                    #
+                    #  Multiplies the power law by a Gaussian
+                    #
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump(x, pwr, sigma)
-                    pymcmodel2 = pymcmodels.Log_splwc_AddGaussianBump2(x, pwr, sigma)
+                    #
+                    # Adds a lognormal to the power law
+                    #
+                    #pymcmodel1 = pymcmodels.Log_splwc_AddGaussianBump2(x, pwr, sigma)
                 # Arithmetic mean
                 if obstype == '.iobs':
                     pwr = np.exp(pwr_ff)
                     pymcmodel1 = pymcmodels.Log_splwc_GaussianBump_lognormal(x, pwr, sigma)
 
-                kaflkaj = lkjafslka
-
                 # Initiate the sampler
                 dbname1 = os.path.join(pkl_location, 'MCMC.M1.'+ region_id + obstype)
                 M1 = pymc.MCMC(pymcmodel1, db='pickle', dbname=dbname1)
-                M2 = pymc.MCMC(pymcmodel2)
-                M2.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
                 # Run the sampler
                 print ' '
                 print('M1: Running power law plus Gaussian model')

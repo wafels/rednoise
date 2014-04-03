@@ -547,7 +547,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('proportion found at given frequency')
                 plt.title(data_name + ' : power distributions')
                 for f in findex:
-                    xx = histogram_loc[1:] / np.log(10.0)
+                    xx = histogram_loc[1:] # / np.log(10.0)
                     yy = hpwr[f, :]
                     gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
                     #print gfit[0]
@@ -560,7 +560,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 logiobs_distrib_width = np.zeros((nposfreq))
                 error_logiobs_distrib_width = np.zeros((nposfreq))
                 for jj, f in enumerate(freqs):
-                    xx = histogram_loc[1:] / np.log(10.0)
+                    xx = histogram_loc[1:] # / np.log(10.0)
                     yy = hpwr[jj, :]
                     try:
                         gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
