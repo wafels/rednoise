@@ -354,82 +354,16 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 nerr = np.sqrt(error[0, 0, 1])
 
                 ###############################################################
-                # Power spectrum analysis: trying to fit a spectrum with a bump
-                # -------------------------------------------------------------
-                # Trying to fit the data with a bump.  We can use the answers
-                # found with a fit without a bump, as an initial estimate
-                #
-                # Without the bump: power = kf ** -n + c
-                #
-                # loglog plots of the power seem to show a bump
-                #
-                # log(power) = log( kf ** -n + c ) + GaussianShape
-                #
-                # Note that
-                #
-                # log(power/ (kf ** -n + c)) = GaussianShape
-                #
-                # This suggests a two stage fitting process.  First, fit the
-                # background power spectrum.  Secondly, fit the Gaussian shape
-                #
-                # Also,
-                #
-                # power = (kf ** -n + c) * exp(GaussianShape)
-                #
-                # What does this mean physically?
-                #
-                # A better fit is probably obtainable by fitting both the power law and
-                # the Gaussian shape simultaneously.
-                #
-                """
-                bf_diff = iobs / bf
-                plt.loglog(freqs, bf_diff)
-                ga_est, ga_est_error = aia_plaw.do_fit(np.log(x),
-                                                       np.log(bf_diff),
-                                                       aia_plaw.GaussianShape, p0 = [1.0, 1.9, 0.6])
-                GA = aia_plaw.GaussianShape(np.log(x), ga_est[0, 0, 0], ga_est[0, 0, 1], ga_est[0, 0, 2])
-                g_A = ga_est[0, 0, 0]
-                g_c = 1000 * np.exp(ga_est[0, 0, 1]) * xnorm
-                g_s = ga_est[0, 0, 2] / np.log(10.0)
-
-                # Plot of the Gaussian excess
-                plt.figure(1)
-                plt.loglog(freqs, bf_diff, color='b', label='data / (power law fit)')
-                plt.loglog(freqs, np.exp(GA), color='r', label='Gaussian fit: A=%4.2f, $f_{0}=$%4.2f mHz, $log_{10}\sigma=$%4.2f' % (g_A, g_c, g_s))
-                plt.xlabel('frequency (%s)' % (freqfactor[1]))
-                plt.ylabel('power ratio')
-                plt.title(data_name + ' - arithmetic mean')
-                plt.legend(loc=3, fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.aPs_gauss_estimate.png')
-                gwb, gwb_error = aia_plaw.do_fit(x, np.log(iobs),
-                                      aia_plaw.LogPowerLawPlusConstantGaussian, nvar= 6,p0 = [answer[0, 0, 0],
-                                                   answer[0, 0, 1],
-                                                   answer[0, 0, 2],
-                                                   ga_est[0,0,0], ga_est[0,0,1], ga_est[0,0,2]],)
-
-                bf_gwb = aia_plaw.LogPowerLawPlusConstantGaussian(x, gwb[0,0,0], gwb[0,0,1], gwb[0,0,2], gwb[0,0,3], gwb[0,0,4], gwb[0,0,5])
-
-                # Plot of the joint fit
-                plt.figure(2)
-                plt.loglog(freqs, bf * np.exp(GA), color='g', label='fit separately')
-                plt.loglog(freqs, iobs, color='b', label='data')
-                plt.loglog(freqs, np.exp(bf_gwb), color='r', label='fit together')
-                plt.legend(loc=3, fontsize=10, framealpha=0.5)
-                g_A = gwb[0, 0, 3]
-                g_c = 1000 * np.exp(gwb[0, 0, 4]) * xnorm
-                g_s = gwb[0, 0, 5] / np.log(10.0)
-                label_gaussian = 'FT: Gaussian fit: A=%4.2f, $f_{0}=$%4.2f mHz, $log_{10}\sigma=$%4.2f' % (g_A, g_c, g_s)
-                label_pwrlaw = 'FT: power law index = %4.2f' % gwb[0, 0, 1]
-                plt.text(freqs[0], 1.0, label_gaussian)
-                plt.text(freqs[0], 0.1, label_pwrlaw)
-                plt.title(data_name + ' - arithmetic mean')
-                plt.savefig(savefig + '.aPs_best_fit_with_Gaussian.png')
-                plt.close('all')
-                print answer, ga_est
-                print gwb
-
-                #sdf = aflakhflahdf
-                """
+                # Estimate the correlation distance in the region.  This is
+                # done by calculating the cross-correlation coefficient between
+                # two randomly selected pixels in the region.  If we do this
+                # often enough then we can estimate the distance at which the
+                # the cross-correlation between two pixels is zero.  This
+                # length-scale is then squared to get the estimated area that
+                # contains a statistically independent time-series.  If we
+                # divide the number of pixels in the region by this estimated
+                # area then we get an estimate of the number of independent
+                # time series in the region.
 
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, then apply the
@@ -505,6 +439,54 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     histogram_loc[kk] = 0.5 * (bin_edges[kk] + bin_edges[kk + 1])
 
                 # -------------------------------------------------------------
+                # plot some histograms of the log power at a small number of
+                # frequencies.
+                findex = []
+                f_of_interest = [0.5 * five_min, five_min, three_min, 2 * three_min, 3 * three_min]
+                hcolor = ['r', 'b', 'g', 'k', 'm']
+                for thisf in f_of_interest:
+                    findex.append(np.unravel_index(np.argmin(np.abs(thisf - freqs)), freqs.shape)[0])
+                plt.figure(3)
+                plt.xlabel('$\log_{10}(power)$')
+                plt.ylabel('proportion found at given frequency')
+                plt.title(data_name + ' : power distributions')
+                for jj, f in enumerate(findex):
+                    xx = histogram_loc / np.log(10.0)
+                    yy = hpwr[f, :]
+                    gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
+                    #print gfit[0]
+                    plt.plot(xx, yy, color=hcolor[jj], label='%7.2f %s, $\sigma=$ %3.2f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
+                    plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]), color=hcolor[jj], linestyle='--')
+                plt.legend(loc=3, fontsize=10, framealpha=0.5)
+                plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
+                plt.close('all')
+
+                # Fit all the histogram curves to find the Gaussian width.
+                # Stick with natural units to get the fit values which are
+                # passed along to other programs
+                logiobs_distrib_width = np.zeros((nposfreq))
+                error_logiobs_distrib_width = np.zeros_like(logiobs_distrib_width)
+                iobs_peak = np.zeros_like(logiobs_distrib_width)
+                logiobs_peak_location = np.zeros_like(logiobs_distrib_width)
+                for jj, f in enumerate(freqs):
+                    xx = histogram_loc
+                    yy = hpwr[jj, :]
+                    iobs_peak[jj] = xx[np.argmax(yy)]
+                    try:
+                        p0 = [0, 0, 0]
+                        p0[0] = np.max(yy)
+                        p0[1] = xx[np.argmax(yy)]
+                        p0[2] = 0.5#np.sqrt(np.mean(((p0[1] - xx) * yy) ** 2))
+                        gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy, p0=p0)
+                        logiobs_distrib_width[jj] = np.abs(gfit[0][2])
+                        error_logiobs_distrib_width[jj] = np.sqrt(np.abs(gfit[1][2, 2]))
+                        logiobs_peak_location[jj] = gfit[0][1]
+                    except:
+                        logiobs_distrib_width[jj] = None
+                        error_logiobs_distrib_width[jj] = None
+                        logiobs_peak_location[jj] = None
+
+                # -------------------------------------------------------------
                 # Plots of power spectra: geometric mean of power spectra at
                 # each pixel
                 ax = plt.subplot(111)
@@ -527,6 +509,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 ax.plot(freqs, lim[0, 1, :], label=s_U68.label, color=s_U68.color, linewidth=s_U68.linewidth, linestyle=s_U68.linestyle)
                 ax.plot(freqs, lim[1, 1, :], label=s_U95.label, color=s_U95.color, linewidth=s_U95.linewidth, linestyle=s_U95.linestyle)
 
+                # Position of the fitted peak in each distribution
+                ax.plot(freqs, np.exp(logiobs_peak_location),  color='m', label='fitted frequency')
+
                 # Extra information for the plot
                 ax.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
                 ax.axvline(three_min, color=s3min.color, linestyle=s3min.linestyle, label=s3min.label)
@@ -538,45 +523,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.close('all')
                 # -------------------------------------------------------------
 
-                # -------------------------------------------------------------
-                # plot some histograms of the log power at a small number of
-                # frequencies.
-                findex = []
-                f_of_interest = [0.5 * five_min, five_min, three_min, 2 * three_min, 3 * three_min]
-                for thisf in f_of_interest:
-                    findex.append(np.unravel_index(np.argmin(np.abs(thisf - freqs)), freqs.shape)[0])
-                plt.figure(3)
-                plt.xlabel('$\log_{10}(power)$')
-                plt.ylabel('proportion found at given frequency')
-                plt.title(data_name + ' : power distributions')
-                for f in findex:
-                    xx = histogram_loc / np.log(10.0)
-                    yy = hpwr[f, :]
-                    gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
-                    #print gfit[0]
-                    plt.plot(xx, yy, label='%7.2f %s, $\sigma=$ %3.2f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
-                    #plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]))
-                plt.legend(loc=3, fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
-
-                # Fit all the histogram curves to find the Gaussian width.
-                # Stick with natural units to get the fit values which are
-                # passed along to other programs
-                logiobs_distrib_width = np.zeros((nposfreq))
-                error_logiobs_distrib_width = np.zeros_like(logiobs_distrib_width)
-                iobs_peak = np.zeros_like(logiobs_distrib_width)
-                for jj, f in enumerate(freqs):
-                    xx = histogram_loc
-                    yy = hpwr[jj, :]
-                    iobs_peak[jj] = xx[np.argmax(yy)]
-                    try:
-                        gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
-                        logiobs_distrib_width[jj] = np.abs(gfit[0][2])
-                        error_logiobs_distrib_width[jj] = np.sqrt(np.abs(gfit[1][2, 2]))
-                    except:
-                        logiobs_distrib_width[jj] = None
-                        error_logiobs_distrib_width[jj] = None
-
                 # plot out the time series
                 plt.figure(4)
                 full_ts.peek()
@@ -586,6 +532,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # -------------------------------------------------------------
                 # plot some histograms of the power at a small number of
                 # frequencies.
+                """
                 histogram_loc2, hpwr2, lim2 = calculate_histograms(nposfreq, pwr, 100)
 
                 findex = []
@@ -608,7 +555,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 full_ts.peek()
                 plt.savefig(savefig + '.full_ts_timeseries.%s' % (savefig_format))
                 plt.close('all')
-
+                """
                 ###############################################################
                 # Time series plots
                 # Plot all the analyzed time series
@@ -676,9 +623,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.figure(14)
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
                 plt.ylabel('decades of frequency')
-                plt.semilogx(freqs, logiobs_distrib_width + error_logiobs_distrib_width, label='+ error', linestyle='.')
-                plt.semilogx(freqs, logiobs_distrib_width - error_logiobs_distrib_width, label='- error', linestyle='.')
-                plt.semilogx(freqs, logiobs_distrib_width, label='estimated width')
+                plt.semilogx(freqs, (logiobs_distrib_width + error_logiobs_distrib_width) / np.log(10.0), label='+ error', linestyle='--')
+                plt.semilogx(freqs, (logiobs_distrib_width - error_logiobs_distrib_width) / np.log(10.0), label='- error', linestyle='--')
+                plt.semilogx(freqs, logiobs_distrib_width / np.log(10.0), label='estimated width')
                 plt.title(data_name + ' - distribution widths')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
                 plt.savefig(savefig + '.logiobs_distribution_width.%s' % (savefig_format))
@@ -710,7 +657,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
-                          (freqs / freqfactor[0], logiobs, iobs_peak, nx * ny))
+                          (freqs / freqfactor[0], logiobs, iobs_peak, logiobs_peak_location, nx * ny))
 
                 # Widths of the power distributions
                 pkl_write(pkl_location,
