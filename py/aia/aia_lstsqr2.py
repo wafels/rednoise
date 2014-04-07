@@ -364,6 +364,67 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # divide the number of pixels in the region by this estimated
                 # area then we get an estimate of the number of independent
                 # time series in the region.
+                def cornorm(a, norm):
+                    return (a - np.mean(a)) / (np.std(a) * norm)
+
+                def exponential_decay(x, A, tau):
+                    return A * np.exp(-x / tau)
+
+                nsample = 100000
+                npicked = 0
+                lag = 1
+                cc = []
+                distance = []
+                while npicked < nsample:
+                    loc1 = (np.random.randint(0, ny), np.random.randint(0, nx))
+                    loc2 = (np.random.randint(0, ny), np.random.randint(0, nx))
+                    if loc1 != loc2:
+                        # Calculate the distance between the two locations
+                        distance.append(np.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2))
+
+                        # Get the time series
+                        ts1 = dc_analysed[loc1[0], loc1[1], :]
+                        ts2 = dc_analysed[loc2[0], loc2[1], :]
+
+                        # Calculate the cross-correlation coefficient
+                        ccvalue = np.correlate(cornorm(ts1, np.size(ts1)), cornorm(ts2, 1.0), mode='full')
+                        cc.append(ccvalue[nt - 1 + lag])
+
+                        # Advance the counter
+                        npicked = npicked + 1
+
+                distance = np.asarray(distance)
+                # Get a histogram of the distances
+                # What is the average correlation coefficient
+                cc = np.asarray(cc)
+                ccc = np.zeros(np.rint(np.max(distance)) + 1)
+                ccc_min = np.rint(np.min(distance))
+                xccc = np.arange(ccc_min, ccc_min + np.rint(np.max(distance)) + 1)
+                hist = np.zeros_like(ccc)
+                for jj, d in enumerate(distance):
+                    dloc = np.rint(d)
+                    hist[dloc] = hist[dloc] + 1
+                    ccc[dloc] = ccc[dloc] + cc[jj]
+                ccc = ccc / hist
+
+                # Fit the positive part of the cross-correlation plot with an
+                # exponential decay curve to get an estimate of the decay
+                # decay constant.  This can be used to estimate where exactly
+                # the cross-correlation falls below a certain level.
+                cccpos = ccc >= 0.0
+                ccc_answer, ccc_error = curve_fit(exponential_decay, xccc[cccpos], ccc[cccpos])
+                decay_constant = ccc_answer[1]
+
+                plt.figure(3)
+                plt.xlabel('distance d (pixels)')
+                plt.ylabel('average cross correlation coefficient at lag %i [%i samples]' % (lag, nsample))
+                plt.title('Average cross correlation vs. distance')
+                plt.plot(xccc, ccc, label = 'data')
+                plt.plot(xccc, exponential_decay(xccc, ccc_answer[0], ccc_answer[1]), label='best fit = %3.2f exp(-d/%3.2f)' % (ccc_answer[0], ccc_answer[1]))
+                plt.axhline(0.1, color='k', linestyle='--')
+                plt.axhline(0.0, color='k')
+                plt.legend()
+                plt.savefig(savefig + '.lag%i_cross_corr.%s' % (lag, savefig_format))
 
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, then apply the
@@ -657,7 +718,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
-                          (freqs / freqfactor[0], logiobs, iobs_peak, logiobs_peak_location, nx * ny))
+                          (freqs / freqfactor[0], logiobs, iobs_peak, logiobs_peak_location, nx * ny, xccc, ccc, ccc_answer))
 
                 # Widths of the power distributions
                 pkl_write(pkl_location,
