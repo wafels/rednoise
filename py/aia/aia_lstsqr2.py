@@ -370,6 +370,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 def exponential_decay(x, A, tau):
                     return A * np.exp(-x / tau)
 
+                def exponential_decay2(x, A1, tau1, A2, tau2):
+                    return A1 * np.exp(-x / tau1) + A2 * np.exp(-x / tau2)
+
+                def exponential_decay3(x, A1, tau1, const):
+                    return A1 * np.exp(-x / tau1) + const
+
                 def linear(x, c, m):
                     return -m * x + c
 
@@ -402,47 +408,47 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 cc = np.asarray(cc)
                 ccc = np.zeros(np.rint(np.max(distance)) + 1)
                 ccc_min = np.rint(np.min(distance))
-                xccc = np.arange(ccc_min, ccc_min + np.rint(np.max(distance)) + 1)
+                xccc = np.arange(0.0, np.rint(np.max(distance)) + 1)
                 hist = np.zeros_like(ccc)
                 for jj, d in enumerate(distance):
                     dloc = np.rint(d)
                     hist[dloc] = hist[dloc] + 1
                     ccc[dloc] = ccc[dloc] + cc[jj]
                 ccc = ccc / hist
+                ccc[0] = 1.0
 
                 # Fit the positive part of the cross-correlation plot with an
                 # exponential decay curve to get an estimate of the decay
                 # decay constant.  This can be used to estimate where exactly
                 # the cross-correlation falls below a certain level.
                 cccpos = ccc >= 0.0
-                #ccc_answer, ccc_error = curve_fit(exponential_decay, xccc[cccpos], ccc[cccpos])
-                #amplitude = ccc_answer[0]
-                #decay_constant = ccc_answer[1]
-                #print amplitude, decay_constant
-                #
-                # Use a linear fit to the positive quantities, distance vs np.log(ccc)
-                #
-                ccc2_answer, ccc2_error = curve_fit(linear, xccc[cccpos], np.log(ccc[cccpos]))
-                amplitude = np.exp(ccc2_answer[0])
-                decay_constant = 1.0 / ccc2_answer[1]
-                print amplitude, decay_constant
+                if region != 'moss':
+                    ccc_answer, ccc_error = curve_fit(exponential_decay, xccc[cccpos], ccc[cccpos])
+                    amplitude = ccc_answer[0]
+                    decay_constant = ccc_answer[1]
+                    print('Model 0 ', amplitude, decay_constant)
 
-                # Estimated decorrelation lengths
-                decorr_length1 = decay_constant * (np.log(amplitude) - np.log(0.1))
-                decorr_length2 = decay_constant * (np.log(amplitude) - np.log(0.05))
-                ccc_best_fit = exponential_decay(xccc, amplitude, decay_constant)
+                    # Estimated decorrelation lengths
+                    decorr_length1 = decay_constant * (np.log(amplitude) - np.log(0.1))
+                    decorr_length2 = decay_constant * (np.log(amplitude) - np.log(0.05))
+                    ccc_best_fit = exponential_decay(xccc, amplitude, decay_constant)
+                else:
+                    ccc_answer, ccc_error = curve_fit(exponential_decay3, xccc[cccpos], ccc[cccpos])
+                    ccc_best_fit = exponential_decay(xccc, ccc_answer[0], ccc_answer[1])
 
                 plt.figure(3)
                 plt.xlabel('distance d (pixels)')
                 plt.ylabel('average cross correlation coefficient at lag %i [%i samples]' % (lag, nsample))
                 plt.title('Average cross correlation vs. distance')
                 plt.plot(xccc, ccc, label='data')
-                plt.plot(xccc, ccc_best_fit, label='best fit = %3.2f exp(-d/%3.2f)' % (ccc_answer[0], ccc_answer[1]))
+                plt.plot(xccc, ccc_best_fit, label='Model 1 best fit')
+                #if region == 'moss':
+                #    plt.plot(xccc, ccc_best_fit_orig, label='Model 0 best fit')
                 plt.axhline(0.1, color='k', linestyle='--')
                 plt.axhline(0.05, color='k', linestyle='-.')
                 plt.axhline(0.0, color='k')
-                plt.axvline(decorr_length1, color='r', label='Length-scale (cc=0.1) = %3.2f pixels' % (decorr_length1), linestyle='--')
-                plt.axvline(decorr_length2, color='r', label='Length-scale (cc=0.05) = %3.2f pixels' % (decorr_length2), linestyle='-.')
+                #plt.axvline(decorr_length1, color='r', label='Length-scale (cc=0.1) = %3.2f pixels' % (decorr_length1), linestyle='--')
+                #plt.axvline(decorr_length2, color='r', label='Length-scale (cc=0.05) = %3.2f pixels' % (decorr_length2), linestyle='-.')
                 plt.legend()
                 plt.savefig(savefig + '.lag%i_cross_corr.%s' % (lag, savefig_format))
 
