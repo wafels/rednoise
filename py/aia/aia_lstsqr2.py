@@ -555,7 +555,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 error_logiobs_distrib_width = np.zeros_like(logiobs_distrib_width)
                 iobs_peak = np.zeros_like(logiobs_distrib_width)
                 logiobs_peak_location = np.zeros_like(logiobs_distrib_width)
+                logiobs_std = np.zeros_like(logiobs_distrib_width)
                 for jj, f in enumerate(freqs):
+                    all_logiobs_at_f = logpwr[:, :, jj]
+                    logiobs_std[jj] = np.std(all_logiobs_at_f)
                     xx = histogram_loc
                     yy = hpwr[jj, :]
                     iobs_peak[jj] = xx[np.argmax(yy)]
@@ -580,24 +583,23 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Set the scale type on each axis
                 ax.set_xscale('log')
-                ax.set_yscale('log')
 
                 # Set the formatting of the tick labels
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
 
                 # Geometric mean
-                ax.plot(freqs, np.exp(logiobs),  color='k', label='geometric mean of power spectra at each pixel')
+                ax.plot(freqs, logiobs / np.log(10.0),  color='k', label='geometric mean of power spectra at each pixel')
                 #ax.plot(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
 
                 # Power at each frequency - distributions
-                ax.plot(freqs, lim[0, 0, :], label=s_L68.label, color=s_L68.color, linewidth=s_L68.linewidth, linestyle=s_L68.linestyle)
-                ax.plot(freqs, lim[1, 0, :], label=s_L95.label, color=s_L95.color, linewidth=s_L95.linewidth, linestyle=s_L95.linestyle)
-                ax.plot(freqs, lim[0, 1, :], label=s_U68.label, color=s_U68.color, linewidth=s_U68.linewidth, linestyle=s_U68.linestyle)
-                ax.plot(freqs, lim[1, 1, :], label=s_U95.label, color=s_U95.color, linewidth=s_U95.linewidth, linestyle=s_U95.linestyle)
+                ax.plot(freqs, np.log10(lim[0, 0, :]), label=s_L68.label, color=s_L68.color, linewidth=s_L68.linewidth, linestyle=s_L68.linestyle)
+                ax.plot(freqs, np.log10(lim[1, 0, :]), label=s_L95.label, color=s_L95.color, linewidth=s_L95.linewidth, linestyle=s_L95.linestyle)
+                ax.plot(freqs, np.log10(lim[0, 1, :]), label=s_U68.label, color=s_U68.color, linewidth=s_U68.linewidth, linestyle=s_U68.linestyle)
+                ax.plot(freqs, np.log10(lim[1, 1, :]), label=s_U95.label, color=s_U95.color, linewidth=s_U95.linewidth, linestyle=s_U95.linestyle)
 
                 # Position of the fitted peak in each distribution
-                ax.plot(freqs, np.exp(logiobs_peak_location),  color='m', label='fitted frequency')
+                ax.plot(freqs, logiobs_peak_location / np.log(10.0),  color='m', label='fitted frequency')
 
                 # Extra information for the plot
                 ax.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
@@ -713,6 +715,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.semilogx(freqs, (logiobs_distrib_width + error_logiobs_distrib_width) / np.log(10.0), label='+ error', linestyle='--')
                 plt.semilogx(freqs, (logiobs_distrib_width - error_logiobs_distrib_width) / np.log(10.0), label='- error', linestyle='--')
                 plt.semilogx(freqs, logiobs_distrib_width / np.log(10.0), label='estimated width')
+                plt.semilogx(freqs, logiobs_std / np.log(10.0), label='standard deviation')
+                plt.semilogx(freqs, (logiobs - logiobs_peak_location) / np.log(10.0), label='mean - fitted peak')
                 plt.title(data_name + ' - distribution widths')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
                 plt.savefig(savefig + '.logiobs_distribution_width.%s' % (savefig_format))
@@ -749,7 +753,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Widths of the power distributions
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.distribution_widths.pickle',
-                          (freqs / freqfactor[0], logiobs_distrib_width))
+                          (freqs / freqfactor[0], logiobs_distrib_width, logiobs_std, np.abs(logiobs - logiobs_peak_location)))
 
                 # Error in the Widths of the power distributions
                 pkl_write(pkl_location,
