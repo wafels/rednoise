@@ -3,8 +3,8 @@
 #
 # Also do posterior predictive checking to find which model fits best.
 #
-import os
 import pickle
+import os
 import numpy as np
 
 import pymc
@@ -16,7 +16,8 @@ import aia_specific
 import pymcmodels
 import rnspectralmodels
 
-np.random.seed(seed=1)
+# Reproducible
+np.random.seed(1)
 
 
 def fix_nonfinite(data):
@@ -93,7 +94,7 @@ def get_chi_M0(map_M0, x, pwr, sigma):
     return sse / (1.0 * (np.size(pwr) - len(A0)))
 
 
-def write_plots(M, region_id, obstype, savefig, model,
+def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 bins=100, savetype='.png', extra_factors=None):
     if model == 'M0':
         variables = ['power_law_norm', 'power_law_index', 'background']
@@ -122,7 +123,7 @@ def write_plots(M, region_id, obstype, savefig, model,
                                                            extra_factors=extra_factors)
 
         # Save file name
-        filename = '%s_%s_%s__%s__%s_%s' % (savefig, model, obstype, '1d', v, savetype)
+        filename = '%s_%s_%s_%s__%s__%s_%s' % (savefig, model, str(passnumber), obstype, '1d', v, savetype)
 
         # Find the histogram
         h, _ = np.histogram(data, bins)
@@ -421,30 +422,28 @@ for iwave, wave in enumerate(waves):
                 # Two passes - first pass to get an initial estimate of the
                 # spectrum, and a second to get a better estimate using the
                 # sigma mean
-                for jjj, sigma in enumerate(sigma_of_distribution, sigma_for_mean):
+                for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
                     tau = 1.0 / (sigma ** 2)
                     pwr = pwr_ff
                     if jjj == 0:
                         pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma)
-                        init = []
-                        M0stats = M0.stats()
-                        init.append(M0stats['mean'])
                     else:
-                        pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma, init=init)
-
+                        pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma, init=A0)
+                    passnumber = str(jjj)
 
                     # Initiate the sampler
-                    dbname0 = os.path.join(pkl_location, 'MCMC.M0.' + region_id + obstype)
+                    dbname0 = os.path.join(pkl_location, 'MCMC.M0.' + passnumber + region_id + obstype)
                     M0 = pymc.MCMC(pymcmodel0, db='pickle', dbname=dbname0)
 
                     # Run the sampler
-                    print('M0: Running simple power law model')
+                    print('M0 : pass %i : Running simple power law model' % (jjj + 1))
                     M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
                     M0.db.close()
 
                     # Now run the MAP
                     map_M0 = pymc.MAP(pymcmodel0)
-                    print('M0: fitting to find the maximum likelihood')
+                    print(' ')
+                    print('M0 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
                     map_M0.fit(method='fmin_powell')
 
                     # Get the variables and the best fit
@@ -452,7 +451,7 @@ for iwave, wave in enumerate(waves):
                     M0_bf = get_spectrum_M0(x, A0)
 
                     # Plot the traces
-                    write_plots(M0, region_id, obstype, savefig, 'M0', bins=40, extra_factors=[xnorm])
+                    write_plots(M0, region_id, obstype, savefig, 'M0', passnumber, bins=40, extra_factors=[xnorm])
 
                     # Get the likelihood at the maximum
                     #likelihood0_data = map_M0.logp_at_max
@@ -460,8 +459,80 @@ for iwave, wave in enumerate(waves):
 
                     # Get the chi-squared value
                     chi0 = get_chi_M0(map_M0, x, pwr, sigma)
-                    print('M0 : pass %i : reduced chi-squared = %f' % (jjj, chi0))
+                    print('M0 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi0))
+                    print('   : variables ', A0)
 
+                #
+                # Second model - power law with Gaussian bumps
+                #
+                for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
+                    tau = 1.0 / (sigma ** 2)
+                    pwr = pwr_ff
+                    if jjj == 0:
+                        pymcmodel1 = pymcmodels.Log_splwc_AddGaussianBump2(x, pwr, sigma)
+                    else:
+                        pymcmodel1 = pymcmodels.Log_splwc_AddGaussianBump2(x, pwr, sigma, init=A1)
+                    passnumber = str(jjj)
+
+                    # Initiate the sampler
+                    dbname1 = os.path.join(pkl_location, 'MCMC.M1.' + passnumber + region_id + obstype)
+                    M1 = pymc.MCMC(pymcmodel1, db='pickle', dbname=dbname1)
+
+                    # Run the sampler
+                    print('M1 : pass %i : Running power law plus bump model' % (jjj + 1))
+                    M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
+                    M1.db.close()
+
+                    # Now run the MAP
+                    map_M1 = pymc.MAP(pymcmodel1)
+                    print(' ')
+                    print('M1 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
+                    map_M1.fit(method='fmin_powell')
+
+                    # Get the variables and the best fit
+                    A1 = get_variables_M1(map_M1)
+                    M1_bf = get_spectrum_M1(x, A1)
+
+                    # Plot the traces
+                    write_plots(M1, region_id, obstype, savefig, 'M1', passnumber, bins=40, extra_factors=[xnorm])
+
+                    # Get the likelihood at the maximum
+                    #likelihood1_data = map_M1.logp_at_max
+                    l1_data = get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype)
+
+                    # Get the chi-squared value
+                    chi1 = get_chi_M1(map_M1, x, pwr, sigma)
+                    print('M1 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi1))
+                    print('   : variables ', A1)
+
+                # Plot
+                plt.figure(1)
+                xvalue = np.log10(freqs)
+
+                # Plot the data
+                plt.plot(xvalue, pwr_ff, label='data', color='k')
+
+                # Plot the M0 fit
+                plt.plot(xvalue, M0_bf, label='M0: maximum likelihood fit', color='b', linestyle=':')
+                plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['mean'], label='M0: average', color = 'b')
+                plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
+                plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
+
+                # Plot the M1 fit
+                plt.plot(xvalue, M1_bf, label='M1: maximum likelihood fit', color='r', linestyle=':')
+                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['mean'], label='M1: average', color = 'r')
+                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
+                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
+
+                # Complete the plot and save it
+                plt.legend(loc=3, framealpha=0.5, fontsize=8)
+                plt.xlabel('log10(frequency (Hz))')
+                plt.ylabel('log(power)')
+                plt.title(obstype)
+                plt.savefig(savefig + obstype + '.model_fit_compare.pymc.png')
+                plt.close('all')
+
+                """
                 #
                 # Second model - power law with Gaussian bumps
                 #
@@ -576,6 +647,7 @@ for iwave, wave in enumerate(waves):
                 plt.savefig(savefig + obstype + '.model_fit_residuals.pymc.png')
                 plt.close('all')
 
+                """
                 """
                 #
                 # Do the posterior predictive comparison
