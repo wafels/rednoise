@@ -287,7 +287,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['sunspot']#['moss', 'qs', 'loopfootpoints', 'sunspot']
+regions = ['moss', 'qs', 'loopfootpoints', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -297,8 +297,8 @@ manip = 'relative'
 nsample = 1000
 
 # PyMC control
-itera = 1000#00
-burn = 200#00
+itera = 100000
+burn = 20000
 thin = 5
 
 # Set the Gaussian width for the data
