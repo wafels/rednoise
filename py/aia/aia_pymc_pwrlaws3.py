@@ -167,7 +167,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                                                                s[v2],
                                                                extra_factors=extra_factors)
                 # Scatter plot : save file name
-                filename = '%s_%s_%s__%s__%s_%s_%s' % (savefig, model, obstype, 'scatter', v, v2, savetype)
+                filename = '%s_%s_%s_%s__%s__%s_%s_%s' % (savefig, model, str(passnumber), obstype, '2dscatter', v, v2, savetype)
 
                 plt.scatter(data, data2, alpha=0.02)
                 plt.xlabel(v + vlabel)
@@ -179,7 +179,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 plt.close('all')
 
                 # 2-D histogram
-                filename = '%s_%s_%s__%s__%s_%s_%s' % (savefig, model, obstype, '2dhistogram', v, v2, savetype)
+                filename = '%s_%s_%s_%s__%s__%s_%s_%s' % (savefig, model, str(passnumber), obstype, '2dhistogram', v, v2, savetype)
 
                 plt.hist2d(data, data2, bins=bins, norm=LogNorm())
                 plt.colorbar()
@@ -287,7 +287,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss', 'qs', 'loopfootpoints', 'sunspot']
+regions = ['sunspot']#['moss', 'qs', 'loopfootpoints', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -297,8 +297,8 @@ manip = 'relative'
 nsample = 1000
 
 # PyMC control
-itera = 100000
-burn = 20000
+itera = 1000#00
+burn = 200#00
 thin = 5
 
 # Set the Gaussian width for the data
@@ -398,13 +398,15 @@ for iwave, wave in enumerate(waves):
                 # Fix any non-finite widths and divide by the number of pixels
                 # Note that this should be the effective number of pixels,
                 # given that the original pixels are not statistically separate.
-                #print 'number of pixels ', npixels
-                #print 'decorrelation length-scale ', decorr_length
-                #npixels_effective = npixels / (decorr_length ** 2)
-                #print("Effective number of independent observations = %f " % (npixels_effective))
-                bins = 100
-                sigma_of_distribution = fix_nonfinite(fitted_width)
-                sigma_for_mean = sigma_of_distribution / np.sqrt(1.0 * bins)
+                print ' '
+                print 'Number of pixels ', npixels
+                print 'Average lag1 cross correlation ', ccc[1]
+                independence_coefficient = 1.0 - np.abs(ccc[1])
+                print 'Average independence coefficient ', independence_coefficient
+                npixels_effective = independence_coefficient * (npixels - 1) + 1
+                print("Effective number of independent observations = %f " % (npixels_effective))
+                sigma_of_distribution = fix_nonfinite(std_dev)
+                sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
                 #unbiased_factor = np.sqrt(npixels_effective / (npixels_effective ** 2 - npixels_effective))
                 #print("Unbiased factor = %f" % (unbiased_factor))
                 #sigma = unbiased_factor * fix_nonfinite(sigma)
@@ -505,6 +507,15 @@ for iwave, wave in enumerate(waves):
                     print('M1 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi1))
                     print('   : variables ', A1)
 
+                # Store these results
+                fitsummarydata = FitSummary(map_M0, l0_data, map_M1, l1_data)
+
+                # Print out these results
+                print ' '
+                print('M0 likelihood = %f, M1 likelihood = %f' % (fitsummarydata["M0"]["maxlogp"], fitsummarydata["M1"]["maxlogp"]))
+                print 'T_lrt for the initial data = %f' % (fitsummarydata["t_lrt"])
+                print 'AIC_{0} - AIC_{1} = %f' % (fitsummarydata["dAIC"])
+                print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
                 # Plot
                 plt.figure(1)
                 xvalue = np.log10(freqs)
@@ -524,12 +535,45 @@ for iwave, wave in enumerate(waves):
                 plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
                 plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
 
+                # Plot the fitness coefficients
+                # Plot the fitness criteria - should really put this in a separate function
+                xpos = -2.0
+                ypos = np.zeros((5))
+                ypos_max = np.max(pwr_ff)
+                ypos_min = np.min(pwr_ff)
+                yrange = ypos_max - ypos_min
+                for yyy in range(0, ypos.size):
+                    ypos[yyy] = ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0))
+                plt.text(xpos, ypos[0], '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
+                plt.text(xpos, ypos[1], '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
+                plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
+                plt.text(xpos, ypos[3], 'M0: reduced $\chi^{2}$ = %f' % (chi0))
+                plt.text(xpos, ypos[4], 'M1: reduced $\chi^{2}$ = %f' % (chi1))
+
                 # Complete the plot and save it
                 plt.legend(loc=3, framealpha=0.5, fontsize=8)
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('log(power)')
                 plt.title(obstype)
                 plt.savefig(savefig + obstype + '.model_fit_compare.pymc.png')
+                plt.close('all')
+
+                # Residual
+                plt.figure(2)
+                plt.plot(xvalue, pwr_ff - M0_bf, label='data - model 0')
+                plt.plot(xvalue, pwr_ff - M1_bf, label='data - model 1')
+                plt.plot(xvalue, np.abs(pwr_ff - M0_bf), label='|data - model 0|')
+                plt.plot(xvalue, np.abs(pwr_ff - M1_bf), label='|data - model 1|')
+                plt.plot(xvalue, sigma_of_distribution, label='estimated log(power) distribution width')
+                plt.plot(xvalue, sigma_for_mean, label='estimated error in mean')
+                plt.axhline(0.0, color='k')
+
+                # Complete the plot and save it
+                plt.legend(framealpha=0.5, fontsize=8)
+                plt.xlabel('log10(frequency (Hz))')
+                plt.ylabel('fit residuals')
+                plt.title(obstype)
+                plt.savefig(savefig + obstype + '.model_fit_residuals.pymc.png')
                 plt.close('all')
 
                 """
