@@ -407,6 +407,9 @@ for iwave, wave in enumerate(waves):
                 print 'Number of pixels ', npixels
                 print 'Average lag 0 cross correlation coefficient = %f' % (ccc0)
                 print 'Average lag %i cross correlation coefficient = %f' % (lag, ccclag)
+                # Independence coefficient - how independent is one pixel compared
+                # to its nearest neighbour?
+                # independence_coefficient = 1.0 - 0.5 * (np.abs(ccc0) + np.abs(ccclag))
                 independence_coefficient = 1.0 - np.abs(ccc0)
                 print 'Average independence coefficient ', independence_coefficient
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
