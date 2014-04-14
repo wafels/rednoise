@@ -714,7 +714,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
-                          (freqs / freqfactor[0], logiobs, iobs_peak, logiobs_peak_location, nx * ny, ccc0, ccclag))
+                          (freqs / freqfactor[0], logiobs, iobs_peak, logiobs_peak_location, nx * ny, ccc0, lag, ccclag))
 
                 # Widths of the power distributions
                 pkl_write(pkl_location,

@@ -372,12 +372,17 @@ for iwave, wave in enumerate(waves):
                 pwr_ff = pickle.load(pkl_file)
                 # Number of pixels used to create the average
                 npixels = pickle.load(pkl_file)
+                # Lag zero cross correlation coefficient
+                ccc0 = pickle.load(pkl_file)
+                # Lag 'lag' coefficient
+                lag = pickle.load(pkl_file)
+                ccclag = pickle.load(pkl_file)
                 # Pixel distance of the cross correlation function
-                xccc = pickle.load(pkl_file)
+                #xccc = pickle.load(pkl_file)
                 # Cross correlation function
-                ccc = pickle.load(pkl_file)
+                #ccc = pickle.load(pkl_file)
                 # Decay constant for the cross-correlation function
-                ccc_answer = pickle.load(pkl_file)
+                #ccc_answer = pickle.load(pkl_file)
                 pkl_file.close()
                 # Load the widths
                 ifilename = 'OUT.' + region_id
@@ -400,8 +405,9 @@ for iwave, wave in enumerate(waves):
                 # given that the original pixels are not statistically separate.
                 print ' '
                 print 'Number of pixels ', npixels
-                print 'Average lag1 cross correlation ', ccc[1]
-                independence_coefficient = 1.0 - np.abs(ccc[1])
+                print 'Average lag 0 cross correlation coefficient = %f' % (ccc0)
+                print 'Average lag %i cross correlation coefficient = %f' % (lag, ccclag)
+                independence_coefficient = 1.0 - np.abs(ccc0)
                 print 'Average independence coefficient ', independence_coefficient
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Effective number of independent observations = %f " % (npixels_effective))
