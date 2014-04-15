@@ -384,20 +384,39 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 lag = 1
                 cclag = []
                 cc0 = []
+                ccmax = []
                 while npicked < nsample:
                     # Pick a location
                     loc1 = (np.random.randint(1, ny - 1), np.random.randint(1, nx - 1))
 
                     # Find the nearest neighbour
-                    if np.random.uniform() > 0.5:
-                        xdifference = 1
-                    else:
+                    rchoice = np.random.randint(0, 8)
+                    if rchoice == 0:
                         xdifference = -1
-                    if np.random.uniform() > 0.5:
-                        ydifference = 1
-                    else:
                         ydifference = -1
-                    loc2 = (loc1[0] + xdifference, loc1[1] + ydifference)
+                    elif rchoice == 1:
+                        xdifference = -1
+                        ydifference = 0
+                    elif rchoice == 2:
+                        xdifference = -1
+                        ydifference = 1
+                    elif rchoice == 3:
+                        xdifference = 0
+                        ydifference = 1
+                    elif rchoice == 4:
+                        xdifference = 1
+                        ydifference = 1
+                    elif rchoice == 5:
+                        xdifference = 1
+                        ydifference = 0
+                    elif rchoice == 6:
+                        xdifference = 1
+                        ydifference = -1
+                    elif rchoice == 7:
+                        xdifference = 0
+                        ydifference = -1
+
+                    loc2 = (loc1[0] + ydifference, loc1[1] + xdifference)
 
                     # Get the time series
                     ts1 = dc_analysed[loc1[0], loc1[1], :]
@@ -407,16 +426,20 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     ccvalue = np.correlate(cornorm(ts1, np.size(ts1)), cornorm(ts2, 1.0), mode='full')
                     cc0.append(ccvalue[nt - 1])
                     cclag.append(ccvalue[nt - 1 + lag])
-
+                    ccmax.append(np.max(ccvalue))
                     # Advance the counter
                     npicked = npicked + 1
 
-                # All the pixels are either +1 or sqrt(2) pixels away from the
+                # All the pixels are all sqrt(2) pixels away from the
                 # central pixel.  We treat them all as nearest neighbor.
                 # What is the average correlation coefficient at the specified
                 # lag?
                 ccc0 = np.mean(np.asarray(cc0))
                 ccclag = np.mean(np.asarray(cclag))
+                cccmax = np.mean(np.asarray(ccmax))
+                print 'Average lag 0 cross correlation coefficient = %f' % (ccc0)
+                print 'Average lag %i cross correlation coefficient = %f' % (lag, ccclag)
+                print 'Average maximum cross correlation coefficient = %f' % (cccmax)
 
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, then apply the

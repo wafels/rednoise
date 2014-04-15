@@ -13,7 +13,7 @@ from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
 import aia_specific
-import pymcmodels
+import pymcmodels2
 import rnspectralmodels
 
 # Reproducible
@@ -207,7 +207,7 @@ def curve_fit_M1(x, y, p0, sigma, n_attempt_limit=10):
     success = False
     while (not success) and (n_attempt <= n_attempt_limit):
         try:
-            answer = curve_fit(rnspectralmodels.Log_splwc_AddGaussianBump2_CF, x, y, p0=p_in, sigma=sigma)
+            answer = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, y, p0=p_in, sigma=sigma)
             success = True
         except RuntimeError:
             print 'Model M1 curve fit did not work - try varying parameters a tiny bit'
@@ -221,7 +221,7 @@ def curve_fit_M1(x, y, p0, sigma, n_attempt_limit=10):
 
 
 def get_spectrum_M1(x, A):
-    return rnspectralmodels.Log_splwc_AddGaussianBump2(x, A)
+    return rnspectralmodels.Log_splwc_AddNormalBump2(x, A)
 
 
 def get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype):
@@ -287,7 +287,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss', 'qs', 'loopfootpoints', 'sunspot']
+regions = ['loopfootpoints', 'sunspot', 'moss', 'qs']
 windows = ['hanning']
 manip = 'relative'
 
@@ -437,9 +437,9 @@ for iwave, wave in enumerate(waves):
                     tau = 1.0 / (sigma ** 2)
                     pwr = pwr_ff
                     if jjj == 0:
-                        pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma)
+                        pymcmodel0 = pymcmodels2.Log_splwc(x, pwr, sigma)
                     else:
-                        pymcmodel0 = pymcmodels.Log_splwc(x, pwr, sigma, init=A0)
+                        pymcmodel0 = pymcmodels2.Log_splwc(x, pwr, sigma, init=A0)
                     passnumber = str(jjj)
 
                     # Initiate the sampler
@@ -474,15 +474,42 @@ for iwave, wave in enumerate(waves):
                     print('   : variables ', A0)
 
                 #
+                # Get an estimate of where the Gaussian bump might be for the
+                # second model
+                #
+                # Frequency range we will consider for the bump
+                bump_frequency_limits = np.asarray([10.0 ** -3.0, 10.0 ** -2.0]) / xnorm
+                bump_loc_lo = x >= bump_frequency_limits[0]
+                bump_loc_hi = x <= bump_frequency_limits[1]
+                # Get where there is excess unexplained power
+                positive_difference = pwr - M0_bf > 0
+                # Combine all the conditions to get where the bump might be
+                bump_loc = positive_difference * bump_loc_lo * bump_loc_hi
+
+                # If there are sufficient points, get an estimate of the bump
+                if bump_loc.sum() >= 10:
+                    g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_CF, np.log(x[bump_loc]), (pwr - M0_bf)[bump_loc])
+                    A1_estimate = [A0[0], A0[1], A0[2], g_estimate[0], g_estimate[1], g_estimate[2]]
+                else:
+                    A1_estimate = None
+                print "Second model estimate : ", A1_estimate
+
+                # Normalized frequencies limits
+                #norm_freq_limits = np.asarray([np.min(x[bump_loc_lo * bump_loc_hi]),
+                #                               np.max(x[bump_loc_lo * bump_loc_hi])])
+
+                #
                 # Second model - power law with Gaussian bumps
                 #
                 for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
                     tau = 1.0 / (sigma ** 2)
                     pwr = pwr_ff
                     if jjj == 0:
-                        pymcmodel1 = pymcmodels.Log_splwc_AddGaussianBump2(x, pwr, sigma)
+                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1_estimate)
                     else:
-                        pymcmodel1 = pymcmodels.Log_splwc_AddGaussianBump2(x, pwr, sigma, init=A1)
+                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1)
+
+                    # Define the pass number
                     passnumber = str(jjj)
 
                     # Initiate the sampler
@@ -564,7 +591,7 @@ for iwave, wave in enumerate(waves):
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('log(power)')
                 plt.title(obstype)
-                plt.savefig(savefig + obstype + '.model_fit_compare.pymc.png')
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
                 plt.close('all')
 
                 # Residual
@@ -582,7 +609,7 @@ for iwave, wave in enumerate(waves):
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('fit residuals')
                 plt.title(obstype)
-                plt.savefig(savefig + obstype + '.model_fit_residuals.pymc.png')
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_residuals.pymc.png')
                 plt.close('all')
 
                 """

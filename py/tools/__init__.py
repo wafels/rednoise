@@ -6,6 +6,7 @@ __email__ = "jack.ireland@nasa.gov"
 
 import cubetools
 import pymcmodels
+import pymcmodels2
 import rnfit2
 import rnsimulation
 import rnspectralmodels
