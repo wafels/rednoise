@@ -33,7 +33,15 @@ def fix_nonfinite(data):
 # Functions to calculate and store results
 #
 def fit_summary(M, maxlogp):
-    return {"AIC": M.AIC, "BIC": M.BIC, "maxlogp": maxlogp}
+    # Calculate the AIC
+    lnL = np.sum([x.logp for x in M.observed_stochastics])
+    k = M.len - M.data_len
+    AIC = 2. * (k - lnL)
+
+    # Calculate the BIC
+    BIC = k * np.log(M.data_len) - 2.0 * lnL
+
+    return {"AIC": AIC, "BIC": BIC, "maxlogp": maxlogp}
 
 
 def T_LRT(maxlogp0, maxlogp1):
@@ -174,7 +182,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 plt.ylabel(v2 + vlabel2)
                 plt.title(region_id + ' ' + obstype + ' %s' % (model))
                 plt.plot([mean], [mean2], 'go')
-                plt.text(mean, mean2, '%4.2f, %4.2f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
+                plt.text(mean, mean2, '%f, %f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
                 plt.savefig(filename)
                 plt.close('all')
 
@@ -186,7 +194,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 plt.xlabel(v + vlabel)
                 plt.ylabel(v2 + vlabel2)
                 plt.plot([mean], [mean2], 'wo')
-                plt.text(mean, mean2, '%4.2f, %4.2f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
+                plt.text(mean, mean2, '%f, %f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
                 plt.title(region_id + ' ' + obstype + ' %s' % (model))
                 plt.savefig(filename)
                 plt.close('all')
@@ -274,6 +282,13 @@ def fix_variables(variable, data, s, extra_factors):
     return data, mean, v95_lo, v95_hi, ''
 
 
+# Prints a title, with space before it and an underline
+def prettyprint(s, underline='-'):
+    print(' ')
+    print(s)
+    print(str(underline) * len(s))
+
+
 plt.ioff()
 plt.close('all')
 #
@@ -287,7 +302,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['loopfootpoints', 'sunspot', 'moss', 'qs']
+regions = ['moss', 'qs', 'loopfootpoints', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -297,14 +312,17 @@ manip = 'relative'
 nsample = 1000
 
 # PyMC control
-itera = 100000
-burn = 20000
+itera = 1000#00
+burn = 200#00
 thin = 5
 
 # Set the Gaussian width for the data
 #sigma = 0.5 * np.log(10.0)
 
 for iwave, wave in enumerate(waves):
+    print(' ')
+    print('##################################################################')
+    prettyprint('Data')
     # Which wavelength?
     print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
 
@@ -312,6 +330,7 @@ for iwave, wave in enumerate(waves):
     # the analysis.
     for iregion, region in enumerate(regions):
         # Which region
+        prettyprint('Region')
         print('Region: ' + region + ' (%i out of %i)' % (iregion + 1, len(regions)))
 
         # Create the branches in order
@@ -403,7 +422,7 @@ for iwave, wave in enumerate(waves):
                 # Fix any non-finite widths and divide by the number of pixels
                 # Note that this should be the effective number of pixels,
                 # given that the original pixels are not statistically separate.
-                print ' '
+                prettyprint('Pixel independence calculation')
                 print 'Number of pixels ', npixels
                 print 'Average lag 0 cross correlation coefficient = %f' % (ccc0)
                 print 'Average lag %i cross correlation coefficient = %f' % (lag, ccclag)
@@ -433,6 +452,7 @@ for iwave, wave in enumerate(waves):
                 # Two passes - first pass to get an initial estimate of the
                 # spectrum, and a second to get a better estimate using the
                 # sigma mean
+                prettyprint('Model fitting and results')
                 for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
                     tau = 1.0 / (sigma ** 2)
                     pwr = pwr_ff
@@ -550,11 +570,19 @@ for iwave, wave in enumerate(waves):
                 print ' '
                 print('M0 likelihood = %f, M1 likelihood = %f' % (fitsummarydata["M0"]["maxlogp"], fitsummarydata["M1"]["maxlogp"]))
                 print 'T_lrt for the initial data = %f' % (fitsummarydata["t_lrt"])
-                print 'AIC_{0} - AIC_{1} = %f' % (fitsummarydata["dAIC"])
-                print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
+                #print 'AIC_{0} - AIC_{1} = %f' % (fitsummarydata["dAIC"])
+                #print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
+
+                # Calculate the best fit Gaussian contribution
+                normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(x), A1[3], A1[4], A1[5]))
+                # Calculate the best fit power law contribution
+                powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(x, A1[0:3]))
+
                 # Plot
                 plt.figure(1)
                 xvalue = np.log10(freqs)
+                fivemin = np.log10(1.0 / 300.0)
+                threemin = np.log10(1.0 / 180.0)
 
                 # Plot the data
                 plt.plot(xvalue, pwr_ff, label='data', color='k')
@@ -571,38 +599,53 @@ for iwave, wave in enumerate(waves):
                 plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
                 plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
 
+                # Plot each component of M1
+                plt.plot(xvalue, normalbump_BF, label='M1: maximum likelihood fit, normal bump', color='g', linestyle='--')
+                plt.plot(xvalue, powerlaw_BF, label='M1: maximum likelihood fit, power law', color='g')
+
+                # Plot the 3 and 5 minute frequencies
+                plt.axvline(fivemin, label='5 mins.', linestyle='--' ,color='k')
+                plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
+
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
                 xpos = -2.0
-                ypos = np.zeros((5))
+                ypos = np.zeros((3))
                 ypos_max = np.max(pwr_ff)
-                ypos_min = np.min(pwr_ff)
+                ypos_min = np.min(pwr_ff) + 0.5 * (np.max(pwr_ff) - np.min(pwr_ff))
                 yrange = ypos_max - ypos_min
                 for yyy in range(0, ypos.size):
                     ypos[yyy] = ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0))
-                plt.text(xpos, ypos[0], '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
-                plt.text(xpos, ypos[1], '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
-                plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
-                plt.text(xpos, ypos[3], 'M0: reduced $\chi^{2}$ = %f' % (chi0))
-                plt.text(xpos, ypos[4], 'M1: reduced $\chi^{2}$ = %f' % (chi1))
+                #plt.text(xpos, ypos[0], '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
+                #plt.text(xpos, ypos[1], '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
+                plt.text(xpos, ypos[0], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
+                plt.text(xpos, ypos[1], 'M0: reduced $\chi^{2}$ = %f' % (chi0))
+                plt.text(xpos, ypos[2], 'M1: reduced $\chi^{2}$ = %f' % (chi1))
 
                 # Complete the plot and save it
                 plt.legend(loc=3, framealpha=0.5, fontsize=8)
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('log(power)')
                 plt.title(obstype)
+                ymin_plotted = np.asarray([np.min(pwr_ff) - 1.0,
+                                           np.max(normalbump_BF) - 2.0])
+                plt.ylim(np.min(ymin_plotted), np.max(pwr_ff) + 1.0)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
                 plt.close('all')
 
                 # Residual
                 plt.figure(2)
-                plt.plot(xvalue, pwr_ff - M0_bf, label='data - model 0')
-                plt.plot(xvalue, pwr_ff - M1_bf, label='data - model 1')
-                plt.plot(xvalue, np.abs(pwr_ff - M0_bf), label='|data - model 0|')
-                plt.plot(xvalue, np.abs(pwr_ff - M1_bf), label='|data - model 1|')
+                plt.plot(xvalue, pwr_ff - M0_bf, label='data - M0')
+                plt.plot(xvalue, pwr_ff - M1_bf, label='data - M1')
+                plt.plot(xvalue, np.abs(pwr_ff - M0_bf), label='|data - M0|')
+                plt.plot(xvalue, np.abs(pwr_ff - M1_bf), label='|data - M1|')
                 plt.plot(xvalue, sigma_of_distribution, label='estimated log(power) distribution width')
                 plt.plot(xvalue, sigma_for_mean, label='estimated error in mean')
                 plt.axhline(0.0, color='k')
+
+                # Plot the 3 and 5 minute frequencies
+                plt.axvline(fivemin, label='5 mins.', linestyle='--' ,color='k')
+                plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
 
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8)
@@ -610,6 +653,25 @@ for iwave, wave in enumerate(waves):
                 plt.ylabel('fit residuals')
                 plt.title(obstype)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_residuals.pymc.png')
+                plt.close('all')
+
+                # Power ratio
+                plt.figure(2)
+                plt.semilogy(xvalue, np.exp(normalbump_BF) / np.exp(powerlaw_BF), label='M1[normal bump] / M1[power law]')
+                plt.semilogy(xvalue, np.exp(pwr_ff) / np.exp(M1_bf), label='data / M1 best fit')
+                plt.semilogy(xvalue, np.exp(pwr_ff) / np.exp(normalbump_BF), label='data / M1[normal bump]')
+                plt.semilogy(xvalue, np.exp(pwr_ff) / np.exp(powerlaw_BF), label='data / M1[power law]')
+                plt.axhline(1.0, color='k')
+                plt.ylim(0.01, 100.0)
+
+                # Plot the 3 and 5 minute frequencies
+                plt.axvline(fivemin, label='5 mins.', linestyle='--', color='k')
+                plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k')
+                plt.xlabel('log10(frequency (Hz))')
+                plt.ylabel('ratio')
+                plt.legend(framealpha=0.5, fontsize=8)
+                plt.title(obstype)
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_ratios.pymc.png')
                 plt.close('all')
 
                 """
