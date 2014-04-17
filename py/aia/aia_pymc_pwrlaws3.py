@@ -499,7 +499,7 @@ for iwave, wave in enumerate(waves):
                 # second model
                 #
                 # Frequency range we will consider for the bump
-                physical_bump_frequency_limits = np.asarray([10.0 ** -3.0, 10.0 ** -2.0])
+                physical_bump_frequency_limits = np.asarray([10.0 ** -3.5, 10.0 ** -2.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
                 bump_loc_lo = x >= bump_frequency_limits[0]
