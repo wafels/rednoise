@@ -69,8 +69,6 @@ s3min.linestyle = "--"
 s3min.label = '3 mins.'
 
 
-
-
 #
 # String defining the basics number of time series
 #

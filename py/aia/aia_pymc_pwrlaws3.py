@@ -15,6 +15,7 @@ from scipy.optimize import curve_fit
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
+from paper1 import sunday_name
 
 # Reproducible
 np.random.seed(1)
@@ -301,8 +302,8 @@ scsvroot = '~/ts/csv_cc_final_test/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['moss', 'qs', 'loopfootpoints', 'sunspot']
+waves = ['193', '171']
+regions = ['qs', 'loopfootpoints', 'moss', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -312,8 +313,8 @@ manip = 'relative'
 nsample = 1000
 
 # PyMC control
-itera = 1000#00
-burn = 200#00
+itera = 100000
+burn = 20000
 thin = 5
 
 # Set the Gaussian width for the data
@@ -498,7 +499,9 @@ for iwave, wave in enumerate(waves):
                 # second model
                 #
                 # Frequency range we will consider for the bump
-                bump_frequency_limits = np.asarray([10.0 ** -3.0, 10.0 ** -2.0]) / xnorm
+                physical_bump_frequency_limits = np.asarray([10.0 ** -3.0, 10.0 ** -2.0])
+                bump_frequency_limits = physical_bump_frequency_limits / xnorm
+                log_bump_frequency_limits = np.log(bump_frequency_limits)
                 bump_loc_lo = x >= bump_frequency_limits[0]
                 bump_loc_hi = x <= bump_frequency_limits[1]
                 # Get where there is excess unexplained power
@@ -513,10 +516,8 @@ for iwave, wave in enumerate(waves):
                 else:
                     A1_estimate = None
                 print "Second model estimate : ", A1_estimate
-
-                # Normalized frequencies limits
-                #norm_freq_limits = np.asarray([np.min(x[bump_loc_lo * bump_loc_hi]),
-                #                               np.max(x[bump_loc_lo * bump_loc_hi])])
+                print "Physical bump frequency position limits : ", physical_bump_frequency_limits
+                print "Normalized log bump frequency limits : ", log_bump_frequency_limits
 
                 #
                 # Second model - power law with Gaussian bumps
@@ -525,9 +526,21 @@ for iwave, wave in enumerate(waves):
                     tau = 1.0 / (sigma ** 2)
                     pwr = pwr_ff
                     if jjj == 0:
-                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1_estimate)
+                        if A1_estimate[4] < log_bump_frequency_limits[0]:
+                            A1_estimate[4] = log_bump_frequency_limits[0]
+                            print '!! Estimate fit exceeded lower limit of log_bump_frequency_limits. Resetting to limit'
+                        if A1_estimate[4] > log_bump_frequency_limits[1]:
+                            A1_estimate[4] = log_bump_frequency_limits[1]
+                            print '!! Estimate fit exceeded upper limit of log_bump_frequency_limits. Resetting to limit'
+                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
                     else:
-                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1)
+                        if A1[4] < log_bump_frequency_limits[0]:
+                            A1[4] = log_bump_frequency_limits[0]
+                            print 'First pass fit exceeded lower limit of log_bump_frequency_limits'
+                        if A1[4] > log_bump_frequency_limits[1]:
+                            A1[4] = log_bump_frequency_limits[1]
+                            print 'First pass fit exceeded upper limit of log_bump_frequency_limits'
+                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1, log_bump_frequency_limits=log_bump_frequency_limits)
 
                     # Define the pass number
                     passnumber = str(jjj)
@@ -570,8 +583,8 @@ for iwave, wave in enumerate(waves):
                 print ' '
                 print('M0 likelihood = %f, M1 likelihood = %f' % (fitsummarydata["M0"]["maxlogp"], fitsummarydata["M1"]["maxlogp"]))
                 print 'T_lrt for the initial data = %f' % (fitsummarydata["t_lrt"])
-                #print 'AIC_{0} - AIC_{1} = %f' % (fitsummarydata["dAIC"])
-                #print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
+                print 'AIC_{0} - AIC_{1} = %f' % (fitsummarydata["dAIC"])
+                print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
 
                 # Calculate the best fit Gaussian contribution
                 normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(x), A1[3], A1[4], A1[5]))
@@ -579,6 +592,7 @@ for iwave, wave in enumerate(waves):
                 powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(x, A1[0:3]))
 
                 # Plot
+                title = 'AIA ' + wave + " : " + sunday_name[region]
                 plt.figure(1)
                 xvalue = np.log10(freqs)
                 fivemin = np.log10(1.0 / 300.0)
@@ -607,6 +621,10 @@ for iwave, wave in enumerate(waves):
                 plt.axvline(fivemin, label='5 mins.', linestyle='--' ,color='k')
                 plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
 
+                # Plot the bump limits
+                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
+                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
                 xpos = -2.0
@@ -626,7 +644,7 @@ for iwave, wave in enumerate(waves):
                 plt.legend(loc=3, framealpha=0.5, fontsize=8)
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('log(power)')
-                plt.title(obstype)
+                plt.title(title)
                 ymin_plotted = np.asarray([np.min(pwr_ff) - 1.0,
                                            np.max(normalbump_BF) - 2.0])
                 plt.ylim(np.min(ymin_plotted), np.max(pwr_ff) + 1.0)
@@ -647,11 +665,15 @@ for iwave, wave in enumerate(waves):
                 plt.axvline(fivemin, label='5 mins.', linestyle='--' ,color='k')
                 plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
 
+                # Plot the bump limits
+                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
+                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8)
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('fit residuals')
-                plt.title(obstype)
+                plt.title(title)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_residuals.pymc.png')
                 plt.close('all')
 
@@ -667,10 +689,16 @@ for iwave, wave in enumerate(waves):
                 # Plot the 3 and 5 minute frequencies
                 plt.axvline(fivemin, label='5 mins.', linestyle='--', color='k')
                 plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k')
+
+                # Plot the bump limits
+                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
+                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+
+                # Complete the plot
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('ratio')
                 plt.legend(framealpha=0.5, fontsize=8)
-                plt.title(obstype)
+                plt.title(title)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_ratios.pymc.png')
                 plt.close('all')
 

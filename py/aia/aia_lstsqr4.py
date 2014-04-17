@@ -148,7 +148,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
               regions=['qs', 'loopfootpoints'],
               windows=['no window'],
               manip='none',
-              savefig_format='eps',
+              savefig_format='png',
               freqfactor=[1000.0, 'mHz'],
               sunday_name={"qs": "quiet Sun", "loopfootpoints": "loop footpoints"}):
 
@@ -379,7 +379,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 def linear(x, c, m):
                     return -m * x + c
 
-                nsample = 10000
+                nsample = np.max(np.asarray([8 * nx * ny, 100000]))
                 npicked = 0
                 lag = 1
                 cclag = []
@@ -434,12 +434,46 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # central pixel.  We treat them all as nearest neighbor.
                 # What is the average correlation coefficient at the specified
                 # lag?
-                ccc0 = np.mean(np.asarray(cc0))
-                ccclag = np.mean(np.asarray(cclag))
-                cccmax = np.mean(np.asarray(ccmax))
+                ccc0 = np.mean(np.abs(np.asarray(cc0)))
+                ccclag = np.mean(np.abs(np.asarray(cclag)))
+                cccmax = np.mean(np.abs(np.asarray(ccmax)))
                 print 'Average lag 0 cross correlation coefficient = %f' % (ccc0)
                 print 'Average lag %i cross correlation coefficient = %f' % (lag, ccclag)
                 print 'Average maximum cross correlation coefficient = %f' % (cccmax)
+
+                # Plot histograms of the three cross correlation coefficients
+                ccc_bins = 100
+                plt.figure(1)
+                plt.hist(np.asarray(cc0), bins=ccc_bins, label='zero lag CCC', alpha = 0.33)
+                plt.hist(np.asarray(cclag), bins=ccc_bins, label='lag %i CCC' % (lag), alpha = 0.33)
+                plt.hist(np.asarray(ccmax), bins=ccc_bins, label='maximum CCC', alpha = 0.33)
+                plt.xlabel('cross correlation coefficient')
+                plt.ylabel('number')
+                plt.title('Measures of cross correlation')
+                plt.legend(fontsize=10, framealpha=0.5)
+                plt.savefig(savefig + '.cross_correlation_coefficients.%s' % (savefig_format))
+                plt.close('all')
+
+                # Plot histograms of the three independence coefficients
+                plt.figure(1)
+                plt.hist(1.0 - np.abs(np.asarray(cc0)), bins=ccc_bins, label='1 - |zero lag CCC|', alpha = 0.33)
+                cc0_mean = np.mean(1.0 - np.abs(np.asarray(cc0)))
+                plt.axvline(cc0_mean, linestyle=':', label='mean(1 - |zero lag CCC|) = %f' % (cc0_mean))
+
+                plt.hist(1.0 - np.abs(np.asarray(cclag)), bins=ccc_bins, label='1 - |lag %i CCC|' % (lag), alpha = 0.33)
+                cclag_mean = np.mean(1.0 - np.abs(np.asarray(cclag)))
+                plt.axvline(cclag_mean, linestyle='--', label='mean(1 - |lag %i CCC|) = %f' % (lag, cclag_mean))
+
+                plt.hist(1.0 - np.abs(np.asarray(ccmax)), bins=ccc_bins, label='1 - |max(CCC)|', alpha = 0.33)
+                ccmax_mean = np.mean(1.0 - np.abs(np.asarray(ccmax)))
+                plt.axvline(ccmax_mean, label='mean(1 - |max(CCC)| = %f' % (ccmax_mean))
+
+                plt.xlabel('independence coefficient')
+                plt.ylabel('number')
+                plt.title('Measures of independence coefficient')
+                plt.legend(fontsize=10, framealpha=0.5)
+                plt.savefig(savefig + '.independence_coefficients.%s' % (savefig_format))
+                plt.close('all')
 
                 # Fourier power: get a Time series from the arithmetic sum of
                 # all the time-series at every pixel, then apply the
