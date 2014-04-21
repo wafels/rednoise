@@ -331,7 +331,7 @@ manip = 'relative'
 #
 # Number of posterior predictive samples to calulcate
 #
-nsample = 1000
+nsample = 5000
 
 # PyMC control
 itera = 100000
@@ -752,12 +752,14 @@ for iwave, wave in enumerate(waves):
                 ntrace = np.size(M0.trace('power_law_index')[:])
 
                 # main loop
-                nsample = ntrace
                 rthis = 0
+                rtried = []
                 while nfound < nsample:
                     # random number
-                    #rthis = np.random.randint(0, high=ntrace)
-                    rthis = rthis + 1
+                    rthis = np.random.randint(0, high=ntrace)
+                    while rthis in rtried:
+                        rthis = np.random.randint(0, high=ntrace)
+                    rtried.append(rthis)
                     print ' '
                     print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
 
@@ -810,15 +812,27 @@ for iwave, wave in enumerate(waves):
                     if (l0 != None) and (l1 != None):
                         t_lrt_pred = T_LRT(l0, l1)
                         if t_lrt_pred >= 0.0:
-                            good_results.append((rthis, l0, chi0, l1, chi1))
+                            fit_results = (rthis, l0, chi0, l1, chi1, t_lrt_pred)
+                            good_results.append(fit_results)
                             nfound = nfound + 1
-                            print('    T_lrt = %f' % (good_results[-1][1]['t_lrt']))
+                            print('    T_lrt = %f' % (T_LRT(l0, l1)))
+                            if np.mod(nfound, 1000) == 0:
+                                plt.figure(1)
+                                plt.plot(xvalue, pred, label='predicted', color='k')
+                                plt.plot(xvalue, fit0_bf, label='M0 fit', color='b')
+                                plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
+                                plt.xlabel("log10(frequency)")
+                                plt.ylabel("log(power)")
+                                plt.legend(fontsize=8, framealpha=0.5)
+                                plt.title(title + " : pp check sample #%i" % (nfound))
+                                plt.savefig(savefig + obstype + '.posterior_predictive.sample.' + str(nfound) + '.png')
+                                plt.close('all')
                         else:
                             print('! T_lrt = %f <0 ! - must be a bad fit' % (t_lrt_pred))
-                            bad_results.append((rthis, l0, chi0, l1, chi1))
+                            bad_results.append((rthis, l0, chi0, l1, chi1, t_lrt_pred))
                     else:
                         print('! Fitting algorithm fell down !')
-                        bad_results.append((rthis, l0, chi0, l1, chi1))
+                        bad_results.append((rthis, l0, chi0, l1, chi1, None))
 
                 # Save the good and bad results and use a different program to plot the results
                 pkl_write(pkl_location,
@@ -831,7 +845,7 @@ for iwave, wave in enumerate(waves):
 
                 # Quick summary plots
                 t_lrt_data = fitsummarydata["t_lrt"]
-                t_lrt_distribution = np.asarray([z[1]["t_lrt"] for z in good_results])
+                t_lrt_distribution = np.asarray([z[5] for z in good_results])
 
                 pvalue = np.sum(t_lrt_distribution >= t_lrt_data) / (1.0 * nsample)
                 print('Posterior predictive p-value = %f' % (pvalue))
@@ -841,6 +855,6 @@ for iwave, wave in enumerate(waves):
                 plt.xlabel('LRT statistic')
                 plt.ylabel('Number found [%i samples]' % (nsample))
                 plt.title(title)
-                plt.axvline(t_lrt_data, color='k', label='p=%4.3f' % (pvalue))
-                plt.legend()
+                plt.axvline(t_lrt_data, color='k', label='p=%4.3f [$T_{LRT}=$%f]' % (pvalue, t_lrt_data))
+                plt.legend(fontsize=8)
                 plt.savefig(savefig + obstype + '.posterior_predictive.png')
