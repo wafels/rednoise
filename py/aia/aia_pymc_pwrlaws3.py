@@ -323,8 +323,8 @@ scsvroot = '~/ts/csv_cc_final_test/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193', '171']
-regions = ['qs', 'loopfootpoints', 'moss', 'sunspot']
+waves = ['171']
+regions = ['loopfootpoints', 'moss', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -760,8 +760,8 @@ for iwave, wave in enumerate(waves):
                     while rthis in rtried:
                         rthis = np.random.randint(0, high=ntrace)
                     rtried.append(rthis)
-                    print ' '
-                    print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
+                    #print ' '
+                    #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
 
                     # Generate test data under hypothesis 0
                     pred = M0.trace('predictive')[rthis]
@@ -770,7 +770,7 @@ for iwave, wave in enumerate(waves):
                     #M0_pp = pymcmodels2.Log_splwc(x, pred, sigma)
                     #map_M0_pp = pymc.MAP(M0_pp)
                     try:
-                        print('M0: fitting to find the maximum likelihood')
+                        #print('M0: fitting to find the maximum likelihood')
                         #
                         # Use the MAP functionality of PyMC
                         #
@@ -784,14 +784,14 @@ for iwave, wave in enumerate(waves):
                         fit0_bf = get_spectrum_M0(x, fit0)
                         l0 = get_log_likelihood(pred, fit0_bf, sigma)
                     except:
-                        print('Error fitting M0 to sample.')
+                        #print('Error fitting M0 to sample.')
                         l0 = None
 
                     # Fit the test data using hypothesis 1 and calculate a likelihood
                     #M1_pp = pymcmodels2.Log_splwc_AddNormalBump2(x, pred, sigma)
                     #map_M1_pp = pymc.MAP(M1_pp)
                     try:
-                        print('M1: fitting to find the maximum likelihood')
+                        #print('M1: fitting to find the maximum likelihood')
                         #
                         # Use the MAP functionality of PyMC
                         #
@@ -805,7 +805,7 @@ for iwave, wave in enumerate(waves):
                         fit1_bf = get_spectrum_M1(x, fit1)
                         l1 = get_log_likelihood(pred, fit1_bf, sigma)
                     except:
-                        print('Error fitting M1 to sample.')
+                        #print('Error fitting M1 to sample.')
                         l1 = None
 
                     # Sort the results into good and bad.
@@ -815,7 +815,7 @@ for iwave, wave in enumerate(waves):
                             fit_results = (rthis, l0, chi0, l1, chi1, t_lrt_pred)
                             good_results.append(fit_results)
                             nfound = nfound + 1
-                            print('    T_lrt = %f' % (T_LRT(l0, l1)))
+                            #print('    T_lrt = %f' % (T_LRT(l0, l1)))
                             if np.mod(nfound, 1000) == 0:
                                 plt.figure(1)
                                 plt.plot(xvalue, pred, label='predicted', color='k')
@@ -828,10 +828,10 @@ for iwave, wave in enumerate(waves):
                                 plt.savefig(savefig + obstype + '.posterior_predictive.sample.' + str(nfound) + '.png')
                                 plt.close('all')
                         else:
-                            print('! T_lrt = %f <0 ! - must be a bad fit' % (t_lrt_pred))
+                            #print('! T_lrt = %f <0 ! - must be a bad fit' % (t_lrt_pred))
                             bad_results.append((rthis, l0, chi0, l1, chi1, t_lrt_pred))
                     else:
-                        print('! Fitting algorithm fell down !')
+                        #print('! Fitting algorithm fell down !')
                         bad_results.append((rthis, l0, chi0, l1, chi1, None))
 
                 # Save the good and bad results and use a different program to plot the results
