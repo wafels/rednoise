@@ -385,6 +385,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 cclag = []
                 cc0 = []
                 ccmax = []
+                covar = []
                 while npicked < nsample:
                     # Pick a location
                     loc1 = (np.random.randint(1, ny - 1), np.random.randint(1, nx - 1))
@@ -427,6 +428,13 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     cc0.append(ccvalue[nt - 1])
                     cclag.append(ccvalue[nt - 1 + lag])
                     ccmax.append(np.max(ccvalue))
+
+                    # Calculate the normalized covariance matrix
+                    ts1n = cornorm(ts1, 1.0)
+                    ts2n = cornorm(ts2, 1.0)
+                    covariance = np.cov(ts1n, ts2n) / np.sqrt(np.var(ts1n) * np.var(ts2n))
+                    covar.append(covariance[1, 0])
+
                     # Advance the counter
                     npicked = npicked + 1
 
@@ -473,6 +481,17 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title('Measures of independence coefficient')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.independence_coefficients.%s' % (savefig_format))
+                plt.close('all')
+
+                # Plot histograms of the normalized covariance
+                ccc_bins = 100
+                plt.figure(1)
+                plt.hist(np.asarray(covar), bins=ccc_bins, label='off diagonal covariance')
+                plt.xlabel('normalized covariance')
+                plt.ylabel('number')
+                plt.title('off diagonal covariance')
+                plt.legend(fontsize=10, framealpha=0.5)
+                plt.savefig(savefig + '.covariance.%s' % (savefig_format))
                 plt.close('all')
 
                 # Fourier power: get a Time series from the arithmetic sum of
@@ -841,8 +860,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['171', '193'],
-          regions=['moss', 'qs', 'loopfootpoints', 'sunspot'],
+          waves=['193', '193'],
+          regions=['loopfootpoints', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 

@@ -289,10 +289,10 @@ second model for these regions should be considered.  The spectrum
 $P_{1}$ where
 \begin{equation}
 \label{eq:pwrlawbunp}
-\ln P_{1}(f) = \ln P_{0} + \alpha\exp\left[-\frac{(\ln(f)-\beta)^{2}}{2\sigma^{2}}\right]
+P_{1}(f) = P_{0} + \alpha\exp\left[-\frac{(\ln(f)-\beta)^{2}}{2\sigma^{2}}\right]
 \end{equation}
-contains the previous power law dependence, plus the second term,
-modelling the excess power.  
+contains the previous power law dependence, plus a second term which
+models any power over and above the power law.
 
 \subsection{Comparing power spectra models}\label{ssec:twomodels}
 
@@ -475,7 +475,33 @@ by the NASA....
 
 \appendix
 
-\section{Posterior predictive checking}
+\section{Determining the number of independent
+  measurements}\label{sec:app:ind}
+
+Figures \ref{} show that the logarithm of the Fourier power in a
+region of the Sun may be approximated by a normal distribution $N(\mu,
+\sigma)$.  The
+maximum likelihood estimate of the mean and variance of normal
+distribution are given by
+\begin{equation}
+\hat{\mu} = \frac{1}{N}\sum_{i=1}^{N}X_{i}
+\label{eqn:mlmean}
+\end{equation}
+and
+\begin{equation}
+\hat{\sigma^{2}} = \frac{1}{N}\sum_{i=1}^{N}(X_{i}-\mu)^{2}
+\label{eqn:mlmean}
+where $N$ is the number of independent measurements.  The estimated
+error in the estimated error is
+\begin{equation}
+\sqrt{\hat{\sigma^{2}}}/\sqrt{N}
+\label{eqn:mlmean}
+\end{equation}
+
+
+
+
+
 
 %% The reference list follows the main body and any appendices.
 %% Use LaTeX's thebibliography environment to mark up your reference list.
