@@ -81,5 +81,10 @@ def tsDetails(nx, ny, nt):
 sunday_name = {'moss': 'moss',
                'qs': 'quiet Sun',
                'loopfootpoints': 'loop footpoints',
+               'loopfootpoints1': 'loop footpoints 1',
+               'loopfootpoints2': 'loop footpoints 2',
+               'highlimb': 'high limb',
+               'lowlimb': 'low limb',
+               'crosslimb': 'cross limb',
                'sunspot': 'sunspot'}
 

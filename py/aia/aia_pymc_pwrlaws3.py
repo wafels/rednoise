@@ -323,13 +323,28 @@ scsvroot = '~/ts/csv_cc_final_test/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171']
+waves = ['171', '193']
 regions = ['loopfootpoints', 'moss', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
 #
-# Number of posterior predictive samples to calulcate
+# Limb
+#
+dataroot = '~/Data/AIA/'
+ldirroot = '~/ts/pickle/'
+sfigroot = '~/ts/img/'
+scsvroot = '~/ts/csv/'
+corename = 'shutdownfun6_6hr'
+sunlocation = 'limb'
+fits_level = '1.0'
+waves = ['171']
+regions = ['highlimb', 'crosslimb', 'lowlimb', 'moss', 'loopfootpoints1', 'loopfootpoints2']
+windows = ['hanning']
+manip = 'relative'
+
+#
+# Number of posterior predictive samples to calculate
 #
 nsample = 5000
 
@@ -624,7 +639,8 @@ for iwave, wave in enumerate(waves):
                 fivemin = np.log10(1.0 / 300.0)
                 threemin = np.log10(1.0 / 180.0)
 
-                # Plot the data
+                # -------------------------------------------------------------
+                # Plot the data and the model fits
                 plt.plot(xvalue, pwr_ff, label='data', color='k')
 
                 # Plot the M0 fit
@@ -677,7 +693,8 @@ for iwave, wave in enumerate(waves):
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
                 plt.close('all')
 
-                # Residual
+                # -------------------------------------------------------------
+                # Measures of the residuals
                 plt.figure(2)
                 plt.plot(xvalue, pwr_ff - M0_bf, label='data - M0')
                 plt.plot(xvalue, pwr_ff - M1_bf, label='data - M1')
@@ -703,6 +720,7 @@ for iwave, wave in enumerate(waves):
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_residuals.pymc.png')
                 plt.close('all')
 
+                # -------------------------------------------------------------
                 # Power ratio
                 plt.figure(2)
                 plt.semilogy(xvalue, np.exp(normalbump_BF) / np.exp(powerlaw_BF), label='M1[normal bump] / M1[power law]')
@@ -726,6 +744,30 @@ for iwave, wave in enumerate(waves):
                 plt.legend(framealpha=0.5, fontsize=8)
                 plt.title(title)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_ratios.pymc.png')
+                plt.close('all')
+
+                #--------------------------------------------------------------
+                # Residuals / estimated noise - this is the contributions to
+                # chi-squared
+                plt.figure(2)
+                plt.plot(xvalue, np.abs(pwr_ff - M0_bf) / sigma_for_mean, label='|data - M0| / sigma for mean / $(N_{f}-k)$')
+                plt.plot(xvalue, np.abs(pwr_ff - M1_bf) / sigma_for_mean, label='|data - M1| / sigma for mean / $(N_{f}-k)$')
+                plt.axhline(1.0, color='k')
+
+                # Plot the 3 and 5 minute frequencies
+                plt.axvline(fivemin, label='5 mins.', linestyle='--', color='k')
+                plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
+
+                # Plot the bump limits
+                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
+                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+
+                # Complete the plot and save it
+                plt.legend(framealpha=0.5, fontsize=8)
+                plt.xlabel('log10(frequency (Hz))')
+                plt.ylabel('contributions to $\chi^{2}$')
+                plt.title(title)
+                plt.savefig(savefig + obstype + '.' + passnumber + '.contributions_to_reduced_chi_squared.png')
                 plt.close('all')
 
                 ###############################################################

@@ -20,9 +20,10 @@ from paper1 import sunday_name
 # input data
 dataroot = '~/Data/AIA/'
 #corename = '20120923_0000__20120923_0100'
-corename = 'shutdownfun3_6hr'
-sunlocation = 'disk'
-fits_level = '1.5'
+#corename = 'shutdownfun3_6hr'
+corename = 'shutdownfun6_6hr'
+sunlocation = 'limb'
+fits_level = '1.0'
 wave = '171'
 cross_correlate = True
 

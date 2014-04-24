@@ -59,6 +59,19 @@ This is what we do with the data and how we do it:
 """
 
 
+def get_coherence(a, b):
+    """ Calculate the coherence of two time series """
+    a_fft = np.fft.fft(a)
+    a_pwr = np.abs(a_fft) ** 2
+    #
+    b_fft = np.fft.fft(b)
+    b_pwr = np.abs(np.fft.fft(b)) ** 2
+    #
+    ab_cross_spectrum = np.conjugate(a_fft) * b_fft
+    ab_pwr = np.abs(ab_cross_spectrum)
+    return (ab_pwr ** 2) / (a_pwr * b_pwr)
+
+
 def calculate_histograms(nposfreq, pwr, bins):
     # number of histogram bins
     hpwr = np.zeros((nposfreq, bins))
@@ -379,7 +392,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 def linear(x, c, m):
                     return -m * x + c
 
-                nsample = np.max(np.asarray([8 * nx * ny, 100000]))
+                nsample = np.min(np.asarray([8 * nx * ny, 10000]))
                 npicked = 0
                 lag = 1
                 cclag = []
@@ -435,6 +448,15 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     covariance = np.cov(ts1n, ts2n) / np.sqrt(np.var(ts1n) * np.var(ts2n))
                     covar.append(covariance[1, 0])
 
+                    # Calculate the coherence for each selected pair, and add
+                    # them up to find the average
+                    print ts1, ts2
+                    coherence = get_coherence(ts1, ts2)
+                    if npicked == 0:
+                        coher = coherence
+                    else:
+                        coher = coher + coherence
+
                     # Advance the counter
                     npicked = npicked + 1
 
@@ -456,7 +478,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.hist(np.asarray(cclag), bins=ccc_bins, label='lag %i CCC' % (lag), alpha = 0.33)
                 plt.hist(np.asarray(ccmax), bins=ccc_bins, label='maximum CCC', alpha = 0.33)
                 plt.xlabel('cross correlation coefficient')
-                plt.ylabel('number')
+                plt.ylabel('number [%i samples]' % (npicked))
                 plt.title('Measures of cross correlation')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.cross_correlation_coefficients.%s' % (savefig_format))
@@ -477,7 +499,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.axvline(ccmax_mean, label='mean(1 - |max(CCC)| = %f' % (ccmax_mean))
 
                 plt.xlabel('independence coefficient')
-                plt.ylabel('number')
+                plt.ylabel('number [%i samples]' % (npicked))
                 plt.title('Measures of independence coefficient')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.independence_coefficients.%s' % (savefig_format))
@@ -488,10 +510,20 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.figure(1)
                 plt.hist(np.asarray(covar), bins=ccc_bins, label='off diagonal covariance')
                 plt.xlabel('normalized covariance')
-                plt.ylabel('number')
+                plt.ylabel('number [%i samples]' % (npicked))
                 plt.title('off diagonal covariance')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.covariance.%s' % (savefig_format))
+                plt.close('all')
+
+                # Plot the average coherence
+                plt.figure(1)
+                plt.plot(freqs, coher / (1.0 * npicked), label='average coherence')
+                plt.xlabel('frequency')
+                plt.ylabel('average coherence [%i samples]' % (npicked))
+                plt.title('Average nearest neighbor coherence')
+                plt.legend(fontsize=10, framealpha=0.5)
+                plt.savefig(savefig + '.coherence.%s' % (savefig_format))
                 plt.close('all')
 
                 # Fourier power: get a Time series from the arithmetic sum of
@@ -832,7 +864,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun6_6hr',
           sunlocation='limb',
           fits_level='1.0',
-          waves=['171', '193', '211', '131'],
+          waves=['171'],
           regions=['highlimb', 'crosslimb', 'lowlimb', 'moss', 'loopfootpoints1', 'loopfootpoints2'],
           windows=['hanning'],
           manip='relative')
@@ -847,7 +879,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           sunlocation='disk',
           fits_level='1.5',
           waves=['171'],
-          regions=['sunspot', 'qs', 'loopfootpoints', 'moss'],
+          regions=['moss', 'sunspot', 'qs', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
 """
@@ -860,8 +892,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['193', '193'],
-          regions=['loopfootpoints', 'sunspot'],
+          waves=['171', '193'],
+          regions=['moss', 'qs', 'loopfootpoints', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 
