@@ -318,16 +318,17 @@ plt.close('all')
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final_test/'
-scsvroot = '~/ts/csv_cc_final_test/'
+sfigroot = '~/ts/img_cc_final/'
+scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'sunspot']
+waves = ['193', '171']
+regions = ['loopfootpoints', 'qs', 'moss', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
+"""
 #
 # Limb
 #
@@ -342,7 +343,7 @@ waves = ['171']
 regions = ['highlimb', 'crosslimb', 'lowlimb', 'moss', 'loopfootpoints1', 'loopfootpoints2']
 windows = ['hanning']
 manip = 'relative'
-
+"""
 #
 # Number of posterior predictive samples to calculate
 #
@@ -447,6 +448,14 @@ for iwave, wave in enumerate(waves):
                 std_dev = pickle.load(pkl_file)
                 abs_diff = pickle.load(pkl_file)
                 pkl_file.close()
+                # Load the coherence
+                ifilename = 'OUT.' + region_id
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.coherence.pickle')
+                print('Loading ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'rb')
+                freqs = pickle.load(pkl_file)
+                coher = pickle.load(pkl_file)
+                pkl_file.close()
 
                 # Find out the length-scale at which the fitted
                 # cross-correlation coefficient reaches the value of 0.1
@@ -469,6 +478,13 @@ for iwave, wave in enumerate(waves):
                 print("Effective number of independent observations = %f " % (npixels_effective))
                 sigma_of_distribution = fix_nonfinite(std_dev)
                 sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
+
+                # Frequency-dependent independence coefficient
+                #independence_coefficient = 1.0 - np.abs(coher)
+                #print 'Coherence: Average independence coefficient ', np.mean(independence_coefficient)
+                #npixels_effective = independence_coefficient * (npixels - 1) + 1
+                #print("Coherence: Effective number of independent observations = %f " % (np.mean(npixels_effective)))
+                #sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
                 #unbiased_factor = np.sqrt(npixels_effective / (npixels_effective ** 2 - npixels_effective))
                 #print("Unbiased factor = %f" % (unbiased_factor))
                 #sigma = unbiased_factor * fix_nonfinite(sigma)
@@ -479,6 +495,7 @@ for iwave, wave in enumerate(waves):
                 # Normalize the frequency
                 xnorm = freqs[0]
                 x = freqs / xnorm
+                nfreq = freqs.size
 
                 #
                 # Model 0 - the power law
@@ -747,11 +764,11 @@ for iwave, wave in enumerate(waves):
                 plt.close('all')
 
                 #--------------------------------------------------------------
-                # Residuals / estimated noise - this is the contributions to
+                # Residuals / estimated noise - these are the contributions to
                 # chi-squared
                 plt.figure(2)
-                plt.plot(xvalue, np.abs(pwr_ff - M0_bf) / sigma_for_mean, label='|data - M0| / sigma for mean / $(N_{f}-k)$')
-                plt.plot(xvalue, np.abs(pwr_ff - M1_bf) / sigma_for_mean, label='|data - M1| / sigma for mean / $(N_{f}-k)$')
+                plt.plot(xvalue, (np.abs(pwr_ff - M0_bf) / sigma_for_mean) ** 2, label='|data - M0| / sigma for mean')
+                plt.plot(xvalue, (np.abs(pwr_ff - M1_bf) / sigma_for_mean) ** 2, label='|data - M1| / sigma for mean')
                 plt.axhline(1.0, color='k')
 
                 # Plot the 3 and 5 minute frequencies

@@ -59,16 +59,21 @@ This is what we do with the data and how we do it:
 """
 
 
-def get_coherence(a, b):
-    """ Calculate the coherence of two time series """
+def get_cross_spectrum(a, b, wsize=10):
     a_fft = np.fft.fft(a)
-    a_pwr = np.abs(a_fft) ** 2
-    #
     b_fft = np.fft.fft(b)
-    b_pwr = np.abs(np.fft.fft(b)) ** 2
+    ab_fft = np.conjugate(a_fft) * b_fft
+    return tsutils.movingaverage(ab_fft, wsize)
+
+
+def get_coherence(a, b, wsize=10):
+    """ Calculate the coherence of two time series """
+    a_pwr = np.abs(get_cross_spectrum(a, a, wsize=wsize))
     #
-    ab_cross_spectrum = np.conjugate(a_fft) * b_fft
-    ab_pwr = np.abs(ab_cross_spectrum)
+    b_pwr = np.abs(get_cross_spectrum(b, b, wsize=wsize))
+    #
+    ab_pwr = np.abs(get_cross_spectrum(a, b, wsize=wsize))
+    #
     return (ab_pwr ** 2) / (a_pwr * b_pwr)
 
 
@@ -246,6 +251,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 t = dt * np.arange(0, nt)
                 tsdummy = TimeSeries(t, t)
                 freqs = freqfactor[0] * tsdummy.PowerSpectrum.frequencies.positive
+                posindex = tsdummy.PowerSpectrum.frequencies.posindex
                 iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
                 nposfreq = len(iobs)
@@ -450,15 +456,21 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                     # Calculate the coherence for each selected pair, and add
                     # them up to find the average
-                    print ts1, ts2
                     coherence = get_coherence(ts1, ts2)
-                    if npicked == 0:
-                        coher = coherence
-                    else:
-                        coher = coher + coherence
+                    #if npicked == 0:
+                    #    coher = coherence[posindex]
+                    #else:
+                    #    coher = coher + coherence[posindex]
+                    coher_array[npicked, :] = coherence[posindex]
 
                     # Advance the counter
                     npicked = npicked + 1
+
+                # Average coherence
+                coher = np.mean(coher_array, axis=0)
+
+                # Maximum coherenc
+                coher_max = np.max(coher_array, axis=0)
 
                 # All the pixels are all sqrt(2) pixels away from the
                 # central pixel.  We treat them all as nearest neighbor.
@@ -518,7 +530,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Plot the average coherence
                 plt.figure(1)
-                plt.plot(freqs, coher / (1.0 * npicked), label='average coherence')
+                plt.semilogx(freqs, coher, label='average coherence')
+                plt.semilogx(freqs, coher_max, label='maximum coherence')
                 plt.xlabel('frequency')
                 plt.ylabel('average coherence [%i samples]' % (npicked))
                 plt.title('Average nearest neighbor coherence')
@@ -834,6 +847,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                           'OUT.' + ofilename + '.distribution_widths_error.pickle',
                           (freqs / freqfactor[0], error_logiobs_distrib_width))
 
+                # Average coherence
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.coherence.pickle',
+                          (freqs / freqfactor[0], coher, coher_max))
+
                 # Bump fit
                 #pkl_write(pkl_location,
                 #          'OUT.' + ofilename + '.bump_fit_all.pickle',
@@ -892,8 +910,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['171', '193'],
-          regions=['moss', 'qs', 'loopfootpoints', 'sunspot'],
+          waves=['193', '171'],
+          regions=['loopfootpoints', 'qs', 'moss', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 
