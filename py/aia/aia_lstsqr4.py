@@ -17,7 +17,7 @@ import csv
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
+from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, prettyprint
 
 font = {'family': 'normal',
         'weight': 'bold',
@@ -383,6 +383,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # divide the number of pixels in the region by this estimated
                 # area then we get an estimate of the number of independent
                 # time series in the region.
+                prettyprint('Calculate pixel by pixel correlation')
                 def cornorm(a, norm):
                     return (a - np.mean(a)) / (np.std(a) * norm)
 
@@ -405,6 +406,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 cc0 = []
                 ccmax = []
                 covar = []
+                coher_array = np.zeros((nsample, nposfreq))
                 while npicked < nsample:
                     # Pick a location
                     loc1 = (np.random.randint(1, ny - 1), np.random.randint(1, nx - 1))
@@ -469,8 +471,18 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Average coherence
                 coher = np.mean(coher_array, axis=0)
 
-                # Maximum coherenc
+                # Standard deviation of the coherence
+                coher_std = np.std(coher_array, axis=0)
+
+                # Maximum coherence
                 coher_max = np.max(coher_array, axis=0)
+
+                # Histogram of coherence
+                nbins = 100
+                coher_hist = np.zeros((nposfreq, nbins))
+                for jjj in range(0, nposfreq - 1):
+                    h, _ = np.histogram(coher_array[:, jjj], bins=nbins, range=(0.0, 1.0))
+                    coher_hist[jjj, :] = h / (1.0 * np.max(h))
 
                 # All the pixels are all sqrt(2) pixels away from the
                 # central pixel.  We treat them all as nearest neighbor.
@@ -491,7 +503,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.hist(np.asarray(ccmax), bins=ccc_bins, label='maximum CCC', alpha = 0.33)
                 plt.xlabel('cross correlation coefficient')
                 plt.ylabel('number [%i samples]' % (npicked))
-                plt.title('Measures of cross correlation')
+                plt.title(data_name + ' : Measures of cross correlation')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.cross_correlation_coefficients.%s' % (savefig_format))
                 plt.close('all')
@@ -512,7 +524,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 plt.xlabel('independence coefficient')
                 plt.ylabel('number [%i samples]' % (npicked))
-                plt.title('Measures of independence coefficient')
+                plt.title(data_name + ' : measures of independence coefficient')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.independence_coefficients.%s' % (savefig_format))
                 plt.close('all')
@@ -523,20 +535,30 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.hist(np.asarray(covar), bins=ccc_bins, label='off diagonal covariance')
                 plt.xlabel('normalized covariance')
                 plt.ylabel('number [%i samples]' % (npicked))
-                plt.title('off diagonal covariance')
+                plt.title(data_name + ' : off diagonal covariance')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.covariance.%s' % (savefig_format))
                 plt.close('all')
 
-                # Plot the average coherence
+                # Plot the coherence measures
                 plt.figure(1)
                 plt.semilogx(freqs, coher, label='average coherence')
+                plt.semilogx(freqs, coher + coher_std, label='average coherence + std')
+                plt.semilogx(freqs, coher - coher_std, label='average coherence - std')
                 plt.semilogx(freqs, coher_max, label='maximum coherence')
-                plt.xlabel('frequency')
-                plt.ylabel('average coherence [%i samples]' % (npicked))
-                plt.title('Average nearest neighbor coherence')
+                plt.xlabel('frequency (mHz)')
+                plt.ylabel(data_name + ' : coherence')
+                plt.title('Distribution of')
                 plt.legend(fontsize=10, framealpha=0.5)
                 plt.savefig(savefig + '.coherence.%s' % (savefig_format))
+                plt.close('all')
+
+                plt.figure(2)
+                plt.imshow(coher_hist, origin='lower', aspect='auto', extent=(freqs[0], freqs[-1], 0, 1))
+                plt.xlabel('frequency (mHz)')
+                plt.ylabel('coherence')
+                plt.title(data_name + ' : Coherence distribution')
+                plt.savefig(savefig + '.coherence_histogram.%s' % (savefig_format))
                 plt.close('all')
 
                 # Fourier power: get a Time series from the arithmetic sum of
@@ -910,8 +932,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['193', '171'],
-          regions=['loopfootpoints', 'qs', 'moss', 'sunspot'],
+          waves=['193'],
+          regions=['moss', 'loopfootpoints', 'qs', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 

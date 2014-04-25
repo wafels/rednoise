@@ -15,7 +15,7 @@ from scipy.optimize import curve_fit
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
-from paper1 import sunday_name
+from paper1 import sunday_name, prettyprint
 
 # Reproducible
 np.random.seed(1)
@@ -302,13 +302,6 @@ def fix_variables(variable, data, s, extra_factors):
         return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' [decades of frequency]'
 
     return data, mean, v95_lo, v95_hi, ''
-
-
-# Prints a title, with space before it and an underline
-def prettyprint(s, underline='-'):
-    print(' ')
-    print(s)
-    print(str(underline) * len(s))
 
 
 plt.ioff()

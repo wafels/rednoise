@@ -4,6 +4,13 @@ Helpers for the paper
 from copy import deepcopy
 
 
+# Prints a title, with space before it and an underline
+def prettyprint(s, underline='-'):
+    print(' ')
+    print(s)
+    print(str(underline) * len(s))
+
+
 #
 #
 #

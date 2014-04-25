@@ -24,7 +24,7 @@ def get_datacube(path, derotate=False, clip=False):
         return np.swapaxes(np.swapaxes(idl['region_window'], 0, 2), 0, 1)
     else:
         # Get a mapcube
-        maps = sunpy.Map(path, cube=True)
+        maps = sunpy.Map(path + '/*.fits', cube=True)
         if derotate:
             dc, ysrdisp, xsrdisp = derotated_datacube_from_mapcube(maps, clip=clip)
         else:
