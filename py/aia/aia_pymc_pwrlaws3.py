@@ -760,8 +760,8 @@ for iwave, wave in enumerate(waves):
                 # Residuals / estimated noise - these are the contributions to
                 # chi-squared
                 plt.figure(2)
-                plt.plot(xvalue, (np.abs(pwr_ff - M0_bf) / sigma_for_mean) ** 2, label='|data - M0| / sigma for mean')
-                plt.plot(xvalue, (np.abs(pwr_ff - M1_bf) / sigma_for_mean) ** 2, label='|data - M1| / sigma for mean')
+                plt.semilogy(xvalue, (np.abs(pwr_ff - M0_bf) / sigma_for_mean) ** 2, label='|data - M0| / sigma for mean')
+                plt.semilogy(xvalue, (np.abs(pwr_ff - M1_bf) / sigma_for_mean) ** 2, label='|data - M1| / sigma for mean')
                 plt.axhline(1.0, color='k')
 
                 # Plot the 3 and 5 minute frequencies
