@@ -53,6 +53,7 @@
 
 \newcommand{\vdag}{(v)^\dagger}
 \newcommand{\myemail}{jack.ireland@nasa.gov}
+\newcommand{\Fps}{Fourier power spectrum}
 
 %% You can insert a short comment on the title page using the command below.
 
@@ -252,20 +253,20 @@ mean of the Fourier power.
 
 These geometric mean Fourier power spectra are shown in Figures
 \ref{fig:geom171} and \ref{fig:geom193}, for each of the physical
-regions considered.  It is clear that the Fourier power spectra
-exhibit power-law like characteristics.  
+regions considered.  It is clear that, in general, the Fourier power
+spectra exhibit power-law like characteristics.
 
 \begin{figure}
-\label{fig:geom171}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.geometric_mean_power_spectra.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.geometric_mean_power_spectra.eps}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.geometric_mean_power_spectra.eps}{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.geometric_mean_power_spectra.eps}
+\label{fig:fit171}
+\plottwo{}{}
+\plottwo{}{}
 \caption{}
 \end{figure}
 
 \begin{figure}
-\label{fig:geom193}
-\plottwo{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.geometric_mean_power_spectra.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.geometric_mean_power_spectra.eps}
-\plottwo{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.geometric_mean_power_spectra.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.geometric_mean_power_spectra.eps}
+\label{fig:fit193}
+\plottwo{}{}
+\plottwo{}{}
 
 \caption{}
 \end{figure}
@@ -283,18 +284,21 @@ The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
 other regions, there appears to be excess Fourier power in the range
 1-10 mHz.  Previous studies (???) have shown that the moss is a source
-of uncorrelated and incoherent Fourier power.  This suggests that a
-second model for these regions should be considered.  The spectrum
-$P_{1}$ where
+of Fourier power.  This suggests that a second model for these regions
+should be considered.  The spectrum $P_{1}$ where
 \begin{equation}
 \label{eq:pwrlawbump}
 P_{1}(f) = P_{0} + \alpha\exp\left[-\frac{(\ln(f)-\beta)^{2}}{2\sigma^{2}}\right]
 \end{equation}
 contains the previous power law dependence, plus a second term which
-models any power over and above the power law.
+models any power over and above the power law.  
 
-These two models are fit to the data (black solid lines, Figures
-\ref{} and \ref{}). The 
+Both these models are fit to the geometrically averaged Fourier power
+spectrum in both wavelengths and in all four regions.  Figures
+\ref{fig:fit171} and \ref{fig:fit193} show the best fit results of
+each model to the data (for details on the fitting procedure, see
+Section \ref{sec:app:ind}).
+
 
 
 \section{Discussion}
@@ -314,20 +318,29 @@ Section \ref{sec:results} demonstrates the presence of a red
 noise-like signal in two of the most commonly used wavebands for
 coronal seismology, SDO-AIA 171\AA\ and 193\AA.  The observed spectra
 generally show a power law-like behavior at time-scales of interest in
-coronal seismology, and longer.  Coronal moss regions seem to show
-slightly higher emission than a background power-law at a limited
-range of frequencies.  However, this does not change the power-law
-like nature of the emission - the power spectrum is essentially scale
-free on average.  Therefore, on average, there is little guidance to
-be had from coronal Fourier power spectra that can be used to pick a
-time-scale that can be used to remove a background trend.
+coronal seismology, and longer.  Within the confines of the models we
+have chosen, coronal moss regions show the largest contribution from a
+non-power law power spectrum source over a relatively limited range of
+frequencies.  The frequencies at which the Gaussian contribution is
+larger than the underlying power-law distribution could be used to
+define an average frequency range within which the majority
+contribution to the overall Fourier power is not associated with the
+underlying power-law distribution.  However, the \Fps\ in this range
+would still have to analyzed using both the power-law and Gaussian
+contributions to the overall power, and better estimates to the
+power-law parameters will be obtained if the full frequency range of
+the observations are used.
 
-If there is no time-scale that can be used to remove a background
-trend, then the time-series has to be analyzed without this processing
-step.  Here too, the red-noise nature of the emission can cause
-problems in attempting to analyze for the presence of narrow frequency
-band oscillations.  Such oscillations are thought to be indicative of
-waves in the solar atmosphere.
+The presence of a non-power law contribution to the \Fps\ does not
+change the fact that the background emission is essentially power-law
+like.  For the frequencies that have been of interest in coronal
+seismology, the background power spectrum is therefore scale free on
+average.  If there is no time-scale that can be used to remove a
+background trend, then the time-series has to be analyzed without this
+processing step.  A lack of awareness of the background red-noise
+nature of the emission can cause problems in attempting to analyze for
+the presence of narrow frequency band oscillations, as the following
+example demonstrates.
 
 \begin{figure}
 \epsscale{.80}
@@ -361,6 +374,16 @@ background red-noise power spectrum should be assumed, along with
 higher confidence levels, in order to minimize the effects of
 mistakenly identifying red-noise as evidence for an oscillatory
 signal.
+
+This has been recognized by \cite{2010MNRAS.402..307V} in the study of
+XMM-Newton observations of highly variable Seyfert 1 galaxies.
+\cite{2010MNRAS.402..307V} presents a model comparison and fitting
+technique that can be used to determine the presence of a narrow-band
+features in Fourier power spectra against a red-noise like background
+emission.  This technique is applicable to the search for oscillatory
+power in coronal time-series.
+
+
 
 \subsection{Implications for coronal seismology and automated
   oscillation detection algorithms}\label{sec:oscdetect}
@@ -410,14 +433,14 @@ finding spatially contiguous regions of the corona which are coherent
 in a given frequency range.  The frequency range searched is based on
 previous experience.  Oscillations that are detected propagating along
 loops are often found by considering distance-time plots
-\cite{demoortel2000} and looking for alternating brightening/darkening
-in those plots as a indicator of a propagating wave.  This is
-essentially a coherence-based approach, as the user is assessing the
-likelihood that an oscillation has been detected based on the observed
-signal in multiple contiguous pixels.  However, each pixel in these
-plots probably has a red-noise background power spectrum, and so the
-discussion of Section \ref{ssec:corseis} suggests that the
-significance of any claimed oscillation is much reduced.
+\cite{demoortel2000, 2003A&A...404L...1K} and looking for alternating
+brightening/darkening in those plots as a indicator of a propagating
+wave.  This is essentially a coherence-based approach, as the user is
+assessing the likelihood that an oscillation has been detected based
+on the observed signal in multiple contiguous pixels.  However, each
+pixel in these plots probably has a red-noise background power
+spectrum, and so the discussion of Section \ref{ssec:corseis} suggests
+that the significance of any claimed oscillation is much reduced.
 
 
 \subsection{``Excess'' emission}\label{ssec:excess}
@@ -433,7 +456,7 @@ distribution of field line angles with the solar surface.  This
 distribution relies on the assumption that all the
 Gaussian-distributed component is entirely due to the channeling of
 photospheric oscillatory power up to ``coronal'' heights and
-temperatures.  However ??? has shown that moss has a relatively
+temperatures.
 
 
 The AIA 171\AA\ and 193\AA\ wavebands are relatively wide, and include
@@ -499,8 +522,7 @@ by the NASA....
 
 \appendix
 
-\section{Determining the number of independent
-  measurements}\label{sec:app:ind}
+\section{Model fitting procedure}\label{sec:app:ind}
 
 Figures \ref{} show that the logarithm of the Fourier power in a
 region of the Sun may be approximated by a normal distribution $N(\mu,
