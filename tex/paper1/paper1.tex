@@ -53,7 +53,9 @@
 
 \newcommand{\vdag}{(v)^\dagger}
 \newcommand{\myemail}{jack.ireland@nasa.gov}
-\newcommand{\Fps}{Fourier power spectrum}
+\newcommand{\PS}{power spectrum}
+\newcommand{\PL}{power-law}
+\newcommand{\Fps}{Fourier \PS}
 
 %% You can insert a short comment on the title page using the command below.
 
@@ -277,8 +279,10 @@ suggest a power-law power spectrum.  This can be modeled as
 \label{eq:pwrlaw}
 P_{0}(f) = Af^{-n} + C,
 \end{equation}
-where $A>0$ is a proportionality constant, $n>0$ is the power law
-index, and $C>0$ describes the high-frequency Fourier power.
+where $A>0$ is a proportionality constant and $n>0$ is the power law
+index.  The quantity $C>0$ models the high-frequency / low power end
+of the spectrum where the detection properties of the detector
+apparatus are assumed to dominate the observations.
 
 The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
@@ -477,6 +481,66 @@ example, \cite{1993ASPC...42..111H} modelled the
 
 
 \subsection{Nature of the power law power spectrum}\label{ssec:nplps}
+The first contribution to both models $P_{0}$ and $P_{i}$ is a
+red-noise like power spectrum.  It is present in both wavebands
+studied and in all the regions, and so parsimony suggests that the
+mechanism of its creation is both similar and ubiquitous in all parts
+of the solar atmosphere.  We hypothesize that the \PL\ \PS\ is due to
+the sum of a distribution of a large number of energy deposition
+events having different energies. \cite{} describes how a
+\PL\ \PS\ may obtained from such a distribution, and that argument
+outlined below.
+
+Each energy deposition event is modeled as an exponentially decaying
+function of time $t$
+\begin{equation}
+\label{eqn:expdecay}
+f(t) = E \frac{1}{T}\exp\left(-\frac{t}{T}\right),
+\end{equation}
+for some timescale $T$ and energy $E$.  The corresponding \Fps\ is
+\begin{equation}
+\label{eqn:ftexpdecay}
+P(f) = E\frac{1}{1 + (2\pi f T)^{2}}.
+\end{equation}
+The total \Fps\ along the line of sight is given by
+\begin{equation}
+\label{eqn:ftexpdecay}
+P_{T}(f) = \sum_{T}N(T)P_{T}(f)
+\end{equation}
+where $N(T)$ is the distribution of time-scales for all the events
+along the line of sight.  Further, if the number of events of a given
+energy $E$ is assumed to be
+\begin{equation}
+\label{eqn:energydistrib}
+N(E) \propto E^{-\alpha_{E}}
+\end{equation}
+and the energy in each event depends on its time scale $T$ such that
+\begin{equation}
+\label{eqn:energydistrib}
+E \propto T^{1+\gamma}
+\end{equation}
+then it can be shown \cite{} that the observed power spectrum can be
+approximated by
+\begin{equation}
+\label{eqn:energydistrib}
+P(f) \propto f^{(2-\alpha_{E})(1+\gamma)}.
+\end{equation}
+
+This derivation shows it is possible to generate \PL\ power spectra
+using swarms of statistically similar events.  The detailed
+application of this model of the observed background \PL\ power
+spectra will depend strongly on three factors that influence the
+observation.  Firstly, the distribution of events along the line of
+sight and their temporal dependence (expressed through the parameters
+$\alpha_{E}$ and $\gamma$ in Equation \ref{eqn:energydistrib}) have
+strong effects on the observed \Fps.  Secondly, the physics of the
+radiation emitted as a function of the energy deposited in each event
+and the existing plasma properties must be consistently modeled.
+Finally, the properties of the observing instrument, in this case the
+AIA filters, will also influence the observed \Fps.  These three
+factors must be modeled in order to confirm or deny the hypothesis
+that ubiquitous energy deposition events are the root cause of the
+observed Fourier power spectra.
 
 
 \section{Conclusions}\label{sec:conc}
