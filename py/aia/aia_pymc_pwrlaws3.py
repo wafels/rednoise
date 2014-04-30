@@ -15,7 +15,7 @@ from scipy.optimize import curve_fit
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
-from paper1 import sunday_name, prettyprint
+from paper1 import sunday_name, prettyprint, log_10_product
 
 # Reproducible
 np.random.seed(1)
@@ -127,6 +127,16 @@ def calculate_reduced_chi2(x, pwr, spectrum, sigma, k):
     return sse / (1.0 * (np.size(pwr) - k))
 
 
+def get_ci(data, ci=0.68):
+    """Calculate the credible interval by excluding an equal amount of
+    probability at each end"""
+    extreme_prob = 0.5 * (1.0 - ci)
+    sz = data.size
+    ordered = np.sort(data)
+    return ordered[np.rint(extreme_prob * sz)], \
+            ordered[np.rint((1.0 - extreme_prob) * sz)]
+
+
 def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 bins=100, savetype='.png', extra_factors=None):
     if model == 'M0':
@@ -150,7 +160,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
     # Go through all the variables
     for v in variables:
         # Fix the data, and get better labels
-        data, mean, v95_lo, v95_hi, vlabel = fix_variables(v,
+        data, mean, v95_lo, v95_hi, v68_lo, v68_hi, vlabel = fix_variables(v,
                                                            M.trace(v)[:],
                                                            s[v],
                                                            extra_factors=extra_factors)
@@ -172,12 +182,16 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
 
         # Summary statistics of the measurement
         plt.axvline(mean, color='k', label='mean', linewidth=2)
-        plt.axvline(v95_lo, color='k', linestyle='-.', linewidth=2, label='95%, lower')
-        plt.axvline(v95_hi, color='k', linestyle='--', linewidth=2, label='95%, upper')
+        plt.axvline(v95_lo, color='k', linestyle='--', linewidth=2)
+        plt.axvline(v95_hi, color='k', linestyle='--', linewidth=2, label='95% CI')
+        plt.axvline(v68_lo, color='k', linestyle='-.', linewidth=2)
+        plt.axvline(v68_hi, color='k', linestyle='-.', linewidth=2, label='68% CI')
 
         plt.text(mean, 0.90 * ypos, ' %f' % (mean), fontsize=fontsize, bbox=bbox)
         plt.text(v95_lo, 0.25 * ypos, ' %f' % (v95_lo), fontsize=fontsize, bbox=bbox)
         plt.text(v95_hi, 0.75 * ypos, ' %f' % (v95_hi), fontsize=fontsize, bbox=bbox)
+        plt.text(v68_lo, 0.42 * ypos, ' %f' % (v68_lo), fontsize=fontsize, bbox=bbox)
+        plt.text(v68_hi, 0.59 * ypos, ' %f' % (v68_hi), fontsize=fontsize, bbox=bbox)
 
         # Define the legend
         plt.legend(framealpha=alpha, fontsize=fontsize, loc=3)
@@ -195,7 +209,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 vpairs.append(v + v2)
 
                 # Fix the data, and get better labels
-                data2, mean2, v95_lo2, v95_hi2, vlabel2 = fix_variables(v2,
+                data2, mean2, v95_lo2, v95_hi2, v68_lo2, v68_hi2, vlabel2 = fix_variables(v2,
                                                                M.trace(v2)[:],
                                                                s[v2],
                                                                extra_factors=extra_factors)
@@ -289,19 +303,27 @@ def fix_variables(variable, data, s, extra_factors):
     v95_lo = s['95% HPD interval'][0]
     v95_hi = s['95% HPD interval'][1]
 
+    v68_lo, v68_hi = get_ci(data, ci=0.68)
+
     if variable == 'power_law_norm' or variable == 'background':
-        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' $[\log_{10}(power)]$'
+        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), f1(v68_lo), f1(v68_hi), ' $[\log_{10}(power)]$'
 
     if variable == 'gaussian_amplitude':
-        return f3(data), f3(mean), f3(v95_lo), f3(v95_hi), ' $[power]$'
+        return f3(data), f3(mean), f3(v95_lo), f3(v95_hi), f3(v68_lo), f3(v68_hi), ' $[power]$'
 
     if variable == 'gaussian_position':
-        return f1(data, norm=extra_factors[0]), f1(mean, norm=extra_factors[0]), f1(v95_lo, norm=extra_factors[0]), f1(v95_hi, norm=extra_factors[0]), ' $[\log_{10}(frequency)]$'
+        return f1(data, norm=extra_factors[0]),\
+            f1(mean, norm=extra_factors[0]),\
+            f1(v95_lo, norm=extra_factors[0]),\
+            f1(v95_hi, norm=extra_factors[0]),\
+            f1(v68_lo, norm=extra_factors[0]),\
+            f1(v68_hi, norm=extra_factors[0]),\
+            ' $[\log_{10}(frequency)]$'
 
     if variable == 'gaussian_width':
-        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), ' [decades of frequency]'
+        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), f1(v68_lo), f1(v68_hi), ' [decades of frequency]'
 
-    return data, mean, v95_lo, v95_hi, ''
+    return data, mean, v95_lo, v95_hi, v68_lo, v68_hi, ''
 
 
 plt.ioff()
@@ -343,8 +365,8 @@ manip = 'relative'
 nsample = 5000
 
 # PyMC control
-itera = 100000
-burn = 20000
+itera = 1000#00
+burn = 200#00
 thin = 5
 
 for iwave, wave in enumerate(waves):
@@ -645,61 +667,77 @@ for iwave, wave in enumerate(waves):
                 # Plot
                 title = 'AIA ' + wave + " : " + sunday_name[region]
                 plt.figure(1)
-                xvalue = np.log10(freqs)
-                fivemin = np.log10(1.0 / 300.0)
-                threemin = np.log10(1.0 / 180.0)
+                xvalue = 1000 * freqs
+                fivemin = 1.0 / 300.0
+                threemin = 1.0 / 180.0
 
                 # -------------------------------------------------------------
                 # Plot the data and the model fits
-                plt.plot(xvalue, pwr_ff, label='data', color='k')
+                plt.close('all')
+                ax = plt.subplot(111)
+
+                # Set the scale type on each axis
+                ax.set_xscale('log')
+                ax.set_yscale('log')
+
+                # Set the formatting of the tick labels
+                xformatter = plt.FuncFormatter(log_10_product)
+                ax.xaxis.set_major_formatter(xformatter)
+
+                ax.plot(xvalue, np.exp(pwr_ff),
+                        label='data', color='k')
 
                 # Plot the M0 fit
-                plt.plot(xvalue, M0_bf, label='M0: maximum likelihood fit', color='b', linestyle=':')
-                plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['mean'], label='M0: average', color = 'b')
-                plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
-                plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
+                ax.plot(xvalue, np.exp(M0_bf),
+                         label='$M_{0}$: maximum likelihood fit', color='b', linestyle=':')
+                #plt.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean'], label='M0: average', color = 'b')
+                #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
+                #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
 
                 # Plot the M1 fit
-                plt.plot(xvalue, M1_bf, label='M1: maximum likelihood fit', color='r', linestyle=':')
-                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['mean'], label='M1: average', color = 'r')
-                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
-                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
+                ax.plot(xvalue, np.exp(M1_bf),
+                        label='$M_{1}$: maximum likelihood fit', color='r', linestyle=':')
+                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['mean'], label='M1: average', color = 'r')
+                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
+                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
 
                 # Plot each component of M1
-                plt.plot(xvalue, normalbump_BF, label='M1: maximum likelihood fit, normal bump', color='g', linestyle='--')
-                plt.plot(xvalue, powerlaw_BF, label='M1: maximum likelihood fit, power law', color='g')
+                ax.plot(xvalue, np.exp(normalbump_BF),
+                        label='$M_{1}$: Gaussian component, $G(\nu)$', color='g', linestyle='--')
+                ax.plot(xvalue, np.exp(powerlaw_BF),
+                        label='$M_{1}$: power law component, $P_{0}(\nu)$', color='g')
 
                 # Plot the 3 and 5 minute frequencies
-                plt.axvline(fivemin, label='5 mins.', linestyle='--', color='k')
-                plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
+                ax.axvline(fivemin, label='5 minutes', linestyle='--', color='k')
+                ax.axvline(threemin, label='3 minutes', linestyle='-.', color='k' )
 
                 # Plot the bump limits
-                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
-                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+                #plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
+                #plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
 
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
                 xpos = -2.0
-                ypos = np.zeros((5))
+                ypos = np.zeros((2))
                 ypos_max = np.max(pwr_ff)
                 ypos_min = np.min(pwr_ff) + 0.5 * (np.max(pwr_ff) - np.min(pwr_ff))
                 yrange = ypos_max - ypos_min
                 for yyy in range(0, ypos.size):
                     ypos[yyy] = ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0))
-                plt.text(xpos, ypos[0], '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
-                plt.text(xpos, ypos[1], '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
-                plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
-                plt.text(xpos, ypos[3], 'M0: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
-                plt.text(xpos, ypos[4], 'M1: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
+                #plt.text(xpos, ypos[0], '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
+                #plt.text(xpos, ypos[1], '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
+                #plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
+                plt.text(xpos, ypos[0], '$M_{0}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
+                plt.text(xpos, ypos[1], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
 
                 # Complete the plot and save it
                 plt.legend(loc=3, framealpha=0.5, fontsize=8)
-                plt.xlabel('log10(frequency (Hz))')
-                plt.ylabel('log(power)')
+                plt.xlabel('frequency (mHz)')
+                plt.ylabel('power')
                 plt.title(title)
-                ymin_plotted = np.asarray([np.min(pwr_ff) - 1.0,
-                                           np.max(normalbump_BF) - 2.0])
-                plt.ylim(np.min(ymin_plotted), np.max(pwr_ff) + 1.0)
+                ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,
+                                           np.max(normalbump_BF) - 2.0]))
+                plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
                 plt.close('all')
 
