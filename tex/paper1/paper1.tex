@@ -19,7 +19,7 @@
 
 %% manuscript produces a one-column, double-spaced document:
 
-\documentclass[manuscript]{../aastex52/aastex}
+\documentclass[preprint]{../aastex52/aastex}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{multirow}
@@ -243,7 +243,7 @@ mean of the Fourier power.
 \label{fig:dist171}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}
-\caption{Distribution of Fourier power at some sample frequencies (see also Figure \ref{fig:dist193}.}
+\caption{Distribution of Fourier power at some sample frequencies (see also Figure \ref{fig:dist193}.)}
 \end{figure}
 
 \begin{figure}
@@ -260,24 +260,63 @@ spectra exhibit power-law like characteristics.
 
 \begin{figure}
 \label{fig:fit171}
-\plottwo{}{}
-\plottwo{}{}
-\caption{}
+\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
+\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
+\caption{aaa}
 \end{figure}
 
-\begin{figure}
-\label{fig:fit193}
-\plottwo{}{}
-\plottwo{}{}
+%\begin{figure}
+%\label{fig:fit193}
+%\plottwo{}{}
+%\plottwo{}{}
+%
+%\caption{}
+%\end{figure}
+\begin{deluxetable}{cccccccc}
+\tabletypesize{\scriptsize}
+\tablecolumns{5}
+\tablewidth{0pt}
+\tablecaption{Parameter values and uncertainty estimates derived for
+    model \protect$M_{2}$.\label{tab:parameters}}
+\tablehead{
+\colhead{Region} & 
+\colhead{Waveband}    & 
+\multicolumn{3}{c}{power law} & \multicolumn{3}{c}{Gaussian} \\
+\colhead{}          & 
+\colhead{}          & 
+\colhead{$\log_{10}A$}          & 
+\colhead{$n$}      & 
+\colhead{$\log_{10}C$}      &
+\colhead{$\log_{10}\alpha$} &
+\colhead{$\beta$ (mHz)}      &
+\colhead{$\sigma$}
+}
+\startdata
+loop footpoints & 171\AA  & $0.47^{+0.01}_{-0.01}$  &$1.86^{+0.01}_{-0.01}$  & $-3.97^{+0.00}_{-0.00}$  & $-1.333^{0.02}_{-0.02}$ & $1.05^{+0.02}_{-0.02}$  & $0.31^{+0.03}_{-0.03}$  \\
+                & 193\AA  &   & 0 & 0  & 0  & 0  & 0  \\
 
-\caption{}
-\end{figure}
+moss            & 171\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+                & 193\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+
+quiet Sun       & 171\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+                & 193\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+
+sunspot         & 171\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+                & 193\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+\enddata
+%% Text for table notes should follow after the \enddata but before
+%% the \end{deluxetable}. Make sure there is at least one \tablenotemark
+%% in the table for each \tablenotetext.
+\end{deluxetable}
+
+
+
 
 The results for the quiet Sun, loop footpoints and sunspot regions
 suggest a power-law power spectrum.  This can be modeled as
 \begin{equation}
 \label{eq:pwrlaw}
-P_{0}(f) = Af^{-n} + C,
+\mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
 \end{equation}
 where $A>0$ is a proportionality constant and $n>0$ is the power law
 index.  The quantity $C>0$ models the high-frequency / low power end
@@ -288,22 +327,25 @@ The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
 other regions, there appears to be excess Fourier power in the range
 1-10 mHz.  Previous studies (???) have shown that the moss is a source
-of Fourier power.  This suggests that a second model for these regions
-should be considered.  The spectrum $P_{1}$ where
+of Fourier power.  This suggests that a second model $M_{2}$ for these
+regions should be considered.  The second model $M_{2}$ has two
+contributions to the overall \Fps; a background power-law of the form
+of $P_{1}$, and a contribution that is more localized, $G(\nu)$.  The
+model is given by
 \begin{equation}
 \label{eq:pwrlawbump}
-P_{1}(f) = P_{0} + \alpha\exp\left[-\frac{(\ln(f)-\beta)^{2}}{2\sigma^{2}}\right]
+\mbox{Model $M_{2}$}: P_{2}(\nu) = P_{1}(\nu) + G(\nu)
 \end{equation}
-contains the previous power law dependence, plus a second term which
-models any power over and above the power law.  
-
+where the localized contribution is described by
+\begin{equation}
+\label{eqn:bump}
+G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\sigma^{2}}\right].
+\end{equation}
 Both these models are fit to the geometrically averaged Fourier power
 spectrum in both wavelengths and in all four regions.  Figures
 \ref{fig:fit171} and \ref{fig:fit193} show the best fit results of
 each model to the data (for details on the fitting procedure, see
 Section \ref{sec:app:ind}).
-
-
 
 \section{Discussion}
 The presence of a power law Fourier spectrum in coronal emission poses
@@ -592,6 +634,8 @@ by the NASA....
 
 \section{Model fitting procedure}\label{sec:app:ind}
 
+
+
 Figures \ref{} show that the logarithm of the Fourier power in a
 region of the Sun may be approximated by a normal distribution $N(\mu,
 \sigma)$.  The
@@ -605,6 +649,7 @@ and
 \begin{equation}
 \hat{\sigma^{2}} = \frac{1}{N}\sum_{i=1}^{N}(X_{i}-\mu)^{2}
 \label{eqn:mlmean}
+\end{equation}
 where $N$ is the number of independent measurements.  The estimated
 error in the estimated error is
 \begin{equation}

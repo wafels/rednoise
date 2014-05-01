@@ -175,6 +175,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
         ypos = np.max(h)
 
         # Plot the histogram and label it
+        plt.figure(1)
         plt.hist(data, bins=bins)
         plt.xlabel(v + vlabel)
         plt.ylabel('p.d.f.')
@@ -216,6 +217,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 # Scatter plot : save file name
                 filename = '%s_%s_%s_%s__%s__%s_%s_%s' % (savefig, model, str(passnumber), obstype, '2dscatter', v, v2, savetype)
 
+                plt.figure(1)
                 plt.scatter(data, data2, alpha=0.02)
                 plt.xlabel(v + vlabel)
                 plt.ylabel(v2 + vlabel2)
@@ -228,6 +230,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 # 2-D histogram
                 filename = '%s_%s_%s_%s__%s__%s_%s_%s' % (savefig, model, str(passnumber), obstype, '2dhistogram', v, v2, savetype)
 
+                plt.figure(1)
                 plt.hist2d(data, data2, bins=bins, norm=LogNorm())
                 plt.colorbar()
                 plt.xlabel(v + vlabel)
@@ -327,7 +330,6 @@ def fix_variables(variable, data, s, extra_factors):
 
 
 plt.ioff()
-plt.close('all')
 #
 # Set up which data to look at
 #
@@ -338,8 +340,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193', '171']
-regions = ['loopfootpoints', 'qs', 'moss', 'sunspot']
+waves = ['171', '193']
+regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -365,9 +367,15 @@ manip = 'relative'
 nsample = 5000
 
 # PyMC control
-itera = 1000#00
-burn = 200#00
+itera = 100000
+burn = 20000
 thin = 5
+
+# Image file type
+imgfiletype = 'pdf'
+
+# Frequency scaling
+freqfactor = 1000.0
 
 for iwave, wave in enumerate(waves):
     print(' ')
@@ -666,14 +674,12 @@ for iwave, wave in enumerate(waves):
 
                 # Plot
                 title = 'AIA ' + wave + " : " + sunday_name[region]
-                plt.figure(1)
-                xvalue = 1000 * freqs
-                fivemin = 1.0 / 300.0
-                threemin = 1.0 / 180.0
+                xvalue = freqfactor * freqs
+                fivemin = freqfactor * 1.0 / 300.0
+                threemin = freqfactor * 1.0 / 180.0
 
                 # -------------------------------------------------------------
                 # Plot the data and the model fits
-                plt.close('all')
                 ax = plt.subplot(111)
 
                 # Set the scale type on each axis
@@ -684,32 +690,33 @@ for iwave, wave in enumerate(waves):
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
 
-                ax.plot(xvalue, np.exp(pwr_ff),
-                        label='data', color='k')
+                ax.plot(xvalue, np.exp(pwr_ff), label='data', color='k')
 
                 # Plot the M0 fit
-                ax.plot(xvalue, np.exp(M0_bf),
-                         label='$M_{0}$: maximum likelihood fit', color='b', linestyle=':')
-                #plt.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean'], label='M0: average', color = 'b')
+                chired = '\chi^{2}_{red}'
+                chiformat = '%4.2f'
+                chivalue = chiformat % (fitsummarydata["M0"]["chi2"])
+                chivaluestring = '$' + chired + '=' + chivalue + '$'
+                ax.plot(xvalue, np.exp(M0_bf), label='$M_{1}$: maximum likelihood fit, ' + chivaluestring, color='b')
+                ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='$M_{1}$: posterior mean', color = 'b', linestyle='--')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
 
                 # Plot the M1 fit
-                ax.plot(xvalue, np.exp(M1_bf),
-                        label='$M_{1}$: maximum likelihood fit', color='r', linestyle=':')
-                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['mean'], label='M1: average', color = 'r')
+                chivalue = chiformat % (fitsummarydata["M1"]["chi2"])
+                chivaluestring = '$' + chired + '=' + chivalue + '$'
+                ax.plot(xvalue, np.exp(M1_bf), label='$M_{2}$: maximum likelihood fit, ' + chivaluestring, color='r')
+                ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='$M_{2}$: posterior mean', color = 'r', linestyle='--')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
 
                 # Plot each component of M1
-                ax.plot(xvalue, np.exp(normalbump_BF),
-                        label='$M_{1}$: Gaussian component, $G(\nu)$', color='g', linestyle='--')
-                ax.plot(xvalue, np.exp(powerlaw_BF),
-                        label='$M_{1}$: power law component, $P_{0}(\nu)$', color='g')
+                ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of maximum likelihood fit, $M_{2}$', color='g')
+                ax.plot(xvalue, np.exp(normalbump_BF), label='Gaussian component of maximum likelihood fit, $M_{2}$', color='g', linestyle='--')
 
                 # Plot the 3 and 5 minute frequencies
                 ax.axvline(fivemin, label='5 minutes', linestyle='--', color='k')
-                ax.axvline(threemin, label='3 minutes', linestyle='-.', color='k' )
+                ax.axvline(threemin, label='3 minutes', linestyle='-.', color='k')
 
                 # Plot the bump limits
                 #plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
@@ -717,7 +724,7 @@ for iwave, wave in enumerate(waves):
 
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
-                xpos = -2.0
+                xpos = freqfactor * 10.0 ** -2.0
                 ypos = np.zeros((2))
                 ypos_max = np.max(pwr_ff)
                 ypos_min = np.min(pwr_ff) + 0.5 * (np.max(pwr_ff) - np.min(pwr_ff))
@@ -727,18 +734,18 @@ for iwave, wave in enumerate(waves):
                 #plt.text(xpos, ypos[0], '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
                 #plt.text(xpos, ypos[1], '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
                 #plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
-                plt.text(xpos, ypos[0], '$M_{0}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
-                plt.text(xpos, ypos[1], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
+                #plt.text(xpos, ypos[0], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
+                #plt.text(xpos, ypos[1], '$M_{2}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
 
                 # Complete the plot and save it
-                plt.legend(loc=3, framealpha=0.5, fontsize=8)
+                plt.legend(framealpha=0.5, fontsize=8, labelspacing=0.2, loc=3)
                 plt.xlabel('frequency (mHz)')
                 plt.ylabel('power')
                 plt.title(title)
                 ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,
                                            np.max(normalbump_BF) - 2.0]))
                 plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
-                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.close('all')
 
                 # -------------------------------------------------------------
