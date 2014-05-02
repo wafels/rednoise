@@ -640,22 +640,24 @@ mean power spectra shown in Figures \ref{fig:fit171} and
 $f$ is the FFT frequency in Hz, and $f_{0}$ is the lowest non-zero FFT
 frequency defined by the data (Section \ref{sec:obs}).
 
-
-Figures \ref{fig:dist171} and \ref{fig:dist193} show that the
-logarithm of the Fourier power in a region of the Sun may be
-approximated by a normal distribution $N(\mu, \sigma)$.  The maximum
-likelihood estimate of the mean and variance of normal distribution
-are given by
+As noted in Section \ref{sec:anal}, the logarithm of the Fourier power for all
+regions may be approximated by a normal distribution $N(\mu, \sigma)$.
+The maximum likelihood estimate of the mean and variance of normal
+distribution are given by
 \begin{equation}
-\hat{\mu} = \frac{1}{N}\sum_{i=1}^{N}X_{i}
+\hat{\mu} = \frac{1}{N_{pixel}}\sum_{i=1}^{N_{pixel}}X_{i}
 \label{eqn:mlmean}
 \end{equation}
 and
 \begin{equation}
-\hat{\sigma^{2}} = \frac{1}{N}\sum_{i=1}^{N}(X_{i}-\mu)^{2}
+\hat{\sigma^{2}} = \frac{1}{N_{pixel}}\sum_{i=1}^{N_{pixel}}(X_{i}-\hat{\mu})^{2}
 \label{eqn:mlmean}
 \end{equation}
-where $N$ is the number of independent measurements.  The estimated
+where $N_{pixel}$ is the number of pixels in each region.
+
+
+
+The estimated
 error in the estimated error is
 \begin{equation}
 \sqrt{\hat{\sigma^{2}}}/\sqrt{N}
