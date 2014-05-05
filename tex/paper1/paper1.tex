@@ -19,7 +19,8 @@
 
 %% manuscript produces a one-column, double-spaced document:
 
-\documentclass[preprint]{../aastex52/aastex}
+
+\documentclass[preprint2]{aastex}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{multirow}
@@ -92,14 +93,11 @@
 
 \author{J. Ireland}
 \affil{ADNET Systems, Inc.,NASA Goddard Space Flight Center, MC. 671.1 Greenbelt, MD
-  20771, USA. }
-\email{jack.ireland@nasa.gov}
+  20771, USA.}
 
 \author{R. T. J. McAteer}
 \affil{Department of Astronomy, New Mexico State University, Las
-  Cruces, NM}
-
-\and
+  Cruces, NM.}
 
 \author{A. R. Inglis}
 \affil{Catholic University of America / NASA Goddard Space Flight Center, MC. 671.1 Greenbelt, MD
@@ -193,11 +191,11 @@ Figures \ref{fig:loc171193} show the location of the regions on sample
 images from the time range considered.
 
 \begin{figure}
-\label{fig:loc171}
 \plottwo{shutdownfun3_6hr_disk_1.5_171.eps}{shutdownfun3_6hr_disk_1.5_193.eps}
 \caption{Locations of the regions analyzed in each of AIA 171\AA\ and
   193\AA, overlaid on sample images taken halfway through the six hour
   span used to form the time-series analyzed.}
+\label{fig:loc171193}
 \end{figure}
 
 Consider the emission from a single pixel, $I(t)$.  The Fourier power
@@ -210,20 +208,19 @@ analyzed.
 
 Figures \ref{fig:compare171193} show example power spectra, plotted using
 a log-log scale, from a single location inside each of the regions
-shown in Figures \ref{fig:loc171} and \ref{fig:loc193}.  The shape of
+shown in Figure \ref{fig:loc171193}.  The shape of
 the power spectra indicate that the Fourier power approximately
 follows a power law at lower frequencies and flattens out at higher
 frequencies.
 
 \begin{figure}
-\label{fig:compare171193}
 \plottwo{loopfootpoints.centralpower.eps}{qs.centralpower.eps}
 \plottwo{sunspot.centralpower.eps}{moss.centralpower.eps}
 \caption{Log-log plot of the Fourier power of a time-series at the AIA
   pixel overlying a randomly chosen pixel in each of the regions
-  considered (see Figures \protect\ref{fig:loc171} and
-  \protect\ref{fig:loc193}).  The vertical black lines indicate the 3
-  and 5 minute frequencies.}
+  considered (see Figure \protect\ref{fig:loc171193}).  The vertical
+  black lines indicate the 3 and 5 minute frequencies.}
+\label{fig:compare171193}
 \end{figure}
 
 
@@ -240,38 +237,38 @@ the Fourier power is considered, which is equivalent to the geometric
 mean of the Fourier power.
 
 \begin{figure}
-\label{fig:dist171}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}
-\caption{Distribution of Fourier power at some sample frequencies (see also Figure \ref{fig:dist193}.)}
+\caption{Distribution of Fourier power at some sample frequencies (see also Figure \ref{fig:dist193} for the corresponding AIA 171\AA\ plots.)}
+\label{fig:dist171}
 \end{figure}
 
 \begin{figure}
-\label{fig:dist193}
 \plottwo{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.power_spectra_distributions.eps}
 \plottwo{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
-\caption{Distribution of Fourier power at some sample frequencies (see Figure \ref{fig:dist171}.)}
+\caption{Distribution of Fourier power at some sample frequencies (see also Figure \ref{fig:dist171} for the corresponding AIA 171\AA\ plots.)}
+\label{fig:dist193}
 \end{figure}
 
 These geometric mean Fourier power spectra are shown in Figures
-\ref{fig:geom171} and \ref{fig:geom193}, for each of the physical
+\ref{fig:fit171} and \ref{fig:fit193}, for each of the physical
 regions considered.  It is clear that, in general, the Fourier power
 spectra exhibit power-law like characteristics.
 
 \begin{figure}
+\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\caption{Geometric mean of the Fourier power spectra in each of the four regions studied in AIA 171\AA\ (shown in black).  Also shown are the posterior mean and maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section \ref{sec:anal} and Appendix \ref{sec:app:ind} for more detail).  Model fit parameter values and their 68\% credible intervals are quoted in Table \ref{tab:parameters}. See also Figure \ref{fig:fit193} for the corresponding AIA 193\AA\ plots.}
 \label{fig:fit171}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
-\caption{aaa}
 \end{figure}
 
-%\begin{figure}
-%\label{fig:fit193}
-%\plottwo{}{}
-%\plottwo{}{}
-%
-%\caption{}
-%\end{figure}
+\begin{figure}
+\plottwo{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\plottwo{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\caption{Geometric mean of the Fourier power spectra in each of the four regions studied in AIA 193\AA\ (shown in black).  Also shown are the posterior mean and maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section \ref{sec:anal} and Appendix \ref{sec:app:ind} for more detail).  Model fit parameter values and their 68\% credible intervals are quoted in Table \ref{tab:parameters}. See also Figure \ref{fig:fit171} for the corresponding AIA 171\AA\ plots.}
+\label{fig:fit193}
+\end{figure}
+
 \begin{deluxetable}{cccccccc}
 \tabletypesize{\scriptsize}
 \tablecolumns{5}
@@ -288,21 +285,32 @@ spectra exhibit power-law like characteristics.
 \colhead{$n$}      & 
 \colhead{$\log_{10}C$}      &
 \colhead{$\log_{10}\alpha$} &
-\colhead{$\beta$ (mHz)}      &
-\colhead{$\sigma$}
+\colhead{$\beta$}      &
+\colhead{$\sigma$}\\
+\colhead{}          & 
+\colhead{}          & 
+\colhead{}          & 
+\colhead{}      & 
+\colhead{}      &
+\colhead{} &
+\colhead{(mHz)}      &
+\colhead{(decades of frequency)}\\
 }
 \startdata
-loop footpoints & 171\AA  & $0.65^{+0.02}_{-0.02}$  &$2.27^{+0.02}_{-0.02}$  & $-4.15^{+0.00}_{-0.00}$  & $-2.16^{0.12}_{-0.11}$ & $0.64^{+0.10}_{-0.10}$  & $0.33^{+0.02}_{-0.02}$  \\
-                & 193\AA  &   & 0 & 0  & 0  & 0  & 0  \\
+loop footpoints & 171\AA  & $0.65^{+0.02}_{-0.02}$  &$2.27^{+0.02}_{-0.02}$  & $-4.15^{+0.00}_{-0.00}$  & $-2.16^{+0.12}_{-0.11}$ & $0.64^{+0.10}_{-0.10}$  & $0.33^{+0.02}_{-0.02}$  \\
+                & 193\AA  & $0.21^{+0.02}_{-0.02}$  & $2.27^{+0.03}_{-0.03}$ & $-4.26^{+0.00}_{-0.00}$  & $-2.24^{+0.09}_{-0.10}$ & $0.37^{+0.06}_{-0.04}$  & $0.40^{+0.01}_{-0.02}$  \\
+                & & & & & & & \\
 
-moss            & 171\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
-                & 193\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+moss            & 171\AA  & $0.47^{+0.01}_{-0.01}$  & $1.86^{+0.01}_{-0.01}$ & $-3.97^{+0.01}_{-0.00}$  & $-1.33^{+0.02}_{-0.02}$  & $1.05^{+0.03}_{-0.02}$  & $0.31^{+0.00}_{-0.01}$  \\
+                & 193\AA  & $0.57^{+0.01}_{-0.01}$  & $2.09^{+0.01}_{-0.01}$ & $-4.28^{+0.00}_{-0.00}$  & $-1.97^{+0.02}_{-0.03}$  & $1.43^{+0.03}_{-0.03}$  & $0.25^{+0.00}_{-0.00}$  \\
+                & & & & & & & \\
 
-quiet Sun       & 171\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
-                & 193\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+quiet Sun       & 171\AA  & $0.67^{+0.01}_{-0.01}$  & $1.73^{+0.01}_{-0.01}$ & $-2.86^{+0.00}_{-0.00}$  & $-3.49^{+0.04}_{-0.04}$  & $4.50^{+0.14}_{-0.09}$  & $0.10^{+0.01}_{-0.01}$  \\
+                & 193\AA  & $0.06^{+0.01}_{-0.01}$  & $2.25^{+0.01}_{-0.01}$ & $-3.38^{+0.00}_{-0.00}$  & $-4.54^{+0.06}_{-0.10}$  & $4.72^{-0.17}_{-0.16}$  & $0.13^{+0.01}_{-0.02}$  \\
+                & & & & & & & \\
 
-sunspot         & 171\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
-                & 193\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
+sunspot         & 171\AA  & $0.51^{+0.01}_{-0.01}$  & $2.27^{+0.02}_{-0.02}$ & $-3.79^{+0.00}_{-0.00}$  & $-2.94^{+0.02}_{-0.02}$  & $2.18^{+0.08}_{-0.07}$  & $0.29^{+0.01}_{-0.01}$  \\
+                & 193\AA  & $0.02^{+0.02}_{-0.01}$  & $2.19^{+0.02}_{-0.04}$ & $-3.85^{+0.00}_{-0.00}$  & $-3.17^{+0.04}_{-0.04}$  & $1.87^{+0.11}_{-0.11}$  & $0.35^{+0.01}_{-0.01}$  \\
 \enddata
 %% Text for table notes should follow after the \enddata but before
 %% the \end{deluxetable}. Make sure there is at least one \tablenotemark
@@ -314,7 +322,7 @@ sunspot         & 171\AA  & 2.16  & 0 & 0  & 0  & 0  & 0  \\
 The results for the quiet Sun, loop footpoints and sunspot regions
 suggest a power-law power spectrum.  This can be modeled as
 \begin{equation}
-\label{eq:pwrlaw}
+\label{eqn:pwrlaw}
 \mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
 \end{equation}
 where $\nu$ is the normalized frequency, $A>0$ is a proportionality
@@ -333,7 +341,7 @@ contributions to the overall \Fps; a background power-law of the form
 of $P_{1}$, and a contribution that is more localized, $G(\nu)$.  The
 model is given by
 \begin{equation}
-\label{eq:pwrlawbump}
+\label{eqn:pwrlawbump}
 \mbox{Model $M_{2}$}: P_{2}(\nu) = P_{1}(\nu) + G(\nu)
 \end{equation}
 where the localized contribution is described by
@@ -361,7 +369,7 @@ sections below.
   detection of oscillatory power}
 \label{ssec:corseis}
 
-Section \ref{sec:results} demonstrates the presence of a red
+Section \ref{sec:anal} demonstrates the presence of a red
 noise-like signal in two of the most commonly used wavebands for
 coronal seismology, SDO-AIA 171\AA\ and 193\AA.  The observed spectra
 generally show a power law-like behavior at time-scales of interest in
@@ -401,23 +409,24 @@ example demonstrates.
   the 95\% confidence level, assuming a white-noise (Gaussian)
  background .  Plot (c) shows the global wavelet power spectrum for
   this wavelet transform.  Plots (d) and (e) are the same as plots (b)
-  and (c) under the assumption of a red-noise background.\label{fig:comparison}}
+  and (c) under the assumption of a red-noise background.}
+\label{fig:comparison}
 \end{figure}
 
 Figure \ref{fig:comparison} shows how a red-noise power spectrum can
 be mistakenly thought to contain an oscillatory signal.  The time
 series (Figure \ref{fig:comparison}(a)) is constructed from a power
 spectrum $P(f)\approx f^{-1.77}$ with no explicit oscillatory content,
-following the construction procedure of \cite{vaughan2010}.  Figure
-\ref{fig:comparison}(b) shows that the assumption of a white-noise
-background and a 95\% confidence level leads to the positive detection
-of significant oscillatory power in this time series. Figure
-\ref{fig:comparison}(c) shows that the assumption of a red-noise
-background with the same confidence level significantly reduces the
-area for which a detection may be claimed.  This simulated data, along
-with the results of Section \ref{sec:results}, suggest that when
-examining the wavelet transforms of time-series for wave packets, a
-background red-noise power spectrum should be assumed, along with
+following the construction procedure of \cite{2010MNRAS.402..307V}.
+Figure \ref{fig:comparison}(b) shows that the assumption of a
+white-noise background and a 95\% confidence level leads to the
+positive detection of significant oscillatory power in this time
+series. Figure \ref{fig:comparison}(c) shows that the assumption of a
+red-noise background with the same confidence level significantly
+reduces the area for which a detection may be claimed.  This simulated
+data, along with the results of Section \ref{sec:anal}, suggest that
+when examining the wavelet transforms of time-series for wave packets,
+a background red-noise power spectrum should be assumed, along with
 higher confidence levels, in order to minimize the effects of
 mistakenly identifying red-noise as evidence for an oscillatory
 signal.
@@ -484,7 +493,7 @@ finding spatially contiguous regions of the corona which are coherent
 in a given frequency range.  The frequency range searched is based on
 previous experience.  Oscillations that are detected propagating along
 loops are often found by considering distance-time plots
-\cite{demoortel2000, 2003A&A...404L...1K} and looking for alternating
+\citep{2000AA...355L..23D, 2003AA...404L...1K} and looking for alternating
 brightening/darkening in those plots as a indicator of a propagating
 wave.  This is essentially a coherence-based approach, as the user is
 assessing the likelihood that an oscillation has been detected based
@@ -496,7 +505,7 @@ that the significance of any claimed oscillation is much reduced.
 
 \subsection{``Excess'' emission}\label{ssec:excess}
 The models fits of Section \ref{sec:anal} indicate that equation
-\ref{eq:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as the
+\ref{eqn:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as the
 superior description of the observed Fourier power spectrum.  This
 model is consistent with previous observations by TRACE of power in
 the frequency range of 1 - 10 mHz.  The moss region shows the largest
@@ -512,7 +521,7 @@ temperatures.
 
 The AIA 171\AA\ and 193\AA\ wavebands are relatively wide, and include
 contributions from plasma at many different temperatures, heights in
-the atmosphere, and many different elements \ref{}.  A deeper
+the atmosphere, and many different elements \cite{}.  A deeper
 understanding of the contributions from these different plasmas is
 required before a good estimate of the distribution of the angle
 coronal loop footpoints make with the surface can be made.
@@ -538,16 +547,16 @@ Each energy deposition event is modeled as an exponentially decaying
 function of time $t$
 \begin{equation}
 \label{eqn:expdecay}
-f(t) = E \frac{1}{T}\exp\left(-\frac{t}{T}\right),
+f(t) = \frac{E}{T}\exp\left(-\frac{t}{T}\right),
 \end{equation}
 for some timescale $T$ and energy $E$.  The corresponding \Fps\ is
 \begin{equation}
 \label{eqn:ftexpdecay}
-P(f) = E\frac{1}{1 + (2\pi f T)^{2}}.
+P(f) = \frac{E}{1 + (2\pi f T)^{2}}.
 \end{equation}
 The total \Fps\ along the line of sight is given by
 \begin{equation}
-\label{eqn:ftexpdecay}
+\label{eqn:sumftexpdecay}
 P_{T}(f) = \sum_{T}N(T)P_{T}(f)
 \end{equation}
 where $N(T)$ is the distribution of time-scales for all the events
@@ -559,13 +568,13 @@ N(E) \propto E^{-\alpha_{E}}
 \end{equation}
 and the energy in each event depends on its time scale $T$ such that
 \begin{equation}
-\label{eqn:energydistrib}
+\label{eqn:energytime}
 E \propto T^{1+\gamma}
 \end{equation}
 then it can be shown \cite{} that the observed power spectrum can be
 approximated by
 \begin{equation}
-\label{eqn:energydistrib}
+\label{eqn:finalfps}
 P(f) \propto f^{(2-\alpha_{E})(1+\gamma)}.
 \end{equation}
 
@@ -634,8 +643,8 @@ by the NASA....
 \appendix
 
 \section{Model fitting procedure}\label{sec:app:ind}
-Equations \ref{pwrlaw} and \ref{pwrlawbump} are fit to the geometric
-mean power spectra shown in Figures \ref{fig:fit171} and
+Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
+geometric mean power spectra shown in Figures \ref{fig:fit171} and
 \ref{fig:fit193}.  The frequency $\nu$ is defined as $f/f_{0}$ where
 $f$ is the FFT frequency in Hz, and $f_{0}$ is the lowest non-zero FFT
 frequency defined by the data (Section \ref{sec:obs}).
@@ -651,7 +660,7 @@ distribution are given by
 and
 \begin{equation}
 \hat{\sigma^{2}} = \frac{1}{N_{pixel}}\sum_{i=1}^{N_{pixel}}(X_{i}-\hat{\mu})^{2}
-\label{eqn:mlmean}
+\label{eqn:sigmamean}
 \end{equation}
 where $N_{pixel}$ is the number of pixels in each region.
 
@@ -661,7 +670,7 @@ The estimated
 error in the estimated error is
 \begin{equation}
 \sqrt{\hat{\sigma^{2}}}/\sqrt{N}
-\label{eqn:mlmean}
+\label{eqn:errorsigmamean}
 \end{equation}
 
 
@@ -695,6 +704,4 @@ error in the estimated error is
 %% See the natbib documentation for more details and options.
 
 \bibliography{references}
-
-
 \end{document}
