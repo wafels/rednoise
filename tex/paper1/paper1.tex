@@ -246,7 +246,9 @@ mean of the Fourier power.
 \begin{figure}
 \plottwo{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.power_spectra_distributions.eps}
 \plottwo{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
-\caption{Distribution of Fourier power at some sample frequencies (see also Figure \ref{fig:dist171} for the corresponding AIA 171\AA\ plots.)}
+\caption{Distribution of Fourier power at some sample frequencies (see
+  also Figure \ref{fig:dist171} for the corresponding AIA
+  171\AA\ plots.)}
 \label{fig:dist193}
 \end{figure}
 
@@ -258,14 +260,28 @@ spectra exhibit power-law like characteristics.
 \begin{figure}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
-\caption{Geometric mean of the Fourier power spectra in each of the four regions studied in AIA 171\AA\ (shown in black).  Also shown are the posterior mean and maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section \ref{sec:anal} and Appendix \ref{sec:app:ind} for more detail).  Model fit parameter values and their 68\% credible intervals are quoted in Table \ref{tab:parameters}. See also Figure \ref{fig:fit193} for the corresponding AIA 193\AA\ plots.}
+\caption{Geometric mean of the Fourier power spectra in each of the
+  four regions studied in AIA 171\AA\ (shown in black).  Also shown
+  are the posterior mean and maximum likelihood fits for model $M_{1}$
+  and $M_{2}$ (see Section \ref{sec:anal} and Appendix
+  \ref{sec:app:ind} for more detail).  Model fit parameter values and
+  their 68\% credible intervals are quoted in Table
+  \ref{tab:parameters}. See also Figure \ref{fig:fit193} for the
+  corresponding AIA 193\AA\ plots.}
 \label{fig:fit171}
 \end{figure}
 
 \begin{figure}
 \plottwo{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 \plottwo{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
-\caption{Geometric mean of the Fourier power spectra in each of the four regions studied in AIA 193\AA\ (shown in black).  Also shown are the posterior mean and maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section \ref{sec:anal} and Appendix \ref{sec:app:ind} for more detail).  Model fit parameter values and their 68\% credible intervals are quoted in Table \ref{tab:parameters}. See also Figure \ref{fig:fit171} for the corresponding AIA 171\AA\ plots.}
+\caption{Geometric mean of the Fourier power spectra in each of the
+  four regions studied in AIA 193\AA\ (shown in black).  Also shown
+  are the posterior mean and maximum likelihood fits for model $M_{1}$
+  and $M_{2}$ (see Section \ref{sec:anal} and Appendix
+  \ref{sec:app:ind} for more detail).  Model fit parameter values and
+  their 68\% credible intervals are quoted in Table
+  \ref{tab:parameters}. See also Figure \ref{fig:fit171} for the
+  corresponding AIA 171\AA\ plots.}
 \label{fig:fit193}
 \end{figure}
 
@@ -316,8 +332,6 @@ sunspot         & 171\AA  & $0.51^{+0.01}_{-0.01}$  & $2.27^{+0.02}_{-0.02}$ & $
 %% the \end{deluxetable}. Make sure there is at least one \tablenotemark
 %% in the table for each \tablenotetext.
 \end{deluxetable}
-
-
 
 The results for the quiet Sun, loop footpoints and sunspot regions
 suggest a power-law power spectrum.  This can be modeled as
@@ -539,9 +553,9 @@ studied and in all the regions, and so parsimony suggests that the
 mechanism of its creation is both similar and ubiquitous in all parts
 of the solar atmosphere.  We hypothesize that the \PL\ \PS\ is due to
 the sum of a distribution of a large number of energy deposition
-events having different energies. \cite{} describes how a
-\PL\ \PS\ may obtained from such a distribution, and that argument
-outlined below.
+events having different energies. \cite{2011soca.book.....A} describes
+how a \PL\ \PS\ may obtained from such a distribution, and that
+argument outlined below.
 
 Each energy deposition event is modeled as an exponentially decaying
 function of time $t$
@@ -552,12 +566,12 @@ f(t) = \frac{E}{T}\exp\left(-\frac{t}{T}\right),
 for some timescale $T$ and energy $E$.  The corresponding \Fps\ is
 \begin{equation}
 \label{eqn:ftexpdecay}
-P(f) = \frac{E}{1 + (2\pi f T)^{2}}.
+P(\nu) = \frac{E}{1 + (2\pi \nu T)^{2}}.
 \end{equation}
 The total \Fps\ along the line of sight is given by
 \begin{equation}
 \label{eqn:sumftexpdecay}
-P_{T}(f) = \sum_{T}N(T)P_{T}(f)
+P_{T}(\nu) = \sum_{T}N(T)P_{T}(\nu)
 \end{equation}
 where $N(T)$ is the distribution of time-scales for all the events
 along the line of sight.  Further, if the number of events of a given
@@ -575,7 +589,7 @@ then it can be shown \cite{} that the observed power spectrum can be
 approximated by
 \begin{equation}
 \label{eqn:finalfps}
-P(f) \propto f^{(2-\alpha_{E})(1+\gamma)}.
+P(\nu) \propto \nu^{(2-\alpha_{E})(1+\gamma)}.
 \end{equation}
 
 This derivation shows it is possible to generate \PL\ power spectra
@@ -585,17 +599,26 @@ spectra will depend strongly on three factors that influence the
 observation.  Firstly, the distribution of events along the line of
 sight and their temporal dependence (expressed through the parameters
 $\alpha_{E}$ and $\gamma$ in Equation \ref{eqn:energydistrib}) have
-strong effects on the observed \Fps.  Secondly, the physics of the
-radiation emitted as a function of the energy deposited in each event
-and the existing plasma properties must be consistently modeled.
-Finally, the properties of the observing instrument, in this case the
-AIA filters, will also influence the observed \Fps.  These three
-factors must be modeled in order to confirm or deny the hypothesis
+strong effects on the observed \Fps.  Secondly, the energy radiated as
+a function of the energy deposited in each event and the existing
+plasma properties must be consistently modeled.  This is required to
+understand how much radiation at each wavelength is emitted from the
+plasma.  Finally, the AIA instrument filters the emitted radiation,
+and this too must be modeled in order to understand the observed \Fps.
+These three features must be modeled in order to test the hypothesis
 that ubiquitous energy deposition events are the root cause of the
-observed Fourier power spectra.
+observed power-law like behavior of the Fourier power spectra.
+
+There has been a considerable amount of work in modeling the
+AIA-detected plasma response.  \cite{} 
+
 
 
 \section{Conclusions}\label{sec:conc}
+
+Comparing the \Fps\ of the simulated observations to the \Fps\ of the
+data will bring new constraints on the simulations that will hopefully
+improve our understanding of the temporal behavior of the solar corona.
 
 
 %% If you wish to include an acknowledgments section in your paper,
