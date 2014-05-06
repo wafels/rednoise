@@ -519,31 +519,22 @@ that the significance of any claimed oscillation is much reduced.
 
 \subsection{``Excess'' emission}\label{ssec:excess}
 The models fits of Section \ref{sec:anal} indicate that equation
-\ref{eqn:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as the
-superior description of the observed Fourier power spectrum.  This
-model is consistent with previous observations by TRACE of power in
-the frequency range of 1 - 10 mHz.  The moss region shows the largest
-presence of this excess emission.
+\ref{eqn:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as
+the superior description of the observed Fourier power spectrum. The
+moss region shows the greatest contribution from the Gaussian
+distribution $G(\nu)$ over the background power law.  
 
-It would be tempting to take this excess contribution and infer a
-distribution of field line angles with the solar surface.  This
-distribution relies on the assumption that all the
-Gaussian-distributed component is entirely due to the channeling of
-photospheric oscillatory power up to ``coronal'' heights and
-temperatures.
-
-
-The AIA 171\AA\ and 193\AA\ wavebands are relatively wide, and include
-contributions from plasma at many different temperatures, heights in
-the atmosphere, and many different elements \cite{}.  A deeper
-understanding of the contributions from these different plasmas is
-required before a good estimate of the distribution of the angle
-coronal loop footpoints make with the surface can be made.
-
-Finally, only two models of the Fourier power spectrum are considered.
-The choice of equation \ref{eqn:pwrlawbump} is motivated by previous
-observations.  However, other models are certainly possible.  For
-example, \cite{1993ASPC...42..111H} modelled the
+\cite{2005ApJ...624L..61D} show that it is possible to leak
+oscillatory power from lower in the atmosphere to the upper reaches of
+the atmosphere through the simple expedient of tilting the field line.
+This changes the acoustic cutoff frequency and so allows wave energy
+to propagate up in to the upper atmosphere.  If spectral model $M_{2}$
+represents conditions in the solar atmosphere, then it should be
+possible to infer a distribution of field line angles with the solar
+surface using \cite{2005ApJ...624L..61D} and the observed power
+distribution $G(\nu)$.  This would constrain the distribution of field
+line angles in the lower atmosphere in different regions of the solar
+surface. 
 
 
 \subsection{Nature of the power law power spectrum}\label{ssec:nplps}
@@ -585,7 +576,7 @@ and the energy in each event depends on its time scale $T$ such that
 \label{eqn:energytime}
 E \propto T^{1+\gamma}
 \end{equation}
-then it can be shown \cite{} that the observed power spectrum can be
+then it can be shown that the observed power spectrum can be
 approximated by
 \begin{equation}
 \label{eqn:finalfps}
@@ -609,6 +600,7 @@ These three features must be modeled in order to test the hypothesis
 that ubiquitous energy deposition events are the root cause of the
 observed power-law like behavior of the Fourier power spectra.
 
+
 There has been a considerable amount of work in modeling the
 AIA-detected plasma response...  \cite{} 
 
@@ -616,9 +608,28 @@ AIA-detected plasma response...  \cite{}
 
 \section{Conclusions}\label{sec:conc}
 
+Time series of AIA 171\AA\ and 193\AA images show approximately power
+law like properties over all regions of the solar surface.  The power
+spectra have been modelled using a power-law power spectrum with a
+constant background summed with a localized contribution 
+
 Comparing the \Fps\ of the simulated observations to the \Fps\ of the
 data will bring new constraints on the simulations that will hopefully
-improve our understanding of the temporal behavior of the solar corona.
+improve our understanding of the temporal behavior of the solar
+corona.  Further, this paper only considers two of the AIA wave-bands
+that are sensitive to higher temperatures.  Using the other
+wave-bands, in comparison with the
+
+Finally, only two models of the Fourier power spectrum have been
+considered.  The choice of equation \ref{eqn:pwrlaw} is motivated by
+the observations of all four regions considered.  Equation
+\ref{eqn:pwrlawbump} was motivated by previous observations of
+oscillatory content in the solar atmosphere.  Equation
+\ref{eqn:pwrlawbump} is shown to be the preferred model in all cases.
+
+
+
+
 
 
 %% If you wish to include an acknowledgments section in your paper,
@@ -728,3 +739,23 @@ error in the estimated error is
 
 \bibliography{references}
 \end{document}
+However, other more complex models are certainly possible.  For
+example, \cite{1993ASPC...42..111H} modelled the background
+chromospheric Fourier power spectrum of a series of Ca-II K-line
+images using a 19-parameter fit consisting of a constant background,
+three components of the form
+\begin{equation}
+\label{eqn:harvey1}
+P(\nu) \propto \frac{1}{1 + (2\pi \nu T_{0})^{b}}.
+\end{equation}
+and two components of the form
+\begin{equation}
+\label{eqn:harvey2}
+P(\nu) \propto
+\left(
+\frac{\nu}{\nu_{0}}
+\right)^{c}
+\left(
+\frac{\Gamma^{2}}{(\nu-\nu_{0})^{2} + \Gamma^{2}}
+\right)^{b}.
+\end{equation}
