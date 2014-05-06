@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import tsutils
 from astropy import units as u
 
+
 # TODO: use astropy quantities to implement the sample time class
 class SampleTimes:
     def __init__(self, time, label='time', units='seconds'):
@@ -86,20 +87,9 @@ class PowerSpectrum:
     def __init__(self, frequencies, power, label='Fourier power'):
         self.frequencies = Frequencies(frequencies)
         self.power = power
-        self.ppower = self.power[..., self.frequencies.posindex]
+        #self.ppower = self.power[..., self.frequencies.posindex]
+        self.ppower = self.power[self.frequencies.posindex]
         self.label = label
-
-        # Mean power
-        self.vaughan_mean = np.mean(self.ppower)
-
-        # Power spectrum normalized by its mean
-        self.normed_by_mean = self.ppower / self.vaughan_mean
-
-        # Standard deviation of the normalized power
-        self.vaughan_std = np.std(self.normed_by_mean)
-
-        # Normalized power expressed in units of its standard deviation
-        self.Npower = self.normed_by_mean / self.vaughan_std
 
     def peek(self, **kwargs):
         """
@@ -107,7 +97,6 @@ class PowerSpectrum:
         spectrum.
         """
         plt.plot(self.frequencies.positive, self.ppower, **kwargs)
-
 
 
 class TimeSeries:

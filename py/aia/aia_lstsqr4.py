@@ -103,10 +103,11 @@ def calculate_histograms(nposfreq, pwr, bins):
 
 # Apply the manipulation function
 def ts_manip(d, manip):
+    dcopy = d.copy()
     if manip == 'relative':
-        dmean = np.mean(d)
-        d = (d - dmean) / dmean
-    return d
+        dmean = np.mean(dcopy)
+        dcopy = dcopy / dmean - 1
+    return dcopy
 
 
 # Apply the window
@@ -251,9 +252,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 t = dt * np.arange(0, nt)
                 tsdummy = TimeSeries(t, t)
                 freqs = freqfactor[0] * tsdummy.PowerSpectrum.frequencies.positive
-                posindex = tsdummy.PowerSpectrum.frequencies.posindex
-                iobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
-                logiobs = np.zeros(tsdummy.PowerSpectrum.Npower.shape)
+                posindex = np.fft.fftfreq(nt, dt) > 0.0 #tsdummy.PowerSpectrum.frequencies.posindex
+                iobs = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
+                logiobs = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
+                logiobsDC = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
                 nposfreq = len(iobs)
                 nfreq = tsdummy.PowerSpectrum.frequencies.nfreq
 
@@ -272,6 +274,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                         # Fix the data for any non-finite entries
                         d = tsutils.fix_nonfinite(d)
+                        dkeep = d.copy()
 
                         # Sum up all the original data
                         doriginal = doriginal + d
@@ -296,7 +299,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                         ts = TimeSeries(t, d)
 
                         # Define the Fourier power we are analyzing
-                        this_power = ts.PowerSpectrum.ppower
+                        this_power = (np.abs(np.fft.fft(d)) ** 2)[posindex] / (1.0 * nt)#ts.PowerSpectrum.ppower
 
                         # Get the total Fourier power
                         iobs = iobs + this_power
@@ -932,8 +935,8 @@ do_lstsqr(dataroot='~/Data/AIA/',
           corename='shutdownfun3_6hr',
           sunlocation='disk',
           fits_level='1.5',
-          waves=['193'],
-          regions=['moss', 'loopfootpoints', 'qs', 'sunspot'],
+          waves=['171', '193'],
+          regions=['loopfootpoints', 'moss', 'qs', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 
