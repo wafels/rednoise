@@ -200,17 +200,14 @@ images from the time range considered.
 
 Consider the emission from a single pixel, $I(t)$.  The Fourier power
 spectrum for this emission was calculated as follows.  First, the
-time-series was normalized by calculating $(I(t) - <I(t)>)/<I(t)>$.
-This normalizes the emission.  Secondly, the normalized time-series
-was apodized using the Hanning window, reducing ringing effects.  This
-results in a time-series from which its Fourier power spectrum was
-analyzed. 
-
-Figures \ref{fig:compare171193} show example power spectra, plotted using
-a log-log scale, from a single location inside each of the regions
-shown in Figure \ref{fig:loc171193}.  The shape of
+time-series was normalized by calculating $(I(t) - \langle I(t)
+\rangle)/\langle I(t) \rangle$. Secondly, the normalized time-series
+was apodized using the Hanning window, reducing ringing effects in the
+power spectrum.  Figures \ref{fig:compare171193} show example power
+spectra, plotted using a log-log scale, from a single location inside
+each of the regions shown in Figure \ref{fig:loc171193}.  The shape of
 the power spectra indicate that the Fourier power approximately
-follows a power law at lower frequencies and flattens out at higher
+follows a power law at lower frequencies, and flattens out at higher
 frequencies.
 
 \begin{figure}
@@ -222,19 +219,6 @@ frequencies.
   black lines indicate the 3 and 5 minute frequencies.}
 \label{fig:compare171193}
 \end{figure}
-
-
-Figures \ref{fig:dist171} and \ref{fig:dist193} show the distributions
-of the logarithm of the Fourier power for certain frequencies in the
-spectrum.  The distributions all approximately follow a normal
-distribution.  This indicates that the power in each each at each
-frequency is approximately log-normally distributed.  This observation
-guides the choice of how to average the power spectrum over each of
-the selected physical regions.  Since the Fourier power is
-log-normally distributed, the arithmetic mean of the Fourier power is
-biased by the very largest powers.  Hence the mean of the logarithm of
-the Fourier power is considered, which is equivalent to the geometric
-mean of the Fourier power.
 
 \begin{figure}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}
@@ -251,11 +235,22 @@ mean of the Fourier power.
   171\AA\ plots.)}
 \label{fig:dist193}
 \end{figure}
+Figures \ref{fig:dist171} and \ref{fig:dist193} show the distributions
+of the logarithm of the Fourier power for a small number of
+frequencies, for all the pixels in each region.  The distributions all
+follow a normal distribution approximately.  This indicates that the
+power in each each at each frequency is approximately log-normally
+distributed.  This observation guides the choice of how to average the
+power spectrum over each of the selected region.  Since the Fourier
+power is log-normally distributed, the arithmetic mean of the Fourier
+power is biased by the very largest powers.  Since the logarithm of
+the Fourier power is approximately Gaussian-distributed, the mean
+value is a better representation of the range of values in the data.
+Hence the mean of the logarithm of the Fourier power is used to
+describe the mean Fourier power spectrum of each region (note that
+this is also equivalent to the geometric mean of the Fourier power.)
 
-These geometric mean Fourier power spectra are shown in Figures
-\ref{fig:fit171} and \ref{fig:fit193}, for each of the physical
-regions considered.  It is clear that, in general, the Fourier power
-spectra exhibit power-law like characteristics.
+
 
 \begin{figure}
 \plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
@@ -333,8 +328,13 @@ sunspot         & 171\AA  & $0.51^{+0.01}_{-0.01}$  & $2.27^{+0.02}_{-0.02}$ & $
 %% in the table for each \tablenotetext.
 \end{deluxetable}
 
-The results for the quiet Sun, loop footpoints and sunspot regions
-suggest a power-law power spectrum.  This can be modeled as
+
+The (geometric) mean Fourier power spectra are shown in Figures
+\ref{fig:fit171} and \ref{fig:fit193}, for each of the physical
+regions considered.  It is clear that, in general, the Fourier power
+spectra exhibit power-law like characteristics.  The results for the
+quiet Sun, loop footpoints and sunspot regions suggest a power-law
+power spectrum.  This can be modeled as
 \begin{equation}
 \label{eqn:pwrlaw}
 \mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
@@ -348,12 +348,18 @@ observations.
 The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
 other regions, there appears to be excess Fourier power in the range
-1-10 mHz.  Previous studies (???) have shown that the moss is a source
-of Fourier power.  This suggests that a second model $M_{2}$ for these
-regions should be considered.  The second model $M_{2}$ has two
-contributions to the overall \Fps; a background power-law of the form
-of $P_{1}$, and a contribution that is more localized, $G(\nu)$.  The
-model is given by
+1-10 mHz.  \cite{2003ApJ...595L..63D} show that the bright upper
+transition region emission above active region plage (also known as
+moss) is a source of wavelet power. Periods of significant wavelet
+power are found in the range 200 to 600 seconds, and typically persist
+for 4–7 cycles. 
+
+
+This suggests that a second model
+$M_{2}$ for these regions should be considered.  The second model
+$M_{2}$ has two contributions to the overall \Fps; a background
+power-law of the form of $P_{1}$, and a contribution that is more
+localized, $G(\nu)$.  The model is given by
 \begin{equation}
 \label{eqn:pwrlawbump}
 \mbox{Model $M_{2}$}: P_{2}(\nu) = P_{1}(\nu) + G(\nu)
@@ -488,13 +494,14 @@ noise when red noise power-spectrum is actually present, coupled with
 too low a confidence level, can lead to misleading results when
 looking for oscillatory signals.  Many detection algorithms do make
 this assumption, for example \cite{2004SoPh..223....1D},
-\cite{2007SoPh..241..397N}, \cite{2008SoPh..248..395S} and
-\cite{2010SoPh..264..403I}.  Such approaches have yet to be tested
-assuming a red-noise background power spectrum, and so their efficacy
-is unknown.  \cite{2004SoPh..223....1D} and \cite{2008SoPh..248..395S}
-are wavelet-based approaches, and Figure \ref{fig:comparison} does
-suggest that a red-noise background spectrum will make a significant
-difference. 
+\cite{2007SoPh..241..397N}, \cite{2008SoPh..248..395S},
+\cite{2010SoPh..264..403I} and \cite{2013SoPh..286..405C}.  Such
+approaches have yet to be tested assuming a red-noise background power
+spectrum, and so their efficacy is unknown.
+\cite{2004SoPh..223....1D} and \cite{2008SoPh..248..395S} are
+wavelet-based approaches, and Figure \ref{fig:comparison} does suggest
+that a red-noise background spectrum will make a significant
+difference.
 
 All the automated detection algorithms described above attempt to find
 individual pixels that are obviously oscillating at some frequency,
@@ -647,10 +654,11 @@ temporal behavior of the solar corona.
 
 \acknowledgments
 
-We are grateful to the developers of SSWIDL \cite{}, SunPy \cite{},
-PyMC \cite{} and matplotlib \cite{} for providing data preparation,
-manipulation, analysis and display packages.  This work was supported
-by the NASA....
+We are grateful to the developers of SSWIDL
+\citep{1998SoPh..182..497F}, SunPy \citep{mumford-proc-scipy-2013}, PyMC
+\citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04} and Scientific Python
+stack for providing data preparation, manipulation, analysis and
+display packages.  This work was supported by the NASA award number????
 
 %% To help institutions obtain information on the effectiveness of their
 %% telescopes, the AAS Journals has created a group of keywords for telescope
