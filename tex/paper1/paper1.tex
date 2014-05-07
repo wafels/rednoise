@@ -20,7 +20,7 @@
 %% manuscript produces a one-column, double-spaced document:
 
 
-\documentclass[preprint2]{aastex}
+\documentclass{aastex}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{multirow}
@@ -35,7 +35,7 @@
 
 %% preprint2 produces a double-column, single-spaced document:
 
-%% \documentclass[preprint2]{aastex}
+%% \documentclass[preprint]{aastex}
 
 %% Sometimes a paper's abstract is too long to fit on the
 %% title page in preprint2 mode. When that is the case,
@@ -294,7 +294,7 @@ spectra exhibit power-law like characteristics.
 \tablehead{
 \colhead{Region} & 
 \colhead{Waveband}    & 
-\multicolumn{3}{c}{power law} & \multicolumn{3}{c}{Gaussian} \\
+\multicolumn{3}{c}{power law} & \multicolumn{3}{c}{lognormal} \\
 \colhead{}          & 
 \colhead{}          & 
 \colhead{$\log_{10}A$}          & 
@@ -390,12 +390,12 @@ generally show a power law-like behavior at time-scales of interest in
 coronal seismology, and longer.  Within the confines of the models we
 have chosen, coronal moss regions show the largest contribution from a
 non-power law power spectrum source over a relatively limited range of
-frequencies.  The frequencies at which the Gaussian contribution is
+frequencies.  The frequencies at which the lognormal contribution is
 larger than the underlying power-law distribution could be used to
 define an average frequency range within which the majority
 contribution to the overall Fourier power is not associated with the
 underlying power-law distribution.  However, the \Fps\ in this range
-would still have to analyzed using both the power-law and Gaussian
+would still have to analyzed using both the power-law and lognormal
 contributions to the overall power, and better estimates to the
 power-law parameters will be obtained if the full frequency range of
 the observations are used.
@@ -507,21 +507,23 @@ finding spatially contiguous regions of the corona which are coherent
 in a given frequency range.  The frequency range searched is based on
 previous experience.  Oscillations that are detected propagating along
 loops are often found by considering distance-time plots
-\citep{2000AA...355L..23D, 2003AA...404L...1K} and looking for alternating
-brightening/darkening in those plots as a indicator of a propagating
-wave.  This is essentially a coherence-based approach, as the user is
-assessing the likelihood that an oscillation has been detected based
-on the observed signal in multiple contiguous pixels.  However, each
-pixel in these plots probably has a red-noise background power
-spectrum, and so the discussion of Section \ref{ssec:corseis} suggests
-that the significance of any claimed oscillation is much reduced.
+\citep{2000AA...355L..23D, 2003AA...404L...1K} and looking for
+alternating brightening/darkening in those plots as a indicator of a
+propagating wave.  This is essentially a coherence-based approach that
+involves an implicit assessment of the likelihood that an oscillation
+has been detected.  The basis of the assessment is a judgement that a
+signal is seen in multiple contiguous pixels.  However, the results of
+Section \ref{sec:anal} suggest that each pixel in these plots has a
+red-noise background power spectrum: the discussion of Section
+\ref{ssec:corseis} therefore suggests that the significance of any
+claimed oscillation is much reduced.
 
 
 \subsection{``Excess'' emission}\label{ssec:excess}
 The models fits of Section \ref{sec:anal} indicate that equation
 \ref{eqn:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as
 the superior description of the observed Fourier power spectrum. The
-moss region shows the greatest contribution from the Gaussian
+moss region shows the greatest contribution from the lognormal
 distribution $G(\nu)$ over the background power law.  
 
 \cite{2005ApJ...624L..61D} show that it is possible to leak
@@ -600,7 +602,6 @@ These three features must be modeled in order to test the hypothesis
 that ubiquitous energy deposition events are the root cause of the
 observed power-law like behavior of the Fourier power spectra.
 
-
 There has been a considerable amount of work in modeling the
 AIA-detected plasma response...  \cite{} 
 
@@ -620,23 +621,18 @@ It is also hypothesized that the lognormal component is due to the
 channeling of oscillatory power from lower to higher levels of the
 solar atmosphere.
 
-Comparing the \Fps\ of the simulated observations to the \Fps\ of the
-data will bring new constraints on the simulations that will hopefully
-improve our understanding of the temporal behavior of the solar
-corona.  Further, this paper only considers two of the AIA wave-bands
-that are sensitive to higher temperatures.  Using the other
-wave-bands, in comparison with the
+Future studies will include examining power spectra at many more
+locations on and off the disk, as well as using the AIA 355\AA, 94\AA,
+131\AA and 211\AA\ wavebands.  The power-law index in
+individual pixels will also be determined, and correlated with other
+physical quantiies such as the emission from those pixels.
 
-Finally, only two models of the Fourier power spectrum have been
-considered.  The choice of equation \ref{eqn:pwrlaw} is motivated by
-the observations of all four regions considered.  Equation
-\ref{eqn:pwrlawbump} was motivated by previous observations of
-oscillatory content in the solar atmosphere.  Equation
-\ref{eqn:pwrlawbump} is shown to be the preferred model in all cases.
-
-
-
-
+Finally, a better understanding of the source of the power-law power
+spectrum will come from comparing the \Fps\ of simulated observations
+to the \Fps\ of the data in all the AIA wave-bands that are sensitive
+to higher temperatures.  This will bring new constraints on the
+simulations and improve our understanding of the
+temporal behavior of the solar corona.
 
 
 %% If you wish to include an acknowledgments section in your paper,
@@ -766,3 +762,15 @@ P(\nu) \propto
 \frac{\Gamma^{2}}{(\nu-\nu_{0})^{2} + \Gamma^{2}}
 \right)^{b}.
 \end{equation}
+
+
+Finally, only two models of the Fourier power spectrum have been
+considered.  The choice of equation \ref{eqn:pwrlaw} is motivated by
+the observations of all four regions considered.  Equation
+\ref{eqn:pwrlawbump} was motivated by previous observations of
+oscillatory content in the solar atmosphere.  Equation
+\ref{eqn:pwrlawbump} is shown to be the preferred model in all cases.
+
+
+
+

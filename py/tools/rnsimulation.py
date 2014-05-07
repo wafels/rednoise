@@ -176,7 +176,7 @@ def noisy_fourier_transform(I, fft_zero=0.0, phase_noise=True):
     # Amplitudes
     A = np.sqrt(I / 2.0)
 
-    print np.sqrt(I)
+    #print np.sqrt(I)
 
     # WARNING - SPECTRAL POWER APPEARs TO BE OUT BY A FACTOR 2 WITHOUT THIS
     # MULTIPLICATION FACTOR BELOW
@@ -214,7 +214,7 @@ def time_series_from_power_spectrum(S, fft_zero=0.0, phase_noise=True, power_noi
     else:
         I = S
 
-    print np.sqrt(I)
+    #print np.sqrt(I)
 
     # Get noisy Fourier transform
     F_complete, F = noisy_fourier_transform(I,
