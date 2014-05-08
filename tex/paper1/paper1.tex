@@ -163,7 +163,6 @@ phenomena.
 
 
 \section{Observations}\label{sec:obs}
-
 Data was obtained from SDO-AIA using the Lockheed Martin Solar
 Astrophysics cutout service (http://lmsal.com/get\_aia\_data/).  Six
 hours of image data at 12 second cadence was selected in the 171\AA
@@ -348,18 +347,19 @@ observations.
 The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
 other regions, there appears to be excess Fourier power in the range
-1-10 mHz.  \cite{2003ApJ...595L..63D} show that the bright upper
-transition region emission above active region plage (also known as
-moss) is a source of wavelet power. Periods of significant wavelet
+1-10 mHz.  \cite{2003ApJ...595L..63D} show that TRACE
+171\AA\ (TRansition Region And Coronal Explorer) time-series of bright
+upper transition region emission above active region plage (also known
+as moss) is a source of wavelet power. Periods of significant wavelet
 power are found in the range 200 to 600 seconds, and typically persist
-for 4–7 cycles. 
-
-
-This suggests that a second model
-$M_{2}$ for these regions should be considered.  The second model
-$M_{2}$ has two contributions to the overall \Fps; a background
-power-law of the form of $P_{1}$, and a contribution that is more
-localized, $G(\nu)$.  The model is given by
+for 4–7 cycles.  Later work by \cite{2005ApJ...624L..61D} suggested
+that spicule flux tubes tilted with respect to the solar surface
+provide a mechanism by which oscillatory power from lower in the
+atmosphere may be channeled to upper portions of the atmosphere.  This
+suggests that a second model $M_{2}$ for the \Fps\ in regions should
+be considered.  The second model $M_{2}$ has two contributions to the
+overall \Fps; a background power-law of the form of $P_{1}$, and a
+contribution that is more localized, $G(\nu)$.  The model is given by
 \begin{equation}
 \label{eqn:pwrlawbump}
 \mbox{Model $M_{2}$}: P_{2}(\nu) = P_{1}(\nu) + G(\nu)
@@ -383,7 +383,6 @@ spectrum also has implications for the detection of narrow frequency
 band oscillations against such a background emission, which is the
 purview of coronal seismology.  We discuss these two topics in the
 sections below.
-
 
 \subsection{Effect of background power spectrum assumptions on the
   detection of oscillatory power}
@@ -412,10 +411,10 @@ like.  For the frequencies that have been of interest in coronal
 seismology, the background power spectrum is therefore scale free on
 average.  If there is no time-scale that can be used to remove a
 background trend, then the time-series has to be analyzed without this
-processing step.  A lack of awareness of the background red-noise
-nature of the emission can cause problems in attempting to analyze for
-the presence of narrow frequency band oscillations, as the following
-example demonstrates.
+processing step.  However, a lack of awareness of the background
+red-noise nature of the emission can cause problems in attempting to
+analyze for the presence of narrow frequency band oscillations, as the
+following example demonstrates.
 
 \begin{figure}
 \epsscale{.80}
@@ -448,33 +447,33 @@ data, along with the results of Section \ref{sec:anal}, suggest that
 when examining the wavelet transforms of time-series for wave packets,
 a background red-noise power spectrum should be assumed, along with
 higher confidence levels, in order to minimize the effects of
-mistakenly identifying red-noise as evidence for an oscillatory
-signal.
+mistakenly identifying random variations in the background power
+spectrum as evidence for an oscillatory signal.
 
 Even this approach to identifying oscillatory power is not quite
 complete, as it simply rejects the null hypothesis that the power
 spectrum can be adequately explained by a red-noise power spectrum.
-Model comparison similar to that described in Section \ref{sec:anal}
-is required to prefer a model with oscillatory content over one
-without. The difficulty in finding narrow-band features in Fourier
-power spectra against a red-noise background power spectrum has been
-recognized by \cite{2010MNRAS.402..307V} in the study of XMM-Newton
-observations of highly variable Seyfert 1 galaxies.
-\cite{2010MNRAS.402..307V} presents a model comparison and fitting
+Model comparison techniques similar to that described in Section
+\ref{sec:anal} is required to prefer a model with oscillatory content
+over one without. The difficulty in finding narrow-band features in
+Fourier power spectra against a red-noise background power spectrum
+has been recognized by \cite{2010MNRAS.402..307V} in the study of
+XMM-Newton observations of highly variable Seyfert 1 galaxies.
+\cite{2010MNRAS.402..307V} presents a model fitting and comparison
 technique is directly applicable to the search for oscillatory power
-in coronal time-series.
-
+in coronal time-series.  
 
 \subsection{Implications for coronal seismology and automated
   oscillation detection algorithms}\label{sec:oscdetect}
 
 The discussion of Section \ref{ssec:corseis} shows that red-noise
 power spectra has a powerful effect on the claims of a detection of
-narrow-frequency band oscillations in time-series.  When looking at
-extended regions of coronal imaging data, evidence for the presence of
-an oscillation in the corona is strengthened if it can be shown that
-narrow frequency-band oscillations occur significantly above a
-red-noise background signal in several neighboring pixels.  Coronal
+narrow-frequency band oscillations in single time-series.  When
+looking at extended regions of coronal imaging data, evidence for the
+presence of a {\it wave} in the corona is strengthened if it can be
+shown that narrow frequency-band oscillations occur significantly
+above the background signal in several neighboring pixels.  Spatial
+extent is one key feature to claim of a detected wave.  Coronal
 seismology derives its observational evidence from such detections,
 and automated detection algorithms hold out the hope of greatly
 increasing the number of oscillating regions detected.
@@ -482,34 +481,35 @@ increasing the number of oscillating regions detected.
 Figure \ref{fig:compare171193} shows that time series from individual
 pixels have power-law like power spectra.  This has implications for
 the design of automated oscillation detection algorithms.  Such an
-algorithm must somehow take into account the nature of the power
-spectrum.  The power-law power spectrum itself lacks an easily
-definable time-scale at or below which a background trend can be
-defined.  Automated detection algorithns that rely on background trend
+algorithm must take into account the nature of the power spectrum.
+The power-law power spectrum itself lacks an easily definable
+time-scale at or below which a background trend can be defined.
+Automated detection algorithms that rely on background trend
 subtraction such as \cite{2010SoPh..264..403I} must therefore look to
 other reasons for to justify a time-scale.
 
 As has been shown above, the assumption of a Gaussian-distributed
-noise when red noise power-spectrum is actually present, coupled with
-too low a confidence level, can lead to misleading results when
-looking for oscillatory signals.  Many detection algorithms do make
-this assumption, for example \cite{2004SoPh..223....1D},
+noise when a red noise power-spectrum is actually present, coupled
+with too low a confidence level, can lead to misleading results when
+looking for oscillatory signals.  Many wave detection algorithms do
+make this assumption, for example \cite{2004SoPh..223....1D},
 \cite{2007SoPh..241..397N}, \cite{2008SoPh..248..395S},
 \cite{2010SoPh..264..403I} and \cite{2013SoPh..286..405C}.  Such
 approaches have yet to be tested assuming a red-noise background power
-spectrum, and so their efficacy is unknown.
+spectrum, and so their efficacy is unknown.  However,
 \cite{2004SoPh..223....1D} and \cite{2008SoPh..248..395S} are
-wavelet-based approaches, and Figure \ref{fig:comparison} does suggest
-that a red-noise background spectrum will make a significant
-difference.
+wavelet-based approaches, and the discussion Section
+\ref{ssec:corseis} does suggest that a red-noise background spectrum
+will make a significant difference to the number of wave detections
+found in the data.
 
 All the automated detection algorithms described above attempt to find
 individual pixels that are obviously oscillating at some frequency,
 using the strength of the oscillation at that frequency (compared to
 some assumption of the background) as the key quantity to measure.
 These pixels are then clumped together and the quality of the signal
-is then assessed.  Detection algorithms based on wave coherence, such
-as \cite{2008SoPh..252..321M}, implement wave detection through
+is then assessed.  Detection algorithms based on {\it wave coherence},
+such as \cite{2008SoPh..252..321M}, implement wave detection through
 finding spatially contiguous regions of the corona which are coherent
 in a given frequency range.  The frequency range searched is based on
 previous experience.  Oscillations that are detected propagating along
@@ -531,8 +531,7 @@ The models fits of Section \ref{sec:anal} indicate that equation
 \ref{eqn:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as
 the superior description of the observed Fourier power spectrum. The
 moss region shows the greatest contribution from the lognormal
-distribution $G(\nu)$ over the background power law.  
-
+distribution $G(\nu)$ over the background power law.
 \cite{2005ApJ...624L..61D} show that it is possible to leak
 oscillatory power from lower in the atmosphere to the upper reaches of
 the atmosphere through the simple expedient of tilting the field line.
@@ -543,7 +542,7 @@ possible to infer a distribution of field line angles with the solar
 surface using \cite{2005ApJ...624L..61D} and the observed power
 distribution $G(\nu)$.  This would constrain the distribution of field
 line angles in the lower atmosphere in different regions of the solar
-surface. 
+surface.
 
 
 \subsection{Nature of the power law power spectrum}\label{ssec:nplps}
@@ -555,7 +554,7 @@ of the solar atmosphere.  We hypothesize that the \PL\ \PS\ is due to
 the sum of a distribution of a large number of energy deposition
 events having different energies. \cite{2011soca.book.....A} describes
 how a \PL\ \PS\ may obtained from such a distribution, and that
-argument outlined below.
+argument is outlined below.
 
 Each energy deposition event is modeled as an exponentially decaying
 function of time $t$
