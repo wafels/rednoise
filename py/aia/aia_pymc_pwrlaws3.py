@@ -340,8 +340,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193']
-regions = ['sunspot']
+waves = ['171', '193']
+regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -744,7 +744,8 @@ for iwave, wave in enumerate(waves):
                 plt.title(title)
                 ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,
                                            np.max(normalbump_BF) - 2.0]))
-                plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
+                #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
+                plt.ylim(0.00001, 10.0)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.close('all')
 

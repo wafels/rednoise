@@ -18,7 +18,7 @@ import cPickle as pickle
 import aia_specific
 import aia_plaw
 from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, prettyprint
-
+"""
 font = {'family': 'normal',
         'weight': 'bold',
         'size': 12}
@@ -26,7 +26,7 @@ font = {'family': 'normal',
 matplotlib.rc('font', **font)
 matplotlib.rc('lines', linewidth=1)
 matplotlib.rc('figure', figsize=(12.5, 10))
-
+"""
 plt.ioff()
 
 
@@ -701,7 +701,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 ax.xaxis.set_major_formatter(xformatter)
 
                 # Geometric mean
-                ax.plot(freqs, logiobs / np.log(10.0),  color='k', label='geometric mean of power spectra at each pixel')
+                ax.plot(freqs, logiobs / np.log(10.0),  color='k', label='geometric mean')
                 #ax.plot(freqs, bf2, color='k', label='best fit n=%4.2f +/- %4.2f' % (param2[1], nerr2))
 
                 # Power at each frequency - distributions
@@ -711,7 +711,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 ax.plot(freqs, np.log10(lim[1, 1, :]), label=s_U95.label, color=s_U95.color, linewidth=s_U95.linewidth, linestyle=s_U95.linestyle)
 
                 # Position of the fitted peak in each distribution
-                ax.plot(freqs, logiobs_peak_location / np.log(10.0),  color='m', label='fitted frequency')
+                #ax.plot(freqs, logiobs_peak_location / np.log(10.0),  color='m', label='fitted frequency')
 
                 # Extra information for the plot
                 ax.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
@@ -720,7 +720,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
                 plt.title(data_name + ' : geometric mean')
                 plt.legend(loc=3, fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.geometric_mean_power_spectra.%s' % (savefig_format))
+                plt.savefig(savefig + '.geometric_mean_power_spectra_for_talk.%s' % (savefig_format))
                 plt.close('all')
                 # -------------------------------------------------------------
 
@@ -936,7 +936,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           sunlocation='disk',
           fits_level='1.5',
           waves=['171', '193'],
-          regions=['loopfootpoints', 'moss', 'qs', 'sunspot'],
+          regions=['qs', 'moss', 'loopfootpoints', 'sunspot'],
           windows=['hanning'],
           manip='relative')
 
