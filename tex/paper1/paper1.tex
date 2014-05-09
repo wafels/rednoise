@@ -706,10 +706,10 @@ geometric mean power spectra shown in Figures \ref{fig:fit171} and
 $f$ is the FFT frequency in Hz, and $f_{0}$ is the lowest non-zero FFT
 frequency defined by the data (Section \ref{sec:obs}).
 
-As noted in Section \ref{sec:anal}, the logarithm of the Fourier power for all
-regions may be approximated by a normal distribution $N(\mu, \sigma)$.
-The maximum likelihood estimate of the mean and variance of normal
-distribution are given by
+As noted in Section \ref{sec:anal}, the logarithm of the Fourier power
+for all regions is approximated by a normal distribution $N(\mu,
+\sigma)$.  The maximum likelihood estimate of the mean and variance of
+normal distribution are given by
 \begin{equation}
 \hat{\mu} = \frac{1}{N_{pixel}}\sum_{i=1}^{N_{pixel}}X_{i}
 \label{eqn:mlmean}
@@ -719,11 +719,10 @@ and
 \hat{\sigma^{2}} = \frac{1}{N_{pixel}}\sum_{i=1}^{N_{pixel}}(X_{i}-\hat{\mu})^{2}
 \label{eqn:sigmamean}
 \end{equation}
-where $N_{pixel}$ is the number of pixels in each region.
-
-The estimated error in the estimated mean is
+where $N_{pixel}$ is the number of pixels in each region.  The
+estimated error in the estimated mean is
 \begin{equation}
-\sqrt{\hat{\sigma^{2}}}/\sqrt{N}
+\sqrt{\hat{\sigma_{d}^{2}}}/\sqrt{N}
 \label{eqn:errorsigmamean}
 \end{equation}
 where $N$ is the number of measurements taken.  This formula assumes
@@ -738,7 +737,7 @@ its neighbors.  Therefore, the measurements used to generate an error
 to the Fourier power are not independent.
 
 Therefore, the number of effectively independent pixels is less than
-the actual number of pixels used in any one region.  The number of
+the actual number of pixels in any one region.  The number of
 effective independent pixels is estimated in the following way.  The
 cross correlation $c(\tau)$ function between two randomly chosen
 next-nearest neighbor pixels is calculated.  The cross correlation
@@ -752,14 +751,38 @@ a coefficient of independence between next nearest neighbor,
 When $\rho$ is 1, the cross-correlation coefficient is zero, and there
 is no measurable linear dependence between neighboring time series.
 When $\rho$ is zero, the cross correlation coefficient is $\pm 1$, and
-the two time-series are linearly dependent on each other.  The effect
-number of independent pixels in region is given by
+the two time-series are linearly dependent on each other.  The
+effective number of independent pixels in region is given by
 \begin{equation}
 \label(eqn:nind}
-N_{ind}= 1 + \rho(N_{pixel}-1)
+N_{ind}= 1 + \rho(N_{pixel}-1).
 \end{equation}
-which is used in Equation \ref{eqn:errorsigmamean} to calculate the
-estimated error in the mean.
+The number of independent measurements $N$ is set to $N_{ind}$ in
+Equation \ref{eqn:errorsigmamean}.  This gives a lengthscale for the
+uncertainty in the mean Fourier \PS.
+
+\subsection{Model fitting}
+
+A three step fitting process is used to fit Models 1 and 2 to the
+data.
+\begin{enumerate}
+\item Model 1 is fit to the data using the distribution widths
+  $\sigma_{d}$.  Since this is much wider than the estimated error in
+  the mean, it allows the fitting algorithm to converge to an
+  approximate fit solution.
+\item The estimated values to the model parameters are then used as
+  initial guesses to the second fit of Model 1, assuming the much
+  narrower estimated error $\sigma_{d}/\sqrt{N){ind}$.  This generates
+  a better estimate to the parameters of the model fit.
+\item The residuals of the model 1 fit to the data are then used to
+  estimate the model parameters of $G(\nu)$.
+\item Model 2 is fit to the data using the distribution widths
+  $\sigma_{d}$, seeded with the maximum likelihood parameter values
+  from Step 2 and the estimated $G(\nu)$ model parameters from Step 3.
+\item Model 2 is fit to the data using the maximum likelihood model
+  parameter values at Step 4 and the adjusted widths
+  $\sigma_{d}/\sqrt{N){ind}$.
+\end{enumarate}
 
 
 
