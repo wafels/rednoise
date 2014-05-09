@@ -112,11 +112,11 @@
 \begin{abstract}
 The Fourier power spectra of regions of the solar corona are
 investigated using AIA 171\AA\ and 193\AA\ data.  It is shown that the
-Fourier power spectra in all the regions show a power law behaviour
+Fourier power spectra in all the regions show a \PL\ behaviour
 approximately.  This suggests that in many parts of the corona a
 background model consisting of white noise and a trend cannot be
 assumed when analyzing for the presence of oscillations in the corona.
-Further, it is shown that the observed power law power spectrum can be
+Further, it is shown that the observed \PL\ \PS\ can be
 formed by summing a distribution of exponentially decaying emission
 events along the line of sight.  This is consistent with the notion
 that the solar atmosphere is heated everywhere by small energy
@@ -202,11 +202,11 @@ spectrum for this emission was calculated as follows.  First, the
 time-series was normalized by calculating $(I(t) - \langle I(t)
 \rangle)/\langle I(t) \rangle$. Secondly, the normalized time-series
 was apodized using the Hanning window, reducing ringing effects in the
-power spectrum.  Figures \ref{fig:compare171193} show example power
+\PS.  Figures \ref{fig:compare171193} show example power
 spectra, plotted using a log-log scale, from a single location inside
 each of the regions shown in Figure \ref{fig:loc171193}.  The shape of
 the power spectra indicate that the Fourier power approximately
-follows a power law at lower frequencies, and flattens out at higher
+follows a \PL\ at lower frequencies, and flattens out at higher
 frequencies.
 
 \begin{figure}
@@ -240,13 +240,13 @@ frequencies, for all the pixels in each region.  The distributions all
 follow a normal distribution approximately.  This indicates that the
 power in each each at each frequency is approximately log-normally
 distributed.  This observation guides the choice of how to average the
-power spectrum over each of the selected region.  Since the Fourier
+\PS\ over each of the selected region.  Since the Fourier
 power is log-normally distributed, the arithmetic mean of the Fourier
 power is biased by the very largest powers.  Since the logarithm of
 the Fourier power is approximately Gaussian-distributed, the mean
 value is a better representation of the range of values in the data.
 Hence the mean of the logarithm of the Fourier power is used to
-describe the mean Fourier power spectrum of each region (note that
+describe the mean \Fps\ of each region (note that
 this is also equivalent to the geometric mean of the Fourier power.)
 
 
@@ -288,7 +288,7 @@ this is also equivalent to the geometric mean of the Fourier power.)
 \tablehead{
 \colhead{Region} & 
 \colhead{Waveband}    & 
-\multicolumn{3}{c}{power law} & \multicolumn{3}{c}{lognormal} \\
+\multicolumn{3}{c}{\PL} & \multicolumn{3}{c}{lognormal} \\
 \colhead{}          & 
 \colhead{}          & 
 \colhead{$\log_{10}A$}          & 
@@ -332,14 +332,14 @@ The (geometric) mean Fourier power spectra are shown in Figures
 \ref{fig:fit171} and \ref{fig:fit193}, for each of the physical
 regions considered.  It is clear that, in general, the Fourier power
 spectra exhibit power-law like characteristics.  The results for the
-quiet Sun, loop footpoints and sunspot regions suggest a power-law
-power spectrum.  This can be modeled as
+quiet Sun, loop footpoints and sunspot regions suggest a \PL\ \PS.
+This can be modeled as
 \begin{equation}
 \label{eqn:pwrlaw}
 \mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
 \end{equation}
 where $\nu$ is the normalized frequency, $A>0$ is a proportionality
-constant and $n>0$ is the power law index.  The quantity $C>0$ models
+constant and $n>0$ is the \PL\ index.  The quantity $C>0$ models
 the high-frequency / low power end of the spectrum where the detection
 properties of the detector apparatus are assumed to dominate the
 observations.
@@ -377,24 +377,23 @@ parameter values and an error estimate for model $M_{2}$.  For details
 on the fitting procedure, see Section \ref{sec:app:ind}.
 
 \section{Discussion}
-The presence of a power law Fourier spectrum in coronal emission poses
-questions about how that emission is formed.  The power law power
-spectrum also has implications for the detection of narrow frequency
-band oscillations against such a background emission, which is the
-purview of coronal seismology.  We discuss these two topics in the
-sections below.
+The presence of a \PL\ Fourier spectrum in coronal emission poses
+questions about how that emission is formed.  The \PL\ \PS\ also has
+implications for the detection of narrow frequency band oscillations
+against such a background emission, which is the purview of coronal
+seismology.  We discuss these two topics in the sections below.
 
-\subsection{Effect of background power spectrum assumptions on the
+\subsection{Effect of background \PS\ assumptions on the
   detection of oscillatory power}
 \label{ssec:corseis}
 
 Section \ref{sec:anal} demonstrates the presence of a red
 noise-like signal in two of the most commonly used wavebands for
 coronal seismology, SDO-AIA 171\AA\ and 193\AA.  The observed spectra
-generally show a power law-like behavior at time-scales of interest in
+generally show a \PL-like behavior at time-scales of interest in
 coronal seismology, and longer.  Within the confines of the models we
 have chosen, coronal moss regions show the largest contribution from a
-non-power law power spectrum source over a relatively limited range of
+non \PL\ \PS\ source over a relatively limited range of
 frequencies.  The frequencies at which the lognormal contribution is
 larger than the underlying power-law distribution could be used to
 define an average frequency range within which the majority
@@ -405,16 +404,15 @@ contributions to the overall power, and better estimates to the
 power-law parameters will be obtained if the full frequency range of
 the observations are used.
 
-The presence of a non-power law contribution to the \Fps\ does not
-change the fact that the background emission is essentially power-law
-like.  For the frequencies that have been of interest in coronal
-seismology, the background power spectrum is therefore scale free on
-average.  If there is no time-scale that can be used to remove a
-background trend, then the time-series has to be analyzed without this
-processing step.  However, a lack of awareness of the background
-red-noise nature of the emission can cause problems in attempting to
-analyze for the presence of narrow frequency band oscillations, as the
-following example demonstrates.
+The presence of a non \PL\ contribution to the \Fps\ does not change
+the fact that the background emission is essentially power-law like.
+For the frequencies that have been of interest in coronal seismology,
+the background \PS\ is therefore scale free on average.  If there is
+no time-scale that can be used to remove a background trend, then the
+time-series has to be analyzed without this processing step.  However,
+a lack of awareness of the background red-noise nature of the emission
+can cause problems in attempting to analyze for the presence of narrow
+frequency band oscillations, as the following example demonstrates.
 
 \begin{figure}
 \epsscale{.80}
@@ -422,46 +420,50 @@ following example demonstrates.
 \caption{Comparison of the effect of assuming a white or red noise
   background on the detection of an oscillatory signal for simulated
   time-series.  Plot (a) shows the simulated time-series, generated
-  from a power spectrum \protect$P(f)\approx f^{-1.77}$ and no
+  from a \protect\PS\ \protect$P(f)\propto f^{-1.77}$ and no
   explicit oscillation included.  Plot (b) shows the wavelet power
   spectrum with the cone-of-influence (shaded area) and regions above
   the 95\% confidence level, assuming a white-noise (Gaussian)
- background .  Plot (c) shows the global wavelet power spectrum for
+ background .  Plot (c) shows the global wavelet \protect\PS\ for
   this wavelet transform.  Plots (d) and (e) are the same as plots (b)
   and (c) under the assumption of a red-noise background.}
 \label{fig:comparison}
 \end{figure}
 
-Figure \ref{fig:comparison} shows how a red-noise power spectrum can
-be mistakenly thought to contain an oscillatory signal.  The time
-series (Figure \ref{fig:comparison}(a)) is constructed from a power
-spectrum $P(f)\approx f^{-1.77}$ with no explicit oscillatory content,
+Figure \ref{fig:comparison} shows how a red-noise \PS\ can be
+mistakenly thought to contain an oscillatory signal.  The time series
+(Figure \ref{fig:comparison}(a)) is constructed from a \PS\
+$P(f)\approx f^{-1.77}$ with no explicit oscillatory content,
 following the construction procedure of \cite{2010MNRAS.402..307V}.
 Figure \ref{fig:comparison}(b) shows that the assumption of a
 white-noise background and a 95\% confidence level leads to the
 positive detection of significant oscillatory power in this time
 series. Figure \ref{fig:comparison}(c) shows that the assumption of a
 red-noise background with the same confidence level significantly
-reduces the area for which a detection may be claimed.  This simulated
-data, along with the results of Section \ref{sec:anal}, suggest that
-when examining the wavelet transforms of time-series for wave packets,
-a background red-noise power spectrum should be assumed, along with
-higher confidence levels, in order to minimize the effects of
-mistakenly identifying random variations in the background power
-spectrum as evidence for an oscillatory signal.
+reduces the area for which a detection may be claimed.  Even with this
+significantly different background assumption, there is still a
+significant amount of wavelet power above the 95\% confidence level.
+However, since the data is simulated without an explicit oscillatory
+component, the high wavelet power must have arisen by chance.  The
+simulated data, along with the results of Section \ref{sec:anal},
+suggest that when examining the wavelet transforms of time-series for
+wave packets, a background red-noise \PS\ should be assumed, along
+with higher confidence levels (99\% or higher), in order to minimize
+the effects of mistakenly identifying random variations in the
+background \PS\ as evidence for an oscillatory signal.
 
-Even this approach to identifying oscillatory power is not quite
-complete, as it simply rejects the null hypothesis that the power
-spectrum can be adequately explained by a red-noise power spectrum.
-Model comparison techniques similar to that described in Section
-\ref{sec:anal} is required to prefer a model with oscillatory content
-over one without. The difficulty in finding narrow-band features in
-Fourier power spectra against a red-noise background power spectrum
-has been recognized by \cite{2010MNRAS.402..307V} in the study of
-XMM-Newton observations of highly variable Seyfert 1 galaxies.
-\cite{2010MNRAS.402..307V} presents a model fitting and comparison
-technique is directly applicable to the search for oscillatory power
-in coronal time-series.  
+However, even this approach to identifying oscillatory power is not
+quite complete, as it simply rejects the null hypothesis that the
+\PS\ can be adequately explained by a red-noise power
+spectrum.  Model comparison techniques similar to that described in
+Section \ref{sec:anal} are required to prefer a model with oscillatory
+content over one without. The difficulty in finding narrow-band
+features in Fourier power spectra against a red-noise background power
+spectrum has been recognized by \cite{2010MNRAS.402..307V} in the
+study of XMM-Newton observations of highly variable Seyfert 1
+galaxies.  \cite{2010MNRAS.402..307V} presents a model fitting and
+comparison technique that is directly applicable to the search for
+oscillatory power in coronal time-series.
 
 \subsection{Implications for coronal seismology and automated
   oscillation detection algorithms}\label{sec:oscdetect}
@@ -481,8 +483,8 @@ increasing the number of oscillating regions detected.
 Figure \ref{fig:compare171193} shows that time series from individual
 pixels have power-law like power spectra.  This has implications for
 the design of automated oscillation detection algorithms.  Such an
-algorithm must take into account the nature of the power spectrum.
-The power-law power spectrum itself lacks an easily definable
+algorithm must take into account the nature of the \PS.
+The power-law \PS\ itself lacks an easily definable
 time-scale at or below which a background trend can be defined.
 Automated detection algorithms that rely on background trend
 subtraction such as \cite{2010SoPh..264..403I} must therefore look to
@@ -521,7 +523,7 @@ involves an implicit assessment of the likelihood that an oscillation
 has been detected.  The basis of the assessment is a judgement that a
 signal is seen in multiple contiguous pixels.  However, the results of
 Section \ref{sec:anal} suggest that each pixel in these plots has a
-red-noise background power spectrum: the discussion of Section
+red-noise background \PS: the discussion of Section
 \ref{ssec:corseis} therefore suggests that the significance of any
 claimed oscillation is much reduced.
 
@@ -529,9 +531,9 @@ claimed oscillation is much reduced.
 \subsection{``Excess'' emission}\label{ssec:excess}
 The models fits of Section \ref{sec:anal} indicate that equation
 \ref{eqn:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as
-the superior description of the observed Fourier power spectrum. The
+the superior description of the observed Fourier \PS. The
 moss region shows the greatest contribution from the lognormal
-distribution $G(\nu)$ over the background power law.
+distribution $G(\nu)$ over the background \PL.
 \cite{2005ApJ...624L..61D} show that it is possible to leak
 oscillatory power from lower in the atmosphere to the upper reaches of
 the atmosphere through the simple expedient of tilting the field line.
@@ -545,24 +547,24 @@ line angles in the lower atmosphere in different regions of the solar
 surface.
 
 
-\subsection{Nature of the power law power spectrum}\label{ssec:nplps}
+\subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
 The first contribution to both models $P_{0}$ and $P_{i}$ is a
-red-noise like power spectrum.  It is present in both wavebands
+red-noise like \PS.  It is present in both wavebands
 studied and in all the regions, and so parsimony suggests that the
 mechanism of its creation is both similar and ubiquitous in all parts
 of the solar atmosphere.  We hypothesize that the \PL\ \PS\ is due to
-the sum of a distribution of a large number of energy deposition
-events having different energies. \cite{2011soca.book.....A} describes
-how a \PL\ \PS\ may obtained from such a distribution, and that
-argument is outlined below.
+the sum of a distribution of a large number of emission events having
+different amounts of emission. \cite{2011soca.book.....A} describes how a
+\PL\ \PS\ may obtained from such a distribution, and that argument is
+outlined below.
 
-Each energy deposition event is modeled as an exponentially decaying
-function of time $t$
+Each emission event is modeled as an exponentially decaying function
+of time $t$
 \begin{equation}
 \label{eqn:expdecay}
 f(t) = \frac{E}{T}\exp\left(-\frac{t}{T}\right),
 \end{equation}
-for some timescale $T$ and energy $E$.  The corresponding \Fps\ is
+for some timescale $T$ and emission $E$.  The corresponding \Fps\ is
 \begin{equation}
 \label{eqn:ftexpdecay}
 P(\nu) = \frac{E}{1 + (2\pi \nu T)^{2}}.
@@ -574,39 +576,50 @@ P_{total}}(\nu) = \sum_{T}N(T)P_{T}(\nu)
 \end{equation}
 where $N(T)$ is the distribution of time-scales for all the events
 along the line of sight.  Further, if the number of events of a given
-energy $E$ is assumed to be
+emission $E$ is assumed to be
 \begin{equation}
 \label{eqn:energydistrib}
 N(E) \propto E^{-\alpha_{E}}
 \end{equation}
-and the energy in each event depends on its time scale $T$ such that
+and the total emission in each event depends on its time scale $T$
+such that
 \begin{equation}
 \label{eqn:energytime}
 E \propto T^{1+\gamma}
 \end{equation}
-then it can be shown that the observed power spectrum can be
+then it can be shown that the observed \PS\ can be
 approximated by
 \begin{equation}
 \label{eqn:finalfps}
 P_{total}(\nu) \propto \nu^{(2-\alpha_{E})(1+\gamma)}.
 \end{equation}
-
 This derivation shows it is possible to generate \PL\ power spectra
-using swarms of statistically similar events.  The detailed
-application of this model of the observed background \PL\ power
-spectra will depend strongly on three factors that influence the
-observation.  Firstly, the distribution of events along the line of
-sight and their temporal dependence (expressed through the parameters
-$\alpha_{E}$ and $\gamma$ in Equation \ref{eqn:energydistrib}) have
-strong effects on the observed \Fps.  Secondly, the energy radiated as
-a function of the energy deposited in each event and the existing
-plasma properties must be consistently modeled.  This is required to
-understand how much radiation at each wavelength is emitted from the
-plasma.  Finally, the AIA instrument filters the emitted radiation,
-and this too must be modeled in order to understand the observed \Fps.
-These three features must be modeled in order to test the hypothesis
-that ubiquitous energy deposition events are the root cause of the
-observed power-law like behavior of the Fourier power spectra.
+using swarms of statistically similar emission events.  
+
+This derivation of a \PL\ \PS\ shares many similar features
+with the nanoflare model of {\it energy} deposition in the solar
+atmosphere. In the nanoflare model,
+
+
+However, inferring the properties of energy deposition events from the
+observed emission \PL\ \PS\ depends strongly on three factors
+that influence the observation.  Firstly, the distribution of events
+along the line of sight and their temporal dependence (expressed
+through the parameters $\alpha_{E}$ and $\gamma$ in Equation
+\ref{eqn:energydistrib}) have strong effects on the observed \Fps.
+Secondly, the energy radiated as a function of the energy deposited in
+each event and the existing plasma properties must be consistently
+modeled.  This is required to understand how much radiation at each
+wavelength is emitted from the plasma.  This is a complex task to do
+correctly, and there is much work ....
+
+
+Finally, the AIA instrument
+filters the emitted radiation, and this too must be modeled in order
+to understand the observed \Fps.  These three features must be modeled
+in order to test the hypothesis that ubiquitous energy deposition
+events are the root cause of the observed power-law like behavior of
+the Fourier power spectra.
 
 There has been a considerable amount of work in modeling the
 AIA-detected plasma response...  \cite{} 
@@ -618,8 +631,8 @@ AIA-detected plasma response...  \cite{}
 Time series of AIA 171\AA\ and 193\AA images show approximately power
 law like properties over all regions of the solar surface.  Detecting
 narrow band oscillatory power should take in to account the presence
-of the power-law like power spectrum.  The power spectra have been
-modelled using three components: a power-law power spectrum, a
+of the \PL\ like \PS.  The power spectra have been
+modelled using three components: a \PL\ \PS, a
 lognormal component, and a constant background.  It is hypothesized
 that the power-law component is due to the sum along the line of sight
 of a large number of statistically similar energy deposition events.
@@ -708,17 +721,45 @@ and
 \end{equation}
 where $N_{pixel}$ is the number of pixels in each region.
 
-
-
-The estimated
-error in the estimated error is
+The estimated error in the estimated mean is
 \begin{equation}
 \sqrt{\hat{\sigma^{2}}}/\sqrt{N}
 \label{eqn:errorsigmamean}
 \end{equation}
+where $N$ is the number of measurements taken.  This formula assumes
+that the measurements taken are all independent of each other.
+However, this is not the case for the Fourier power in any given
+frequency.  This is because neighbouring pixels are highly likely to
+be physically connected to each other, and so time-series in
+neighboring pixels are likely to be strongly correlated (assuming that
+the background structure exists over at least two pixels).  Secondly,
+the point spread function of AIA spreads emission in one pixel over
+its neighbors.  Therefore, the measurements used to generate an error
+to the Fourier power are not independent.
 
-
-
+Therefore, the number of effectively independent pixels is less than
+the actual number of pixels used in any one region.  The number of
+effective independent pixels is estimated in the following way.  The
+cross correlation $c(\tau)$ function between two randomly chosen
+next-nearest neighbor pixels is calculated.  The cross correlation
+coefficient measures the linear dependence of two time series $X(t)$
+and $Y(t \pm \tau)$ at different lags $\tau$.  This is used to define
+a coefficient of independence between next nearest neighbor,
+\begin{equation}
+\label{eqn:ind}
+\rho = 1 - \max|c(\tau)|.
+\end{equation}
+When $\rho$ is 1, the cross-correlation coefficient is zero, and there
+is no measurable linear dependence between neighboring time series.
+When $\rho$ is zero, the cross correlation coefficient is $\pm 1$, and
+the two time-series are linearly dependent on each other.  The effect
+number of independent pixels in region is given by
+\begin{equation}
+\label(eqn:nind}
+N_{ind}= 1 + \rho(N_{pixel}-1)
+\end{equation}
+which is used in Equation \ref{eqn:errorsigmamean} to calculate the
+estimated error in the mean.
 
 
 
@@ -751,7 +792,7 @@ error in the estimated error is
 \end{document}
 However, other more complex models are certainly possible.  For
 example, \cite{1993ASPC...42..111H} modelled the background
-chromospheric Fourier power spectrum of a series of Ca-II K-line
+chromospheric Fourier \PS\ of a series of Ca-II K-line
 images using a 19-parameter fit consisting of a constant background,
 three components of the form
 \begin{equation}
@@ -771,7 +812,7 @@ P(\nu) \propto
 \end{equation}
 
 
-Finally, only two models of the Fourier power spectrum have been
+Finally, only two models of the Fourier \PS\ have been
 considered.  The choice of equation \ref{eqn:pwrlaw} is motivated by
 the observations of all four regions considered.  Equation
 \ref{eqn:pwrlawbump} was motivated by previous observations of

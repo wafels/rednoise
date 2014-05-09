@@ -91,7 +91,7 @@ ts.units = 'arb. units'
 ts.name = 'simulated data [n=%4.2f]' % (model_param[1])
 
 # Get the normalized power and the positive frequencies
-iobs = ts.PowerSpectrum.Npower
+iobs = ts.PowerSpectrum.ppower
 this = ([ts.PowerSpectrum.frequencies.positive, iobs],)
 
 # _____________________________________________________________________________
