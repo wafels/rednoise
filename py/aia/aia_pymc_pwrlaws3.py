@@ -341,7 +341,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
+regions = ['moss']
 windows = ['hanning']
 manip = 'relative'
 

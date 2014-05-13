@@ -5,7 +5,7 @@ import os
 import pickle
 import numpy as np
 import aia_specific
-
+import rnspectralmodels
 from matplotlib import pyplot as plt
 
 from paper1 import log_10_product, s171, s193, s5min, s3min, tsDetails
@@ -60,7 +60,6 @@ for iregion, region in enumerate(regions):
         locations = aia_specific.save_location_calculator(roots,
                                      branches)
 
-
         # set the saving locations
         sfig = locations["image"]
         scsv = locations["csv"]
@@ -98,6 +97,8 @@ for iregion, region in enumerate(regions):
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
+                dummy = pickle.load(pkl_file)
+                dummy = pickle.load(pkl_file)
                 pwr_ff = pickle.load(pkl_file)
                 pkl_file.close()
 
@@ -153,6 +154,38 @@ for wave in waves:
         ax.plot(1000 * freqs, pwr_central[region + wave], label=sunday_name[region],
                 linestyle=SS[wave].linestyle,
                 linewidth=SS[wave].linewidth)
+
+    if wave == '171':
+        A1 = [1.1031059689844873, 1.8623857178233456, -9.140960370407038, -3.1279186484485546, 3.1658463991730077, 0.6950910275985983]
+
+        # Calculate the best fit Gaussian contribution
+        normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(x), A1[3], A1[4], A1[5]))
+        # Calculate the best fit power law contribution
+        powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(x, A1[0:3]))
+
+        pl = '$P(f)=0.47f^{-1.86}$'
+        gf = '$G(f)=0.046 N(\ln f: -6.85, 0.71) + 10^{-3.97}$'
+        ax.plot(1000 * freqs, np.exp(powerlaw_BF), label='moss: power law $P(f)$', color='b', linestyle='-.')
+        ax.plot(1000 * freqs, np.exp(normalbump_BF), label='moss: lognormal $G(f)$', color='b', linestyle=':')
+        ax.plot(1000 * freqs, np.exp(rnspectralmodels.Log_splwc_AddNormalBump2(x, A1)), label='moss: $P(f) + G(f)$', color='b', linestyle='--')
+        plt.text(0.31, 1.1, pl)
+        plt.text(0.03, 5.1, gf)
+
+    if wave == '193':
+        A1 = [1.280530967812677, 2.076966054374039, -10.089892351088762, -4.567462870970832, 3.4415369706621, 0.5756966230782082]
+
+        # Calculate the best fit Gaussian contribution
+        normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(x), A1[3], A1[4], A1[5]))
+        # Calculate the best fit power law contribution
+        powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(x, A1[0:3]))
+
+        pl = '$P(f)=0.57f^{-2.09}$'
+        gf = '$G(f)=0.011 N(\ln f: -6.55, 0.58) + 10^{-4.28}$'
+        ax.plot(1000 * freqs, np.exp(powerlaw_BF), label='moss: power law, $P(f)$', color='b', linestyle='-.')
+        ax.plot(1000 * freqs, np.exp(normalbump_BF), label='moss: lognormal, $G(f)$', color='b', linestyle=':')
+        ax.plot(1000 * freqs, np.exp(rnspectralmodels.Log_splwc_AddNormalBump2(x, A1)), label='moss: $P(f) + G(f)$', color='b', linestyle='--')
+        plt.text(0.31, 1.1, pl)
+        plt.text(0.03, 5.1, gf)
 
     # Extra information for the plot
     ax.axvline(1000 * five_min, label='5 mins.',
