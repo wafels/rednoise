@@ -163,8 +163,8 @@ for wave in waves:
         # Calculate the best fit power law contribution
         powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(x, A1[0:3]))
 
-        pl = '$P(f)=0.47f^{-1.86}$'
-        gf = '$G(f)=0.046 N(\ln f: -6.85, 0.71) + 10^{-3.97}$'
+        pl = '$P(f)=3.01f^{-1.86}$'
+        gf = '$G(f)=0.043 N(\ln f: 3.17, 0.70) + 10^{-3.97}$'
         ax.plot(1000 * freqs, np.exp(powerlaw_BF), label='moss: power law $P(f)$', color='b', linestyle='-.')
         ax.plot(1000 * freqs, np.exp(normalbump_BF), label='moss: lognormal $G(f)$', color='b', linestyle=':')
         ax.plot(1000 * freqs, np.exp(rnspectralmodels.Log_splwc_AddNormalBump2(x, A1)), label='moss: $P(f) + G(f)$', color='b', linestyle='--')
@@ -179,8 +179,8 @@ for wave in waves:
         # Calculate the best fit power law contribution
         powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(x, A1[0:3]))
 
-        pl = '$P(f)=0.57f^{-2.09}$'
-        gf = '$G(f)=0.011 N(\ln f: -6.55, 0.58) + 10^{-4.28}$'
+        pl = '$P(f)=3.60f^{-2.09}$'
+        gf = '$G(f)=0.010 N(\ln f: -6.55, 0.58) + 10^{-4.38}$'
         ax.plot(1000 * freqs, np.exp(powerlaw_BF), label='moss: power law, $P(f)$', color='b', linestyle='-.')
         ax.plot(1000 * freqs, np.exp(normalbump_BF), label='moss: lognormal, $G(f)$', color='b', linestyle=':')
         ax.plot(1000 * freqs, np.exp(rnspectralmodels.Log_splwc_AddNormalBump2(x, A1)), label='moss: $P(f) + G(f)$', color='b', linestyle='--')
@@ -198,7 +198,7 @@ for wave in waves:
                linestyle=SS['3 mins'].linestyle,
                linewidth=SS['3 mins'].linewidth)
 
-    plt.xlabel('frequency (%s)' % (freqfactor[1]))
+    plt.xlabel('frequency $\nu$ (%s)' % (freqfactor[1]))
     plt.ylabel('average power (arb. units)')
     plt.title('AIA ' + wave + '$\AA$')
     plt.legend(loc=3, fontsize=10, framealpha=0.5)
