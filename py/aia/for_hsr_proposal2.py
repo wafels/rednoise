@@ -165,8 +165,8 @@ for wave in waves:
 
         pl = '$P(f)=3.01f^{-1.86}$'
         gf = '$G(f)=0.043 N(\ln f: 3.17, 0.70) + 10^{-3.97}$'
-        ax.plot(1000 * freqs, np.exp(powerlaw_BF), label='moss: power law $P(f)$', color='b', linestyle='-.')
-        ax.plot(1000 * freqs, np.exp(normalbump_BF), label='moss: lognormal $G(f)$', color='b', linestyle=':')
+        ax.plot(1000 * freqs, np.exp(powerlaw_BF) - 10.0 ** -3.97, label='moss: power law $P(f)$', color='b', linestyle='-.')
+        ax.plot(1000 * freqs, np.exp(normalbump_BF) + 10.0 ** -3.97, label='moss: lognormal $G(f)$', color='b', linestyle=':')
         ax.plot(1000 * freqs, np.exp(rnspectralmodels.Log_splwc_AddNormalBump2(x, A1)), label='moss: $P(f) + G(f)$', color='b', linestyle='--')
         plt.text(0.31, 1.1, pl)
         plt.text(0.03, 5.1, gf)
@@ -181,24 +181,24 @@ for wave in waves:
 
         pl = '$P(f)=3.60f^{-2.09}$'
         gf = '$G(f)=0.010 N(\ln f: -6.55, 0.58) + 10^{-4.38}$'
-        ax.plot(1000 * freqs, np.exp(powerlaw_BF), label='moss: power law, $P(f)$', color='b', linestyle='-.')
-        ax.plot(1000 * freqs, np.exp(normalbump_BF), label='moss: lognormal, $G(f)$', color='b', linestyle=':')
+        ax.plot(1000 * freqs, np.exp(powerlaw_BF) - 10.0 ** -4.38, label='moss: power law, $P(f)$', color='b', linestyle='-.')
+        ax.plot(1000 * freqs, np.exp(normalbump_BF) + 10.0 ** -4.38, label='moss: lognormal, $G(f)$', color='b', linestyle=':')
         ax.plot(1000 * freqs, np.exp(rnspectralmodels.Log_splwc_AddNormalBump2(x, A1)), label='moss: $P(f) + G(f)$', color='b', linestyle='--')
         plt.text(0.31, 1.1, pl)
         plt.text(0.03, 5.1, gf)
 
     # Extra information for the plot
-    ax.axvline(1000 * five_min, label='5 mins.',
+    ax.axvline(1000 * five_min, label='5 minutes',
                color=SS['5 mins'].color,
-               linestyle=SS['5 minutes'].linestyle,
-               linewidth=SS['5 minutes'].linewidth)
+               linestyle=SS['5 mins'].linestyle,
+               linewidth=SS['5 mins'].linewidth)
 
-    ax.axvline(1000 * three_min, label='3 mins.',
+    ax.axvline(1000 * three_min, label='3 minutes',
                color=SS['3 mins'].color,
-               linestyle=SS['3 minutes'].linestyle,
-               linewidth=SS['3 minutes'].linewidth)
+               linestyle=SS['3 mins'].linestyle,
+               linewidth=SS['3 mins'].linewidth)
 
-    plt.xlabel('frequency $\nu$ (%s)' % (freqfactor[1]))
+    plt.xlabel('frequency ' + r'$\nu$ (%s)' % (freqfactor[1]))
     plt.ylabel('average power (arb. units)')
     plt.title('AIA ' + wave + '$\AA$')
     plt.legend(loc=3, fontsize=10, framealpha=0.5)
