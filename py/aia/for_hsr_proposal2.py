@@ -190,13 +190,13 @@ for wave in waves:
     # Extra information for the plot
     ax.axvline(1000 * five_min, label='5 mins.',
                color=SS['5 mins'].color,
-               linestyle=SS['5 mins'].linestyle,
-               linewidth=SS['5 mins'].linewidth)
+               linestyle=SS['5 minutes'].linestyle,
+               linewidth=SS['5 minutes'].linewidth)
 
     ax.axvline(1000 * three_min, label='3 mins.',
                color=SS['3 mins'].color,
-               linestyle=SS['3 mins'].linestyle,
-               linewidth=SS['3 mins'].linewidth)
+               linestyle=SS['3 minutes'].linestyle,
+               linewidth=SS['3 minutes'].linewidth)
 
     plt.xlabel('frequency $\nu$ (%s)' % (freqfactor[1]))
     plt.ylabel('average power (arb. units)')
