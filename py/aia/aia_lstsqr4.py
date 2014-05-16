@@ -849,11 +849,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 ###############################################################
                 # Plot the results of the Shapiro-Wilks test for the Fourier
-                # power distributions
+                # power distributions.  Low p-values reject the null hypothesis
+                # of normality.
                 pvalue = np.asarray([result[1] for result in shapiro_wilks])
                 plt.figure(15)
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
-                plt.ylabel('p-value (low values reject normality)')
+                plt.ylabel('p-value')
                 plt.semilogx(freqs, pvalue, label='pvalue', linestyle='--')
                 plt.title(data_name + ': Fourier power distributions, Shapiro-Wilks normality test')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
@@ -873,7 +874,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('Anderson-Darling statistic value')
                 for jjj, sig in enumerate(significance):
                     plt.axhline(crit[jjj], color='k')
-                    plt.text(freqs[1], crit[jjj], '%s' % (sig))
+                    plt.text(freqs[1], crit[jjj], '%s' % (str(np.rint(sig))))
                 plt.semilogx(freqs, statvalue, label='AD statistic', linestyle='--')
                 plt.title(data_name + ': Fourier power distributions, Anderson-Darling normality test')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
