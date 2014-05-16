@@ -495,6 +495,22 @@ for iwave, wave in enumerate(waves):
                 # Independence coefficient - how independent is one pixel compared
                 # to its nearest neighbour?
                 # independence_coefficient = 1.0 - 0.5 * (np.abs(ccc0) + np.abs(ccclag))
+                #
+                # NOTE: The astroML package has a method for sampling from an
+                # empirical (1-d) distribution.  See http://www.astroml.org/book_figures/chapter3/fig_clone_distribution.html
+                # or use the following code snippet:
+                # from astroML.density_estimation import EmpiricalDistribution
+                # # generate an 'observed' bimodal distribution with 10000 values
+                # dists = (stats.norm(-1.3, 0.5), stats.norm(1.3, 0.5))
+                # fracs = (0.6, 0.4)
+                # x = np.hstack((d.rvs(f * Ndata) for d, f in zip(dists, fracs)))
+                # # We can clone the distribution easily with this function
+                # x_cloned = EmpiricalDistribution(x).rvs(Nclone)
+                #
+                # Could use this to sample from the empirical distribution of
+                # the independence distribution.  Hmmm - would this work with
+                # PyMC?
+                #
                 independence_coefficient = 1.0 - np.abs(ccc0)
                 print 'Average independence coefficient ', independence_coefficient
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
