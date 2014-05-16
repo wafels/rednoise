@@ -854,7 +854,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 pvalue = np.asarray([result[1] for result in shapiro_wilks])
                 plt.figure(15)
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
-                plt.ylabel('p-value')
+                plt.ylabel('p-value [low values reject normality]')
                 plt.semilogx(freqs, pvalue, label='pvalue', linestyle='--')
                 plt.title(data_name + ': Fourier power distributions, Shapiro-Wilks normality test')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
@@ -869,12 +869,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 statvalue = np.asarray([result[0] for result in anderson_darling])
                 crit = anderson_darling[0][1]
                 significance = anderson_darling[0][2]
-                plt.figure(15)
+                plt.figure(16)
                 plt.xlabel('frequency (%s)' % (freqfactor[1]))
-                plt.ylabel('Anderson-Darling statistic value')
+                plt.ylabel('AD statistic value')
                 for jjj, sig in enumerate(significance):
                     plt.axhline(crit[jjj], color='k')
-                    plt.text(freqs[1], crit[jjj], '%s' % (str(np.rint(sig))))
+                    plt.text(freqs[1], crit[jjj], 'reject at %s %%' % (str(np.rint(sig))))
                 plt.semilogx(freqs, statvalue, label='AD statistic', linestyle='--')
                 plt.title(data_name + ': Fourier power distributions, Anderson-Darling normality test')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
