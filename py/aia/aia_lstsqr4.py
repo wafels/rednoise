@@ -9,7 +9,12 @@ import matplotlib
 import tsutils
 import os
 from timeseries import TimeSeries
+# Curve fitting routine
 from scipy.optimize import curve_fit
+
+# Tests for normality
+from scipy.stats import shapiro
+from scipy.stats import anderson
 #from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 #from rnfit2 import Do_MCMC, rnsave
 #from pymcmodels import single_power_law_with_constant_not_normalized
@@ -662,18 +667,27 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 # Fit all the histogram curves to find the Gaussian width.
                 # Stick with natural units to get the fit values which are
-                # passed along to other programs
+                # passed along to other programs.  Also, apply the Shapiro-Wilks
+                # and Anderson-Darling tests for normality to test the assertion
+                # that these distributions are approximately normal
                 logiobs_distrib_width = np.zeros((nposfreq))
                 error_logiobs_distrib_width = np.zeros_like(logiobs_distrib_width)
                 iobs_peak = np.zeros_like(logiobs_distrib_width)
                 logiobs_peak_location = np.zeros_like(logiobs_distrib_width)
                 logiobs_std = np.zeros_like(logiobs_distrib_width)
+                shapiro_wilks = []
+                anderson_darling = []
                 for jj, f in enumerate(freqs):
                     all_logiobs_at_f = logpwr[:, :, jj]
                     logiobs_std[jj] = np.std(all_logiobs_at_f)
                     xx = histogram_loc
                     yy = hpwr[jj, :]
                     iobs_peak[jj] = xx[np.argmax(yy)]
+                    # Apply the Shapiro-Wilks test and store the results
+                    shapiro_wilks.append(shapiro(all_logiobs_at_f))
+                    # Apply the Anderson-Darling test and store the results
+                    anderson_darling.append(anderson(all_logiobs_at_f, dist='norm'))
+                    # Try the fit
                     try:
                         p0 = [0, 0, 0]
                         p0[0] = np.max(yy)
@@ -832,6 +846,38 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.title(data_name + ' - distribution widths')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
                 plt.savefig(savefig + '.logiobs_distribution_width.%s' % (savefig_format))
+
+                ###############################################################
+                # Plot the results of the Shapiro-Wilks test for the Fourier
+                # power distributions
+                pvalue = np.asarray([result[1] for result in shapiro_wilks])
+                plt.figure(15)
+                plt.xlabel('frequency (%s)' % (freqfactor[1]))
+                plt.ylabel('p-value (low values reject normality)')
+                plt.semilogx(freqs, pvalue, label='pvalue', linestyle='--')
+                plt.title(data_name + ': Fourier power distributions, Shapiro-Wilks normality test')
+                plt.legend(loc=3, framealpha=0.3, fontsize=10)
+                plt.savefig(savefig + '.shapiro_wilks.distribution_width.%s' % (savefig_format))
+
+                ###############################################################
+                # Plot the results of the Anderson-Darling test for the Fourier
+                # power distributions.  If the AD statistic value is above a
+                # particular critical value corresponding to a given
+                # significance level, then the null hypothesis (in this case
+                # normality) can be rejected at that significance level.
+                statvalue = np.asarray([result[0] for result in anderson_darling])
+                crit = anderson_darling[0][1]
+                significance = anderson_darling[0][2]
+                plt.figure(15)
+                plt.xlabel('frequency (%s)' % (freqfactor[1]))
+                plt.ylabel('Anderson-Darling statistic value')
+                for jjj, sig in enumerate(significance):
+                    plt.axhline(crit[jjj], color='k')
+                    plt.text(freqs[1], crit[jjj], '%s' % (sig))
+                plt.semilogx(freqs, statvalue, label='AD statistic', linestyle='--')
+                plt.title(data_name + ': Fourier power distributions, Anderson-Darling normality test')
+                plt.legend(loc=3, framealpha=0.3, fontsize=10)
+                plt.savefig(savefig + '.anderson_darling.distribution_width.%s' % (savefig_format))
 
                 ###############################################################
                 # Save various data products
