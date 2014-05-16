@@ -92,7 +92,7 @@
 %% As in the title, use \\ to force line breaks.
 
 \author{J. Ireland}
-\affil{ADNET Systems, Inc.,NASA Goddard Space Flight Center, MC. 671.1 Greenbelt, MD
+\affil{ADNET Systems, Inc.,NASA Goddard Space Flight Center, MC. 671.1, Greenbelt, MD
   20771, USA.}
 
 \author{R. T. J. McAteer}
@@ -100,8 +100,8 @@
   Cruces, NM.}
 
 \author{A. R. Inglis}
-\affil{Catholic University of America / NASA Goddard Space Flight Center, MC. 671.1 Greenbelt, MD
-  20771, USA.}
+\affil{NASA Goddard Space Flight Center, Greenbelt, MC. 671.1, MD, 20771, USA.
+\affil{Physics Department, The Catholic University of America, Washington, DC, 20664, USA.}
 
 %% Mark off your abstract in the ``abstract'' environment. In the manuscript
 %% style, abstract will output a Received/Accepted line after the
@@ -163,22 +163,42 @@ phenomena.
 
 
 \section{Observations}\label{sec:obs}
-Data was obtained from SDO-AIA using the Lockheed Martin Solar
-Astrophysics cutout service (http://lmsal.com/get\_aia\_data/).  Six
-hours of image data at 12 second cadence was selected in the 171\AA
-and 193\AA\ wavebands (2012-09-23 00:00 - 06:00 UT, 1800 images per
-waveband).  These wavebands were selected in order to obtain a wide
-range of approximate temperatures in the solar corona.
+
+The data used in this study is from the Atmospheric Imaging Assembly
+(AIA) \cite{2012SoPh..275...17L} on board the Solar Dynamics
+Observatory (SDO) \cite{2012SoPh..275....3P}.  AIA observes in
+multiple wavebands simultaneously and continuously, at high cadence
+(12 seconds) and at high spatial resolution (0.6 arcseconds per pixel
+at the Sun).  These data enable detailed comparisons between phenomena
+seen in multiple wavebands, and are therefore ideal for assessing the
+frequency content of the solar atmosphere.  The data was acquired
+using the Lockheed Martin Solar Astrophysics cutout service
+(http://lmsal.com/get\_aia\_data/).  Six hours of image data in the
+time range 2012-09-23 00:00 - 06:00 UT, at the full 12 second cadence,
+in the 171\AA and 193\AA\ wavebands is used.  These wavebands were
+selected because previous studies in similar wavebands (TRACE 171\AA
+and 193\AA) show the presence of coronal oscillations.  The cutout of
+the Sun selected covers two adjacent $\beta\gamma$ regions NOAA AR
+11575 and AR 11577.  This cutout was selected for two reasons.  First,
+it is quiescent in that there were no X-ray flares or other
+large-scale disturbances over the spatial extent of the cutout within
+the time range.  Therefore, any variations in the plasma properties
+cannot be ascribed to large-scale disturbances.  Second, the selected
+cutout region contains a sunspot, and sunspots are known to be
+locations over which three minute oscillations have been detected by
+other instruments \citep{2002A&A...387L..13D}.
 
 The downloaded cutout data was prepared for analysis using the
 SolarSoft / IDL routines READ\_SDO and AIA\_PREP.  These procedures
-move the downloaded level 1.0 FITS files to level 1.5 FITS files.  All
-further processing from this point was performed in the SunPy 0.4
-(http://www.sunpy.org) data analysis environment.  Images were
-de-rotated to compensate for solar rotation, based on the center of
-the field of view of each image.  After de-rotation, each image layer
-was co-registered with the image half way through the dataset, at
-approximately 03:00 UT.
+convert the downloaded level 1.0 FITS cutout files to level 1.5 FITS
+files.  This involves translating, scaling and rotating the images so
+they have the same sun-center, image scale with solar north in the
+same direction.  All further processing from this point was performed
+in the SunPy 0.4 (http://www.sunpy.org) data analysis environment.
+Images were de-rotated to compensate for solar rotation, based on the
+center of the field of view of each image.  After de-rotation, each
+image layer was co-registered with the image half way through the
+dataset, at approximately 03:00 UT.
 
 \section{Analysis}\label{sec:anal}
 We wish to analyze the frequency content of these resulting datacubes
@@ -193,7 +213,10 @@ images from the time range considered.
 \plottwo{shutdownfun3_6hr_disk_1.5_171.eps}{shutdownfun3_6hr_disk_1.5_193.eps}
 \caption{Locations of the regions analyzed in each of AIA 171\AA\ and
   193\AA, overlaid on sample images taken halfway through the six hour
-  span used to form the time-series analyzed.}
+  span used to form the time-series analyzed.  The spatial extent of
+  the data is ??? to ??? in the x-direction, and ??? - ??? in the
+  y-direction, in heliocentric cartesian co-ordinates
+  \citep{2006A&A...449..791T}.}
 \label{fig:loc171193}
 \end{figure}
 
@@ -202,7 +225,10 @@ spectrum for this emission was calculated as follows.  First, the
 time-series was normalized by calculating $(I(t) - \langle I(t)
 \rangle)/\langle I(t) \rangle$. Secondly, the normalized time-series
 was apodized using the Hanning window, reducing ringing effects in the
-\PS.  Figures \ref{fig:compare171193} show example power
+\PS.  The full 12 second cadence is used, yielding time series of 1800
+samples.  The full spatial resolution is also retained in order to
+obtain fine detail on the variation of frequency content as a function
+of location.  Figures \ref{fig:compare171193} show example power
 spectra, plotted using a log-log scale, from a single location inside
 each of the regions shown in Figure \ref{fig:loc171193}.  The shape of
 the power spectra indicate that the Fourier power approximately
