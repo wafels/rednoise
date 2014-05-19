@@ -12,6 +12,10 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
+# Normality tests
+from scipy.stats import shapiro, anderson
+from statsmodels.graphics.gofplots import qqplot
+
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
@@ -820,26 +824,48 @@ for iwave, wave in enumerate(waves):
 
                 #--------------------------------------------------------------
                 # Residuals / estimated noise - these are the contributions to
-                # chi-squared
+                # chi-squared.  Also calculate the Shapiro-Wilks test and the
+                # Anderson-Darling test for normality of the M1_bf residuals.
+                # These will let us know if the reduced chi-squared values
+                # are OK to use.
+                nmzd = (pwr_ff - M1_bf) / sigma_for_mean
+                anderson_result = anderson(nmzd, dist='norm')
+                ad_crit = anderson_result[1]
+                ad_sig = anderson_result[2]
+                for jjj in range(0, 5):
+                    if anderson_result[0] >= ad_crit[jjj]:
+                        anderson_level = ad_sig[jjj]
+
+                shapiro_result = shapiro(nmzd)
                 plt.figure(2)
-                plt.semilogy(xvalue, (np.abs(pwr_ff - M0_bf) / sigma_for_mean) ** 2, label='|data - M0| / sigma for mean')
-                plt.semilogy(xvalue, (np.abs(pwr_ff - M1_bf) / sigma_for_mean) ** 2, label='|data - M1| / sigma for mean')
-                plt.axhline(1.0, color='k')
+                plt.semilogx(xvalue, (pwr_ff - M0_bf) / sigma_for_mean, label='(data - M0) / sigma for mean')
+                plt.semilogx(xvalue, nmzd, label='(data - M1) / sigma for mean')
+                plt.axhline(0.0, color='k')
+
+                # Print the normality tests to the plot
+                plt.text(xvalue[0], 0.01, 'M1: Shapiro-Wilks p=%f' % (shapiro_result[1]))
+                plt.text(xvalue[0], 0.10, 'M1: Anderson-Darling: reject above %s %% (AD=%f)' % (str(anderson_level), anderson_result[0]))
 
                 # Plot the 3 and 5 minute frequencies
                 plt.axvline(fivemin, label='5 mins.', linestyle='--', color='k')
-                plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
+                plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k')
 
                 # Plot the bump limits
-                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
-                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+                plt.axvline(physical_bump_frequency_limits[0], label='bump center position limit', linestyle=':' ,color='k')
+                plt.axvline(physical_bump_frequency_limits[1], linestyle=':' ,color='k')
 
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8)
                 plt.xlabel('log10(frequency (Hz))')
-                plt.ylabel('contributions to $\chi^{2}$')
+                plt.ylabel('scaled residual')
                 plt.title(title)
-                plt.savefig(savefig + obstype + '.' + passnumber + '.contributions_to_reduced_chi_squared.png')
+                plt.savefig(savefig + obstype + '.' + passnumber + '.scaled_residual.png')
+                plt.close('all')
+
+                #--------------------------------------------------------------
+                # qq-plot
+                qqplot(nmzd.flatten(), line='s')
+                plt.savefig(savefig + obstype + '.' + passnumber + '.qqplot.png')
                 plt.close('all')
 
                 ###############################################################
