@@ -207,9 +207,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #data_name = wave + ' (' + fits_level + winname + ', ' + manip + '), ' + region
                 #data_name = region_id
                 if region in sunday_name:
-                    data_name = 'AIA ' + str(wave) + ', ' + sunday_name[region]
+                    data_name = 'AIA ' + str(wave) + ' : ' + sunday_name[region]
                 else:
-                    data_name = 'AIA ' + str(wave) + ', ' + region
+                    data_name = 'AIA ' + str(wave) + ' : ' + region
 
                 # Create a location to save the figures
                 savefig = os.path.join(os.path.expanduser(sfig), window, manip)

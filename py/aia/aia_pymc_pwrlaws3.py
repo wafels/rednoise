@@ -329,8 +329,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193']
-regions = ['moss', 'qs', 'sunspot']
+waves = ['171', '193']
+regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
