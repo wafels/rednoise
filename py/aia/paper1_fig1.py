@@ -2,13 +2,15 @@
 #
 #
 import os
+from matplotlib import rc_file
+matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
+rc_file(os.path.expanduser(matplotlib_file))
+import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 import aia_specific
 
-from matplotlib import pyplot as plt
-
-from paper1 import log_10_product, s171, s193, s5min, s3min, tsDetails
+from paper1 import log_10_product, s171, s193, s5min, s3min, sunday_name
 
 
 plt.ioff()
@@ -17,9 +19,9 @@ plt.close('all')
 # Set up which data to look at
 #
 dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle_cc/'
-sfigroot = '~/ts/img_cc/'
-scsvroot = '~/ts/csv_cc/'
+ldirroot = '~/ts/pickle_cc_final/'
+sfigroot = '~/ts/img_cc_final/'
+scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
@@ -59,7 +61,6 @@ for iregion, region in enumerate(regions):
         # Data and save locations are based here
         locations = aia_specific.save_location_calculator(roots,
                                      branches)
-
 
         # set the saving locations
         sfig = locations["image"]
@@ -115,13 +116,6 @@ for iregion, region in enumerate(regions):
                 #
                 loc = os.path.join(os.path.expanduser(scsv), window, manip)
 
-
-
-sunday_name = {'qs': 'quiet Sun',
-               'loopfootpoints': 'loop foot points',
-               'sunspot': 'sunspot',
-               'moss': 'moss'}
-
 SS = {}
 SS['171'] = s171
 SS['193'] = s193
@@ -172,6 +166,8 @@ for region in regions:
     plt.ylabel('power (arb. units)')
     plt.title(sunday_name[region])
     plt.legend(loc=3, fontsize=10, framealpha=0.5)
+    #plt.tight_layout(0.2)
+    plt.ylim(0.00000001, 100.0)
     # Create the branches in order
     branches = [corename, sunlocation, fits_level, wave, region]
 

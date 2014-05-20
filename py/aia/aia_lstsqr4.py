@@ -2,12 +2,14 @@
 Specifies a directory of AIA files and uses a least-squares fit to generate
 some fit estimates.
 """
-# Test 6: Posterior predictive checking
-import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib
-import tsutils
 import os
+from matplotlib import rc_file
+matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
+rc_file(os.path.expanduser(matplotlib_file))
+import matplotlib.pyplot as plt
+
+import numpy as np
+import tsutils
 from timeseries import TimeSeries
 # Curve fitting routine
 from scipy.optimize import curve_fit
@@ -21,16 +23,8 @@ from statsmodels.graphics.gofplots import qqplot
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, prettyprint, csv_timeseries_write, pkl_write
-"""
-font = {'family': 'normal',
-        'weight': 'bold',
-        'size': 12}
-
-matplotlib.rc('font', **font)
-matplotlib.rc('lines', linewidth=1)
-matplotlib.rc('figure', figsize=(12.5, 10))
-"""
+from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
+from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
 plt.ioff()
 
 
@@ -143,7 +137,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
               regions=['qs', 'loopfootpoints'],
               windows=['no window'],
               manip='none',
-              savefig_format='png',
+              savefig_format='eps',
               freqfactor=[1000.0, 'mHz'],
               sunday_name={"qs": "quiet Sun", "loopfootpoints": "loop footpoints"}):
 
@@ -624,16 +618,18 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     findex.append(np.unravel_index(np.argmin(np.abs(thisf - freqs)), freqs.shape)[0])
                 plt.figure(3)
                 plt.xlabel('$\log_{10}(power)$')
-                plt.ylabel('proportion found at given frequency')
-                plt.title(data_name + ' : power distributions')
+                plt.ylabel('prop. found at given frequency')
+                plt.title(data_name)
                 for jj, f in enumerate(findex):
                     xx = histogram_loc / np.log(10.0)
                     yy = hpwr[f, :]
                     gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
                     #print gfit[0]
                     plt.plot(xx, yy, color=hcolor[jj], label='%7.2f %s, $\sigma=$ %3.2f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
-                    plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]), color=hcolor[jj], linestyle='--')
-                plt.legend(loc=3, fontsize=10, framealpha=0.5)
+                    #plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]), color=hcolor[jj], linestyle='--')
+                plt.legend(loc=2, fontsize=10, framealpha=0.5)
+                plt.ylim(power_distribution_details()['ylim'][0], power_distribution_details()['ylim'][1])
+                plt.xlim(power_distribution_details()['xlim'][0], power_distribution_details()['xlim'][1])
                 plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
                 plt.close('all')
 

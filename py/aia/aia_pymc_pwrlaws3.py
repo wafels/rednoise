@@ -4,11 +4,14 @@
 # Also do posterior predictive checking to find which model fits best.
 #
 import pickle
-import os
 import numpy as np
+import os
+from matplotlib import rc_file
+matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
+rc_file(os.path.expanduser(matplotlib_file))
+import matplotlib.pyplot as plt
 
 import pymc
-from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
@@ -20,7 +23,7 @@ import aia_specific
 import pymcmodels2
 import rnspectralmodels
 from paper1 import sunday_name, prettyprint, log_10_product
-from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite
+from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details
 
 # Reproducible
 np.random.seed(1)
@@ -326,8 +329,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
+waves = ['193']
+regions = ['moss', 'qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -747,7 +750,7 @@ for iwave, wave in enumerate(waves):
                 ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
-                plt.ylim(0.00001, 10.0)
+                plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.close('all')
 

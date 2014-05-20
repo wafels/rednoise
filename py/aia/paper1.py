@@ -30,6 +30,14 @@ def log_10_product(x, pos):
         return fmt % (x)
 
 
+def power_distribution_details():
+    return {"xlim": [-8.0, 1.5], "ylim": [0.0, 0.12]}
+
+
+def fit_details():
+    return {"ylim": [0.00001, 10.0]}
+
+
 #
 # Line styles for all figures
 #
@@ -66,13 +74,13 @@ s193.color = 'r'
 
 s5min = LineStyles()
 s5min.color = 'k'
-s5min.linewidth = 3
+s5min.linewidth = 1
 s5min.linestyle = "-"
 s5min.label = '5 mins.'
 
 s3min = LineStyles()
 s3min.color = 'k'
-s3min.linewidth = 3
+s3min.linewidth = 1
 s3min.linestyle = "--"
 s3min.label = '3 mins.'
 
