@@ -18,11 +18,10 @@ from statsmodels.graphics.gofplots import qqplot
 #from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 #from rnfit2 import Do_MCMC, rnsave
 #from pymcmodels import single_power_law_with_constant_not_normalized
-import csv
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, prettyprint
+from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, prettyprint, csv_timeseries_write, pkl_write
 """
 font = {'family': 'normal',
         'weight': 'bold',
@@ -130,34 +129,6 @@ def DefineWindow(window, nt):
         win = np.hamming(nt)
     winname = ', ' + window
     return win, winname
-
-
-# Write out a pickle file
-def pkl_write(location, fname, a):
-    pkl_file_location = os.path.join(location, fname)
-    print('Writing ' + pkl_file_location)
-    pkl_file = open(pkl_file_location, 'wb')
-    for element in a:
-        pickle.dump(element, pkl_file)
-    pkl_file.close()
-
-
-# Write a CSV time series
-def csv_timeseries_write(location, fname, a):
-    # Get the time and the data out separately
-    t = a[0]
-    d = a[1]
-    # Make the directory if it is not already
-    if not(os.path.isdir(location)):
-        os.makedirs(location)
-    # full file name
-    savecsv = os.path.join(location, fname)
-    # Open and write the file
-    ofile = open(savecsv, "wb")
-    writer = csv.writer(ofile, delimiter=',')
-    for i, dd in enumerate(d):
-        writer.writerow([t[i], dd])
-    ofile.close()
 
 
 # Main analysis loop

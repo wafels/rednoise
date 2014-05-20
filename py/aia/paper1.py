@@ -2,6 +2,10 @@
 Helpers for the paper
 """
 from copy import deepcopy
+import os
+import csv
+import cPickle as pickle
+import numpy as np
 
 
 # Prints a title, with space before it and an underline
@@ -11,9 +15,6 @@ def prettyprint(s, underline='-'):
     print(str(underline) * len(s))
 
 
-#
-#
-#
 def log_10_product(x, pos):
     """The two args are the value and tick position.
     Label ticks with the product of the exponentiation.
@@ -94,4 +95,41 @@ sunday_name = {'moss': 'moss',
                'lowlimb': 'low limb',
                'crosslimb': 'cross limb',
                'sunspot': 'sunspot'}
+
+
+# Write a CSV time series
+def csv_timeseries_write(location, fname, a):
+    # Get the time and the data out separately
+    t = a[0]
+    d = a[1]
+    # Make the directory if it is not already
+    if not(os.path.isdir(location)):
+        os.makedirs(location)
+    # full file name
+    savecsv = os.path.join(location, fname)
+    # Open and write the file
+    ofile = open(savecsv, "wb")
+    writer = csv.writer(ofile, delimiter=',')
+    for i, dd in enumerate(d):
+        writer.writerow([t[i], dd])
+    ofile.close()
+
+
+# Write out a pickle file
+def pkl_write(location, fname, a):
+    pkl_file_location = os.path.join(location, fname)
+    print('Writing ' + pkl_file_location)
+    pkl_file = open(pkl_file_location, 'wb')
+    for element in a:
+        pickle.dump(element, pkl_file)
+    pkl_file.close()
+
+
+def fix_nonfinite(data):
+    bad_indexes = np.logical_not(np.isfinite(data))
+    good_indexes = np.logical_not(bad_indexes)
+    good_data = data[good_indexes]
+    interpolated = np.interp(bad_indexes.nonzero()[0], good_indexes.nonzero()[0], good_data)
+    data[bad_indexes] = interpolated
+    return data
 

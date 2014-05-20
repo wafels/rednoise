@@ -20,18 +20,10 @@ import aia_specific
 import pymcmodels2
 import rnspectralmodels
 from paper1 import sunday_name, prettyprint, log_10_product
+from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite
 
 # Reproducible
 np.random.seed(1)
-
-
-def fix_nonfinite(data):
-    bad_indexes = np.logical_not(np.isfinite(data))
-    good_indexes = np.logical_not(bad_indexes)
-    good_data = data[good_indexes]
-    interpolated = np.interp(bad_indexes.nonzero()[0], good_indexes.nonzero()[0], good_data)
-    data[bad_indexes] = interpolated
-    return data
 
 
 #
@@ -71,16 +63,6 @@ def FitSummary(M0, l0_data, chi0, M1, l1_data, chi1):
     fitsummary["dAIC"] = fitsummary["M0"]["AIC"] - fitsummary["M1"]["AIC"]
     fitsummary["dBIC"] = fitsummary["M0"]["BIC"] - fitsummary["M1"]["BIC"]
     return fitsummary
-
-
-# Write out a pickle file
-def pkl_write(location, fname, a):
-    pkl_file_location = os.path.join(location, fname)
-    print('Writing ' + pkl_file_location)
-    pkl_file = open(pkl_file_location, 'wb')
-    for element in a:
-        pickle.dump(element, pkl_file)
-    pkl_file.close()
 
 
 #
@@ -345,7 +327,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss']
+regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 
@@ -828,7 +810,8 @@ for iwave, wave in enumerate(waves):
                 # Anderson-Darling test for normality of the M1_bf residuals.
                 # These will let us know if the reduced chi-squared values
                 # are OK to use.
-                nmzd = (pwr_ff - M1_bf) / sigma_for_mean
+                M1_residuals = pwr_ff - M1_bf
+                nmzd = M1_residuals / sigma_for_mean
                 anderson_result = anderson(nmzd, dist='norm')
                 ad_crit = anderson_result[1]
                 ad_sig = anderson_result[2]
@@ -864,7 +847,7 @@ for iwave, wave in enumerate(waves):
 
                 #--------------------------------------------------------------
                 # qq-plot
-                qqplot(nmzd.flatten(), line='s')
+                qqplot(nmzd.flatten(), line='45', fit=True)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.qqplot.png')
                 plt.close('all')
 
@@ -877,6 +860,18 @@ for iwave, wave in enumerate(waves):
                 pkl_write(pkl_location,
                       'M1_maximum_likelihood.' + region_id + '.pickle',
                       (A1, fitsummarydata, pwr, sigma, M1_bf))
+
+                # M1 residuals - saved as CSV so they can be used by other
+                # analysis environments
+                csv_timeseries_write(os.path.join(os.path.expanduser(scsv)),
+                                     '.'.join((ident, 'M1_residuals.csv')),
+                                     (freqs, M1_residuals))
+
+                # M1 estimated deviance- saved as CSV so they can be used by
+                # other analysis environments
+                csv_timeseries_write(os.path.join(os.path.expanduser(scsv)),
+                                     '.'.join((ident, 'sigma_for_mean.csv')),
+                                     (freqs, sigma_for_mean))
 
                 ###############################################################
                 # Second part - model selection through posterior predictive
