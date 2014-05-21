@@ -4,11 +4,15 @@ Load in the FITS files and write out a numpy arrays
 # Movie creation
 #import matplotlib
 #matplotlib.use("Agg")
+import os
+from matplotlib import rc_file
+matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1_image_plots.rc'
+rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
-#import matplotlib.animation as animation
+
 import cPickle as pickle
 import aia_specific
-import os
+
 from sunpy.time import parse_time
 from sunpy.cm import cm
 import numpy as np
@@ -228,7 +232,7 @@ for region in regions:
 plt.xlim(lower_left[0], upper_right[0])
 plt.ylim(lower_left[1], upper_right[1])
 plt.savefig(os.path.join(save_locations["image"], ident + '.eps'))
-
+"""
 
 #
 # Save all regions
@@ -255,8 +259,8 @@ for region in keys:
     pickle.dump(pixel_index, outputfile)
     outputfile.close()
     print('Saved to ' + ofilename)
-
-    """
+"""
+"""
     # Set up formatting for the movie files
     Writer = animation.writers['ffmpeg']
     writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
@@ -271,7 +275,7 @@ for region in keys:
     ani = animation.ArtistAnimation(fig, img, interval=20, blit=True, repeat_delay=0)
     ani.save(movie_output, writer=writer)
     print('Movie written to ' + movie_output)
-    """
+"""
 
 # Save the SunPy mapcube
 #pickle.dump(original_mapcube, open(os.path.join(output, 'full.' + wave + '.mapcube.pickle'), 'wb'))
