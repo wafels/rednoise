@@ -382,9 +382,8 @@ geometric mean of the Fourier power.)
   maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section
   \ref{sec:anal} and Appendix \ref{sec:app:ind} for more detail).
   Model fit parameter values and their 68\% credible intervals are
-  quoted in Table \ref{tab:parameters}. See also Figure
-  \ref{fig:fit193} for the corresponding AIA 193\AA\ plots.}
-\label{fig:fit171}
+  quoted in Table \ref{tab:parameters}.}
+\label{fig:fit171193}
 \end{figure}
 
 \begin{deluxetable}{cccccccc}
@@ -436,12 +435,11 @@ sunspot         & 171\AA  & $0.51^{+0.01}_{-0.01}$  & $2.27^{+0.02}_{-0.02}$ & $
 \end{deluxetable}
 
 
-The (geometric) mean Fourier power spectra are shown in Figures
-\ref{fig:fit171} and \ref{fig:fit193}, for each of the physical
-regions considered.  It is clear that, in general, the Fourier power
-spectra exhibit power-law like characteristics.  The results for the
-quiet Sun, loop footpoints and sunspot regions suggest a \PL\ \PS.
-This can be modeled as
+The (geometric) mean Fourier power spectra are shown in Figure
+\ref{fig:fit171193} for each of the physical regions considered.  It
+is clear that, in general, the Fourier power spectra exhibit power-law
+like characteristics.  The results for the quiet Sun, loop footpoints
+and sunspot regions suggest a \PL\ \PS.  This can be modeled as
 \begin{equation}
 \label{eqn:pwrlaw}
 \mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
@@ -478,8 +476,8 @@ where the localized contribution is described by
 G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\sigma^{2}}\right].
 \end{equation}
 Both these models are fit to the geometrically averaged Fourier power
-spectrum in both wavelengths and in all four regions.  Figures
-\ref{fig:fit171} and \ref{fig:fit193} show the fit results of
+spectrum in both wavelengths and in all four regions.  Figure
+\ref{fig:fit171193} show the fit results of
 each model to the data.  Table \ref{tab:parameters} shows the fitted
 parameter values and an error estimate for model $M_{2}$.  For details
 on the fitting procedure, see Section \ref{sec:app:ind}.
@@ -699,7 +697,7 @@ then it can be shown that the observed \PS\ can be
 approximated by
 \begin{equation}
 \label{eqn:finalfps}
-P_{total}(\nu) \propto \nu^{(2-\alpha_{E})(1+\gamma)}.
+P_{total}(\nu) \propto \nu^{-(2-\alpha_{E})(1+\gamma)}.
 \end{equation}
 This derivation shows it is possible to generate \PL\ power spectra
 using swarms of statistically similar emission events.  
@@ -739,27 +737,25 @@ AIA-detected plasma response...  \cite{}
 Time series of AIA 171\AA\ and 193\AA images show approximately power
 law like properties over all regions of the solar surface.  Detecting
 narrow band oscillatory power should take in to account the presence
-of the \PL\ like \PS.  The power spectra have been
-modelled using three components: a \PL\ \PS, a
-lognormal component, and a constant background.  It is hypothesized
-that the power-law component is due to the sum along the line of sight
-of a large number of statistically similar energy deposition events.
-It is also hypothesized that the lognormal component is due to the
-channeling of oscillatory power from lower to higher levels of the
-solar atmosphere.
+of the \PL\ like \PS.  The power spectra have been modelled using
+three components: a \PL\ \PS, a lognormal component, and a constant
+background.  It is hypothesized that the power-law component is due to
+the sum along the line of sight of a large number of statistically
+similar energy deposition events.  It is also hypothesized that the
+lognormal component is due to the channeling of oscillatory power from
+lower to higher levels of the solar atmosphere.
 
 Future studies will include examining power spectra at many more
 locations on and off the disk, as well as using the AIA 355\AA, 94\AA,
-131\AA and 211\AA\ wavebands.  The power-law index in
-individual pixels will also be determined, and correlated with other
-physical quantiies such as the emission from those pixels.
-
-Finally, a better understanding of the source of the power-law power
-spectrum will come from comparing the \Fps\ of simulated observations
-to the \Fps\ of the data in all the AIA wave-bands that are sensitive
-to higher temperatures.  This will bring new constraints on the
-simulations and improve our understanding of the
-temporal behavior of the solar corona.
+131\AA and 211\AA\ wavebands.  The power-law index in individual
+pixels will also be determined, and correlated with other physical
+quantiies such as the emission from those pixels.  Finally, a better
+understanding of the source of the power-law power spectrum will come
+from comparing the \Fps\ of simulated observations to the \Fps\ of the
+data in all the AIA wave-bands that are sensitive to higher
+temperatures.  This will bring new constraints on the simulations and
+improve our understanding of the temporal behavior of the solar
+corona.
 
 
 %% If you wish to include an acknowledgments section in your paper,
@@ -809,10 +805,10 @@ display packages.  This work was supported by the NASA award number????
 
 \section{Model fitting procedure}\label{sec:app:ind}
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
-geometric mean power spectra shown in Figures \ref{fig:fit171} and
-\ref{fig:fit193}.  The frequency $\nu$ is defined as $f/f_{0}$ where
-$f$ is the FFT frequency in Hz, and $f_{0}$ is the lowest non-zero FFT
-frequency defined by the data (Section \ref{sec:obs}).
+geometric mean power spectra shown in Figures \ref{fig:fit171193}.
+The frequency $\nu$ is defined as $f/f_{0}$ where $f$ is the FFT
+frequency in Hz, and $f_{0}$ is the lowest non-zero FFT frequency
+defined by the data (Section \ref{sec:obs}).
 
 As noted in Section \ref{sec:anal}, the logarithm of the Fourier power
 for all regions is approximated by a normal distribution $N(\mu,
