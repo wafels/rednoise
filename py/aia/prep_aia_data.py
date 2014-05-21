@@ -5,9 +5,9 @@ Load in the FITS files and write out a numpy arrays
 #import matplotlib
 #matplotlib.use("Agg")
 import os
-from matplotlib import rc_file
-matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1_image_plots.rc'
-rc_file(os.path.expanduser(matplotlib_file))
+#from matplotlib import rc_file
+#matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1_image_plots.rc'
+#rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
 
 import cPickle as pickle

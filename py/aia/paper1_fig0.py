@@ -15,7 +15,8 @@ import aia_specific
 from sunpy.cm import cm
 import numpy as np
 from paper1 import sunday_name
-import sunpy.map as Map
+import sunpy
+from sunpy.time import parse_time
 
 
 # input data
@@ -53,10 +54,10 @@ nt = 1800
 layer_index = nt / 2
 if wave == '171':
     filename = 'AIA20120923_025959_0171.fits'
-    omap = Map(os.path.join(aia_data_location[''], filename))
+    omap = sunpy.make_map(os.path.join(aia_data_location['aiadata'], filename))
 if wave == '193':
     filename = 'AIA20120923_030006_0193.fits'
-    omap = Map(os.path.join(aia_data_location[''], filename))
+    omap = sunpy.make_map(os.path.join(aia_data_location['aiadata'], filename))
 
 # Define regions in the datacube
 # y locations are first, x locations second
@@ -105,8 +106,13 @@ def define_central_data(regions):
 #
 
 # Shape of the datacube
-ny = omap.data.shape[0]
 nx = omap.data.shape[1]
+
+xoffset = 47
+
+omapall = omap.data[:, 0:nx - xoffset]
+ny = omapall.shape[0]
+nx = omapall.shape[1]
 
 cXY = [omap.meta['xcen'], omap.meta['ycen']]
 dXY = [omap.meta['cdelt1'], omap.meta['cdelt2']]
@@ -137,20 +143,21 @@ lower_left = px2arcsec(Q, [0, 0])
 upper_right = px2arcsec(Q, [nx - 1, ny - 1])
 extent = [lower_left[0], upper_right[0], lower_left[1], upper_right[1]]
 
-
 plt.figure(1)
-plt.imshow(np.log(omap.data),
+plt.imshow(np.log(omapall),
            origin='bottom',
            cmap=cm.get_cmap(name='sdoaia' + wave),
            extent=extent)
 #plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
-plt.title('AIA ' + wave + ' (%s)' % (omap.meta['date'].strftime('%Y/%m/%d %H:%M:%S')))
+plt.title('AIA ' + wave + ' (%s)' % (parse_time(omap.date).strftime('%Y/%m/%d %H:%M:%S')))
 plt.ylabel('y (arcseconds)')
 plt.xlabel('x (arcseconds)')
 for region in regions:
     pixel_index = regions[region]
     y = pixel_index[0]
     x = pixel_index[1]
+    x[0] = x[0] + xoffset
+    x[1] = x[1] + xoffset
     loc1 = px2arcsec(Q, [x[0], y[0]])
     loc2 = px2arcsec(Q, [x[1], y[1]])
     aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='w', linewidth=3)
@@ -158,5 +165,5 @@ for region in regions:
     plt.text(loc2[0], loc2[1], sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5))
 plt.xlim(lower_left[0], upper_right[0])
 plt.ylim(lower_left[1], upper_right[1])
-plt.savefig(os.path.join(save_locations["image"], ident + '.eps'))
-
+plt.savefig(os.path.join(save_locations["image"], ident + '.pdf'))
+plt.close('all')

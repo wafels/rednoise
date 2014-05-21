@@ -154,11 +154,7 @@ deposition events.
 %% square-bracket argument, for instance, \object[\[WEG2004\] 14h-090]{90}).
 %%  Otherwise, LaTeX will issue an error. 
 
-\section{Introduction}
-
-The solar corona is observed to support many different oscillatory
-phenomena.
-
+\section{Introduction}\label{sec:int}
 Coronal seismology is the study of oscillatory phenomena in the solar
 corona.  First suggested by \cite{1970PASJ...22..341U}, the practice
 of coronal seismology attempts to locate oscillatory phenomena in the
@@ -176,8 +172,8 @@ Oscillatory phenomena in the solar corona are relatively rare, both
 spatially and temporally.  Two types of oscillatory motions have
 received a lot of attention.  The first is known as a transverse
 oscillation, since the loop motion is approximately transverse to the
-extent of the loop \citep{valery}.  These motions appear to be
-triggered by nearby flaring events, and are identified with the
+extent of the loop \citep{1999Sci...285..862N}.  These motions appear
+to be triggered by nearby flaring events, and are identified with the
 fundamental harmonic of the kink mode of the flux tube that comprises
 the coronal loop.  The second type is known as a longitudinal
 oscillation, or propagating disturbance (PD).  These waves propogate
@@ -185,9 +181,59 @@ along flux tubes, and have been identified as slow mode (MHD)
 magneto-acoustic waves (although alternative interpretations do exist
 that do not invoke oscillatory phenomena, for example, \cite{}).
 
-Their relative scarcity has prompted efforts to create automated
-oscillation detection algorithms.
+Their scarcity on the Sun has prompted efforts to create automated
+oscillation detection algorithms.  The need for an automated
+oscillation detection algorithm is also exacerbated by the large and
+rapidly growing amount of AIA data, which means that the amount of
+data that has to be searched is large.  There have been several
+attempts at designing such algorithms.  \cite{2004SoPh..223....1D}
+describe the design of an automated oscillation-detection algorithm
+based on the wavelet analysis. The algorithm finds significant wave
+packets ranging from single to multiple wave cycles in duration, by a
+wavelet power/confidence level comparison against the null hypothesis
+that a given time series is Gaussian-distributed noise.  Pixels with
+significant oscillatory content are grouped manually.
+\cite{2007SoPh..241..397N} take a similar approach, using a
+thresholded fast Fourier transform to find locations in TRACE data
+that may support an oscillatory signal. The threshold level is defined
+as three to four times the average FFT power; if the maximum FFT power
+is above this level then the frequency at which that power occurs is
+assumed to be real.  \cite{2010SoPh..264..403I} assume that an
+oscillatory signal is present in each location in the datacube and then
+use a Bayesian-based treatment to calculate the probability that the
+frequency has a particular value.  This algorithm relies on
+subtracting a background trend from the time-series being tested, and
+assumes that the noise is Gaussian distributed.
 
+The above algorithms precipitate detections based on the strength of
+the signal of an oscillation on a pixel by pixel basis, and then group
+these pixels together using some set of criteria.  The automated
+detection algorithm of \cite{2008SoPh..248..395S} begins by
+identifying candidate oscillatory regions as those that show a high
+variance \citep{2003SoPh..213..103G} (under the implicit assumption
+that the time-series has an approximately constant mean value).
+Detections are based on wavelet filtering of these regions in all
+three dimensions of the data cube simultaneously, with the implicit
+assumption that the noise is Gaussian-distributed.
+
+The algorithm of \cite{2008SoPh..252..321M} differs from the previous
+algorithms: it begins by Fourier transforming the entire data cube,
+and calculating the coherence of neighboring pixels in narrow
+frequency bands, and filtering the results. The null hypothesis here
+is that the time series is pure Gaussian noise, with the additional
+assumption that pairs of noisy time-series have low coherence, and so
+can be rejected.  In this algorithm, the spatial extent of the
+coherence of the oscillatory signal is the key identifier of a wave
+process.
+
+All these detections algorithms, and many detections in the literature
+make either the explicit or implicit assumption that the observed
+time-series consists of a background trend of some kind and at least
+approximately Gaussian-distributed noise.  However, it is shown below
+that time-series of coronal emission may be better described by other
+models.  These models have implications for the practice of coronal
+seismology, and may be indicative of the nature of the fundamental
+energy deposition that keeps the corona hot.
 
 
 \section{Observations}\label{sec:obs}
