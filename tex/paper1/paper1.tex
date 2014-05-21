@@ -163,10 +163,11 @@ theoretical descriptions of those wave modes to infer the physical
 conditions of the solar corona.  The practice of coronal seismology
 began in earnest with observations of wave modes by SOHO-EIT
 \citep{1998ApJ...501L.217D, 1999SoPh..186..207B} and TRACE
-\citep{1999ApJ...520..880A} (see also \cite{} for more extensive
-reviews of coronal seismology).  Since then, many papers have been
-published describing oscillatory phenomena in the corona and their
-interpretation in terms of theoretically known wave modes.
+\citep{1999ApJ...520..880A} (see also \cite{lrsp-2005-3},
+\cite{2012RSPTA.370.3193D} for more extensive reviews of coronal
+seismology).  Since then, many papers have been published describing
+oscillatory phenomena in the corona and their interpretation in terms
+of theoretically known wave modes.
 
 Oscillatory phenomena in the solar corona are relatively rare, both
 spatially and temporally.  Two types of oscillatory motions have
@@ -179,7 +180,8 @@ the coronal loop.  The second type is known as a longitudinal
 oscillation, or propagating disturbance (PD).  These waves propogate
 along flux tubes, and have been identified as slow mode (MHD)
 magneto-acoustic waves (although alternative interpretations do exist
-that do not invoke oscillatory phenomena, for example, \cite{}).
+that do not invoke oscillatory phenomena, for example,
+\cite{0004-637X-722-2-1013} and \cite{2041-8205-727-2-L37}).
 
 Their scarcity on the Sun has prompted efforts to create automated
 oscillation detection algorithms.  The need for an automated
@@ -214,30 +216,30 @@ variance \citep{2003SoPh..213..103G} (under the implicit assumption
 that the time-series has an approximately constant mean value).
 Detections are based on wavelet filtering of these regions in all
 three dimensions of the data cube simultaneously, with the implicit
-assumption that the noise is Gaussian-distributed.
-
-The algorithm of \cite{2008SoPh..252..321M} differs from the previous
-algorithms: it begins by Fourier transforming the entire data cube,
-and calculating the coherence of neighboring pixels in narrow
-frequency bands, and filtering the results. The null hypothesis here
-is that the time series is pure Gaussian noise, with the additional
-assumption that pairs of noisy time-series have low coherence, and so
-can be rejected.  In this algorithm, the spatial extent of the
-coherence of the oscillatory signal is the key identifier of a wave
-process.
+assumption that the noise is Gaussian-distributed.  The algorithm of
+\cite{2008SoPh..252..321M} differs from the previous algorithms: it
+begins by Fourier transforming the entire data cube, and calculating
+the coherence of neighboring pixels in narrow frequency bands, and
+filtering the results. The null hypothesis here is that the time
+series is pure Gaussian noise, with the additional assumption that
+pairs of noisy time-series have low coherence, and so can be rejected.
+In this algorithm, the spatial extent of the coherence of the
+oscillatory signal is the key identifier of a wave process.
 
 All these detections algorithms, and many detections in the literature
 make either the explicit or implicit assumption that the observed
 time-series consists of a background trend of some kind and at least
-approximately Gaussian-distributed noise.  However, it is shown below
-that time-series of coronal emission may be better described by other
-models.  These models have implications for the practice of coronal
-seismology, and may be indicative of the nature of the fundamental
-energy deposition that keeps the corona hot.
+approximately Gaussian-distributed noise.  However, it is shown below,
+using data from the Atmospheric Imaging Assembly (AIA)
+\cite{2012SoPh..275...17L} on board the Solar Dynamics Observatory
+(SDO) \cite{2012SoPh..275....3P}, that time-series of coronal emission
+may be better described by other models.  These models have
+implications for the practice of coronal seismology, and may be
+indicative of the nature of the fundamental energy deposition that
+keeps the corona hot.
 
 
 \section{Observations}\label{sec:obs}
-
 The data used in this study is from the Atmospheric Imaging Assembly
 (AIA) \cite{2012SoPh..275...17L} on board the Solar Dynamics
 Observatory (SDO) \cite{2012SoPh..275....3P}.  AIA observes in
