@@ -188,24 +188,26 @@ oscillation detection algorithms.  The need for an automated
 oscillation detection algorithm is also exacerbated by the large and
 rapidly growing amount of AIA data, which means that the amount of
 data that has to be searched is large.  There have been several
-attempts at designing such algorithms.  \cite{2004SoPh..223....1D}
-describe the design of an automated oscillation-detection algorithm
-based on the wavelet analysis. The algorithm finds significant wave
-packets ranging from single to multiple wave cycles in duration, by a
-wavelet power/confidence level comparison against the null hypothesis
-that a given time series is Gaussian-distributed noise.  Pixels with
-significant oscillatory content are grouped manually.
-\cite{2007SoPh..241..397N} take a similar approach, using a
-thresholded fast Fourier transform to find locations in TRACE data
-that may support an oscillatory signal. The threshold level is defined
-as three to four times the average FFT power; if the maximum FFT power
-is above this level then the frequency at which that power occurs is
-assumed to be real.  \cite{2010SoPh..264..403I} assume that an
-oscillatory signal is present in each location in the datacube and then
-use a Bayesian-based treatment to calculate the probability that the
-frequency has a particular value.  This algorithm relies on
-subtracting a background trend from the time-series being tested, and
-assumes that the noise is Gaussian distributed.
+attempts at designing such algorithms, all of which operate on
+time-series of two-dimensional image data (data cubes).
+\cite{2004SoPh..223....1D} describe the design of an automated
+oscillation-detection algorithm based on the wavelet analysis. The
+algorithm finds significant wave packets ranging from single to
+multiple wave cycles in duration, by a wavelet power/confidence level
+comparison against the null hypothesis that a given time series is
+Gaussian-distributed noise.  Pixels with significant oscillatory
+content are grouped manually.  \cite{2007SoPh..241..397N} take a
+similar approach, using a thresholded fast Fourier transform to find
+locations in TRACE data that may support an oscillatory signal. The
+threshold level is defined as three to four times the average FFT
+power; if the maximum FFT power is above this level then the frequency
+at which that power occurs is assumed to be real.
+\cite{2010SoPh..264..403I} assume that an oscillatory signal is
+present in each location in the datacube and then use a Bayesian-based
+treatment to calculate the probability that the frequency has a
+particular value.  This algorithm relies on subtracting a background
+trend from the time-series being tested, and assumes that the noise is
+Gaussian distributed.
 
 The above algorithms precipitate detections based on the strength of
 the signal of an oscillation on a pixel by pixel basis, and then group
@@ -322,63 +324,61 @@ frequencies.
 \end{figure}
 
 \begin{figure}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}
-\caption{Distribution of Fourier power at some sample frequencies (see also Figure \ref{fig:dist193} for the corresponding AIA 171\AA\ plots.)}
-\label{fig:dist171}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
+}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.power_spectra_distributions.eps}
+}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.power_spectra_distributions.eps}
+}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
+}
+\caption{Distribution of Fourier power at some sample frequencies as a
+function of AIA waveband and location.}
+\label{fig:dist171193}
 \end{figure}
+Figure \ref{fig:dist171193} show the distributions of the logarithm of
+the Fourier power for a small number of frequencies, for all the
+pixels in each region.  The distributions all follow a normal
+distribution approximately.  This indicates that the power in each
+each at each frequency is approximately log-normally distributed.
+This observation guides the choice of how to average the \PS\ over
+each of the selected region.  Since the Fourier power is log-normally
+distributed, the arithmetic mean of the Fourier power is biased by the
+very largest powers.  Since the logarithm of the Fourier power is
+approximately Gaussian-distributed, the mean value is a better
+representation of the range of values in the data.  Hence the mean of
+the logarithm of the Fourier power is used to describe the mean
+\Fps\ of each region (note that this is also equivalent to the
+geometric mean of the Fourier power.)
+
+
 
 \begin{figure}
-\plottwo{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.power_spectra_distributions.eps}
-\plottwo{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
-\caption{Distribution of Fourier power at some sample frequencies (see
-  also Figure \ref{fig:dist171} for the corresponding AIA
-  171\AA\ plots.)}
-\label{fig:dist193}
-\end{figure}
-Figures \ref{fig:dist171} and \ref{fig:dist193} show the distributions
-of the logarithm of the Fourier power for a small number of
-frequencies, for all the pixels in each region.  The distributions all
-follow a normal distribution approximately.  This indicates that the
-power in each each at each frequency is approximately log-normally
-distributed.  This observation guides the choice of how to average the
-\PS\ over each of the selected region.  Since the Fourier
-power is log-normally distributed, the arithmetic mean of the Fourier
-power is biased by the very largest powers.  Since the logarithm of
-the Fourier power is approximately Gaussian-distributed, the mean
-value is a better representation of the range of values in the data.
-Hence the mean of the logarithm of the Fourier power is used to
-describe the mean \Fps\ of each region (note that
-this is also equivalent to the geometric mean of the Fourier power.)
-
-
-
-\begin{figure}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
-\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+}
+\centerline{
+\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+}
 \caption{Geometric mean of the Fourier power spectra in each of the
-  four regions studied in AIA 171\AA\ (shown in black).  Also shown
-  are the posterior mean and maximum likelihood fits for model $M_{1}$
-  and $M_{2}$ (see Section \ref{sec:anal} and Appendix
-  \ref{sec:app:ind} for more detail).  Model fit parameter values and
-  their 68\% credible intervals are quoted in Table
-  \ref{tab:parameters}. See also Figure \ref{fig:fit193} for the
-  corresponding AIA 193\AA\ plots.}
+  four regions studied in AIA 171\AA\ (left column) and AIA
+  193\AA\ (right column).  Also shown are the posterior mean and
+  maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section
+  \ref{sec:anal} and Appendix \ref{sec:app:ind} for more detail).
+  Model fit parameter values and their 68\% credible intervals are
+  quoted in Table \ref{tab:parameters}. See also Figure
+  \ref{fig:fit193} for the corresponding AIA 193\AA\ plots.}
 \label{fig:fit171}
-\end{figure}
-
-\begin{figure}
-\plottwo{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
-\plottwo{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
-\caption{Geometric mean of the Fourier power spectra in each of the
-  four regions studied in AIA 193\AA\ (shown in black).  Also shown
-  are the posterior mean and maximum likelihood fits for model $M_{1}$
-  and $M_{2}$ (see Section \ref{sec:anal} and Appendix
-  \ref{sec:app:ind} for more detail).  Model fit parameter values and
-  their 68\% credible intervals are quoted in Table
-  \ref{tab:parameters}. See also Figure \ref{fig:fit171} for the
-  corresponding AIA 171\AA\ plots.}
-\label{fig:fit193}
 \end{figure}
 
 \begin{deluxetable}{cccccccc}
