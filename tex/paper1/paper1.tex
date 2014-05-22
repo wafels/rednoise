@@ -115,11 +115,14 @@ Fourier power spectra in all the regions show a \PL\ behaviour
 approximately.  This suggests that in many parts of the corona a
 background model consisting of white noise and a trend cannot be
 assumed when analyzing for the presence of oscillations in the corona.
-Further, it is shown that the observed \PL\ \PS\ can be
-formed by summing a distribution of exponentially decaying emission
-events along the line of sight.  This is consistent with the notion
-that the solar atmosphere is heated everywhere by small energy
-deposition events.
+The implications of this discovery to the field of coronal seismology
+and automated detections of oscillations is discussed.  Further, it is
+shown that the observed \PL\ \PS\ can be formed by summing a
+distribution of exponentially decaying emission events along the line
+of sight.  This is consistent with the notion that the solar
+atmosphere is heated everywhere by small energy deposition events.
+
+
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. The uncommented
@@ -432,7 +435,6 @@ sunspot         & 171\AA  & $0.51^{+0.01}_{-0.01}$  & $2.27^{+0.02}_{-0.02}$ & $
 %% in the table for each \tablenotetext.
 \end{deluxetable}
 
-
 The (geometric) mean Fourier power spectra are shown in Figure
 \ref{fig:fit171193} for each of the physical regions considered.  It
 is clear that, in general, the Fourier power spectra exhibit power-law
@@ -474,18 +476,40 @@ where the localized contribution is described by
 G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\sigma^{2}}\right].
 \end{equation}
 Both these models are fit to the geometrically averaged Fourier power
-spectrum in both wavelengths and in all four regions.  Figure
-\ref{fig:fit171193} show the fit results of
-each model to the data.  Table \ref{tab:parameters} shows the fitted
-parameter values and an error estimate for model $M_{2}$.  For details
-on the fitting procedure, see Section \ref{sec:app:ind}.
+spectrum in both wavelengths and in all four regions, and compared to
+decide which model best describes the data.  The model comparison
+process is described in Section \ref{ssec:compare}.
+
+\subsection{Comparing spectral models}\label{ssec:compare}
+Deciding which model best fits the data is achieved using a model
+comparison process based on the work of \cite{2010MNRAS.402..307V}.
+In the first part of this work, two models of the background Fourier
+power spectrum from XMM-Newton observations of highly variable Seyfert
+1 galaxies are compared to find which one best describes the
+background spectrum.  The comparison process is as follows.
+
+
+
+
+
+
+
+\subsection{Results}\label{ssec:results}
+Figure \ref{fig:fit171193} show the fit results of each model to the
+data.  Table \ref{tab:parameters} shows the fitted parameter values
+and an error estimate for model $M_{2}$.  For details on the fitting
+procedure, see Section \ref{sec:app:ind}.
+
+
 
 \section{Discussion}
-The presence of a \PL\ Fourier spectrum in coronal emission poses
-questions about how that emission is formed.  The \PL\ \PS\ also has
-implications for the detection of narrow frequency band oscillations
-against such a background emission, which is the purview of coronal
-seismology.  We discuss these two topics in the sections below.
+The presence of a \PL\ \PS\ has implications for the detection of
+narrow frequency band oscillations against such a background emission,
+for both non-automated and automated methods.  These are discussed in
+Sections \ref{ssec:corseis} and \ref{sec:oscdetect}.  Further, the
+\PL\ Fourier spectrum in coronal emission poses questions about how
+that emission is formed.  A hypothesis regarding the formation of this
+power law spectrum is presented in Section \ref{ssec:nplps}.
 
 \subsection{Effect of background \PS\ assumptions on the
   detection of oscillatory power}
@@ -769,10 +793,12 @@ corona.
 \acknowledgments
 
 We are grateful to the developers of SSWIDL
-\citep{1998SoPh..182..497F}, SunPy \citep{mumford-proc-scipy-2013}, PyMC
-\citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04} and Scientific Python
-stack for providing data preparation, manipulation, analysis and
-display packages.  This work was supported by the NASA award number????
+\citep{1998SoPh..182..497F}, SunPy \citep{mumford-proc-scipy-2013},
+PyMC \citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04} and Scientific
+Python stack for providing data preparation, manipulation, analysis
+and display packages.  This work was supported by NASA award
+NNX13AE03G S01 funded through NASA ROSES NNH12ZDA001N-SHP.
+
 
 %% To help institutions obtain information on the effectiveness of their
 %% telescopes, the AAS Journals has created a group of keywords for telescope
@@ -801,7 +827,7 @@ display packages.  This work was supported by the NASA award number????
 
 \appendix
 
-\section{Model fitting procedure}\label{sec:app:ind}
+\section{Details of the model fitting procedure}\label{sec:app:ind}
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
 geometric mean power spectra shown in Figures \ref{fig:fit171193}.
 The frequency $\nu$ is defined as $f/f_{0}$ where $f$ is the FFT
@@ -943,7 +969,5 @@ the observations of all four regions considered.  Equation
 \ref{eqn:pwrlawbump} was motivated by previous observations of
 oscillatory content in the solar atmosphere.  Equation
 \ref{eqn:pwrlawbump} is shown to be the preferred model in all cases.
-
-
 
 

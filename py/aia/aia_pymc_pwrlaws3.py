@@ -111,8 +111,13 @@ def get_chi_M0(map_M0, x, pwr, sigma):
     return sse / (1.0 * (np.size(pwr) - len(A0)))
 
 
+def T_SSE(data, fit, sigma):
+    sse = np.sum(((data - fit) / sigma) ** 2)
+    return sse
+
+
 def calculate_reduced_chi2(x, pwr, spectrum, sigma, k):
-    sse = np.sum(((pwr - spectrum) / sigma) ** 2)
+    sse = T_SSE(pwr, spectrum, sigma)
     return sse / (1.0 * (np.size(pwr) - k))
 
 
@@ -974,11 +979,11 @@ for iwave, wave in enumerate(waves):
 
                 # Save the good and bad results and use a different program to plot the results
                 pkl_write(pkl_location,
-                          'posterior_predictive.' + region_id + '.good.pickle',
+                          'posterior_predictive.T_LRT.' + region_id + '.good.pickle',
                           good_results)
 
                 pkl_write(pkl_location,
-                          'posterior_predictive.' + region_id + '.bad.pickle',
+                          'posterior_predictive.T_LRT.' + region_id + '.bad.pickle',
                           bad_results)
 
                 # Quick summary plots
@@ -995,4 +1000,101 @@ for iwave, wave in enumerate(waves):
                 plt.title(title)
                 plt.axvline(t_lrt_data, color='k', label='p=%4.3f [$T_{LRT}=$%f]' % (pvalue, t_lrt_data))
                 plt.legend(fontsize=8)
-                plt.savefig(savefig + obstype + '.posterior_predictive.png')
+                plt.savefig(savefig + obstype + '.posterior_predictive.T_LRT.png')
+
+                ###############################################################
+                # Third part - model fitness through posterior predictive
+                # checking.
+                good_results2 = []
+                bad_results2 = []
+
+                # Number of successful comparisons
+                nfound2 = 0
+
+                # Number of posterior samples available
+                ntrace = np.size(M1.trace('power_law_index')[:])
+
+                # T_SSE for the data
+                t_sse_data = T_SSE(pwr_ff, M1_bf, sigma)
+
+                # main loop
+                rthis = 0
+                rtried = []
+                while nfound < nsample:
+                    # random number
+                    rthis = np.random.randint(0, high=ntrace)
+                    while rthis in rtried:
+                        rthis = np.random.randint(0, high=ntrace)
+                    rtried.append(rthis)
+                    #print ' '
+                    #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
+
+                    # Generate test data under hypothesis 0
+                    pred = M1.trace('predictive')[rthis]
+
+                    # Fit the test data using hypothesis 1 and calculate a likelihood
+                    #M1_pp = pymcmodels2.Log_splwc_AddNormalBump2(x, pred, sigma)
+                    #map_M1_pp = pymc.MAP(M1_pp)
+                    try:
+                        #print('M1: fitting to find the maximum likelihood')
+                        #
+                        # Use the MAP functionality of PyMC
+                        #
+                        #map_M1_pp.fit(method='fmin_powell')
+                        #map_M1_pp.fit(method='fmin_powell')
+                        #l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
+                        #
+                        # Curve fits
+                        #
+                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma, p0=A1)
+                        fit1_bf = get_spectrum_M1(x, fit1)
+                        l1 = get_log_likelihood(pred, fit1_bf, sigma)
+                    except:
+                        #print('Error fitting M1 to sample.')
+                        l1 = None
+
+                    # Sort the results into good and bad.
+                    if (l1 != None):
+                        t_sse_pred = T_SSE(pred, fit1_bf, sigma)
+                        if t_lrt_pred >= 0.0:
+                            fit_results = (rthis, chi1, t_sse_pred)
+                            good_results.append(fit_results)
+                            nfound = nfound + 1
+                            if np.mod(nfound, 1000) == 0:
+                                plt.figure(1)
+                                plt.plot(xvalue, pred, label='predicted', color='k')
+                                plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
+                                plt.xlabel("log10(frequency)")
+                                plt.ylabel("log(power)")
+                                plt.legend(fontsize=8, framealpha=0.5)
+                                plt.title(title + " : pp check sample #%i" % (nfound))
+                                plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.sample.' + str(nfound) + '.png')
+                                plt.close('all')
+                        else:
+                            bad_results.append((rthis, l0, chi0, l1, chi1, t_lrt_pred))
+                    else:
+                        bad_results.append((rthis, l0, chi0, l1, chi1, None))
+
+                # Save the good and bad results and use a different program to plot the results
+                pkl_write(pkl_location,
+                          'posterior_predictive.T_SSE.' + region_id + '.good.pickle',
+                          good_results)
+
+                pkl_write(pkl_location,
+                          'posterior_predictive.T_SSE.' + region_id + '.bad.pickle',
+                          bad_results)
+
+                # Quick summary plots
+                t_sse_distribution = np.asarray([z[2] for z in good_results])
+
+                pvalue = np.sum(t_sse_distribution >= t_sse_data) / (1.0 * nsample)
+                print('Posterior predictive p-value = %f' % (pvalue))
+
+                plt.figure(2)
+                plt.hist(t_sse_distribution, bins=30)
+                plt.xlabel('SSE statistic')
+                plt.ylabel('Number found [%i samples]' % (nsample))
+                plt.title(title)
+                plt.axvline(t_lrt_data, color='k', label='p=%4.3f [$T_{LRT}=$%f]' % (pvalue, t_sse_data))
+                plt.legend(fontsize=8)
+                plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.png')
