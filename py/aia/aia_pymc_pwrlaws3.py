@@ -335,7 +335,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
+regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 
@@ -358,11 +358,15 @@ manip = 'relative'
 #
 # Number of posterior predictive samples to calculate
 #
-nsample = 5000
+# Set to 1 to do a full analytical run.  Set to a high number to do a test
+# run
+testing = 1
+
+nsample = 5000 / testing
 
 # PyMC control
-itera = 100000
-burn = 20000
+itera = 100000 / testing
+burn = 20000 / testing
 thin = 5
 
 # Image file type
@@ -884,6 +888,7 @@ for iwave, wave in enumerate(waves):
                 ###############################################################
                 # Second part - model selection through posterior predictive
                 # checking.
+                prettyprint('Model selection through posterior predictive checking - T_LRT')
                 # Results Storage
                 good_results = []
                 bad_results = []
@@ -1001,10 +1006,12 @@ for iwave, wave in enumerate(waves):
                 plt.axvline(t_lrt_data, color='k', label='p=%4.3f [$T_{LRT}=$%f]' % (pvalue, t_lrt_data))
                 plt.legend(fontsize=8)
                 plt.savefig(savefig + obstype + '.posterior_predictive.T_LRT.png')
+                plt.close('all')
 
                 ###############################################################
                 # Third part - model fitness through posterior predictive
                 # checking.
+                prettyprint('Model checking through posterior predictive checking - T_SSE')
                 good_results2 = []
                 bad_results2 = []
 
@@ -1016,11 +1023,11 @@ for iwave, wave in enumerate(waves):
 
                 # T_SSE for the data
                 t_sse_data = T_SSE(pwr_ff, M1_bf, sigma)
-
+                print 'T_SSE for the data = %f' % (t_sse_data)
                 # main loop
                 rthis = 0
                 rtried = []
-                while nfound < nsample:
+                while nfound2 < nsample:
                     # random number
                     rthis = np.random.randint(0, high=ntrace)
                     while rthis in rtried:
@@ -1048,44 +1055,41 @@ for iwave, wave in enumerate(waves):
                         #
                         fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma, p0=A1)
                         fit1_bf = get_spectrum_M1(x, fit1)
-                        l1 = get_log_likelihood(pred, fit1_bf, sigma)
+                        t_sse_pred = T_SSE(pred, fit1_bf, sigma)
                     except:
-                        #print('Error fitting M1 to sample.')
-                        l1 = None
+                        print('Error fitting M1 to sample.')
+                        t_sse_pred = None
 
                     # Sort the results into good and bad.
-                    if (l1 != None):
-                        t_sse_pred = T_SSE(pred, fit1_bf, sigma)
-                        if t_lrt_pred >= 0.0:
-                            fit_results = (rthis, chi1, t_sse_pred)
-                            good_results.append(fit_results)
-                            nfound = nfound + 1
-                            if np.mod(nfound, 1000) == 0:
-                                plt.figure(1)
-                                plt.plot(xvalue, pred, label='predicted', color='k')
-                                plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
-                                plt.xlabel("log10(frequency)")
-                                plt.ylabel("log(power)")
-                                plt.legend(fontsize=8, framealpha=0.5)
-                                plt.title(title + " : pp check sample #%i" % (nfound))
-                                plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.sample.' + str(nfound) + '.png')
-                                plt.close('all')
-                        else:
-                            bad_results.append((rthis, l0, chi0, l1, chi1, t_lrt_pred))
+                    if (t_sse_pred != None):
+                        print t_sse_pred, t_sse_data
+                        fit_results = (rthis, t_sse_pred)
+                        good_results2.append(fit_results)
+                        nfound2 = nfound2 + 1
+                        if np.mod(nfound2, 1000) == 0:
+                            plt.figure(1)
+                            plt.plot(xvalue, pred, label='predicted', color='k')
+                            plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
+                            plt.xlabel("log10(frequency)")
+                            plt.ylabel("log(power)")
+                            plt.legend(fontsize=8, framealpha=0.5)
+                            plt.title(title + " : pp check sample #%i" % (nfound2))
+                            plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.sample.' + str(nfound2) + '.png')
+                            plt.close('all')
                     else:
-                        bad_results.append((rthis, l0, chi0, l1, chi1, None))
+                        bad_results2.append((rthis, t_sse_pred))
 
                 # Save the good and bad results and use a different program to plot the results
                 pkl_write(pkl_location,
                           'posterior_predictive.T_SSE.' + region_id + '.good.pickle',
-                          good_results)
+                          good_results2)
 
                 pkl_write(pkl_location,
                           'posterior_predictive.T_SSE.' + region_id + '.bad.pickle',
-                          bad_results)
+                          bad_results2)
 
                 # Quick summary plots
-                t_sse_distribution = np.asarray([z[2] for z in good_results])
+                t_sse_distribution = np.asarray([z[1] for z in good_results2])
 
                 pvalue = np.sum(t_sse_distribution >= t_sse_data) / (1.0 * nsample)
                 print('Posterior predictive p-value = %f' % (pvalue))
@@ -1095,6 +1099,7 @@ for iwave, wave in enumerate(waves):
                 plt.xlabel('SSE statistic')
                 plt.ylabel('Number found [%i samples]' % (nsample))
                 plt.title(title)
-                plt.axvline(t_lrt_data, color='k', label='p=%4.3f [$T_{LRT}=$%f]' % (pvalue, t_sse_data))
+                plt.axvline(t_sse_data, color='k', label='p=%4.3f [$T_{SSE}=$%f]' % (pvalue, t_sse_data))
                 plt.legend(fontsize=8)
                 plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.png')
+                plt.close('all')

@@ -500,8 +500,6 @@ data.  Table \ref{tab:parameters} shows the fitted parameter values
 and an error estimate for model $M_{2}$.  For details on the fitting
 procedure, see Section \ref{sec:app:ind}.
 
-
-
 \section{Discussion}
 The presence of a \PL\ \PS\ has implications for the detection of
 narrow frequency band oscillations against such a background emission,
@@ -583,7 +581,9 @@ background \PS\ as evidence for an oscillatory signal.
 However, even this approach to identifying oscillatory power is not
 quite complete, as it simply rejects the null hypothesis that the
 \PS\ can be adequately explained by a red-noise power
-spectrum.  Model comparison techniques similar to that described in
+spectrum.  
+
+Model comparison techniques similar to that described in
 Section \ref{sec:anal} are required to prefer a model with oscillatory
 content over one without. The difficulty in finding narrow-band
 features in Fourier power spectra against a red-noise background power
@@ -603,7 +603,7 @@ looking at extended regions of coronal imaging data, evidence for the
 presence of a {\it wave} in the corona is strengthened if it can be
 shown that narrow frequency-band oscillations occur significantly
 above the background signal in several neighboring pixels.  Spatial
-extent is one key feature to claim of a detected wave.  Coronal
+extent is the key feature to claim of a detected wave.  Coronal
 seismology derives its observational evidence from such detections,
 and automated detection algorithms hold out the hope of greatly
 increasing the number of oscillating regions detected.
@@ -611,12 +611,12 @@ increasing the number of oscillating regions detected.
 Figure \ref{fig:compare171193} shows that time series from individual
 pixels have power-law like power spectra.  This has implications for
 the design of automated oscillation detection algorithms.  Such an
-algorithm must take into account the nature of the \PS.
-The power-law \PS\ itself lacks an easily definable
-time-scale at or below which a background trend can be defined.
-Automated detection algorithms that rely on background trend
-subtraction such as \cite{2010SoPh..264..403I} must therefore look to
-other reasons for to justify a time-scale.
+algorithm must take into account the nature of the \PS.  The power-law
+\PS\ itself lacks an easily definable time-scale at or below which a
+background trend can be defined.  Automated detection algorithms that
+rely on background trend subtraction, such as
+\cite{2010SoPh..264..403I} must therefore look to other reasons for to
+justify a time-scale.
 
 As has been shown above, the assumption of a Gaussian-distributed
 noise when a red noise power-spectrum is actually present, coupled
