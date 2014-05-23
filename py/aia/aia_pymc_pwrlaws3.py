@@ -521,7 +521,7 @@ for iwave, wave in enumerate(waves):
 
                 # Use the coherence estimate to get a frequency-dependent
                 # independence coefficient
-                independence_coefficient = 1.0 - coher_95_hi
+                independence_coefficient = 1.0 - coher_mean
                 print 'Average independence coefficient ', np.mean(independence_coefficient)
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
