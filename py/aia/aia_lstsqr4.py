@@ -457,6 +457,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 coher_hist = np.zeros((nposfreq, nbins))
                 coher_95_hi = np.zeros(nposfreq)
                 coher_mode = np.zeros_like(coher_95_hi)
+                coher_mean = np.zeros_like(coher_95_hi)
                 for jjj in range(0, nposfreq - 1):
                     z = coher_array[:, jjj].flatten()
                     h, _ = np.histogram(z, bins=nbins, range=(0.0, 1.0))
@@ -464,6 +465,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     coher_ds = descriptive_stats(z)
                     coher_95_hi[jjj] = coher_ds.cred[0.95][1]
                     coher_mode[jjj] = coher_ds.mode
+                    coher_mean[jjj] = coher_ds.mean
 
                 # All the pixels are all sqrt(2) pixels away from the
                 # central pixel.  We treat them all as nearest neighbor.
@@ -544,8 +546,6 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Plot the coherence measures
                 plt.figure(1)
                 plt.semilogx(freqs, coher, label='average coherence')
-                plt.semilogx(freqs, coher + coher_std, label='average coherence + std')
-                plt.semilogx(freqs, coher - coher_std, label='average coherence - std')
                 plt.semilogx(freqs, coher_max, label='maximum coherence')
                 plt.semilogx(freqs, coher_95_hi, label='high 95 % CI')
                 plt.semilogx(freqs, coher_mode, label='mode')
@@ -558,8 +558,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
                 plt.figure(2)
                 plt.imshow(coher_hist, origin='lower', aspect='auto', extent=(freqs[0], freqs[-1], 0, 1))
-                plt.semilogx(freqs, coher_95_hi, label='high 95 % CI')
-                plt.semilogx(freqs, coher_mode, label='mode')
+                plt.plot(freqs, coher_95_hi, label='high 95 % CI')
+                plt.plot(freqs, coher_mode, label='mode')
+                plt.plot(freqs, coher_max, label='maximum coherence')
+                plt.plot(freqs, coher_mean, label='mean')
                 plt.xlabel('frequency (mHz)')
                 plt.ylabel('coherence')
                 plt.title(data_name + ' : Coherence distribution')
@@ -925,7 +927,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Widths of the power distributions
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.distribution_widths.pickle',
-                          (freqs / freqfactor[0], logiobs_distrib_width, logiobs_std, np.abs(logiobs - logiobs_peak_location)))
+                          (freqs / freqfactor[0], logiobs_distrib_width,
+                           logiobs_std, np.abs(logiobs - logiobs_peak_location)))
 
                 # Error in the Widths of the power distributions
                 pkl_write(pkl_location,
@@ -935,7 +938,8 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Coherence quantities
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.coherence.pickle',
-                          (freqs / freqfactor[0], coher, coher_max, coher_mode, coher_95_hi))
+                          (freqs / freqfactor[0], coher, coher_max, coher_mode,
+                           coher_95_hi, coher_mean))
 
                 # Bump fit
                 #pkl_write(pkl_location,

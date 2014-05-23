@@ -479,10 +479,12 @@ for iwave, wave in enumerate(waves):
                 coher_max = pickle.load(pkl_file)
                 coher_mode = pickle.load(pkl_file)
                 coher_95_hi = pickle.load(pkl_file)
+                coher_mean = pickle.load(pkl_file)
                 pkl_file.close()
 
                 # Something wrong with the last coherence - estimate it
                 coher_95_hi[-1] = coher_95_hi[-2]
+                coher_mean[-1] = coher_mean[-2]
 
                 # Find out the length-scale at which the fitted
                 # cross-correlation coefficient reaches the value of 0.1
