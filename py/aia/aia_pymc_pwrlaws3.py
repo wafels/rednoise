@@ -476,7 +476,13 @@ for iwave, wave in enumerate(waves):
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
                 coher = pickle.load(pkl_file)
+                coher_max = pickle.load(pkl_file)
+                coher_mode = pickle.load(pkl_file)
+                coher_95_hi = pickle.load(pkl_file)
                 pkl_file.close()
+
+                # Something wrong with the last coherence - estimate it
+                coher_95_hi[-1] = coher_95_hi[-2]
 
                 # Find out the length-scale at which the fitted
                 # cross-correlation coefficient reaches the value of 0.1
@@ -509,15 +515,19 @@ for iwave, wave in enumerate(waves):
                 # the independence distribution.  Hmmm - would this work with
                 # PyMC?
                 #
-                independence_coefficient = 1.0 - np.abs(ccc0)
-                print 'Average independence coefficient ', independence_coefficient
+                #independence_coefficient = 1.0 - np.abs(ccc0)
+
+                # Use the coherence estimate to get a frequency-dependent
+                # independence coefficient
+                independence_coefficient = 1.0 - coher_95_hi
+                print 'Average independence coefficient ', np.mean(independence_coefficient)
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
-                print("Effective number of independent observations = %f " % (npixels_effective))
+                print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
                 sigma_of_distribution = fix_nonfinite(std_dev)
                 sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
 
                 # Frequency-dependent independence coefficient
-                #independence_coefficient = 1.0 - np.abs(coher)
+                #independence_coefficient = 1.0 - np.abs(ccc0)
                 #print 'Coherence: Average independence coefficient ', np.mean(independence_coefficient)
                 #npixels_effective = independence_coefficient * (npixels - 1) + 1
                 #print("Coherence: Effective number of independent observations = %f " % (np.mean(npixels_effective)))

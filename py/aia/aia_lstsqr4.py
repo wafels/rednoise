@@ -25,6 +25,7 @@ import aia_specific
 import aia_plaw
 from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
 from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
+from paper1 import descriptive_stats
 plt.ioff()
 
 
@@ -137,7 +138,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
               regions=['qs', 'loopfootpoints'],
               windows=['no window'],
               manip='none',
-              savefig_format='eps',
+              savefig_format='png',
               freqfactor=[1000.0, 'mHz'],
               sunday_name={"qs": "quiet Sun", "loopfootpoints": "loop footpoints"}):
 
@@ -146,15 +147,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
     # main loop
     for iwave, wave in enumerate(waves):
-        # Which wavelength?
-        print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
-
         # Now that the loading and saving locations are seot up, proceed with
         # the analysis.
         for iregion, region in enumerate(regions):
-            # Which region
-            print('Region: ' + region + ' (%i out of %i)' % (iregion + 1, len(regions)))
-
             # Create the branches in order
             branches = [corename, sunlocation, fits_level, wave, region]
 
@@ -176,6 +171,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
 
             # Go through all the windows
             for iwindow, window in enumerate(windows):
+                # General notification that we have a new data-set
+                prettyprint('Loading New Data')
+                # Which wavelength?
+                print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
+                # Which region
+                print('Region: ' + region + ' (%i out of %i)' % (iregion + 1, len(regions)))
                 # Which window
                 print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
@@ -356,7 +357,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # divide the number of pixels in the region by this estimated
                 # area then we get an estimate of the number of independent
                 # time series in the region.
-                prettyprint('Calculate pixel by pixel correlation')
+                prettyprint('Calculate pixel by pixel independence measures')
 
                 def cornorm(a, norm):
                     return (a - np.mean(a)) / (np.std(a) * norm)
@@ -454,32 +455,58 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # Histogram of coherence
                 nbins = 100
                 coher_hist = np.zeros((nposfreq, nbins))
+                coher_95_hi = np.zeros(nposfreq)
+                coher_mode = np.zeros_like(coher_95_hi)
                 for jjj in range(0, nposfreq - 1):
-                    h, _ = np.histogram(coher_array[:, jjj], bins=nbins, range=(0.0, 1.0))
+                    z = coher_array[:, jjj].flatten()
+                    h, _ = np.histogram(z, bins=nbins, range=(0.0, 1.0))
                     coher_hist[jjj, :] = h / (1.0 * np.max(h))
+                    coher_ds = descriptive_stats(z)
+                    coher_95_hi[jjj] = coher_ds.cred[0.95][1]
+                    coher_mode[jjj] = coher_ds.mode
 
                 # All the pixels are all sqrt(2) pixels away from the
                 # central pixel.  We treat them all as nearest neighbor.
                 # What is the average correlation coefficient at the specified
                 # lag?
-                ccc0 = np.mean(np.abs(np.asarray(cc0)))
-                ccclag = np.mean(np.abs(np.asarray(cclag)))
-                cccmax = np.mean(np.abs(np.asarray(ccmax)))
-                print 'Average lag 0 cross correlation coefficient = %f' % (ccc0)
-                print 'Average lag %i cross correlation coefficient = %f' % (lag, ccclag)
-                print 'Average maximum cross correlation coefficient = %f' % (cccmax)
+                # Lag 0 cross correlation coefficient
+                cc0 = np.asarray(cc0)
+                cc0_ds = descriptive_stats(cc0)
+
+                # Lag 'lag' cross correlation coefficient
+                cclag = np.abs(np.asarray(cclag))
+                cclag_ds = descriptive_stats(cclag)
+
+                # Maximum cross correlation coefficient
+                ccmax = np.abs(np.asarray(ccmax))
+                ccmax_ds = descriptive_stats(ccmax)
+                print 'Average lag 0 cross correlation coefficient = %f' % (cc0_ds.mean)
+                print 'Average lag %i cross correlation coefficient = %f' % (lag, cclag_ds.mean)
+                print 'Average maximum cross correlation coefficient = %f' % (ccmax_ds.mean)
 
                 # Plot histograms of the three cross correlation coefficients
                 ccc_bins = 100
                 plt.figure(1)
-                plt.hist(np.asarray(cc0), bins=ccc_bins, label='zero lag CCC', alpha = 0.33)
-                plt.hist(np.asarray(cclag), bins=ccc_bins, label='lag %i CCC' % (lag), alpha = 0.33)
-                plt.hist(np.asarray(ccmax), bins=ccc_bins, label='maximum CCC', alpha = 0.33)
+                plt.hist(cc0, bins=ccc_bins, label='zero lag CCC', alpha=0.33)
+                plt.axvline(cc0_ds.mean, label='cc0 mean %f' % cc0_ds.mean)
+                plt.axvline(cc0_ds.mode, label='cc0 mode %f' % cc0_ds.mode)
+                plt.axvline(cc0_ds.cred[0.95][1], label='cc0 95%% CI %f' % cc0_ds.cred[0.95][1])
+
+                plt.hist(cclag, bins=ccc_bins, label='lag %i CCC' % (lag), alpha=0.33)
+                plt.axvline(cclag_ds.mean, label='cclag mean %f' % cclag_ds.mean, linestyle=':')
+                plt.axvline(cclag_ds.mode, label='cclag mode %f' % cclag_ds.mode, linestyle=':')
+                plt.axvline(cclag_ds.cred[0.95][1], label='cclag 95%% CI %f' % cclag_ds.cred[0.95][1], linestyle='--')
+
+                plt.hist(ccmax, bins=ccc_bins, label='maximum CCC', alpha=0.33)
+                plt.axvline(ccmax_ds.mean, label='ccmax mean %f' % ccmax_ds.mean, linestyle=':')
+                plt.axvline(ccmax_ds.mode, label='ccmax mode %f' % ccmax_ds.mode, linestyle=':')
+                plt.axvline(ccmax_ds.cred[0.95][1], label='ccmax 95%% CI %f' % ccmax_ds.cred[0.95][1], linestyle='--')
+
                 plt.xlabel('cross correlation coefficient')
                 plt.ylabel('number [%i samples]' % (npicked))
                 plt.title(data_name + ' : Measures of cross correlation')
                 plt.legend(fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.cross_correlation_coefficients.%s' % (savefig_format))
+                plt.savefig(savefig + '.independence.cross_correlation_coefficients.%s' % (savefig_format))
                 plt.close('all')
 
                 # Plot histograms of the three independence coefficients
@@ -500,7 +527,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('number [%i samples]' % (npicked))
                 plt.title(data_name + ' : measures of independence coefficient')
                 plt.legend(fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.independence_coefficients.%s' % (savefig_format))
+                plt.savefig(savefig + '.independence.independence_coefficients.%s' % (savefig_format))
                 plt.close('all')
 
                 # Plot histograms of the normalized covariance
@@ -511,7 +538,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.ylabel('number [%i samples]' % (npicked))
                 plt.title(data_name + ' : off diagonal covariance')
                 plt.legend(fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.covariance.%s' % (savefig_format))
+                plt.savefig(savefig + '.independence.covariance.%s' % (savefig_format))
                 plt.close('all')
 
                 # Plot the coherence measures
@@ -520,19 +547,24 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.semilogx(freqs, coher + coher_std, label='average coherence + std')
                 plt.semilogx(freqs, coher - coher_std, label='average coherence - std')
                 plt.semilogx(freqs, coher_max, label='maximum coherence')
+                plt.semilogx(freqs, coher_95_hi, label='high 95 % CI')
+                plt.semilogx(freqs, coher_mode, label='mode')
                 plt.xlabel('frequency (mHz)')
                 plt.ylabel(data_name + ' : coherence')
                 plt.title('Distribution of')
                 plt.legend(fontsize=10, framealpha=0.5)
-                plt.savefig(savefig + '.coherence.%s' % (savefig_format))
+                plt.savefig(savefig + '.independence.coherence.%s' % (savefig_format))
                 plt.close('all')
 
                 plt.figure(2)
                 plt.imshow(coher_hist, origin='lower', aspect='auto', extent=(freqs[0], freqs[-1], 0, 1))
+                plt.semilogx(freqs, coher_95_hi, label='high 95 % CI')
+                plt.semilogx(freqs, coher_mode, label='mode')
                 plt.xlabel('frequency (mHz)')
                 plt.ylabel('coherence')
                 plt.title(data_name + ' : Coherence distribution')
-                plt.savefig(savefig + '.coherence_histogram.%s' % (savefig_format))
+                plt.legend(fontsize=10, framealpha=0.5)
+                plt.savefig(savefig + '.independence.coherence_histogram.%s' % (savefig_format))
                 plt.close('all')
 
                 # Fourier power: get a Time series from the arithmetic sum of
@@ -823,7 +855,7 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 plt.semilogx(freqs, (logiobs - logiobs_peak_location) / np.log(10.0), label='mean - fitted peak')
                 plt.title(data_name + ' - distribution widths')
                 plt.legend(loc=3, framealpha=0.3, fontsize=10)
-                plt.savefig(savefig + '.logiobs_distribution_width.%s' % (savefig_format))
+                plt.savefig(savefig + '.distribution_width.logiobs.%s' % (savefig_format))
 
                 ###############################################################
                 # Plot the results of the Shapiro-Wilks test for the Fourier
@@ -886,7 +918,9 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.logiobs.pickle',
-                          (freqs / freqfactor[0], logiobs, iobs_peak, logiobs_peak_location, nx * ny, ccc0, lag, ccclag))
+                          (freqs / freqfactor[0], logiobs, iobs_peak,
+                           logiobs_peak_location, nx * ny,
+                           cc0_ds.mean, lag, cclag_ds.mean))
 
                 # Widths of the power distributions
                 pkl_write(pkl_location,
@@ -898,10 +932,10 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                           'OUT.' + ofilename + '.distribution_widths_error.pickle',
                           (freqs / freqfactor[0], error_logiobs_distrib_width))
 
-                # Average coherence
+                # Coherence quantities
                 pkl_write(pkl_location,
                           'OUT.' + ofilename + '.coherence.pickle',
-                          (freqs / freqfactor[0], coher, coher_max))
+                          (freqs / freqfactor[0], coher, coher_max, coher_mode, coher_95_hi))
 
                 # Bump fit
                 #pkl_write(pkl_location,
@@ -962,7 +996,7 @@ do_lstsqr(dataroot='~/Data/AIA/',
           sunlocation='disk',
           fits_level='1.5',
           waves=['171', '193'],
-          regions=['qs', 'moss', 'loopfootpoints', 'sunspot'],
+          regions=['sunspot', 'qs', 'moss', 'loopfootpoints'],
           windows=['hanning'],
           manip='relative')
 

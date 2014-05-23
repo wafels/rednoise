@@ -141,3 +141,22 @@ def fix_nonfinite(data):
     data[bad_indexes] = interpolated
     return data
 
+
+class descriptive_stats:
+    """Some simple descriptive statistics of a 1-D input array"""
+    def __init__(self, data, ci=[0.68, 0.95], **kwargs):
+        self.n = np.size(data)
+        self.max = np.max(data)
+        self.min = np.min(data)
+        self.mean = np.mean(data)
+        self.median = np.median(data)
+        self.hist, self.xhist = np.histogram(data, **kwargs)
+        self.mode = self.xhist[np.argmax(self.hist)]
+        self.std = np.std(data)
+        self.cred = {}
+        for cilevel in ci:
+            lo = 0.5 * (1.0 - cilevel)
+            hi = 1.0 - lo
+            sorted_data = np.sort(data)
+            self.cred[cilevel] = [sorted_data[np.rint(lo * self.n)],
+                                  sorted_data[np.rint(hi * self.n)]]
