@@ -486,6 +486,16 @@ for iwave, wave in enumerate(waves):
                 coher_95_hi[-1] = coher_95_hi[-2]
                 coher_mean[-1] = coher_mean[-2]
 
+                # Load the correlative measures
+                ifilename = 'OUT.' + region_id
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.correlative.pickle')
+                print('Loading ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'rb')
+                cc0_ds = pickle.load(pkl_file)
+                cclag_ds = pickle.load(pkl_file)
+                ccmax_ds = pickle.load(pkl_file)
+                pkl_file.close()
+
                 # Find out the length-scale at which the fitted
                 # cross-correlation coefficient reaches the value of 0.1
                 #decorr_length = ccc_answer[1] * (np.log(ccc_answer[0]) - np.log(0.1))
@@ -521,12 +531,13 @@ for iwave, wave in enumerate(waves):
 
                 # Use the coherence estimate to get a frequency-dependent
                 # independence coefficient
-                independence_coefficient = 1.0 - coher_mean
+                # independence_coefficient = 1.0 - coher
+                independence_coefficient = 1.0 - np.abs(coher_mode)
                 print 'Average independence coefficient ', np.mean(independence_coefficient)
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
                 sigma_of_distribution = fix_nonfinite(std_dev)
-                sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
+                sigma_for_mean = sigma_of_distribution #/ np.sqrt(npixels_effective)
 
                 # Frequency-dependent independence coefficient
                 #independence_coefficient = 1.0 - np.abs(ccc0)

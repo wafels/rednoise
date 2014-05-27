@@ -941,6 +941,11 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                           (freqs / freqfactor[0], coher, coher_max, coher_mode,
                            coher_95_hi, coher_mean))
 
+                # Correlation / independence quantities
+                pkl_write(pkl_location,
+                          'OUT.' + ofilename + '.correlative.pickle',
+                          (cc0_ds, cclag_ds, ccmax_ds))
+
                 # Bump fit
                 #pkl_write(pkl_location,
                 #          'OUT.' + ofilename + '.bump_fit_all.pickle',
