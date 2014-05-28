@@ -929,7 +929,7 @@ for iwave, wave in enumerate(waves):
                     #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
 
                     # Generate test data under hypothesis 0
-                    pred = M1.trace('predictive')[rthis]
+                    pred = M0.trace('predictive')[rthis]
 
                     # Fit the test data using hypothesis 0 and calculate a likelihood
                     try:
