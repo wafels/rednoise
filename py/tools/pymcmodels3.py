@@ -69,6 +69,10 @@ def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
                                       upper=10.0,
                                       doc='background')
 
+    # Factor that expresses our uncertainty over the number of independent
+    # pixels that comprise the observation
+    nfactor = pymc.OneOverX('nfactor', value=1.0)
+
     # Model for the power law spectrum
     @pymc.deterministic(plot=False)
     def fourier_power_spectrum(p=power_law_index,
@@ -80,13 +84,13 @@ def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
         return out
 
     spectrum = pymc.Normal('spectrum',
-                           tau=1.0 / (sigma ** 2),
+                           tau=1.0 / ((sigma ** 2) / nfactor),
                            mu=fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
 
     predictive = pymc.Normal('predictive',
-                             tau=1.0 / (sigma ** 2),
+                             tau=1.0 / ((sigma ** 2) / nfactor),
                              mu=fourier_power_spectrum)
     # MCMC model
     return locals()
@@ -169,6 +173,10 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
                                       upper=3.0,
                                       doc='gaussian_width')
 
+    # Factor that expresses our uncertainty over the number of independent
+    # pixels that comprise the observation
+    nfactor = pymc.OneOverX('nfactor', value=1.0)
+
     # Model for the power law spectrum
     @pymc.deterministic(plot=False)
     def fourier_power_spectrum(p=power_law_index,
@@ -183,14 +191,15 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
         return out
 
     spectrum = pymc.Normal('spectrum',
-                           tau=1.0 / (sigma ** 2),
+                           tau=1.0 / ((sigma ** 2) / nfactor),
                            mu=fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
 
     predictive = pymc.Normal('predictive',
-                             tau=1.0 / (sigma ** 2),
+                             tau=1.0 / ((sigma ** 2) / nfactor),
                              mu=fourier_power_spectrum)
 
     # MCMC model
     return locals()
+

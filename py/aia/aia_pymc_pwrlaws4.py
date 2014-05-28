@@ -537,7 +537,7 @@ for iwave, wave in enumerate(waves):
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
                 sigma_of_distribution = fix_nonfinite(std_dev)
-                sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
+                sigma_for_mean = sigma_of_distribution #/ np.sqrt(npixels_effective)
 
                 # Frequency-dependent independence coefficient
                 #independence_coefficient = 1.0 - np.abs(ccc0)
