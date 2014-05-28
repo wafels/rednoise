@@ -928,8 +928,8 @@ for iwave, wave in enumerate(waves):
                     #print ' '
                     #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
 
-                    # Generate test data under hypothesis 1
-                    pred = M0.trace('predictive')[rthis]
+                    # Generate test data under hypothesis 0
+                    pred = M1.trace('predictive')[rthis]
 
                     # Fit the test data using hypothesis 0 and calculate a likelihood
                     try:
@@ -940,16 +940,23 @@ for iwave, wave in enumerate(waves):
                         # variable.  Unfortunately, this will take much much
                         # longer than the current process.
                         #
+                        # Curve fits
+                        # ----------
                         #fit0, _ = curve_fit(rnspectralmodels.Log_splwc_CF, x, pred, sigma=sigma / np.sqrt(A0[3]), p0=A0[0:3])
                         #fit0_bf = get_spectrum_M0(x, fit0)
                         #l0 = get_log_likelihood(pred, fit0_bf, sigma / np.sqrt(A0[3]))
+                        #
+                        # Use PyMC
+                        # --------
                         pymcmodel0 = pymcmodels3.Log_splwc(x, pred, sigma)
                         #M0 = pymc.MCMC(pymcmodel0)
+                        #M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
                         map_M0 = pymc.MAP(pymcmodel0)
                         map_M0.fit(method='fmin_powell')
                         A0_bf = get_variables_M0(map_M0)
                         fit0_bf = get_spectrum_M0(x, A0_bf)
                         l0 = get_log_likelihood(pred, fit0_bf, sigma / np.sqrt(A0_bf[3]))
+                        print 'l0 = %f' % (l0)
                     except:
                         print('LRT: Error fitting M0 to sample.')
                         l0 = None
@@ -963,16 +970,23 @@ for iwave, wave in enumerate(waves):
                         # variable.  Unfortunately, this will take much much
                         # longer than the current process.
                         #
+                        # Curve fits
+                        # ----------
                         #fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma / np.sqrt(A1[6]), p0=A1[0:6])
                         #fit1_bf = get_spectrum_M1(x, fit1)
                         #l1 = get_log_likelihood(pred, fit1_bf, sigma / np.sqrt(A1[6]))
-                        pymcmodel1 = pymcmodels3.Log_splwc(x, pred, sigma)
+                        #
+                        # Use PyMC
+                        # --------
+                        pymcmodel1 = pymcmodels3.Log_splwc_AddNormalBump2(x, pred, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
                         #M1 = pymc.MCMC(pymcmodel1)
+                        #M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
                         map_M1 = pymc.MAP(pymcmodel1)
                         map_M1.fit(method='fmin_powell')
                         A1_bf = get_variables_M1(map_M1)
                         fit1_bf = get_spectrum_M1(x, A1_bf)
                         l1 = get_log_likelihood(pred, fit1_bf, sigma / np.sqrt(A1_bf[6]))
+                        print 'l1 = %f' % (l1)
                     except:
                         print('LRT: Error fitting M1 to sample.')
                         l1 = None
