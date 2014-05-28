@@ -25,7 +25,6 @@ Hence we set up PyMC models that implement these distributions.
 """
 
 
-import numpy as np
 import pymc
 import rnspectralmodels
 

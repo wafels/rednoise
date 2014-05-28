@@ -513,22 +513,21 @@ power law spectrum is presented in Section \ref{ssec:nplps}.
   detection of oscillatory power}
 \label{ssec:corseis}
 
-Section \ref{sec:anal} demonstrates the presence of a red
-noise-like signal in two of the most commonly used wavebands for
+Section \ref{sec:anal} demonstrates the presence of an approximate
+\PL\ \PS\ signal in two of the most commonly used wavebands for
 coronal seismology, SDO-AIA 171\AA\ and 193\AA.  The observed spectra
 generally show a \PL-like behavior at time-scales of interest in
 coronal seismology, and longer.  Within the confines of the models we
 have chosen, coronal moss regions show the largest contribution from a
-non \PL\ \PS\ source over a relatively limited range of
-frequencies.  The frequencies at which the lognormal contribution is
-larger than the underlying power-law distribution could be used to
-define an average frequency range within which the majority
-contribution to the overall Fourier power is not associated with the
-underlying power-law distribution.  However, the \Fps\ in this range
-would still have to analyzed using both the power-law and lognormal
-contributions to the overall power, and better estimates to the
-power-law parameters will be obtained if the full frequency range of
-the observations are used.
+non \PL\ \PS\ source over a relatively limited range of frequencies.
+The frequencies at which the lognormal contribution is larger than the
+underlying power-law distribution could be used to define an average
+frequency range within which the majority contribution to the overall
+Fourier power is not associated with the underlying power-law
+distribution.  However, the \Fps\ in this range would still have to
+analyzed using both the power-law and lognormal contributions to the
+overall power, and better estimates to the power-law parameters will
+be obtained if the full frequency range of the observations are used.
 
 The presence of a non \PL\ contribution to the \Fps\ does not change
 the fact that the background emission is essentially power-law like.
@@ -536,68 +535,69 @@ For the frequencies that have been of interest in coronal seismology,
 the background \PS\ is therefore scale free on average.  If there is
 no time-scale that can be used to remove a background trend, then the
 time-series has to be analyzed without this processing step.  However,
-a lack of awareness of the background red-noise nature of the emission
+a lack of awareness of the background \PL\ \PS\ nature of the emission
 can cause problems in attempting to analyze for the presence of narrow
 frequency band oscillations, as the following example demonstrates.
 
 \begin{figure}
 \epsscale{.80}
 \plotone{white_red_compare.eps}
-\caption{Comparison of the effect of assuming a white or red noise
-  background on the detection of an oscillatory signal for simulated
-  time-series.  Plot (a) shows the simulated time-series, generated
-  from a \protect\PS\ \protect$P(f)\propto f^{-1.77}$ and no
+\caption{Comparison of the effect of assuming a white or
+  \PL\ \PS\ background on the detection of an oscillatory signal for
+  simulated time-series.  Plot (a) shows the simulated time-series,
+  generated from a \protect\PS\ \protect$P(f)\propto f^{-1.77}$ and no
   explicit oscillation included.  Plot (b) shows the wavelet power
   spectrum with the cone-of-influence (shaded area) and regions above
   the 95\% confidence level, assuming a white-noise (Gaussian)
- background .  Plot (c) shows the global wavelet \protect\PS\ for
+  background .  Plot (c) shows the global wavelet \protect\PS\ for
   this wavelet transform.  Plots (d) and (e) are the same as plots (b)
-  and (c) under the assumption of a red-noise background.}
+  and (c) under the assumption of a
+  \protect\PL\ \protect\PS\ background.}
 \label{fig:comparison}
 \end{figure}
 
-Figure \ref{fig:comparison} shows how a red-noise \PS\ can be
-mistakenly thought to contain an oscillatory signal.  The time series
-(Figure \ref{fig:comparison}(a)) is constructed from a \PS\
-$P(f)\approx f^{-1.77}$ with no explicit oscillatory content,
-following the construction procedure of \cite{2010MNRAS.402..307V}.
-Figure \ref{fig:comparison}(b) shows that the assumption of a
-white-noise background and a 95\% confidence level leads to the
-positive detection of significant oscillatory power in this time
-series. Figure \ref{fig:comparison}(c) shows that the assumption of a
-red-noise background with the same confidence level significantly
-reduces the area for which a detection may be claimed.  Even with this
+Figure \ref{fig:comparison} shows how a time series generated from a
+random sample from a \PL\ \PS\ can be mistakenly thought to contain a
+narrow-band oscillatory signal.  The time series (Figure
+\ref{fig:comparison}(a)) is constructed from a \PS\ $P(f)\approx
+f^{-1.77}$ with no explicit oscillatory content, following the
+construction procedure of \cite{2010MNRAS.402..307V}.  Figure
+\ref{fig:comparison}(b) shows that the assumption of a white-noise
+background and a 95\% confidence level leads to the positive detection
+of significant oscillatory power in this time series. Figure
+\ref{fig:comparison}(c) shows that the assumption of a background
+\PL\ \PS\ with the same confidence level significantly reduces the
+area for which a detection may be claimed.  Even with this
 significantly different background assumption, there is still a
 significant amount of wavelet power above the 95\% confidence level.
 However, since the data is simulated without an explicit oscillatory
 component, the high wavelet power must have arisen by chance.  The
 simulated data, along with the results of Section \ref{sec:anal},
 suggest that when examining the wavelet transforms of time-series for
-wave packets, a background red-noise \PS\ should be assumed, along
-with higher confidence levels (99\% or higher), in order to minimize
-the effects of mistakenly identifying random variations in the
-background \PS\ as evidence for an oscillatory signal.
+wave packets, a background \PL\ \PS\ should be assumed, along with
+higher confidence levels (99\% or higher), in order to minimize the
+effects of mistakenly identifying random variations in the background
+\PS\ as evidence for an oscillatory signal.
 
 However, even this approach to identifying oscillatory power is not
 quite complete, as it simply rejects the null hypothesis that the
-\PS\ can be adequately explained by a red-noise power
-spectrum.  
+\PS\ can be adequately explained by a \PL\ \PS.
 
-Model comparison techniques similar to that described in
-Section \ref{sec:anal} are required to prefer a model with oscillatory
-content over one without. The difficulty in finding narrow-band
-features in Fourier power spectra against a red-noise background power
-spectrum has been recognized by \cite{2010MNRAS.402..307V} in the
-study of XMM-Newton observations of highly variable Seyfert 1
-galaxies.  \cite{2010MNRAS.402..307V} presents a model fitting and
-comparison technique that is directly applicable to the search for
-oscillatory power in coronal time-series.
+Model comparison techniques similar to that described in Section
+\ref{sec:anal} are required to prefer a model with oscillatory content
+over one without. The difficulty in finding narrow-band features in
+Fourier power spectra against a background \PL\ \PS\ has been
+recognized by \cite{2010MNRAS.402..307V} in the study of XMM-Newton
+observations of highly variable Seyfert 1 galaxies.
+\cite{2010MNRAS.402..307V} presents a model fitting and comparison
+technique that is directly applicable to the search for oscillatory
+power in coronal time-series.
 
 \subsection{Implications for coronal seismology and automated
   oscillation detection algorithms}\label{sec:oscdetect}
 
-The discussion of Section \ref{ssec:corseis} shows that red-noise
-power spectra has a powerful effect on the claims of a detection of
+The discussion of Section \ref{ssec:corseis} shows that \PL\ power
+spectra have a powerful effect on the claims of a detection of
 narrow-frequency band oscillations in single time-series.  When
 looking at extended regions of coronal imaging data, evidence for the
 presence of a {\it wave} in the corona is strengthened if it can be
@@ -619,19 +619,18 @@ rely on background trend subtraction, such as
 justify a time-scale.
 
 As has been shown above, the assumption of a Gaussian-distributed
-noise when a red noise power-spectrum is actually present, coupled
-with too low a confidence level, can lead to misleading results when
-looking for oscillatory signals.  Many wave detection algorithms do
-make this assumption, for example \cite{2004SoPh..223....1D},
+(white) noise when a \PL\ \PS\ is actually present, coupled with too
+low a confidence level, can lead to misleading results when looking
+for oscillatory signals.  Many wave detection algorithms do make this
+assumption, for example \cite{2004SoPh..223....1D},
 \cite{2007SoPh..241..397N}, \cite{2008SoPh..248..395S},
 \cite{2010SoPh..264..403I} and \cite{2013SoPh..286..405C}.  Such
-approaches have yet to be tested assuming a red-noise background power
-spectrum, and so their efficacy is unknown.  However,
-\cite{2004SoPh..223....1D} and \cite{2008SoPh..248..395S} are
-wavelet-based approaches, and the discussion Section
-\ref{ssec:corseis} does suggest that a red-noise background spectrum
-will make a significant difference to the number of wave detections
-found in the data.
+approaches have yet to be tested assuming a background \PL\ \PS, and
+so their efficacy is unknown.  However, \cite{2004SoPh..223....1D} and
+\cite{2008SoPh..248..395S} are wavelet-based approaches, and the
+discussion Section \ref{ssec:corseis} does suggest that a background
+\PL\ \PS\ will make a significant difference to the number of wave
+detections found in the data.
 
 All the automated detection algorithms described above attempt to find
 individual pixels that are obviously oscillating at some frequency,
@@ -651,9 +650,9 @@ involves an implicit assessment of the likelihood that an oscillation
 has been detected.  The basis of the assessment is a judgement that a
 signal is seen in multiple contiguous pixels.  However, the results of
 Section \ref{sec:anal} suggest that each pixel in these plots has a
-red-noise background \PS: the discussion of Section
-\ref{ssec:corseis} therefore suggests that the significance of any
-claimed oscillation is much reduced.
+background \PL\ \PS: the discussion of Section \ref{ssec:corseis}
+therefore suggests that the significance of any claimed oscillation is
+much reduced.
 
 
 \subsection{``Excess'' emission}\label{ssec:excess}
@@ -677,14 +676,14 @@ surface.
 
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
 The first contribution to both models $P_{0}$ and $P_{i}$ is a
-red-noise like \PS.  It is present in both wavebands
-studied and in all the regions, and so parsimony suggests that the
-mechanism of its creation is both similar and ubiquitous in all parts
-of the solar atmosphere.  We hypothesize that the \PL\ \PS\ is due to
-the sum of a distribution of a large number of emission events having
-different amounts of emission. \cite{2011soca.book.....A} describes how a
-\PL\ \PS\ may obtained from such a distribution, and that argument is
-outlined below.
+\PL-like \PS.  It is present in both wavebands studied and in all the
+regions, and so parsimony suggests that the mechanism of its creation
+is both similar and ubiquitous in all parts of the solar atmosphere.
+We hypothesize that the \PL\ \PS\ is due to the sum of a distribution
+of a large number of emission events having different amounts of
+emission. \cite{2011soca.book.....A} describes how a \PL\ \PS\ may
+obtained from such a distribution, and that argument is outlined
+below.
 
 Each emission event is modeled as an exponentially decaying function
 of time $t$

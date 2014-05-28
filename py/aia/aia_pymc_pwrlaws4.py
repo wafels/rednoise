@@ -6,9 +6,9 @@
 import pickle
 import numpy as np
 import os
-from matplotlib import rc_file
-matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
-rc_file(os.path.expanduser(matplotlib_file))
+#from matplotlib import rc_file
+#matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
+#rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
 
 import pymc
@@ -20,7 +20,7 @@ from scipy.stats import shapiro, anderson
 from statsmodels.graphics.gofplots import qqplot
 
 import aia_specific
-import pymcmodels2
+import pymcmodels3
 import rnspectralmodels
 from paper1 import sunday_name, prettyprint, log_10_product
 from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details
@@ -81,7 +81,8 @@ def get_log_likelihood(y, f, sigma):
 # Hypothesis 0 functions
 #
 def get_variables_M0(m):
-    A = [m.value.power_law_norm, m.value.power_law_index, m.value.background]
+    A = [m.value.power_law_norm, m.value.power_law_index, m.value.background,
+         m.value.nfactor]
     return A
 
 
@@ -94,8 +95,9 @@ def get_spectrum_M0(x, A):
     return rnspectralmodels.Log_splwc(x, A)
 
 
-def get_likelihood_M0(map_M0, x, pwr, sigma, tau, obstype):
-    A0 = get_variables_M0(map_M0)
+def get_likelihood_M0(map_M0, x, pwr, sigma, obstype):
+    tau = 1.0 / (sigma ** 2)
+    A0 = get_variables_M0(map_M0)[0:3]
     A0 = curve_fit_M0(x, pwr, A0, sigma)
     if obstype == '.logiobs':
         return pymc.normal_like(pwr, get_spectrum_M0(x, A0), tau)
@@ -134,13 +136,13 @@ def get_ci(data, ci=0.68):
 def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 bins=100, savetype='.png', extra_factors=None):
     if model == 'M0':
-        variables = ['power_law_norm', 'power_law_index', 'background']
+        variables = ['power_law_norm', 'power_law_index', 'background', 'nfactor']
     if model == 'M1':
         variables = ['power_law_norm', 'power_law_index', 'background',
-                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
+                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width', 'nfactor']
     if model == 'M2':
         variables = ['power_law_norm', 'power_law_index', 'background',
-                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width']
+                 'gaussian_amplitude', 'gaussian_position', 'gaussian_width', 'nfactor']
 
     s = M.stats()
     fontsize = 10
@@ -241,7 +243,8 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
 #
 def get_variables_M1(m):
     A = [m.value.power_law_norm, m.value.power_law_index, m.value.background,
-         m.value.gaussian_amplitude, m.value.gaussian_position, m.value.gaussian_width]
+         m.value.gaussian_amplitude, m.value.gaussian_position,
+         m.value.gaussian_width, m.value.nfactor]
     return A
 
 
@@ -268,8 +271,9 @@ def get_spectrum_M1(x, A):
     return rnspectralmodels.Log_splwc_AddNormalBump2(x, A)
 
 
-def get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype):
-    A1 = get_variables_M1(map_M1)
+def get_likelihood_M1(map_M1, x, pwr, sigma, obstype):
+    tau = 1.0 / (sigma ** 2)
+    A1 = get_variables_M1(map_M1)[0:6]
     A1 = curve_fit_M1(x, pwr, A1, sigma)
     return pymc.normal_like(pwr, get_spectrum_M1(x, A1), tau)
 
@@ -360,13 +364,13 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 1
+testing = 100
 
 nsample = 5000 / testing
 
 # PyMC control
-itera = 100000 / testing
-burn = 20000 / testing
+itera = 100000 # / testing
+burn = 20000 #/ testing
 thin = 5
 
 # Image file type
@@ -564,47 +568,45 @@ for iwave, wave in enumerate(waves):
                 # spectrum, and a second to get a better estimate using the
                 # sigma mean
                 prettyprint('Model fitting and results')
-                for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
-                    tau = 1.0 / (sigma ** 2)
-                    pwr = pwr_ff
-                    if jjj == 0:
-                        pymcmodel0 = pymcmodels2.Log_splwc(x, pwr, sigma)
-                    else:
-                        pymcmodel0 = pymcmodels2.Log_splwc(x, pwr, sigma, init=A0)
-                    passnumber = str(jjj)
+                sigma = sigma_of_distribution
+                tau = 1.0 / (sigma ** 2)
+                pwr = pwr_ff
+                pymcmodel0 = pymcmodels3.Log_splwc(x, pwr, sigma)
+                jjj = 0
+                passnumber = str(jjj)
 
-                    # Initiate the sampler
-                    dbname0 = os.path.join(pkl_location, 'MCMC.M0.' + passnumber + region_id + obstype)
-                    M0 = pymc.MCMC(pymcmodel0, db='pickle', dbname=dbname0)
+                # Initiate the sampler
+                dbname0 = os.path.join(pkl_location, 'MCMC.M0.' + passnumber + region_id + obstype)
+                M0 = pymc.MCMC(pymcmodel0, db='pickle', dbname=dbname0)
 
-                    # Run the sampler
-                    print('M0 : pass %i : Running simple power law model' % (jjj + 1))
-                    M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
-                    M0.db.close()
+                # Run the sampler
+                print('M0 : pass %i : Running simple power law model' % (jjj + 1))
+                M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
+                M0.db.close()
 
-                    # Now run the MAP
-                    map_M0 = pymc.MAP(pymcmodel0)
-                    print(' ')
-                    print('M0 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
-                    map_M0.fit(method='fmin_powell')
+                # Now run the MAP
+                map_M0 = pymc.MAP(pymcmodel0)
+                print(' ')
+                print('M0 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
+                map_M0.fit(method='fmin_powell')
 
-                    # Get the variables and the best fit
-                    A0 = get_variables_M0(map_M0)
-                    M0_bf = get_spectrum_M0(x, A0)
+                # Get the variables and the best fit
+                A0 = get_variables_M0(map_M0)
+                M0_bf = get_spectrum_M0(x, A0)
 
-                    # Plot the traces
-                    write_plots(M0, region_id, obstype, savefig, 'M0', passnumber, bins=40, extra_factors=[xnorm])
+                # Plot the traces
+                write_plots(M0, region_id, obstype, savefig, 'M0', passnumber, bins=40, extra_factors=[xnorm])
 
-                    # Get the likelihood at the maximum
-                    #likelihood0_data = map_M0.logp_at_max
-                    l0_data = get_likelihood_M0(map_M0, x, pwr, sigma, tau, obstype)
-                    l0_data_logp = get_log_likelihood(pwr, M0_bf, sigma)
+                # Get the likelihood at the maximum
+                #likelihood0_data = map_M0.logp_at_max
+                l0_data = get_likelihood_M0(map_M0, x, pwr, sigma / np.sqrt(A0[3]), obstype)
+                l0_data_logp = get_log_likelihood(pwr, M0_bf, sigma / np.sqrt(A0[3]))
 
-                    # Get the chi-squared value
-                    chi0 = get_chi_M0(map_M0, x, pwr, sigma)
-                    print('M0 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi0))
-                    print('   : variables ', A0)
-                    print('   : estimate log likelihood = %f' % (l0_data_logp))
+                # Get the chi-squared value
+                chi0 = get_chi_M0(map_M0, x, pwr, sigma / np.sqrt(A0[3]))
+                print('M0 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi0))
+                print('   : variables ', A0)
+                print('   : estimate log likelihood = %f' % (l0_data_logp))
 
                 #
                 # Get an estimate of where the Gaussian bump might be for the
@@ -634,61 +636,53 @@ for iwave, wave in enumerate(waves):
                 #
                 # Second model - power law with Gaussian bumps
                 #
-                for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
-                    tau = 1.0 / (sigma ** 2)
-                    pwr = pwr_ff
-                    if jjj == 0:
-                        if A1_estimate[4] < log_bump_frequency_limits[0]:
-                            A1_estimate[4] = log_bump_frequency_limits[0]
-                            print '!! Estimate fit exceeded lower limit of log_bump_frequency_limits. Resetting to limit'
-                        if A1_estimate[4] > log_bump_frequency_limits[1]:
-                            A1_estimate[4] = log_bump_frequency_limits[1]
-                            print '!! Estimate fit exceeded upper limit of log_bump_frequency_limits. Resetting to limit'
-                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
-                    else:
-                        if A1[4] < log_bump_frequency_limits[0]:
-                            A1[4] = log_bump_frequency_limits[0]
-                            print 'First pass fit exceeded lower limit of log_bump_frequency_limits'
-                        if A1[4] > log_bump_frequency_limits[1]:
-                            A1[4] = log_bump_frequency_limits[1]
-                            print 'First pass fit exceeded upper limit of log_bump_frequency_limits'
-                        pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1, log_bump_frequency_limits=log_bump_frequency_limits)
+                sigma = sigma_of_distribution
+                tau = 1.0 / (sigma ** 2)
+                pwr = pwr_ff
+                if A1_estimate[4] < log_bump_frequency_limits[0]:
+                    A1_estimate[4] = log_bump_frequency_limits[0]
+                    print '!! Estimate fit exceeded lower limit of log_bump_frequency_limits. Resetting to limit'
+                if A1_estimate[4] > log_bump_frequency_limits[1]:
+                    A1_estimate[4] = log_bump_frequency_limits[1]
+                    print '!! Estimate fit exceeded upper limit of log_bump_frequency_limits. Resetting to limit'
+                pymcmodel1 = pymcmodels3.Log_splwc_AddNormalBump2(x, pwr, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
 
-                    # Define the pass number
-                    passnumber = str(jjj)
+                # Define the pass number
+                jjj = 0
+                passnumber = str(jjj)
 
-                    # Initiate the sampler
-                    dbname1 = os.path.join(pkl_location, 'MCMC.M1.' + passnumber + region_id + obstype)
-                    M1 = pymc.MCMC(pymcmodel1, db='pickle', dbname=dbname1)
+                # Initiate the sampler
+                dbname1 = os.path.join(pkl_location, 'MCMC.M1.' + passnumber + region_id + obstype)
+                M1 = pymc.MCMC(pymcmodel1, db='pickle', dbname=dbname1)
 
-                    # Run the sampler
-                    print('M1 : pass %i : Running power law plus bump model' % (jjj + 1))
-                    M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
-                    M1.db.close()
+                # Run the sampler
+                print('M1 : pass %i : Running power law plus bump model' % (jjj + 1))
+                M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
+                M1.db.close()
 
-                    # Now run the MAP
-                    map_M1 = pymc.MAP(pymcmodel1)
-                    print(' ')
-                    print('M1 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
-                    map_M1.fit(method='fmin_powell')
+                # Now run the MAP
+                map_M1 = pymc.MAP(pymcmodel1)
+                print(' ')
+                print('M1 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
+                map_M1.fit(method='fmin_powell')
 
-                    # Get the variables and the best fit
-                    A1 = get_variables_M1(map_M1)
-                    M1_bf = get_spectrum_M1(x, A1)
+                # Get the variables and the best fit
+                A1 = get_variables_M1(map_M1)
+                M1_bf = get_spectrum_M1(x, A1)
 
-                    # Plot the traces
-                    write_plots(M1, region_id, obstype, savefig, 'M1', passnumber, bins=40, extra_factors=[xnorm])
+                # Plot the traces
+                write_plots(M1, region_id, obstype, savefig, 'M1', passnumber, bins=40, extra_factors=[xnorm])
 
-                    # Get the likelihood at the maximum
-                    #likelihood1_data = map_M1.logp_at_max
-                    l1_data = get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype)
-                    l1_data_logp = get_log_likelihood(pwr, M1_bf, sigma)
+                # Get the likelihood at the maximum
+                #likelihood1_data = map_M1.logp_at_max
+                l1_data = get_likelihood_M1(map_M1, x, pwr, sigma / np.sqrt(A1[6]), obstype)
+                l1_data_logp = get_log_likelihood(pwr, M1_bf, sigma / np.sqrt(A1[6]))
 
-                    # Get the chi-squared value
-                    chi1 = get_chi_M1(map_M1, x, pwr, sigma)
-                    print('M1 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi1))
-                    print('   : variables ', A1)
-                    print('   : estimate log likelihood = %f' % (l1_data_logp))
+                # Get the chi-squared value
+                chi1 = get_chi_M1(map_M1, x, pwr, sigma / np.sqrt(A1[6]))
+                print('M1 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi1))
+                print('   : variables ', A1)
+                print('   : estimate log likelihood = %f' % (l1_data_logp))
 
                 # Store these results
                 fitsummarydata = FitSummary(map_M0, l0_data, chi0, map_M1, l1_data, chi1)
@@ -934,49 +928,53 @@ for iwave, wave in enumerate(waves):
                     #print ' '
                     #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
 
-                    # Generate test data under hypothesis 0
+                    # Generate test data under hypothesis 1
                     pred = M0.trace('predictive')[rthis]
 
                     # Fit the test data using hypothesis 0 and calculate a likelihood
-                    #M0_pp = pymcmodels2.Log_splwc(x, pred, sigma)
-                    #map_M0_pp = pymc.MAP(M0_pp)
                     try:
-                        #print('M0: fitting to find the maximum likelihood')
                         #
-                        # Use the MAP functionality of PyMC
+                        # Curve fits.  This should really be replaced by the
+                        # full Bayesian fit as the Bayesian fit in this program
+                        # includes variable noise in the form of the "nfactor"
+                        # variable.  Unfortunately, this will take much much
+                        # longer than the current process.
                         #
-                        #map_M0_pp.fit(method='fmin_powell')
-                        #map_M0_pp.fit(method='fmin_powell')
-                        #l0 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        fit0, _ = curve_fit(rnspectralmodels.Log_splwc_CF, x, pred, sigma=sigma, p0=A0)
-                        fit0_bf = get_spectrum_M0(x, fit0)
-                        l0 = get_log_likelihood(pred, fit0_bf, sigma)
+                        #fit0, _ = curve_fit(rnspectralmodels.Log_splwc_CF, x, pred, sigma=sigma / np.sqrt(A0[3]), p0=A0[0:3])
+                        #fit0_bf = get_spectrum_M0(x, fit0)
+                        #l0 = get_log_likelihood(pred, fit0_bf, sigma / np.sqrt(A0[3]))
+                        pymcmodel0 = pymcmodels3.Log_splwc(x, pred, sigma)
+                        #M0 = pymc.MCMC(pymcmodel0)
+                        map_M0 = pymc.MAP(pymcmodel0)
+                        map_M0.fit(method='fmin_powell')
+                        A0_bf = get_variables_M0(map_M0)
+                        fit0_bf = get_spectrum_M0(x, A0_bf)
+                        l0 = get_log_likelihood(pred, fit0_bf, sigma / np.sqrt(A0_bf[3]))
                     except:
-                        #print('Error fitting M0 to sample.')
+                        print('LRT: Error fitting M0 to sample.')
                         l0 = None
 
                     # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddNormalBump2(x, pred, sigma)
-                    #map_M1_pp = pymc.MAP(M1_pp)
                     try:
-                        #print('M1: fitting to find the maximum likelihood')
                         #
-                        # Use the MAP functionality of PyMC
+                        # Curve fits.  This should really be replaced by the
+                        # full Bayesian fit as the Bayesian fit in this program
+                        # includes variable noise in the form of the "nfactor"
+                        # variable.  Unfortunately, this will take much much
+                        # longer than the current process.
                         #
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma, p0=A1)
-                        fit1_bf = get_spectrum_M1(x, fit1)
-                        l1 = get_log_likelihood(pred, fit1_bf, sigma)
+                        #fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma / np.sqrt(A1[6]), p0=A1[0:6])
+                        #fit1_bf = get_spectrum_M1(x, fit1)
+                        #l1 = get_log_likelihood(pred, fit1_bf, sigma / np.sqrt(A1[6]))
+                        pymcmodel1 = pymcmodels3.Log_splwc(x, pred, sigma)
+                        #M1 = pymc.MCMC(pymcmodel1)
+                        map_M1 = pymc.MAP(pymcmodel1)
+                        map_M1.fit(method='fmin_powell')
+                        A1_bf = get_variables_M1(map_M1)
+                        fit1_bf = get_spectrum_M1(x, A1_bf)
+                        l1 = get_log_likelihood(pred, fit1_bf, sigma / np.sqrt(A1_bf[6]))
                     except:
-                        #print('Error fitting M1 to sample.')
+                        print('LRT: Error fitting M1 to sample.')
                         l1 = None
 
                     # Sort the results into good and bad.
@@ -986,7 +984,7 @@ for iwave, wave in enumerate(waves):
                             fit_results = (rthis, l0, chi0, l1, chi1, t_lrt_pred)
                             good_results.append(fit_results)
                             nfound = nfound + 1
-                            #print('    T_lrt = %f' % (T_LRT(l0, l1)))
+                            print('#%i    T_lrt = %f' % (nfound, T_LRT(l0, l1)))
                             if np.mod(nfound, 1000) == 0:
                                 plt.figure(1)
                                 plt.plot(xvalue, pred, label='predicted', color='k')
@@ -1045,7 +1043,7 @@ for iwave, wave in enumerate(waves):
                 ntrace = np.size(M1.trace('power_law_index')[:])
 
                 # T_SSE for the data
-                t_sse_data = T_SSE(pwr_ff, M1_bf, sigma)
+                t_sse_data = T_SSE(pwr_ff, M1_bf, sigma / np.sqrt(A1[6]))
                 print 'T_SSE for the data = %f' % (t_sse_data)
                 # main loop
                 rthis = 0
@@ -1059,28 +1057,20 @@ for iwave, wave in enumerate(waves):
                     #print ' '
                     #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
 
-                    # Generate test data under hypothesis 0
+                    # Generate test data under hypothesis 1
                     pred = M1.trace('predictive')[rthis]
 
                     # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddNormalBump2(x, pred, sigma)
-                    #map_M1_pp = pymc.MAP(M1_pp)
+
                     try:
-                        #print('M1: fitting to find the maximum likelihood')
-                        #
-                        # Use the MAP functionality of PyMC
-                        #
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
                         #
                         # Curve fits
                         #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma, p0=A1)
+                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma / np.sqrt(A1[6]), p0=A1[0:6])
                         fit1_bf = get_spectrum_M1(x, fit1)
-                        t_sse_pred = T_SSE(pred, fit1_bf, sigma)
+                        t_sse_pred = T_SSE(pred, fit1_bf, sigma / np.sqrt(A1[6]))
                     except:
-                        print('Error fitting M1 to sample.')
+                        print('SSE: Error fitting M1 to sample.')
                         t_sse_pred = None
 
                     # Sort the results into good and bad.
