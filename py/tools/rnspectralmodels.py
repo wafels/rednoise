@@ -122,9 +122,56 @@ def Log_splwc_AddNormalBump2(f, a):
 
 
 def Log_splwc_AddNormalBump2_CF(f, a0, a1, a2, a3, a4, a5):
-    return np.log(power_law_with_constant(f, [a0, a1, a2]) + NormalBump2(np.log(f), [a3, a4, a5]))
+    return Log_splwc_AddNormalBump2(f, [a0, a1, a2, a3, a4, a5])
 
 
+#
+# This section implements the "non-periodic" component as described by
+# Harvey 1993.
+#
+def exp_decay_autocor(f, a):
+    return np.exp(a[0]) / (1.0 + (2 * np.pi * f * a[1]) ** a[2])
+
+
+def exp_decay_autocor_CF(f, a0, a1, a2):
+    return exp_decay_autocor(f, [a0, a1, a2])
+
+
+def splwc_AddExpDecayAutocor(f, a):
+    """Simple power law with a constant, a model component that is constant at
+    low frequencies and tails off to zero at high frequencies.  At high
+    frequencies the power spectrum is dominated by the constant background.
+
+    Parameters
+    ----------
+    f : ndarray
+        frequencies
+
+    a : ndarray[6]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index
+        a[2] : the natural logarithm of the constant background
+        a[3] : the natural logarithm of the normalization constant for the
+               second component
+        a[4] : period
+        a[5] : power law of decay
+    """
+    return power_law_with_constant(f, a[0:3]) + exp_decay_autocor(f, a[3:6])
+
+
+def Log_splwc_AddExpDecayAutocor(f, a):
+    return np.log(splwc_AddExpDecayAutocor(f, a))
+
+
+def Log_splwc_AddExpDecayAutocor_CF(f, a0, a1, a2, a3, a4, a5):
+    return Log_splwc_AddExpDecayAutocor(f, [a0, a1, a2, a3, a4, a5])
+
+#
+#
+#
+# ----------------------------------------------------------------------------
+# Everything below here can probably be safely deleted.
+#
 #
 # Model with Gaussian bump.
 #
