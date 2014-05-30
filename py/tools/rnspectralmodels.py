@@ -130,7 +130,7 @@ def Log_splwc_AddNormalBump2_CF(f, a0, a1, a2, a3, a4, a5):
 # Harvey 1993.
 #
 def exp_decay_autocor(f, a):
-    return np.exp(a[0]) / (1.0 + (2 * np.pi * f * a[1]) ** a[2])
+    return np.exp(a[0]) / (1.0 + (2 * np.pi * f / a[1]) ** a[2])
 
 
 def exp_decay_autocor_CF(f, a0, a1, a2):
@@ -166,6 +166,44 @@ def Log_splwc_AddExpDecayAutocor(f, a):
 def Log_splwc_AddExpDecayAutocor_CF(f, a0, a1, a2, a3, a4, a5):
     return Log_splwc_AddExpDecayAutocor(f, [a0, a1, a2, a3, a4, a5])
 
+
+#
+# Double broken power law models
+#
+def broken_power_law_with_constant(f, a):
+    # a[0] = natural logarithm of the amplitude
+    # a[1] = power law index at frequencies less than a[3]
+    # a[2] = natural logarithm of the background constant
+    # a[3] = location of the break in the power law
+    # a[4] = power law index at frequencies greater than a[3]
+    power = np.zeros_like(f)
+
+    # Where the first power law is valid
+    p1_location = f < a[3]
+
+    # Where the second power law is valid
+    p2_location = f >= a[3]
+
+    # First power law
+    p1 = np.exp(a[0]) * ((fnorm(f[p1_location], f[0]) ** (-a[1]))) + np.exp(a[2])
+
+    # Second power law
+    p2_amplitude = np.exp(a[0]) * a[3] ** (a[4] - a[1])
+    p2 = p2_amplitude * ((fnorm(f[p2_location], f[0]) ** (-a[4]))) + np.exp(a[2])
+
+    # Fill in the power
+    power[p1_location] = p1
+    power[p2_location] = p2
+
+    return power
+
+
+def Log_broken_power_law_with_constant(f, a):
+    return np.log(broken_power_law_with_constant(f, a))
+
+
+def Log_broken_power_law_with_constant_CF(f, a0, a1, a2, a3, a4):
+    return np.log(broken_power_law_with_constant(f, [a0, a1, a2, a3, a4]))
 #
 #
 #

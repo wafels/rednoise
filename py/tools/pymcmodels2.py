@@ -194,3 +194,107 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
 
     # MCMC model
     return locals()
+
+
+#
+# The model here is a power law plus some Gaussian emission.  Then take the
+# log of that
+#
+def Log_splwc_AddExpDecayAutoCor(analysis_frequencies, analysis_power, sigma,
+                             init=None,
+                             normalized_frequency_limits=[2.0, 1000.0]):
+    #Set up a PyMC model: power law for the power spectrum#
+    # PyMC definitions
+    # Define data and stochastics
+    if init == None:
+        power_law_index = pymc.Uniform('power_law_index',
+                                       lower=-1.0,
+                                       upper=6.0,
+                                       doc='power law index')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      lower=-10.0,
+                                      upper=10.0,
+                                      doc='power law normalization')
+
+        background = pymc.Uniform('background',
+                                      lower=-20.0,
+                                      upper=10.0,
+                                      doc='background')
+
+        eda_amplitude = pymc.Uniform('eda_amplitude',
+                                      lower=-20.0,
+                                      upper=0.0,
+                                      doc='eda_amplitude')
+
+        eda_frequency = pymc.Uniform('eda_frequency',
+                                      lower=normalized_frequency_limits[0],
+                                      upper=normalized_frequency_limits[1],
+                                      doc='eda_frequency')
+
+        eda_index = pymc.Uniform('eda_index',
+                                      lower=0.001,
+                                      upper=6.0,
+                                      doc='eda_width')
+    else:
+        power_law_index = pymc.Uniform('power_law_index',
+                                       value=init[0],
+                                       lower=-1.0,
+                                       upper=6.0,
+                                       doc='power law index')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      value=init[1],
+                                      lower=-10.0,
+                                      upper=10.0,
+                                      doc='power law normalization')
+
+        background = pymc.Uniform('background',
+                                      value=init[2],
+                                      lower=-20.0,
+                                      upper=10.0,
+                                      doc='background')
+
+        eda_amplitude = pymc.Uniform('eda_amplitude',
+                                      value=init[3],
+                                      lower=-20.0,
+                                      upper=0.0,
+                                      doc='eda_amplitude')
+
+        eda_frequency = pymc.Uniform('eda_frequency',
+                                      value=init[4],
+                                      lower=normalized_frequency_limits[0],
+                                      upper=normalized_frequency_limits[1],
+                                      doc='eda_frequency')
+
+        eda_index = pymc.Uniform('eda_index',
+                                      value=init[5],
+                                      lower=0.001,
+                                      upper=6.0,
+                                      doc='eda_width')
+
+    # Model for the power law spectrum
+    @pymc.deterministic(plot=False)
+    def fourier_power_spectrum(p=power_law_index,
+                               a=power_law_norm,
+                               b=background,
+                               ea=eda_amplitude,
+                               ep=eda_frequency,
+                               ei=eda_index,
+                               f=analysis_frequencies):
+        #A pure and simple power law model#
+        out = rnspectralmodels.Log_splwc_AddNormalBump2(f, [a, p, b, ea, ep, ei])
+        return out
+
+    spectrum = pymc.Normal('spectrum',
+                           tau=1.0 / (sigma ** 2),
+                           mu=fourier_power_spectrum,
+                           value=analysis_power,
+                           observed=True)
+
+    predictive = pymc.Normal('predictive',
+                             tau=1.0 / (sigma ** 2),
+                             mu=fourier_power_spectrum)
+
+    # MCMC model
+    return locals()
