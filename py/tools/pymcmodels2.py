@@ -283,7 +283,7 @@ def Log_splwc_AddExpDecayAutoCor(analysis_frequencies, analysis_power, sigma,
                                ei=eda_index,
                                f=analysis_frequencies):
         #A pure and simple power law model#
-        out = rnspectralmodels.Log_splwc_AddNormalBump2(f, [a, p, b, ea, ep, ei])
+        out = rnspectralmodels.Log_splwc_AddExpDecayAutocor(f, [a, p, b, ea, ep, ei])
         return out
 
     spectrum = pymc.Normal('spectrum',
@@ -298,3 +298,95 @@ def Log_splwc_AddExpDecayAutoCor(analysis_frequencies, analysis_power, sigma,
 
     # MCMC model
     return locals()
+
+
+#
+# The model here is a broken power law with a constant
+#
+def Log_double_broken_power_law_with_constant(analysis_frequencies, analysis_power, sigma,
+                                              init=None):
+    #Set up a PyMC model: power law for the power spectrum#
+    # PyMC definitions
+    # Define data and stochastics
+    if init == None:
+        power_law_index1 = pymc.Uniform('power_law_index1',
+                                       lower=0.0001,
+                                       upper=6.0,
+                                       doc='power law index 1')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      lower=-10.0,
+                                      upper=10.0,
+                                      doc='power law normalization')
+
+        background = pymc.Uniform('background',
+                                      lower=-20.0,
+                                      upper=10.0,
+                                      doc='background')
+
+        break_frequency = pymc.Uniform('break_frequency',
+                                      lower=-20.0,
+                                      upper=0.0,
+                                      doc='break frequency')
+
+        power_law_index2 = pymc.Uniform('power_law_index2',
+                                       lower=0.0001,
+                                       upper=6.0,
+                                       doc='power law index 2')
+
+    else:
+        power_law_index1 = pymc.Uniform('power_law_index1',
+                                       value=init[0],
+                                       lower=0.0001,
+                                       upper=6.0,
+                                       doc='power law index 1')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                       value=init[1],
+                                      lower=-10.0,
+                                      upper=10.0,
+                                      doc='power law normalization')
+
+        background = pymc.Uniform('background',
+                                       value=init[2],
+                                      lower=-20.0,
+                                      upper=10.0,
+                                      doc='background')
+
+        break_frequency = pymc.Uniform('break_frequency',
+                                       value=init[3],
+                                      lower=-20.0,
+                                      upper=0.0,
+                                      doc='break frequency')
+
+        power_law_index2 = pymc.Uniform('power_law_index2',
+                                       value=init[4],
+                                       lower=0.0001,
+                                       upper=6.0,
+                                       doc='power law index 2')
+
+    # Model for the power law spectrum
+    @pymc.deterministic(plot=False)
+    def fourier_power_spectrum(n1=power_law_index1,
+                               a=power_law_norm,
+                               b=background,
+                               brk=break_frequency,
+                               n2=power_law_index2,
+                               f=analysis_frequencies):
+        #A pure and simple power law model#
+        out = rnspectralmodels.Log_double_broken_power_law_with_constant(f, [a, n1, b, brk, n2])
+        return out
+
+    spectrum = pymc.Normal('spectrum',
+                           tau=1.0 / (sigma ** 2),
+                           mu=fourier_power_spectrum,
+                           value=analysis_power,
+                           observed=True)
+
+    predictive = pymc.Normal('predictive',
+                             tau=1.0 / (sigma ** 2),
+                             mu=fourier_power_spectrum)
+
+    # MCMC model
+    return locals()
+

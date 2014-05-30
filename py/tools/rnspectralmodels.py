@@ -170,7 +170,7 @@ def Log_splwc_AddExpDecayAutocor_CF(f, a0, a1, a2, a3, a4, a5):
 #
 # Double broken power law models
 #
-def broken_power_law_with_constant(f, a):
+def double_broken_power_law_with_constant(f, a):
     # a[0] = natural logarithm of the amplitude
     # a[1] = power law index at frequencies less than a[3]
     # a[2] = natural logarithm of the background constant
@@ -198,12 +198,12 @@ def broken_power_law_with_constant(f, a):
     return power
 
 
-def Log_broken_power_law_with_constant(f, a):
-    return np.log(broken_power_law_with_constant(f, a))
+def Log_double_broken_power_law_with_constant(f, a):
+    return np.log(double_broken_power_law_with_constant(f, a))
 
 
-def Log_broken_power_law_with_constant_CF(f, a0, a1, a2, a3, a4):
-    return np.log(broken_power_law_with_constant(f, [a0, a1, a2, a3, a4]))
+def Log_double_broken_power_law_with_constant_CF(f, a0, a1, a2, a3, a4):
+    return np.log(double_broken_power_law_with_constant(f, [a0, a1, a2, a3, a4]))
 #
 #
 #
