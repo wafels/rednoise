@@ -325,8 +325,8 @@ def Log_double_broken_power_law_with_constant(analysis_frequencies, analysis_pow
                                       doc='background')
 
         break_frequency = pymc.Uniform('break_frequency',
-                                      lower=-20.0,
-                                      upper=0.0,
+                                      lower=1.0,
+                                      upper=7.0,
                                       doc='break frequency')
 
         power_law_index2 = pymc.Uniform('power_law_index2',

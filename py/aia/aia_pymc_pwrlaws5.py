@@ -335,7 +335,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss', 'qs', 'moss', 'loopfootpoints']
+regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 
@@ -611,7 +611,7 @@ for iwave, wave in enumerate(waves):
                 # second model
                 #
                 # Frequency range we will consider for the bump
-                physical_bump_frequency_limits = np.asarray([10.0 ** -4.0, 10.0])
+                physical_bump_frequency_limits = np.asarray([10.0 ** -7.0, 10.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 bump_loc_lo = x >= bump_frequency_limits[0]
                 bump_loc_hi = x <= bump_frequency_limits[1]
@@ -907,6 +907,7 @@ for iwave, wave in enumerate(waves):
                                      '.'.join((ident, 'sigma_for_mean.csv')),
                                      (freqs, sigma_for_mean))
 
+"""
                 ###############################################################
                 # Second part - model selection through posterior predictive
                 # checking.
@@ -971,7 +972,7 @@ for iwave, wave in enumerate(waves):
                         #
                         # Curve fits
                         #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma, p0=A1)
+                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddExpDecayAutocor_CF, x, pred, sigma=sigma, p0=A1)
                         fit1_bf = get_spectrum_M1(x, fit1)
                         l1 = get_log_likelihood(pred, fit1_bf, sigma)
                     except:
@@ -1075,7 +1076,7 @@ for iwave, wave in enumerate(waves):
                         #
                         # Curve fits
                         #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, x, pred, sigma=sigma, p0=A1)
+                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddExpDecayAutocor_CF, x, pred, sigma=sigma, p0=A1)
                         fit1_bf = get_spectrum_M1(x, fit1)
                         t_sse_pred = T_SSE(pred, fit1_bf, sigma)
                     except:
@@ -1125,3 +1126,4 @@ for iwave, wave in enumerate(waves):
                 plt.legend(fontsize=8)
                 plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.png')
                 plt.close('all')
+"""

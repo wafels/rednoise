@@ -174,21 +174,22 @@ def double_broken_power_law_with_constant(f, a):
     # a[0] = natural logarithm of the amplitude
     # a[1] = power law index at frequencies less than a[3]
     # a[2] = natural logarithm of the background constant
-    # a[3] = location of the break in the power law
+    # a[3] = natural logarithm of the location of the break in the power law
     # a[4] = power law index at frequencies greater than a[3]
     power = np.zeros_like(f)
+    fbreak = np.exp(a[3])
 
     # Where the first power law is valid
-    p1_location = f < a[3]
+    p1_location = f < fbreak
 
     # Where the second power law is valid
-    p2_location = f >= a[3]
+    p2_location = f >= fbreak
 
     # First power law
     p1 = np.exp(a[0]) * ((fnorm(f[p1_location], f[0]) ** (-a[1]))) + np.exp(a[2])
 
     # Second power law
-    p2_amplitude = np.exp(a[0]) * a[3] ** (a[4] - a[1])
+    p2_amplitude = np.exp(a[0]) * fbreak ** (a[4] - a[1])
     p2 = p2_amplitude * ((fnorm(f[p2_location], f[0]) ** (-a[4]))) + np.exp(a[2])
 
     # Fill in the power
