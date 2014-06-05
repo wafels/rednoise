@@ -1,4 +1,5 @@
 """
+OLD version - superseded by aia_lstsqr4.py
 Makes use of Astropy quantities
 Loads in a pickle file corresponding to a datacube, and calculates various
 properties of the Fourier transform for that region.

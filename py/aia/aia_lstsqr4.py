@@ -1,4 +1,5 @@
 """
+CURRENT version
 Specifies a directory of AIA files and uses a least-squares fit to generate
 some fit estimates.
 """
@@ -699,7 +700,12 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                     # Apply the Anderson-Darling test and store the results
                     anderson_darling_dist = 'norm'
                     anderson_darling.append(anderson(nmzd, dist=anderson_darling_dist))
-                    # Try the fit
+                    # Try fitting a Gaussian shape. But maybe there is a better
+                    # shape that PyMC can sample from.  Other approach - extend
+                    # the wifth until 99% of the observed distribution lies
+                    # under the Gaussian distribution, keeping the amplitude of
+                    # the Gaussian distribution constant. This over-estimates
+                    # the error in the mean, and so is a bit more conservative.
                     try:
                         p0 = [0, 0, 0]
                         p0[0] = np.max(yy)

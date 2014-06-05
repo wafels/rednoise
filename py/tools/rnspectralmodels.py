@@ -176,26 +176,20 @@ def double_broken_power_law_with_constant(f, a):
     # a[2] = natural logarithm of the background constant
     # a[3] = natural logarithm of the location of the break in the power law
     # a[4] = power law index at frequencies greater than a[3]
-    power = np.zeros_like(f)
+    power = np.float64(np.zeros_like(f))
     fbreak = np.exp(a[3])
-
     # Where the first power law is valid
     p1_location = f < fbreak
-
     # Where the second power law is valid
     p2_location = f >= fbreak
-
     # First power law
     p1 = np.exp(a[0]) * ((fnorm(f[p1_location], f[0]) ** (-a[1]))) + np.exp(a[2])
-
     # Second power law
     p2_amplitude = np.exp(a[0]) * fbreak ** (a[4] - a[1])
     p2 = p2_amplitude * ((fnorm(f[p2_location], f[0]) ** (-a[4]))) + np.exp(a[2])
-
-    # Fill in the power
+    #Fill in the power
     power[p1_location] = p1
     power[p2_location] = p2
-
     return power
 
 
@@ -205,6 +199,34 @@ def Log_double_broken_power_law_with_constant(f, a):
 
 def Log_double_broken_power_law_with_constant_CF(f, a0, a1, a2, a3, a4):
     return np.log(double_broken_power_law_with_constant(f, [a0, a1, a2, a3, a4]))
+
+#
+# Even simpler Gaussian models (not lognormal)
+#
+def splwc_AddSimpleNormalBump2(f, a):
+    """Simple power law with a constant, plus a Gaussian shaped bump.
+    This model assumes that the powe spectrum is made up of a power law and a
+    constant background.  At high frequencies the power spectrum is dominated
+    by the constant background.
+
+    Parameters
+    ----------
+    f : ndarray
+        frequencies
+
+    a : ndarray[2]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index
+        a[2] : the natural logarithm of the constant background
+    """
+    return power_law_with_constant(f, a[0:3]) + NormalBump2(f, a[3:6])
+
+def Log_splwc_AddSimpleNormalBump2(f, a):
+    return np.log(splwc_AddSimpleNormalBump2(f, a))
+
+def Log_splwc_AddSimpleNormalBump2_CF(f, a0, a1, a2, a3, a4, a5):
+    return Log_splwc_AddSimpleNormalBump2(f, [a0, a1, a2, a3, a4, a5])
+
 #
 #
 #
