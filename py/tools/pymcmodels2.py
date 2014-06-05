@@ -462,7 +462,7 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
         # Jeffreys' prior
         if type == 'jeffreys':
             sfactor = pymc.OneOverX('sfactor', value=1.0, doc='sfactor')
-            nfactor = sfactor * sigma_type["npixel"]
+            nfactor = sfactor * sigma_type["npixels"]
         # Prior estimated from the shape of the cross-correlation distribution
         if type == 'beta':
             if init == None:
@@ -472,7 +472,7 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
                 sfactor = pymc.Beta('sfactor',
                                     sigma_type['alpha'], sigma_type['beta'],
                                     value=init[6])
-            nfactor = 1.0 + (sigma_type["npixel"] - 1) * sfactor
+            nfactor = 1.0 + (sigma_type["npixels"] - 1) * sfactor
     else:
         nfactor = 1.0
 
