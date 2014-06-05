@@ -29,7 +29,9 @@ import numpy as np
 import pymc
 import rnspectralmodels
 
-
+# -----------------------------------------------------------------------------
+# Model : np.log( power law plus constant )
+#
 def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
     #Set up a PyMC model: power law for the power spectrum
     # PyMC definitions
