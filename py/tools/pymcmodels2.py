@@ -7,21 +7,9 @@ All the models have two objects in common:
     description of the observed spectrum,
 (2) an object "spectrum" which is likelihood of the observed spectrum given
     the model.
-"""
-
-"""
 Notes
+-----
 
-By observation, it seems that the power laws for the AIA data are distributed
-approximately as follows
-
-iobs - (average power spectra, averaged over all the pixels)
- - lognormally dsitributed
-
-logiobs
- - normally distributed.
-
-Hence we set up PyMC models that implement these distributions.
 """
 
 
@@ -33,9 +21,10 @@ import rnspectralmodels
 # Model : np.log( power law plus constant )
 #
 def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
-    #Set up a PyMC model: power law for the power spectrum
-    # PyMC definitions
-    # Define data and stochastics
+    """Power law with a constant.  This model assumes that the power
+    spectrum is made up of a power law and a constant background.  At high
+    frequencies the power spectrum is dominated by the constant background.
+    """
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',
                                        lower=-1.0,
@@ -100,9 +89,9 @@ def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
 def Log_splwc_AddLognormalBump2(analysis_frequencies, analysis_power, sigma,
                              init=None,
                              log_bump_frequency_limits=[2.0, 6.0]):
-    #Set up a PyMC model: power law for the power spectrum#
-    # PyMC definitions
-    # Define data and stochastics
+    """
+    Model: np.log( power law plus constant + lognormal )
+    """
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',
                                        lower=-1.0,
@@ -203,9 +192,9 @@ def Log_splwc_AddLognormalBump2(analysis_frequencies, analysis_power, sigma,
 def Log_splwc_AddExpDecayAutoCor(analysis_frequencies, analysis_power, sigma,
                              init=None,
                              normalized_frequency_limits=[2.0, 1000.0]):
-    #Set up a PyMC model: power law for the power spectrum#
-    # PyMC definitions
-    # Define data and stochastics
+    """
+    Model: np.log( power law plus constant + exponential decay autocorrelation )
+    """
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',
                                        lower=-1.0,
@@ -305,9 +294,9 @@ def Log_splwc_AddExpDecayAutoCor(analysis_frequencies, analysis_power, sigma,
 #
 def Log_double_broken_power_law_with_constant(analysis_frequencies, analysis_power, sigma,
                                               init=None):
-    #Set up a PyMC model: power law for the power spectrum#
-    # PyMC definitions
-    # Define data and stochastics
+    """
+    Model : np.log( broken power law plus constant )
+    """
     if init == None:
         power_law_index1 = pymc.Uniform('power_law_index1',
                                        lower=0.0001,
@@ -395,10 +384,11 @@ def Log_double_broken_power_law_with_constant(analysis_frequencies, analysis_pow
 #
 def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
                              init=None,
-                             normalized_bump_frequency_limits=[2.0, 6.0]):
-    #Set up a PyMC model: power law for the power spectrum#
-    # PyMC definitions
-    # Define data and stochastics
+                             normalized_bump_frequency_limits=[1.0, 1000.0],
+                             sigma_type=None):
+    """
+    Model : np.log( power law plus constant + normal bump )
+    """
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',
                                        lower=-1.0,
@@ -466,6 +456,26 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
                                       upper=3.0,
                                       doc='gaussian_width')
 
+    # Putting a prior on the noise estimation
+    if sigma_type is not None:
+        type = sigma_type["type"]
+        # Jeffreys' prior
+        if type == 'jeffreys':
+            sfactor = pymc.OneOverX('sfactor', value=1.0, doc='sfactor')
+            nfactor = sfactor * sigma_type["npixel"]
+        # Prior estimated from the shape of the cross-correlation distribution
+        if type == 'beta':
+            if init == None:
+                sfactor = pymc.Beta('sfactor',
+                                    sigma_type['alpha'], sigma_type['beta'])
+            else:
+                sfactor = pymc.Beta('sfactor',
+                                    sigma_type['alpha'], sigma_type['beta'],
+                                    value=init[6])
+            nfactor = 1.0 + (sigma_type["npixel"] - 1) * sfactor
+    else:
+        nfactor = 1.0
+
     # Model for the power law spectrum
     @pymc.deterministic(plot=False)
     def fourier_power_spectrum(p=power_law_index,
@@ -475,18 +485,18 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
                                gc=gaussian_position,
                                gs=gaussian_width,
                                f=analysis_frequencies):
-        #A pure and simple power law model#
+
         out = rnspectralmodels.Log_splwc_AddNormalBump2(f, [a, p, b, ga, gc, gs])
         return out
 
     spectrum = pymc.Normal('spectrum',
-                           tau=1.0 / (sigma ** 2),
+                           tau=1.0 / (sigma ** 2) / nfactor,
                            mu=fourier_power_spectrum,
                            value=analysis_power,
                            observed=True)
 
     predictive = pymc.Normal('predictive',
-                             tau=1.0 / (sigma ** 2),
+                             tau=1.0 / (sigma ** 2) / nfactor,
                              mu=fourier_power_spectrum)
 
     # MCMC model

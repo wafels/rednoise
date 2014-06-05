@@ -1,5 +1,6 @@
 """
-PyMC models for the red noise study.
+PyMC models for the red noise study.  These models have a Jeffreys' prior for
+the noise in the data.
 
 All the models have two objects in common:
 
@@ -7,32 +8,24 @@ All the models have two objects in common:
     description of the observed spectrum,
 (2) an object "spectrum" which is likelihood of the observed spectrum given
     the model.
-"""
 
-"""
 Notes
+-----
 
-By observation, it seems that the power laws for the AIA data are distributed
-approximately as follows
-
-iobs - (average power spectra, averaged over all the pixels)
- - lognormally dsitributed
-
-logiobs
- - normally distributed.
-
-Hence we set up PyMC models that implement these distributions.
 """
 
 
 import pymc
 import rnspectralmodels
 
-
+# -----------------------------------------------------------------------------
+# Power law with a constant
+#
 def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
-    #Set up a PyMC model: power law for the power spectrum
-    # PyMC definitions
-    # Define data and stochastics
+    """Power law with a constant.  This model assumes that the power
+    spectrum is made up of a power law and a constant background.  At high
+    frequencies the power spectrum is dominated by the constant background.
+    """
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',
                                        lower=-1.0,
@@ -94,17 +87,15 @@ def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
     # MCMC model
     return locals()
 
-
-#
-# The model here is a power law plus some Gaussian emission.  Then take the
-# log of that
+# -----------------------------------------------------------------------------
+# Power law with a constant, plus a Gaussian shaped bump
 #
 def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
                              init=None,
                              log_bump_frequency_limits=[2.0, 6.0]):
-    #Set up a PyMC model: power law for the power spectrum#
-    # PyMC definitions
-    # Define data and stochastics
+    """
+    Power law with a constant, plus a Gaussian shaped bump.
+    """
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',
                                        lower=-1.0,

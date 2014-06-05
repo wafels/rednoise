@@ -1,5 +1,5 @@
 """
-Spectra for use with the red noise MCMC analysis.
+Power Spectrum Models
 """
 
 import numpy as np
@@ -34,7 +34,7 @@ def power_law(f, a):
 # Power law with constant
 #
 def power_law_with_constant(f, a):
-    """Simple power law with a constant.  This model assumes that the power
+    """Power law with a constant.  This model assumes that the power
     spectrum is made up of a power law and a constant background.  At high
     frequencies the power spectrum is dominated by the constant background.
 
