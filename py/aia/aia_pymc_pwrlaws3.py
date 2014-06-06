@@ -257,7 +257,9 @@ for iwave, wave in enumerate(waves):
                 if sigma_type is not None:
                     # Fit the independence coefficient with a beta distribution
                     if sigma_type["type"] == 'beta':
-                        ic_fit_params = beta_distrib.fit(independence_coefficient)
+                        # Create a PDF from the independence coefficient
+                        ic_pdf = (independence_coefficient.size - 1) * independence_coefficient / np.sum(independence_coefficient)
+                        ic_fit_params = beta_distrib.fit(ic_pdf)
                         sigma_type = {"type": "beta",
                                       "alpha": ic_fit_params[0],
                                       "beta": ic_fit_params[1],
