@@ -46,7 +46,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
+regions = ['moss', 'qs', 'sunspot', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 
@@ -88,7 +88,12 @@ freqfactor = 1000.0
 
 # Choose to use a prior (or not) for the noise in the power.  When sigma_type
 # is set to none, then no prior is used.
+sigma_type = {"type": "beta"}
 sigma_type = None
+
+# Choose the shape of the bump
+bump_shape = 'normal'
+
 
 for iwave, wave in enumerate(waves):
     print(' ')
@@ -253,7 +258,7 @@ for iwave, wave in enumerate(waves):
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
                 sigma_of_distribution = fix_nonfinite(std_dev)
                 sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
-                
+
                 if sigma_type is not None:
                     # Fit the independence coefficient with a beta distribution
                     if sigma_type["type"] == 'beta':
@@ -268,7 +273,6 @@ for iwave, wave in enumerate(waves):
                     if sigma_type["type"] == 'jeffreys':
                         sigma_type = {"type": "jeffreys",
                                       "npixels": npixels}
-
 
                 # Frequency-dependent independence coefficient
                 #independence_coefficient = 1.0 - np.abs(ccc0)
@@ -285,7 +289,7 @@ for iwave, wave in enumerate(waves):
 
                 # Normalize the frequency
                 xnorm = freqs[0]
-                x = freqs / xnorm
+                normed_freqs = freqs / xnorm
                 nfreq = freqs.size
 
                 #
@@ -299,9 +303,9 @@ for iwave, wave in enumerate(waves):
                     tau = 1.0 / (sigma ** 2)
                     pwr = pwr_ff
                     if jjj == 0:
-                        pymcmodel0 = pymcmodels2.Log_splwc(x, pwr, sigma)
+                        pymcmodel0 = pymcmodels2.Log_splwc(normed_freqs, pwr, sigma)
                     else:
-                        pymcmodel0 = pymcmodels2.Log_splwc(x, pwr, sigma, init=A0)
+                        pymcmodel0 = pymcmodels2.Log_splwc(normed_freqs, pwr, sigma, init=A0)
                     passnumber = str(jjj)
 
                     # Initiate the sampler
@@ -321,18 +325,18 @@ for iwave, wave in enumerate(waves):
 
                     # Get the variables and the best fit
                     A0 = get_variables_M0(map_M0)
-                    M0_bf = get_spectrum_M0(x, A0)
+                    M0_bf = get_spectrum_M0(normed_freqs, A0)
 
                     # Plot the traces
                     write_plots(M0, region_id, obstype, savefig, 'M0', passnumber, bins=40, extra_factors=[xnorm])
 
                     # Get the likelihood at the maximum
                     #likelihood0_data = map_M0.logp_at_max
-                    l0_data = get_likelihood_M0(map_M0, x, pwr, sigma, tau, obstype)
+                    l0_data = get_likelihood_M0(map_M0, normed_freqs, pwr, sigma, obstype)
                     l0_data_logp = get_log_likelihood(pwr, M0_bf, sigma)
 
                     # Get the chi-squared value
-                    chi0 = get_chi_M0(map_M0, x, pwr, sigma)
+                    chi0 = get_chi_M0(map_M0, normed_freqs, pwr, sigma)
                     print('M0 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi0))
                     print('   : variables ', A0)
                     print('   : estimate log likelihood = %f' % (l0_data_logp))
@@ -342,11 +346,11 @@ for iwave, wave in enumerate(waves):
                 # second model
                 #
                 # Frequency range we will consider for the bump
-                physical_bump_frequency_limits = np.asarray([10.0 ** -3.5, 10.0 ** -2.0])
+                physical_bump_frequency_limits = np.asarray([1.0 / 700.0, 1.0 / 100.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
-                bump_loc_lo = x >= bump_frequency_limits[0]
-                bump_loc_hi = x <= bump_frequency_limits[1]
+                bump_loc_lo = normed_freqs >= bump_frequency_limits[0]
+                bump_loc_hi = normed_freqs <= bump_frequency_limits[1]
                 # Get where there is excess unexplained power
                 positive_difference = pwr - M0_bf > 0
                 # Combine all the conditions to get where the bump might be
@@ -354,7 +358,13 @@ for iwave, wave in enumerate(waves):
 
                 # If there are sufficient points, get an estimate of the bump
                 if bump_loc.sum() >= 10:
-                    g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_CF, np.log(x[bump_loc]), (pwr - M0_bf)[bump_loc])
+                    x_bump_estimate = normed_freqs[bump_loc]
+                    y_bump_estimate = (pwr - M0_bf)[bump_loc]
+                    if bump_shape == 'lognormal':
+                        g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_CF, np.log(x_bump_estimate), y_bump_estimate)
+                    if bump_shape == 'normal':
+                        p0_bump_estimate = [np.log(np.max(y_bump_estimate)), np.log(x_bump_estimate[np.argmax(y_bump_estimate)]), 0.0]
+                        g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_allexp_CF, x_bump_estimate, y_bump_estimate, p0=p0_bump_estimate)
                     A1_estimate = [A0[0], A0[1], A0[2], g_estimate[0], g_estimate[1], g_estimate[2]]
                 else:
                     A1_estimate = None
@@ -369,13 +379,16 @@ for iwave, wave in enumerate(waves):
                     tau = 1.0 / (sigma ** 2)
                     pwr = pwr_ff
                     if jjj == 0:
-                        if A1_estimate[4] < log_bump_frequency_limits[0]:
-                            A1_estimate[4] = log_bump_frequency_limits[0]
-                            print '!! Estimate fit exceeded lower limit of log_bump_frequency_limits. Resetting to limit'
-                        if A1_estimate[4] > log_bump_frequency_limits[1]:
-                            A1_estimate[4] = log_bump_frequency_limits[1]
-                            print '!! Estimate fit exceeded upper limit of log_bump_frequency_limits. Resetting to limit'
-                        pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2(x, pwr, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
+                        if bump_shape == 'lognormal':
+                            pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pwr, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
+                            if A1_estimate[4] < log_bump_frequency_limits[0]:
+                                A1_estimate[4] = log_bump_frequency_limits[0]
+                                print '!! Estimate fit exceeded lower limit of log_bump_frequency_limits. Resetting to limit'
+                            if A1_estimate[4] > log_bump_frequency_limits[1]:
+                                A1_estimate[4] = log_bump_frequency_limits[1]
+                                print '!! Estimate fit exceeded upper limit of log_bump_frequency_limits. Resetting to limit'
+                        if bump_shape == 'normal':
+                            pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2_allexp(normed_freqs, pwr, sigma, init=A1_estimate, normalized_bump_frequency_limits=log_bump_frequency_limits)
                     else:
                         if A1[4] < log_bump_frequency_limits[0]:
                             A1[4] = log_bump_frequency_limits[0]
@@ -383,7 +396,10 @@ for iwave, wave in enumerate(waves):
                         if A1[4] > log_bump_frequency_limits[1]:
                             A1[4] = log_bump_frequency_limits[1]
                             print 'First pass fit exceeded upper limit of log_bump_frequency_limits'
-                        pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2(x, pwr, sigma, init=A1, log_bump_frequency_limits=log_bump_frequency_limits)
+                        if bump_shape == 'lognormal':
+                            pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pwr, sigma, init=A1, log_bump_frequency_limits=log_bump_frequency_limits)
+                        if bump_shape == 'normal':
+                            pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2_allexp(normed_freqs, pwr, sigma, init=A1, normalized_bump_frequency_limits=log_bump_frequency_limits)
 
                     # Define the pass number
                     passnumber = str(jjj)
@@ -405,18 +421,18 @@ for iwave, wave in enumerate(waves):
 
                     # Get the variables and the best fit
                     A1 = get_variables_M1(map_M1)
-                    M1_bf = get_spectrum_M1(x, A1)
+                    M1_bf = get_spectrum_M1(normed_freqs, A1, bump_shape)
 
                     # Plot the traces
                     write_plots(M1, region_id, obstype, savefig, 'M1', passnumber, bins=40, extra_factors=[xnorm])
 
                     # Get the likelihood at the maximum
                     #likelihood1_data = map_M1.logp_at_max
-                    l1_data = get_likelihood_M1(map_M1, x, pwr, sigma, tau, obstype)
+                    l1_data = get_likelihood_M1(map_M1, normed_freqs, pwr, sigma, bump_shape)
                     l1_data_logp = get_log_likelihood(pwr, M1_bf, sigma)
 
                     # Get the chi-squared value
-                    chi1 = get_chi_M1(map_M1, x, pwr, sigma)
+                    chi1 = get_chi_M1(map_M1, normed_freqs, pwr, sigma, bump_shape)
                     print('M1 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi1))
                     print('   : variables ', A1)
                     print('   : estimate log likelihood = %f' % (l1_data_logp))
@@ -435,10 +451,13 @@ for iwave, wave in enumerate(waves):
                 print 'M0: chi-squared = %f' % (fitsummarydata["M0"]["chi2"])
                 print 'M1: chi-squared = %f' % (fitsummarydata["M1"]["chi2"])
 
-                # Calculate the best fit Gaussian contribution
-                normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(x), A1[3], A1[4], A1[5]))
+                # Calculate the best fit bump contribution
+                if bump_shape == 'lognormal':
+                    normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(normed_freqs), A1[3], A1[4], A1[5]))
+                if bump_shape == 'normal':
+                    normalbump_BF = np.log(rnspectralmodels.NormalBump2_allexp_CF(normed_freqs, A1[3], A1[4], A1[5]))
                 # Calculate the best fit power law contribution
-                powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(x, A1[0:3]))
+                powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(normed_freqs, A1[0:3]))
 
                 # Plot
                 title = 'AIA ' + wave + " : " + sunday_name[region]
@@ -639,6 +658,7 @@ for iwave, wave in enumerate(waves):
                                      '.'.join((ident, 'sigma_for_mean.csv')),
                                      (freqs, sigma_for_mean))
 
+                """
                 ###############################################################
                 # Second part - model selection through posterior predictive
                 # checking.
@@ -669,7 +689,7 @@ for iwave, wave in enumerate(waves):
                     pred = M0.trace('predictive')[rthis]
 
                     # Fit the test data using hypothesis 0 and calculate a likelihood
-                    #M0_pp = pymcmodels2.Log_splwc(x, pred, sigma)
+                    #M0_pp = pymcmodels2.Log_splwc(normed_freqs, pred, sigma)
                     #map_M0_pp = pymc.MAP(M0_pp)
                     try:
                         #print('M0: fitting to find the maximum likelihood')
@@ -678,19 +698,19 @@ for iwave, wave in enumerate(waves):
                         #
                         #map_M0_pp.fit(method='fmin_powell')
                         #map_M0_pp.fit(method='fmin_powell')
-                        #l0 = get_likelihood_M0(map_M0_pp, x, pred, sigma, tau, obstype)
+                        #l0 = get_likelihood_M0(map_M0_pp, normed_freqs, pred, sigma, tau, obstype)
                         #
                         # Curve fits
                         #
-                        fit0, _ = curve_fit(rnspectralmodels.Log_splwc_CF, x, pred, sigma=sigma, p0=A0)
-                        fit0_bf = get_spectrum_M0(x, fit0)
+                        fit0, _ = curve_fit(rnspectralmodels.Log_splwc_CF, normed_freqs, pred, sigma=sigma, p0=A0)
+                        fit0_bf = get_spectrum_M0(normed_freqs, fit0)
                         l0 = get_log_likelihood(pred, fit0_bf, sigma)
                     except:
                         #print('Error fitting M0 to sample.')
                         l0 = None
 
                     # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(x, pred, sigma)
+                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pred, sigma)
                     #map_M1_pp = pymc.MAP(M1_pp)
                     try:
                         #print('M1: fitting to find the maximum likelihood')
@@ -699,12 +719,15 @@ for iwave, wave in enumerate(waves):
                         #
                         #map_M1_pp.fit(method='fmin_powell')
                         #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
+                        #l1 = get_likelihood_M1(map_M1_pp, normed_freqs, pred, sigma, tau, obstype)
                         #
                         # Curve fits
                         #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, x, pred, sigma=sigma, p0=A1)
-                        fit1_bf = get_spectrum_M1(x, fit1)
+                        if bump_shape == 'lognormal':
+                            fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
+                        if bump_shape == 'normal':
+                            fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
+                        fit1_bf = get_spectrum_M1(normed_freqs, fit1)
                         l1 = get_log_likelihood(pred, fit1_bf, sigma)
                     except:
                         #print('Error fitting M1 to sample.')
@@ -794,7 +817,7 @@ for iwave, wave in enumerate(waves):
                     pred = M1.trace('predictive')[rthis]
 
                     # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(x, pred, sigma)
+                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pred, sigma)
                     #map_M1_pp = pymc.MAP(M1_pp)
                     try:
                         #print('M1: fitting to find the maximum likelihood')
@@ -803,12 +826,12 @@ for iwave, wave in enumerate(waves):
                         #
                         #map_M1_pp.fit(method='fmin_powell')
                         #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, x, pred, sigma, tau, obstype)
+                        #l1 = get_likelihood_M1(map_M1_pp, normed_freqs, pred, sigma, tau, obstype)
                         #
                         # Curve fits
                         #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, x, pred, sigma=sigma, p0=A1)
-                        fit1_bf = get_spectrum_M1(x, fit1)
+                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
+                        fit1_bf = get_spectrum_M1(normed_freqs, fit1)
                         t_sse_pred = T_SSE(pred, fit1_bf, sigma)
                     except:
                         print('Error fitting M1 to sample.')
@@ -857,3 +880,4 @@ for iwave, wave in enumerate(waves):
                 plt.legend(fontsize=8)
                 plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.png')
                 plt.close('all')
+                """

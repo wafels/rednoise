@@ -379,6 +379,7 @@ def Log_double_broken_power_law_with_constant(analysis_frequencies, analysis_pow
     # MCMC model
     return locals()
 
+
 # -----------------------------------------------------------------------------
 # Model : np.log( power law plus constant + normal bump )
 #
@@ -417,7 +418,7 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
 
         gaussian_width = pymc.Uniform('gaussian_width',
                                       lower=0.001,
-                                      upper=3.0,
+                                      upper=300.0,
                                       doc='gaussian_width')
     else:
         power_law_index = pymc.Uniform('power_law_index',
@@ -453,7 +454,7 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
         gaussian_width = pymc.Uniform('gaussian_width',
                                       value=init[5],
                                       lower=0.001,
-                                      upper=3.0,
+                                      upper=300.0,
                                       doc='gaussian_width')
 
     # Putting a prior on the noise estimation
@@ -487,6 +488,130 @@ def Log_splwc_AddNormalBump2(analysis_frequencies, analysis_power, sigma,
                                f=analysis_frequencies):
 
         out = rnspectralmodels.Log_splwc_AddNormalBump2(f, [a, p, b, ga, gc, gs])
+        return out
+
+    spectrum = pymc.Normal('spectrum',
+                           tau=1.0 / (sigma ** 2) / nfactor,
+                           mu=fourier_power_spectrum,
+                           value=analysis_power,
+                           observed=True)
+
+    predictive = pymc.Normal('predictive',
+                             tau=1.0 / (sigma ** 2) / nfactor,
+                             mu=fourier_power_spectrum)
+
+    # MCMC model
+    return locals()
+
+
+# -----------------------------------------------------------------------------
+# Model : np.log( power law plus constant + normal bump )
+#
+def Log_splwc_AddNormalBump2_allexp(analysis_frequencies, analysis_power, sigma,
+                             init=None,
+                             normalized_bump_frequency_limits=[1.0, 1000.0],
+                             sigma_type=None):
+    """
+    Model : np.log( power law plus constant + normal bump )
+    """
+    if init == None:
+        power_law_index = pymc.Uniform('power_law_index',
+                                       lower=-1.0,
+                                       upper=6.0,
+                                       doc='power law index')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      lower=-10.0,
+                                      upper=10.0,
+                                      doc='power law normalization')
+
+        background = pymc.Uniform('background',
+                                      lower=-20.0,
+                                      upper=10.0,
+                                      doc='background')
+
+        gaussian_amplitude = pymc.Uniform('gaussian_amplitude',
+                                      lower=-20.0,
+                                      upper=5.0,
+                                      doc='gaussian_amplitude')
+
+        gaussian_position = pymc.Uniform('gaussian_position',
+                                      lower=normalized_bump_frequency_limits[0],
+                                      upper=normalized_bump_frequency_limits[1],
+                                      doc='gaussian_position')
+
+        gaussian_width = pymc.Uniform('gaussian_width',
+                                      lower=0.001,
+                                      upper=300.0,
+                                      doc='gaussian_width')
+    else:
+        power_law_index = pymc.Uniform('power_law_index',
+                                       value=init[1],
+                                       lower=-1.0,
+                                       upper=6.0,
+                                       doc='power law index')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      value=init[0],
+                                      lower=-10.0,
+                                      upper=10.0,
+                                      doc='power law normalization')
+
+        background = pymc.Uniform('background',
+                                      value=init[2],
+                                      lower=-20.0,
+                                      upper=10.0,
+                                      doc='background')
+
+        gaussian_amplitude = pymc.Uniform('gaussian_amplitude',
+                                      value=init[3],
+                                      lower=-20.0,
+                                      upper=5.0,
+                                      doc='gaussian_amplitude')
+
+        gaussian_position = pymc.Uniform('gaussian_position',
+                                      value=init[4],
+                                      lower=normalized_bump_frequency_limits[0],
+                                      upper=normalized_bump_frequency_limits[1],
+                                      doc='gaussian_position')
+
+        gaussian_width = pymc.Uniform('gaussian_width',
+                                      value=init[5],
+                                      lower=0.001,
+                                      upper=300.0,
+                                      doc='gaussian_width')
+
+    # Putting a prior on the noise estimation
+    if sigma_type is not None:
+        type = sigma_type["type"]
+        # Jeffreys' prior
+        if type == 'jeffreys':
+            sfactor = pymc.OneOverX('sfactor', value=1.0, doc='sfactor')
+            nfactor = sfactor * sigma_type["npixels"]
+        # Prior estimated from the shape of the cross-correlation distribution
+        if type == 'beta':
+            if init == None:
+                sfactor = pymc.Beta('sfactor',
+                                    sigma_type['alpha'], sigma_type['beta'])
+            else:
+                sfactor = pymc.Beta('sfactor',
+                                    sigma_type['alpha'], sigma_type['beta'],
+                                    value=init[6])
+            nfactor = 1.0 + (sigma_type["npixels"] - 1) * sfactor
+    else:
+        nfactor = 1.0
+
+    # Model for the power law spectrum
+    @pymc.deterministic(plot=False)
+    def fourier_power_spectrum(p=power_law_index,
+                               a=power_law_norm,
+                               b=background,
+                               ga=gaussian_amplitude,
+                               gc=gaussian_position,
+                               gs=gaussian_width,
+                               f=analysis_frequencies):
+
+        out = rnspectralmodels.Log_splwc_AddNormalBump2_allexp(f, [a, p, b, ga, gc, gs])
         return out
 
     spectrum = pymc.Normal('spectrum',

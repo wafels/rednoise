@@ -76,6 +76,27 @@ def NormalBump2_CF(x, a0, a1, a2):
 def Log_NormalBump2_CF(x, a0, a1, a2):
     return np.log(NormalBump2(x, [a0, a1, a2]))
 
+
+# ----------------------------------------------------------------------------
+# Normal distribution, all exponential parameters.
+#
+def NormalBump2_allexp(x, a):
+    amplitude = np.exp(a[0])
+    position = np.exp(a[1])
+    width = np.exp(a[2])
+    z = (x - position) / width
+    norm = 1.0 / (np.sqrt(2 * np.pi * width ** 2))
+    return amplitude * norm * np.exp(-0.5 * z ** 2)
+
+
+def NormalBump2_allexp_CF(x, a0, a1, a2):
+    return NormalBump2_allexp(x, [a0, a1, a2])
+
+
+def Log_NormalBump2_allexp_CF(x, a0, a1, a2):
+    return np.log(NormalBump2_allexp(x, [a0, a1, a2]))
+
+
 # ----------------------------------------------------------------------------
 # Power law plus constant + lognormal bump.
 #
@@ -90,7 +111,6 @@ def Log_NormalBump2_CF(x, a0, a1, a2):
 # amplitude term.  This means the search space is slightly more coupled than
 # the implementation below "Model with Gaussian Bump"
 #
-
 def splwc_AddLognormalBump2(f, a):
     """Simple power law with a constant, plus a lognormally shaped bump.
     This model assumes that the powe spectrum is made up of a power law and a
@@ -117,7 +137,7 @@ def Log_splwc_AddLognormalBump2(f, a):
     return np.log(splwc_AddLognormalBump2(f, a))
 
 
-def Log_splwc_AddlognormalBump2_CF(f, a0, a1, a2, a3, a4, a5):
+def Log_splwc_AddLognormalBump2_CF(f, a0, a1, a2, a3, a4, a5):
     return Log_splwc_AddLognormalBump2(f, [a0, a1, a2, a3, a4, a5])
 
 
@@ -228,3 +248,34 @@ def Log_splwc_AddNormalBump2(f, a):
 
 def Log_splwc_AddNormalBump2_CF(f, a0, a1, a2, a3, a4, a5):
     return Log_splwc_AddNormalBump2(f, [a0, a1, a2, a3, a4, a5])
+
+
+# ----------------------------------------------------------------------------
+# Power law plus Normal Bump
+#
+def splwc_AddNormalBump2_allexp(f, a):
+    """Power law with a constant, plus a Gaussian shaped bump in which all the
+    parameters have been expressed logarithmically.
+
+    Parameters
+    ----------
+    f : ndarray
+        frequencies
+
+    a : ndarray[2]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index
+        a[2] : the natural logarithm of the constant background
+        a[3] : the natural logarithm of the Gaussian amplitude
+        a[4] : center of the Gaussian
+        a[5] : width of the Gaussian
+    """
+    return power_law_with_constant(f, a[0:3]) + NormalBump2_allexp(f, a[3:6])
+
+
+def Log_splwc_AddNormalBump2_allexp(f, a):
+    return np.log(splwc_AddNormalBump2_allexp(f, a))
+
+
+def Log_splwc_AddNormalBump2_allexp_CF(f, a0, a1, a2, a3, a4, a5):
+    return Log_splwc_AddNormalBump2_allexp(f, [a0, a1, a2, a3, a4, a5])
