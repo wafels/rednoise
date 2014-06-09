@@ -216,6 +216,8 @@ for iwave, wave in enumerate(waves):
                 ccmax_ds = pickle.load(pkl_file)
                 pkl_file.close()
 
+                klasdflkjsd = ahlfjkhas
+
                 # Find out the length-scale at which the fitted
                 # cross-correlation coefficient reaches the value of 0.1
                 #decorr_length = ccc_answer[1] * (np.log(ccc_answer[0]) - np.log(0.1))

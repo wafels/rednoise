@@ -27,6 +27,7 @@ import aia_plaw
 from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
 from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
 from paper1 import descriptive_stats
+import scipy
 plt.ioff()
 
 
@@ -474,15 +475,15 @@ def do_lstsqr(dataroot='~/Data/AIA/',
                 # lag?
                 # Lag 0 cross correlation coefficient
                 cc0 = np.asarray(cc0)
-                cc0_ds = descriptive_stats(cc0)
+                cc0_ds = descriptive_stats(cc0, bins=50)
 
                 # Lag 'lag' cross correlation coefficient
                 cclag = np.abs(np.asarray(cclag))
-                cclag_ds = descriptive_stats(cclag)
+                cclag_ds = descriptive_stats(cclag, bins=50)
 
                 # Maximum cross correlation coefficient
                 ccmax = np.abs(np.asarray(ccmax))
-                ccmax_ds = descriptive_stats(ccmax)
+                ccmax_ds = descriptive_stats(ccmax, bins=50)
                 print 'Average lag 0 cross correlation coefficient = %f' % (cc0_ds.mean)
                 print 'Average lag %i cross correlation coefficient = %f' % (lag, cclag_ds.mean)
                 print 'Average maximum cross correlation coefficient = %f' % (ccmax_ds.mean)
