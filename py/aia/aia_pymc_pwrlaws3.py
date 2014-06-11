@@ -46,9 +46,10 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss', 'qs', 'sunspot', 'loopfootpoints']
+regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
+neighbour = 'random'
 
 """
 #
@@ -92,7 +93,7 @@ sigma_type = {"type": "beta"}
 sigma_type = None
 
 # Choose the shape of the bump
-bump_shape = 'normal'
+bump_shape = 'lognormal'
 
 
 for iwave, wave in enumerate(waves):
@@ -164,20 +165,9 @@ for iwave, wave in enumerate(waves):
                 # Peak Fourier power per frequency
                 pwr_ff_peak = pickle.load(pkl_file)
                 # Fitted Peak of the Fourier power per frequency
-                pwr_ff = pickle.load(pkl_file)
+                pwr_ff_fitted = pickle.load(pkl_file)
                 # Number of pixels used to create the average
                 npixels = pickle.load(pkl_file)
-                # Lag zero cross correlation coefficient
-                ccc0 = pickle.load(pkl_file)
-                # Lag 'lag' coefficient
-                lag = pickle.load(pkl_file)
-                ccclag = pickle.load(pkl_file)
-                # Pixel distance of the cross correlation function
-                #xccc = pickle.load(pkl_file)
-                # Cross correlation function
-                #ccc = pickle.load(pkl_file)
-                # Decay constant for the cross-correlation function
-                #ccc_answer = pickle.load(pkl_file)
                 pkl_file.close()
                 # Load the widths
                 ifilename = 'OUT.' + region_id
@@ -185,13 +175,16 @@ for iwave, wave in enumerate(waves):
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
+                # Fitted width of the Fourier power per frequency
                 fitted_width = pickle.load(pkl_file)
+                # Standard deviation of the Fourier power per frequency
                 std_dev = pickle.load(pkl_file)
+                # Absolute difference
                 abs_diff = pickle.load(pkl_file)
                 pkl_file.close()
                 # Load the coherence
                 ifilename = 'OUT.' + region_id
-                pkl_file_location = os.path.join(pkl_location, ifilename + '.coherence.pickle')
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.coherence.' + neighbour + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
@@ -208,7 +201,7 @@ for iwave, wave in enumerate(waves):
 
                 # Load the correlative measures
                 ifilename = 'OUT.' + region_id
-                pkl_file_location = os.path.join(pkl_location, ifilename + '.correlative.pickle')
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.correlative.' + neighbour + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 cc0_ds = pickle.load(pkl_file)
@@ -216,20 +209,16 @@ for iwave, wave in enumerate(waves):
                 ccmax_ds = pickle.load(pkl_file)
                 pkl_file.close()
 
-                klasdflkjsd = ahlfjkhas
-
-                # Find out the length-scale at which the fitted
-                # cross-correlation coefficient reaches the value of 0.1
-                #decorr_length = ccc_answer[1] * (np.log(ccc_answer[0]) - np.log(0.1))
-                #print("Decorrelation length = %f pixels" % (decorr_length))
+                # Pick which definition of the power to use
+                pwr_ff = pwr_ff_fitted
 
                 # Fix any non-finite widths and divide by the number of pixels
                 # Note that this should be the effective number of pixels,
                 # given that the original pixels are not statistically separate.
-                prettyprint('Pixel independence calculation')
+                prettyprint('%s: Pixel independence calculation' % (neighbour))
                 print 'Number of pixels ', npixels
-                print 'Average lag 0 cross correlation coefficient = %f' % (ccc0)
-                print 'Average lag %i cross correlation coefficient = %f' % (lag, ccclag)
+                #print 'Mode, maximum cross correlation coefficient = %f' % (ccmax_ds.mode)
+                dependence_coefficient = ccmax_ds.mode
                 # Independence coefficient - how independent is one pixel compared
                 # to its nearest neighbour?
                 # independence_coefficient = 1.0 - 0.5 * (np.abs(ccc0) + np.abs(ccclag))
@@ -251,10 +240,16 @@ for iwave, wave in enumerate(waves):
                 #
                 #independence_coefficient = 1.0 - np.abs(ccc0)
 
+                #qqq = scipy.stats.beta.fit(cclag)
+                #pdf = scipy.stats.beta.pdf(cclag_ds.x, qqq[0], qqq[1])
+                #plt.plot(cclag_ds.x, pdf)
+                #plt.plot(cclag_ds.xhist[0:-1], ccc_bins * cclag_ds.hist / np.float(np.sum(cclag_ds.hist)))
+                #plt.show()
+
                 # Use the coherence estimate to get a frequency-dependent
                 # independence coefficient
                 # independence_coefficient = 1.0 - coher
-                independence_coefficient = 1.0 - np.abs(ccc0)
+                independence_coefficient = 1.0 - np.abs(dependence_coefficient)
                 print 'Average independence coefficient ', np.mean(independence_coefficient)
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
@@ -348,7 +343,7 @@ for iwave, wave in enumerate(waves):
                 # second model
                 #
                 # Frequency range we will consider for the bump
-                physical_bump_frequency_limits = np.asarray([1.0 / 10000.0, 1.0 / 100.0])
+                physical_bump_frequency_limits = np.asarray([1.0 / 1000.0, 1.0 / 100.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
                 bump_loc_lo = normed_freqs >= bump_frequency_limits[0]
@@ -370,6 +365,7 @@ for iwave, wave in enumerate(waves):
                     A1_estimate = [A0[0], A0[1], A0[2], g_estimate[0], g_estimate[1], g_estimate[2]]
                 else:
                     A1_estimate = None
+                print "Fitting bump with " + bump_shape
                 print "Second model estimate : ", A1_estimate
                 print "Physical bump frequency position limits : ", physical_bump_frequency_limits
                 print "Normalized log bump frequency limits : ", log_bump_frequency_limits
@@ -630,6 +626,24 @@ for iwave, wave in enumerate(waves):
                 plt.ylabel('scaled residual')
                 plt.title(title)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.scaled_residual.png')
+                plt.close('all')
+
+                #--------------------------------------------------------------
+                # Size of the residual compared to estimate noise levels
+                plt.figure(2)
+                plt.semilogx(xvalue, np.abs(nmzd), label='|data - M1| / sigma for mean')
+                plt.axhline(1.0, label='expected by normality', color='r')
+
+                # Plot the bump limits
+                plt.axvline(physical_bump_frequency_limits[0], label='bump center position limit', linestyle=':' ,color='k')
+                plt.axvline(physical_bump_frequency_limits[1], linestyle=':' ,color='k')
+
+                # Complete the plot and save it
+                plt.legend(framealpha=0.5, fontsize=8)
+                plt.xlabel('log10(frequency (Hz))')
+                plt.ylabel('scaled |residual|')
+                plt.title(title)
+                plt.savefig(savefig + obstype + '.' + passnumber + '.scaled_abs_residual.png')
                 plt.close('all')
 
                 #--------------------------------------------------------------

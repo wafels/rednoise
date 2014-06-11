@@ -151,6 +151,7 @@ class descriptive_stats:
         self.mean = np.mean(data)
         self.median = np.median(data)
         self.hist, self.xhist = np.histogram(data, **kwargs)
+        self.x = 0.5 * (self.xhist[0:-2] + self.xhist[1:-1])
         self.mode = self.xhist[np.argmax(self.hist)]
         self.std = np.std(data)
         self.cred = {}
