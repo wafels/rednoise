@@ -143,7 +143,7 @@ manip = 'relative'
 savefig_format = 'png'
 freqfactor = [1000.0, 'mHz']
 sunday_name = {"qs": "quiet Sun", "loopfootpoints": "loop footpoints"}
-neighbour = 'random'
+neighbour = 'nearest'
 
 five_min = freqfactor[0] * 1.0 / 300.0
 three_min = freqfactor[0] * 1.0 / 180.0
@@ -225,7 +225,8 @@ for iwave, wave in enumerate(waves):
             dt = 12.0
             t = dt * np.arange(0, nt)
             tsdummy = TimeSeries(t, t)
-            freqs = freqfactor[0] * tsdummy.PowerSpectrum.frequencies.positive
+            freqs_original = tsdummy.PowerSpectrum.frequencies.positive
+            freqs = freqfactor[0] * freqs_original
             posindex = np.fft.fftfreq(nt, dt) > 0.0 #tsdummy.PowerSpectrum.frequencies.posindex
             iobs = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
             logiobs = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
@@ -331,7 +332,7 @@ for iwave, wave in enumerate(waves):
             # Power spectrum analysis: arithmetic mean approach
             # Normalize the frequency.
             xnorm = tsdummy.PowerSpectrum.frequencies.positive[0]
-            x = freqs / (xnorm * freqfactor[0])
+            x = freqs_original / freqs_original[0]
 
             # Fourier power: fit a power law to the arithmetic mean of the
             # Fourier power
@@ -475,8 +476,6 @@ for iwave, wave in enumerate(waves):
                 coher_95_hi[jjj] = coher_ds.cred[0.95][1]
                 coher_mode[jjj] = coher_ds.mode
                 coher_mean[jjj] = coher_ds.mean
-
-            aklfj = lkasfljk
 
             # All the pixels are all sqrt(2) pixels away from the
             # central pixel.  We treat them all as nearest neighbor.
@@ -689,19 +688,23 @@ for iwave, wave in enumerate(waves):
             # passed along to other programs.  Also, apply the Shapiro-Wilks
             # and Anderson-Darling tests for normality to test the assertion
             # that these distributions are approximately normal
-            logiobs_distrib_width = np.zeros((nposfreq))
-            error_logiobs_distrib_width = np.zeros_like(logiobs_distrib_width)
-            iobs_peak = np.zeros_like(logiobs_distrib_width)
-            logiobs_peak_location = np.zeros_like(logiobs_distrib_width)
-            logiobs_std = np.zeros_like(logiobs_distrib_width)
+            logiobs_width_fitted = np.zeros((nposfreq))
+            error_logiobs_width_fitted = np.zeros_like(logiobs_width_fitted)
+            logiobs_peak = np.zeros_like(logiobs_width_fitted)
+            logiobs_peak_fitted = np.zeros_like(logiobs_width_fitted)
+            logiobs_std = np.zeros_like(logiobs_width_fitted)
+            logiobs_skew = np.zeros_like(logiobs_width_fitted)
+            logiobs_kurtosis = np.zeros_like(logiobs_width_fitted)
             shapiro_wilks = []
             anderson_darling = []
             for jj, f in enumerate(freqs):
                 all_logiobs_at_f = logpwr[:, :, jj].flatten()
                 logiobs_std[jj] = np.std(all_logiobs_at_f)
+                logiobs_skew[jj] = scipy.stats.skew(all_logiobs_at_f)
+                logiobs_kurtosis[jj] = scipy.stats.kurtosis(all_logiobs_at_f)
                 xx = histogram_loc
                 yy = hpwr[jj, :]
-                iobs_peak[jj] = xx[np.argmax(yy)]
+                logiobs_peak[jj] = xx[np.argmax(yy)]
                 # Apply the Shapiro-Wilks test and store the results
                 nmzd = all_logiobs_at_f
                 shapiro_wilks.append(shapiro(nmzd))
@@ -720,13 +723,13 @@ for iwave, wave in enumerate(waves):
                     p0[1] = xx[np.argmax(yy)]
                     p0[2] = 0.5#np.sqrt(np.mean(((p0[1] - xx) * yy) ** 2))
                     gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy, p0=p0)
-                    logiobs_distrib_width[jj] = np.abs(gfit[0][2])
-                    error_logiobs_distrib_width[jj] = np.sqrt(np.abs(gfit[1][2, 2]))
-                    logiobs_peak_location[jj] = gfit[0][1]
+                    logiobs_width_fitted[jj] = np.abs(gfit[0][2])
+                    error_logiobs_width_fitted[jj] = np.sqrt(np.abs(gfit[1][2, 2]))
+                    logiobs_peak_fitted[jj] = gfit[0][1]
                 except:
-                    logiobs_distrib_width[jj] = None
-                    error_logiobs_distrib_width[jj] = None
-                    logiobs_peak_location[jj] = None
+                    logiobs_width_fitted[jj] = None
+                    error_logiobs_width_fitted[jj] = None
+                    logiobs_peak_fitted[jj] = None
 
             # -------------------------------------------------------------
             # Plots of power spectra: geometric mean of power spectra at
@@ -751,7 +754,7 @@ for iwave, wave in enumerate(waves):
             ax.plot(freqs, np.log10(lim[1, 1, :]), label=s_U95.label, color=s_U95.color, linewidth=s_U95.linewidth, linestyle=s_U95.linestyle)
 
             # Position of the fitted peak in each distribution
-            #ax.plot(freqs, logiobs_peak_location / np.log(10.0),  color='m', label='fitted frequency')
+            #ax.plot(freqs, logiobs_peak_fitted / np.log(10.0),  color='m', label='fitted frequency')
 
             # Extra information for the plot
             ax.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
@@ -864,14 +867,40 @@ for iwave, wave in enumerate(waves):
             plt.figure(14)
             plt.xlabel('frequency (%s)' % (freqfactor[1]))
             plt.ylabel('decades of frequency')
-            plt.semilogx(freqs, (logiobs_distrib_width + error_logiobs_distrib_width) / np.log(10.0), label='+ error', linestyle='--')
-            plt.semilogx(freqs, (logiobs_distrib_width - error_logiobs_distrib_width) / np.log(10.0), label='- error', linestyle='--')
-            plt.semilogx(freqs, logiobs_distrib_width / np.log(10.0), label='estimated width')
+            plt.semilogx(freqs, (logiobs_width_fitted + error_logiobs_width_fitted) / np.log(10.0), label='+ error', linestyle='--')
+            plt.semilogx(freqs, (logiobs_width_fitted - error_logiobs_width_fitted) / np.log(10.0), label='- error', linestyle='--')
+            plt.semilogx(freqs, logiobs_width_fitted / np.log(10.0), label='estimated width')
             plt.semilogx(freqs, logiobs_std / np.log(10.0), label='standard deviation')
-            plt.semilogx(freqs, (logiobs - logiobs_peak_location) / np.log(10.0), label='mean - fitted peak')
+            plt.semilogx(freqs, (logiobs - logiobs_peak_fitted) / np.log(10.0), label='mean - fitted peak')
             plt.title(data_name + ' - distribution widths')
             plt.legend(loc=3, framealpha=0.3, fontsize=10)
             plt.savefig(savefig + '.distribution_width.logiobs.%s' % (savefig_format))
+
+            ###############################################################
+            # Plot the results of the skewness of the power distributions
+
+            plt.figure(15)
+            plt.xlabel('frequency (%s)' % (freqfactor[1]))
+            plt.ylabel('skew')
+            plt.semilogx(freqs, logiobs_skew, label='sample skew')
+            plt.title(data_name + ': Fourier power distributions, skewness')
+            plt.axhline(0.0, label='>0, right tailed: <0, left tailed', linestyle='--')
+            plt.legend(loc=3, framealpha=0.3, fontsize=10)
+            plt.savefig(savefig + '.power_spectra_distributions.skewness.%s' % (savefig_format))
+            plt.close('all')
+
+            ###############################################################
+            # Plot the results of the kurtosis of the power distributions
+
+            plt.figure(15)
+            plt.xlabel('frequency (%s)' % (freqfactor[1]))
+            plt.ylabel('kurtosis')
+            plt.semilogx(freqs, logiobs_kurtosis, label='sample kurtosis')
+            plt.axhline(3.0, label='normal distribution', linestyle='--')
+            plt.title(data_name + ': Fourier power distributions, kurtosis')
+            plt.legend(loc=3, framealpha=0.3, fontsize=10)
+            plt.savefig(savefig + '.power_spectra_distributions.kurtosis.%s' % (savefig_format))
+            plt.close('all')
 
             ###############################################################
             # Plot the results of the Shapiro-Wilks test for the Fourier
@@ -913,7 +942,7 @@ for iwave, wave in enumerate(waves):
             ofilename = region_id
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.fourier_power.pickle',
-                      (freqs / freqfactor[0], pwr))
+                      (freqs_original, pwr))
 
             # Analyzed data
             pkl_write(pkl_location,
@@ -923,52 +952,46 @@ for iwave, wave in enumerate(waves):
             # Fourier transform
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.fft_transform.pickle',
-                      (freqs / freqfactor[0], fft_transform))
+                      (freqs_original, fft_transform))
 
-            # Arithmetic mean of power spectra
+            # logarithm of the arithmetic mean of power spectra
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.iobs.pickle',
-                      (freqs / freqfactor[0], np.log(iobs)))
+                      (freqs_original, np.log(iobs)))
 
             # Geometric mean of power spectra
-            #(freqs / freqfactor[0], logiobs, logiobs_distrib_width))
+            # (frequencies, number of pixels, mean logiobs ,gaussian fitted
+            # logiobs, peak logiobs)
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.logiobs.pickle',
-                      (freqs / freqfactor[0], logiobs, iobs_peak,
-                       logiobs_peak_location, nx * ny,
-                       cc0_ds.mean, lag, cclag_ds.mean))
+                      (freqs_original, nx * ny,
+                       logiobs,
+                       logiobs_peak_fitted,
+                       logiobs_peak))
 
             # Widths of the power distributions
+            #(frequencies
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.distribution_widths.pickle',
-                      (freqs / freqfactor[0], logiobs_distrib_width,
-                       logiobs_std, np.abs(logiobs - logiobs_peak_location)))
+                      (freqs_original,
+                       logiobs_std,
+                       logiobs_width_fitted))
 
             # Error in the Widths of the power distributions
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.distribution_widths_error.pickle',
-                      (freqs / freqfactor[0], error_logiobs_distrib_width))
+                      (freqs_original, error_logiobs_width_fitted))
 
             # Coherence quantities
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.coherence.' + neighbour + '.pickle',
-                      (freqs / freqfactor[0], coher, coher_max, coher_mode,
+                      (freqs_original, coher, coher_max, coher_mode,
                        coher_95_hi, coher_mean))
 
             # Correlation / independence quantities
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.correlative.' + neighbour + '.pickle',
                       (cc0_ds, cclag_ds, ccmax_ds))
-
-            # Bump fit
-            #pkl_write(pkl_location,
-            #          'OUT.' + ofilename + '.bump_fit_all.pickle',
-            #          (bump_ans_all, bump_err_all))
-
-            # Simple fit
-            #pkl_write(pkl_location,
-            #          'OUT.' + ofilename + '.simple_fit_all.pickle',
-            #          (simple_ans_all, simple_err_all))
 
             # Save the full time series to a CSV file
             csv_timeseries_write(os.path.join(os.path.expanduser(scsv), window, manip),

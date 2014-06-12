@@ -49,7 +49,7 @@ waves = ['171', '193']
 regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
-neighbour = 'random'
+neighbour = 'nearest'
 
 """
 #
@@ -152,7 +152,7 @@ for iwave, wave in enumerate(waves):
                 else:
                     print('Data is normally distributed.')
 
-                # Load the data
+                # Load the power spectrum
                 pkl_location = locations['pickle']
                 ifilename = 'OUT.' + region_id + obstype
                 pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
@@ -160,28 +160,29 @@ for iwave, wave in enumerate(waves):
                 pkl_file = open(pkl_file_location, 'rb')
                 # Frequencies
                 freqs = pickle.load(pkl_file)
-                # Averaged Fourier Power per frequency
-                pwr_average = pickle.load(pkl_file)
-                # Peak Fourier power per frequency
-                pwr_ff_peak = pickle.load(pkl_file)
-                # Fitted Peak of the Fourier power per frequency
-                pwr_ff_fitted = pickle.load(pkl_file)
                 # Number of pixels used to create the average
                 npixels = pickle.load(pkl_file)
+                # Mean Fourier Power per frequency
+                pwr_ff_mean = pickle.load(pkl_file)
+                # Fitted Fourier power per frequency
+                pwr_ff_fitted = pickle.load(pkl_file)
+                # Histogram Peak of the Fourier power per frequency
+                pwr_ff_peak = pickle.load(pkl_file)
                 pkl_file.close()
+
                 # Load the widths
                 ifilename = 'OUT.' + region_id
                 pkl_file_location = os.path.join(pkl_location, ifilename + '.distribution_widths.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
+                # Frequencies
                 freqs = pickle.load(pkl_file)
-                # Fitted width of the Fourier power per frequency
-                fitted_width = pickle.load(pkl_file)
                 # Standard deviation of the Fourier power per frequency
                 std_dev = pickle.load(pkl_file)
-                # Absolute difference
-                abs_diff = pickle.load(pkl_file)
+                # Fitted width of the Fourier power per frequency
+                fitted_width = pickle.load(pkl_file)
                 pkl_file.close()
+
                 # Load the coherence
                 ifilename = 'OUT.' + region_id
                 pkl_file_location = os.path.join(pkl_location, ifilename + '.coherence.' + neighbour + '.pickle')
@@ -210,7 +211,7 @@ for iwave, wave in enumerate(waves):
                 pkl_file.close()
 
                 # Pick which definition of the power to use
-                pwr_ff = pwr_ff_fitted
+                pwr_ff = pwr_ff_mean
 
                 # Fix any non-finite widths and divide by the number of pixels
                 # Note that this should be the effective number of pixels,
@@ -218,7 +219,7 @@ for iwave, wave in enumerate(waves):
                 prettyprint('%s: Pixel independence calculation' % (neighbour))
                 print 'Number of pixels ', npixels
                 #print 'Mode, maximum cross correlation coefficient = %f' % (ccmax_ds.mode)
-                dependence_coefficient = ccmax_ds.mode
+                dependence_coefficient = ccmax_ds.mean
                 # Independence coefficient - how independent is one pixel compared
                 # to its nearest neighbour?
                 # independence_coefficient = 1.0 - 0.5 * (np.abs(ccc0) + np.abs(ccclag))
@@ -465,6 +466,11 @@ for iwave, wave in enumerate(waves):
 
                 # -------------------------------------------------------------
                 # Plot the data and the model fits
+                model_selector_format = '%i'
+                dAIC_value = model_selector_format % (fitsummarydata["dAIC"])
+                dAIC_value_string = '$AIC_{1} - AIC_{2} = ' + dAIC_value + '$'
+                dBIC_value = model_selector_format % (fitsummarydata["dBIC"])
+                dBIC_value_string = '$BIC_{1} - BIC_{2} = ' + dBIC_value + '$'
                 ax = plt.subplot(111)
 
                 # Set the scale type on each axis
@@ -483,7 +489,7 @@ for iwave, wave in enumerate(waves):
                 chivalue = chiformat % (fitsummarydata["M0"]["chi2"])
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
                 ax.plot(xvalue, np.exp(M0_bf), label='$M_{1}$: maximum likelihood fit, ' + chivaluestring, color='b')
-                ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='$M_{1}$: posterior mean', color = 'b', linestyle='--')
+                #ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='$M_{1}$: posterior mean', color = 'b', linestyle='--')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
 
@@ -491,7 +497,7 @@ for iwave, wave in enumerate(waves):
                 chivalue = chiformat % (fitsummarydata["M1"]["chi2"])
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
                 ax.plot(xvalue, np.exp(M1_bf), label='$M_{2}$: maximum likelihood fit, ' + chivaluestring, color='r')
-                ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='$M_{2}$: posterior mean', color = 'r', linestyle='--')
+                #ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='$M_{2}$: posterior mean', color = 'r', linestyle='--')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
 
@@ -510,14 +516,14 @@ for iwave, wave in enumerate(waves):
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
                 xpos = freqfactor * 10.0 ** -2.0
-                ypos = np.zeros((2))
-                ypos_max = np.max(pwr_ff)
-                ypos_min = np.min(pwr_ff) + 0.5 * (np.max(pwr_ff) - np.min(pwr_ff))
+                ypos = np.zeros(2)
+                ypos_max = np.log(fit_details()['ylim'][1]) - 1.0
+                ypos_min = np.log(fit_details()['ylim'][0]) + 1.0
                 yrange = ypos_max - ypos_min
                 for yyy in range(0, ypos.size):
-                    ypos[yyy] = ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0))
-                #plt.text(xpos, ypos[0], '$AIC_{0} - AIC_{1}$ = %f' % (fitsummarydata["dAIC"]))
-                #plt.text(xpos, ypos[1], '$BIC_{0} - BIC_{1}$ = %f' % (fitsummarydata["dBIC"]))
+                    ypos[yyy] = np.exp(ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0)))
+                plt.text(xpos, ypos[0], dAIC_value_string)
+                plt.text(xpos, ypos[1], dBIC_value_string)
                 #plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
                 #plt.text(xpos, ypos[0], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
                 #plt.text(xpos, ypos[1], '$M_{2}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
@@ -531,7 +537,7 @@ for iwave, wave in enumerate(waves):
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
-                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % ('png'))
                 plt.close('all')
 
                 # -------------------------------------------------------------
