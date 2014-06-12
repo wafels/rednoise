@@ -351,18 +351,18 @@ function of AIA waveband and location.}
 \end{figure}
 Figure \ref{fig:dist171193} show the distributions of the logarithm of
 the Fourier power for a small number of frequencies, for all the
-pixels in each region.  The distributions all follow a normal
-distribution approximately.  This indicates that the power in each
-each at each frequency is approximately log-normally distributed.
-This observation guides the choice of how to average the \PS\ over
-each of the selected region.  Since the Fourier power is log-normally
-distributed, the arithmetic mean of the Fourier power is biased by the
-very largest powers.  Since the logarithm of the Fourier power is
-approximately Gaussian-distributed, the mean value is a better
-representation of the range of values in the data.  Hence the mean of
-the logarithm of the Fourier power is used to describe the mean
-\Fps\ of each region (note that this is also equivalent to the
-geometric mean of the Fourier power.)
+pixels in each region.  These distributions are centrally peaked, and
+show a slightly heavier tail towards lower Fourier powers (negative
+skew), and are slightly broader when compared to a Gaussian
+distribution.  Plots of all these distribution show that they are all
+unimodal.  These observations guide the choice of how to average the
+\PS\ over each of the selected region.  The nature of these
+distributions suggest that the arithmetic mean of the Fourier power is
+biased by the very largest powers.  Therefore, the mean value of the
+logarithm of the Fourier power is a better description of the range of
+values in the data (this is equivalent to the geometric mean of the
+Fourier power).  The \FPs\ used below are calculated from the mean
+value of the logarithm of the Fourier power.
 
 \begin{figure}
 \centerline{
@@ -826,51 +826,41 @@ NNX13AE03G S01 funded through NASA ROSES NNH12ZDA001N-SHP.
 
 \appendix
 
-\section{Details of the model fitting procedure}\label{sec:app:ind}
-Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
-geometric mean power spectra shown in Figures \ref{fig:fit171193}.
-The frequency $\nu$ is defined as $f/f_{0}$ where $f$ is the FFT
-frequency in Hz, and $f_{0}$ is the lowest non-zero FFT frequency
-defined by the data (Section \ref{sec:obs}).
+\section{Fitting models to the \PS}\label{sec:app:ind}
+In order to perform the fit, the noise in the mean \FPs\ must be
+estimated.  To do that, the power distributions of Section \ref{???}
+are considered.  Each measurement of the Fourier power at a given
+pixel is not independent of the Fourier power at another pixel.  This
+is because neighbouring pixels are highly likely to be physically
+connected to each other, and so time-series in neighboring pixels are
+likely to be strongly correlated (assuming that the background
+structure exists over at least two pixels).  Also, the point spread
+function of AIA spreads emission in one pixel over on to its
+neighbors.  Secondly, the distributions are only approximately normal.
 
-As noted in Section \ref{sec:anal}, the logarithm of the Fourier power
-for all regions is approximated by a normal distribution $N(\mu,
-\sigma)$.  The maximum likelihood estimate of the mean and variance of
-normal distribution are given by
+Let the standard error in the mean of samples from a distribution be
+given by $\sigma_{mean}$.  It is defined as the standard deviation of
+the sampling distribution of the mean:
 \begin{equation}
-\hat{\mu} = \frac{1}{N_{pixel}}\sum_{i=1}^{N_{pixel}}X_{i}
-\label{eqn:mlmean}
-\end{equation}
-and
-\begin{equation}
-\hat{\sigma^{2}} = \frac{1}{N_{pixel}}\sum_{i=1}^{N_{pixel}}(X_{i}-\hat{\mu})^{2}
+\sigma_{mean} = \sigma / N
 \label{eqn:sigmamean}
 \end{equation}
-where $N_{pixel}$ is the number of pixels in each region.  The
-estimated error in the estimated mean is
-\begin{equation}
-\sqrt{\hat{\sigma_{d}^{2}}}/\sqrt{N}
-\label{eqn:errorsigmamean}
-\end{equation}
-where $N$ is the number of measurements taken.  This formula assumes
-that the measurements taken are all independent of each other.
-However, this is not the case for the Fourier power in any given
-frequency.  This is because neighbouring pixels are highly likely to
-be physically connected to each other, and so time-series in
-neighboring pixels are likely to be strongly correlated (assuming that
-the background structure exists over at least two pixels).  Secondly,
-the point spread function of AIA spreads emission in one pixel over
-its neighbors.  Therefore, the measurements used to generate an error
-to the Fourier power are not independent.
+where $\sigma$ is the standard deviation of the original distribution
+and $N$ is the sample size.  This formula assumes that the
+measurements taken are all independent of each other, which is not the
+case for the Fourier power spectra studied here.  Hence the value of
+$N$ cannot be set to the number of pixels in a region.
 
-Therefore, the number of effectively independent pixels is less than
-the actual number of pixels in any one region.  The number of
-effective independent pixels is estimated in the following way.  The
-cross correlation $c(\tau)$ function between two randomly chosen
-next-nearest neighbor pixels is calculated.  The cross correlation
-coefficient measures the linear dependence of two time series $X(t)$
-and $Y(t \pm \tau)$ at different lags $\tau$.  This is used to define
-a coefficient of independence between next nearest neighbor,
+Hence, the number of effectively independent pixels time-series must
+be calculated.  First, a pair of randomly chosen next-nearest neighbor
+pixels are selected from the region.  Next nearest neighbor pixels are
+chosen as close physical proximity is most likely to express the
+strongest interdependence.  Next, the cross correlation $c(\tau)$
+function between two randomly chosen next-nearest neighbor pixels is
+calculated.  The cross correlation coefficient measures the linear
+dependence of two time series $X(t)$ and $Y(t \pm \tau)$ at different
+lags $\tau$.  This is used to define a coefficient of independence
+between the neighbors,
 \begin{equation}
 \label{eqn:ind}
 \rho = 1 - \max|c(\tau)|.
@@ -878,15 +868,28 @@ a coefficient of independence between next nearest neighbor,
 When $\rho$ is 1, the cross-correlation coefficient is zero, and there
 is no measurable linear dependence between neighboring time series.
 When $\rho$ is zero, the cross correlation coefficient is $\pm 1$, and
-the two time-series are linearly dependent on each other.  The
-effective number of independent pixels in region is given by
+the two time-series are linearly dependent on each other.  This
+procedure is repeated 10,000 and the mean value $\hat{\rho}$ is
+calculated. The effective number of independent pixels in region is
+given by
 \begin{equation}
 \label{eqn:nind}
-N_{ind}= 1 + \rho(N_{pixel}-1).
+N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
 \end{equation}
-The number of independent measurements $N$ is set to $N_{ind}$ in
-Equation \ref{eqn:errorsigmamean}.  This gives a lengthscale for the
-uncertainty in the mean Fourier \PS.
+The number of independent measurements $N$ is set to $N_{eff}$ in
+Equation \ref{eqn:sigmamean}.
+
+
+
+
+Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
+geometric mean power spectra shown in Figures \ref{fig:fit171193}.
+The frequency $\nu$ is defined as $f/f_{0}$ where $f$ is the FFT
+frequency in Hz, and $f_{0}$ is the lowest non-zero FFT frequency
+defined by the data (Section \ref{sec:obs}).
+
+
+
 
 \subsection{Model fitting}
 
@@ -894,12 +897,12 @@ A three step fitting process is used to fit Models 1 and 2 to the
 data.
 \begin{enumerate}
 \item Model 1 is fit to the data using the distribution widths
-  $\sigma_{d}$.  Since this is much wider than the estimated error in
+  $\sigma$.  Since this is much wider than the standard error in
   the mean, it allows the fitting algorithm to converge to an
   approximate fit solution.
 \item The estimated values to the model parameters are then used as
   initial guesses to the second fit of Model 1, assuming the much
-  narrower estimated error $\sigma_{d}/\sqrt{N}{ind}$.  This generates
+  narrower estimated error $\sigma/\sqrt{N_{eff}}$.  This generates
   a better estimate to the parameters of the model fit.
 \item The residuals of the model 1 fit to the data are then used to
   estimate the model parameters of $G(\nu)$.
