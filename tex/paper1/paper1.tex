@@ -675,6 +675,7 @@ surface.
 
 
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
+
 The first contribution to both models $P_{0}$ and $P_{i}$ is a
 \PL-like \PS.  It is present in both wavebands studied and in all the
 regions, and so parsimony suggests that the mechanism of its creation
@@ -770,7 +771,7 @@ Future studies will include examining power spectra at many more
 locations on and off the disk, as well as using the AIA 355\AA, 94\AA,
 131\AA and 211\AA\ wavebands.  The power-law index in individual
 pixels will also be determined, and correlated with other physical
-quantiies such as the emission from those pixels.  Finally, a better
+quantities such as the emission from those pixels.  Finally, a better
 understanding of the source of the power-law power spectrum will come
 from comparing the \Fps\ of simulated observations to the \Fps\ of the
 data in all the AIA wave-bands that are sensitive to higher
@@ -869,7 +870,7 @@ When $\rho$ is 1, the cross-correlation coefficient is zero, and there
 is no measurable linear dependence between neighboring time series.
 When $\rho$ is zero, the cross correlation coefficient is $\pm 1$, and
 the two time-series are linearly dependent on each other.  This
-procedure is repeated 10,000 and the mean value $\hat{\rho}$ is
+procedure is repeated 10,000 times and the mean value $\hat{\rho}$ is
 calculated. The effective number of independent pixels in region is
 given by
 \begin{equation}
@@ -877,42 +878,56 @@ given by
 N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
 \end{equation}
 The number of independent measurements $N$ is set to $N_{eff}$ in
-Equation \ref{eqn:sigmamean}.
+Equation \ref{eqn:sigmamean}.  The value $\sigma_{mean}$ is used as
+the estimate of the error in the \FPs.  Table \ref{tab:neff} shows the
+number of pixels in the region and the estimated number of effective
+pixels. 
 
 
 
 
+
+\subsection{Model fitting and selection}
+
+The \FPs\ are assumed to be normally distributed with a width given by
+$\sigma_{mean}$ as calculated above.
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
 geometric mean power spectra shown in Figures \ref{fig:fit171193}.
 The frequency $\nu$ is defined as $f/f_{0}$ where $f$ is the FFT
 frequency in Hz, and $f_{0}$ is the lowest non-zero FFT frequency
-defined by the data (Section \ref{sec:obs}).
+defined by the data (Section \ref{sec:obs}).  A five step fitting
+process is used to fit Models 1 and 2 to the data.  Maximum likelihood
+estimates are found using scipy's maximum likelihood estimators
 
 
-
-
-\subsection{Model fitting}
-
-A three step fitting process is used to fit Models 1 and 2 to the
-data.
 \begin{enumerate}
-\item Model 1 is fit to the data using the distribution widths
-  $\sigma$.  Since this is much wider than the standard error in
-  the mean, it allows the fitting algorithm to converge to an
-  approximate fit solution.
-\item The estimated values to the model parameters are then used as
-  initial guesses to the second fit of Model 1, assuming the much
-  narrower estimated error $\sigma/\sqrt{N_{eff}}$.  This generates
-  a better estimate to the parameters of the model fit.
+\item Maximum likelihood estimates to the values of the parameters of
+  Model 1 are found using the distribution widths $\sigma$.  Since
+  these widths are much larger than $\sigma_{mean}$ is much wider than
+  the standard error in the mean, it allows the fitting algorithm to
+  converge to an approximate fit solution.
+\item The estimated values to the Model 1 parameters are then used as
+  initial guesses to the second estimate of the Model 1
+  parameters. Maximum likelihood estimates to the values of the
+  parameters of Model 1 are found using the distribution widths
+  $\sigma_{mean}$, seeded with estimated parameter values from step 1.
+  This generates a better estimate to the parameters of the model
+  fit.  The resulting parameter estimates are the final estimates for
+  Model 1.
 \item The residuals of the model 1 fit to the data are then used to
   estimate the model parameters of $G(\nu)$.
 \item Model 2 is fit to the data using the distribution widths
-  $\sigma_{d}$, seeded with the maximum likelihood parameter values
-  from Step 2 and the estimated $G(\nu)$ model parameters from Step 3.
-\item Model 2 is fit to the data using the maximum likelihood model
-  parameter values at Step 4 and the adjusted widths
-  $\sigma_{d}/\sqrt{N}{ind}$.
+  $\sigma$, seeded with the maximum likelihood parameter values of
+  Model 1 from step 2 and the estimated $G(\nu)$ model parameters from
+  step 3.
+\item Model 2 is fit to the data using the maximum likelihood Model 2
+  parameter values at Step 4 and the widths $\sigma_{mean}$.  The
+  resulting parameter estimates are the final estimates for Model 2.
 \end{enumerate}
+
+Models are selected using the Akaike and Bayesian Information Criteria
+\cite{???} calculated using the final parameter estimates of Models 1
+and 2.
 
 
 
@@ -943,6 +958,8 @@ data.
 
 \bibliography{references}
 \end{document}
+
+
 However, other more complex models are certainly possible.  For
 example, \cite{1993ASPC...42..111H} modelled the background
 chromospheric Fourier \PS\ of a series of Ca-II K-line
@@ -973,3 +990,4 @@ oscillatory content in the solar atmosphere.  Equation
 \ref{eqn:pwrlawbump} is shown to be the preferred model in all cases.
 
 
+The mean power spect

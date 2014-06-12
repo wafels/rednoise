@@ -46,7 +46,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
+regions = ['moss', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -255,7 +255,7 @@ for iwave, wave in enumerate(waves):
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
                 sigma_of_distribution = fix_nonfinite(std_dev)
-                sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
+                sigma_for_mean = sigma_of_distribution #/ np.sqrt(npixels_effective)
 
                 if sigma_type is not None:
                     # Fit the independence coefficient with a beta distribution
