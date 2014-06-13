@@ -456,6 +456,14 @@ for iwave, wave in enumerate(waves):
                 # Calculate the best fit power law contribution
                 powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(normed_freqs, A1[0:3]))
 
+                # Print the maximum of the ratio of the bump contribution and
+                # to the power law, and the frequency at which occurs
+                bump_to_pl_ratio = np.exp(normalbump_BF) / np.exp(powerlaw_BF)
+                max_bump_to_pl_ratio_index = np.argmax(bump_to_pl_ratio)
+                print '++++++++++++++++++++++++'
+                print 'Maximum bump to PL ratio is %f at frequency = %f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], 1000 * freqs[max_bump_to_pl_ratio_index])
+                print '++++++++++++++++++++++++'
+
                 # Plot
                 title = 'AIA ' + wave + " : " + sunday_name[region]
                 xvalue = freqfactor * freqs
@@ -511,6 +519,11 @@ for iwave, wave in enumerate(waves):
                 ax.axvline(fivemin, label='5 minutes', linestyle='--', color='k')
                 ax.axvline(threemin, label='3 minutes', linestyle='-.', color='k')
 
+                # Plot the location of the maximum bump ratio
+                ax.axvline(freqfactor * freqs[max_bump_to_pl_ratio_index],
+                           label='Maximum bump to PL ratio is %4.2f at frequency = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index]),
+                           linestyle=':', color='g')
+
                 # Plot the bump limits
                 #plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
                 #plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
@@ -533,7 +546,7 @@ for iwave, wave in enumerate(waves):
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8, labelspacing=0.2, loc=3)
                 plt.xlabel('frequency (mHz)')
-                plt.ylabel('power')
+                plt.ylabel('power (arb. units)')
                 plt.title(title)
                 ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,
                                            np.max(normalbump_BF) - 2.0]))

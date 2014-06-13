@@ -504,30 +504,32 @@ Model selection is implemented using the Akaike Information Criterion
 AIC \equiv -2 \ln L_{max} - 2k
 \end{equation}
 where $L_{max}$ is the maximum likelihood achievable by the model, and
-$k$ is the number of parameters in the model.  The BIC is defined as
+$k$ is the number of parameters in the model ($k=3$ for Model 1, and
+$k=6$ for Model 2).  The BIC is defined as
 \begin{equation}\label{eqn:bic}
 BIC \equiv -2 \ln L_{max} - k\ln N
 \end{equation}
-where $N$ is the number of data points used in the fit.  Model
-selection is guided by calculating $\delta AIC = AIC_{1} - AIC_{2}$
-and $\delta BIC = BIC_{1} - BIC_{2}$.  Positive values of $\delta AIC,
-\delta BIC$ express a preference for model 2 over model 1.
+where $N$ is the number of data points used in the fit (in this case
+$N=899$, the number of non-zero frequencies of the Fourier power
+spectrum).  Model selection is guided by calculating $\delta AIC =
+AIC_{1} - AIC_{2}$ and $\delta BIC = BIC_{1} - BIC_{2}$.  Positive
+values of $\delta AIC, \delta BIC$ express a preference for model 2
+over model 1.
 
-
-For both the AIC and the BIC, Model 2 is overwhelmingly preferred to
-Model 1. Table \ref{tab:parameters} gives the parameter estimates and
-68\% credible intervals of the parameter values.  The power law
-indices for all regions and both wavebands lie in the range 1.8 to
-2.3, although there is no consistency between one waveband and
-another.  For example, the 171\AA\ and 193\AA\ loop footpoint results
-both have the same power law index, but the other regions do not.
-However, it should be noted that there is no {\it a priori} reason why
-the power law indices for a region seen in two different wavebands
-should be the same.  This is because each waveband is designed to
-examine different features on the Sun in broadly different temperature
-ranges, and may be imaging very different physical processes: hence,
-the emission seen in one waveband need not have the same statistical
-properties as another
+Using both the AIC and the BIC, Model 2 is overwhelmingly preferred to
+Model 1 (see Figure \ref{fig:fit171193}). Table \ref{tab:parameters}
+gives the parameter estimates and 68\% credible intervals of the
+parameter values.  The power law indices for all regions and both
+wavebands lie in the range 1.8 to 2.3, although there is no
+consistency between one waveband and another.  For example, the
+171\AA\ and 193\AA\ loop footpoint results both have the same power
+law index, but the other regions do not.  However, it should be noted
+that there is no {\it a priori} reason why the power law indices for a
+region seen in two different wavebands should be the same.  This is
+because each waveband is designed to examine different features on the
+Sun in broadly different temperature ranges, and may be imaging very
+different physical processes: hence, the emission seen in one waveband
+need not have the same statistical properties as any other.
 
 
 
@@ -960,8 +962,8 @@ estimates are found using scipy's maximum likelihood estimators
 \end{enumerate}
 
 Models are selected using the Akaike and Bayesian Information Criteria
-\cite{???} calculated using the final parameter estimates of Models 1
-and 2.
+\cite{2007MNRAS.377L..74L} calculated using the final parameter
+estimates of Models 1 and 2.
 
 
 
