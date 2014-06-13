@@ -32,8 +32,6 @@ from aia_pymc_pwrlaws_helpers import *
 # Reproducible
 np.random.seed(1)
 
-
-
 plt.ioff()
 #
 # Set up which data to look at
@@ -255,7 +253,7 @@ for iwave, wave in enumerate(waves):
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
                 sigma_of_distribution = fix_nonfinite(std_dev)
-                sigma_for_mean = sigma_of_distribution #/ np.sqrt(npixels_effective)
+                sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
 
                 if sigma_type is not None:
                     # Fit the independence coefficient with a beta distribution
@@ -488,7 +486,9 @@ for iwave, wave in enumerate(waves):
                 chiformat = '%4.2f'
                 chivalue = chiformat % (fitsummarydata["M0"]["chi2"])
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
-                ax.plot(xvalue, np.exp(M0_bf), label='$M_{1}$: maximum likelihood fit, ' + chivaluestring, color='b')
+                #label = '$M_{1}$: maximum likelihood fit, ' + chivaluestring
+                label = '$M_{1}$, maximum likelihood fit'
+                ax.plot(xvalue, np.exp(M0_bf), label=label, color='b')
                 #ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='$M_{1}$: posterior mean', color = 'b', linestyle='--')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
@@ -496,7 +496,9 @@ for iwave, wave in enumerate(waves):
                 # Plot the M1 fit
                 chivalue = chiformat % (fitsummarydata["M1"]["chi2"])
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
-                ax.plot(xvalue, np.exp(M1_bf), label='$M_{2}$: maximum likelihood fit, ' + chivaluestring, color='r')
+                #label = '$M_{2}$: maximum likelihood fit, ' + chivaluestring
+                label = '$M_{2}$, maximum likelihood fit'
+                ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
                 #ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='$M_{2}$: posterior mean', color = 'r', linestyle='--')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
@@ -515,15 +517,15 @@ for iwave, wave in enumerate(waves):
 
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
-                xpos = freqfactor * 10.0 ** -2.0
-                ypos = np.zeros(2)
-                ypos_max = np.log(fit_details()['ylim'][1]) - 1.0
-                ypos_min = np.log(fit_details()['ylim'][0]) + 1.0
-                yrange = ypos_max - ypos_min
-                for yyy in range(0, ypos.size):
-                    ypos[yyy] = np.exp(ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0)))
-                plt.text(xpos, ypos[0], dAIC_value_string)
-                plt.text(xpos, ypos[1], dBIC_value_string)
+                xpos = freqfactor * (7.0 * (10.0 ** -3.0))
+                #ypos = np.zeros(2)
+                #ypos_max = np.log(fit_details()['ylim'][1]) - 1.0
+                #ypos_min = np.log(fit_details()['ylim'][0]) + 1.0
+                #yrange = ypos_max - ypos_min
+                #for yyy in range(0, ypos.size):
+                #    ypos[yyy] = np.exp(ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0)))
+                plt.text(xpos, 1.0, dAIC_value_string)
+                plt.text(xpos, 10.0 ** 0.5, dBIC_value_string)
                 #plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
                 #plt.text(xpos, ypos[0], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
                 #plt.text(xpos, ypos[1], '$M_{2}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
@@ -537,7 +539,7 @@ for iwave, wave in enumerate(waves):
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
-                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % ('png'))
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % ('pdf'))
                 plt.close('all')
 
                 # -------------------------------------------------------------

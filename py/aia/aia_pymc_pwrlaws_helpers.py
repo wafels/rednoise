@@ -182,6 +182,10 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
         plt.axvline(v95_hi, color='k', linestyle='--', linewidth=2, label='95% CI')
         plt.axvline(v68_lo, color='k', linestyle='-.', linewidth=2)
         plt.axvline(v68_hi, color='k', linestyle='-.', linewidth=2, label='68% CI')
+        print '------------------------'
+        print v, '68%', v68_lo, v68_hi
+        print v, '95%', v95_lo, v95_hi
+        print '------------------------'
 
         plt.text(mean, 0.90 * ypos, ' %f' % (mean), fontsize=fontsize, bbox=bbox)
         plt.text(v95_lo, 0.25 * ypos, ' %f' % (v95_lo), fontsize=fontsize, bbox=bbox)

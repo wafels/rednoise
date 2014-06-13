@@ -55,8 +55,18 @@
 \newcommand{\vdag}{(v)^\dagger}
 \newcommand{\myemail}{jack.ireland@nasa.gov}
 \newcommand{\PS}{power spectrum}
+\newcommand{\mPS}{mean power spectrum}
+
+\newcommand{\PA}{power spectra}
+\newcommand{\mPA}{mean power spectra}
+
 \newcommand{\PL}{power-law}
+
 \newcommand{\Fps}{Fourier \PS}
+\newcommand{\mFps}{mean Fourier \PS}
+
+\newcommand{\Fpa}{Fourier \PA}
+\newcommand{\mFpa}{mean Fourier \PA}
 
 %% You can insert a short comment on the title page using the command below.
 
@@ -109,20 +119,19 @@
 %% editorial office after submission.
 
 \begin{abstract}
-The Fourier power spectra of regions of the solar corona are
-investigated using AIA 171\AA\ and 193\AA\ data.  It is shown that the
-Fourier power spectra in all the regions show a \PL\ behaviour
-approximately.  This suggests that in many parts of the corona a
-background model consisting of white noise and a trend cannot be
-assumed when analyzing for the presence of oscillations in the corona.
-The implications of this discovery to the field of coronal seismology
-and automated detections of oscillations is discussed.  Further, it is
-shown that the observed \PL\ \PS\ can be formed by summing a
-distribution of exponentially decaying emission events along the line
-of sight.  This is consistent with the notion that the solar
-atmosphere is heated everywhere by small energy deposition events.
-
-
+The \mFpa\ of regions of the solar corona are investigated using AIA
+171\AA\ and 193\AA\ data.  It is shown that the \mFpa\ in all regions
+show an approximate \PL\ behaviour.  This average behavior is
+inconsistent with the common assumption that coronal time-series are
+well described by the sum of a long time-scale background trend plus
+Gaussian-distributed noise, with some specific locations also showing
+an oscillatory signal.  The implications of this discovery to the
+field of coronal seismology and automated detections of oscillations
+is discussed.  Further, it is shown that the observed \PL\ \PS\ can be
+formed by summing a distribution of exponentially decaying emission
+events along the line of sight.  This is consistent with the notion
+that the solar atmosphere is heated everywhere by small energy
+deposition events.
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. The uncommented
@@ -334,16 +343,16 @@ frequencies.
 
 \begin{figure}
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
 }
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.power_spectra_distributions.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.power_spectra_distributions.eps}
 }
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.power_spectra_distributions.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.power_spectra_distributions.eps}
 }
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
 }
 \caption{Distribution of Fourier power at some sample frequencies as a
 function of AIA waveband and location.}
@@ -361,23 +370,23 @@ distributions suggest that the arithmetic mean of the Fourier power is
 biased by the very largest powers.  Therefore, the mean value of the
 logarithm of the Fourier power is a better description of the range of
 values in the data (this is equivalent to the geometric mean of the
-Fourier power).  The \FPs\ used below are calculated from the mean
+Fourier power).  The \PA\ used below are calculated from the mean
 value of the logarithm of the Fourier power.
 
 \begin{figure}
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
 \centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
-\caption{Geometric mean of the Fourier power spectra in each of the
+\caption{Geometric mean of the \protect\Fpa\ in each of the
   four regions studied in AIA 171\AA\ (left column) and AIA
   193\AA\ (right column).  Also shown are the posterior mean and
   maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section
@@ -435,11 +444,11 @@ sunspot         & 171\AA  & $0.51^{+0.01}_{-0.01}$  & $2.27^{+0.02}_{-0.02}$ & $
 %% in the table for each \tablenotetext.
 \end{deluxetable}
 
-The (geometric) mean Fourier power spectra are shown in Figure
-\ref{fig:fit171193} for each of the physical regions considered.  It
-is clear that, in general, the Fourier power spectra exhibit power-law
-like characteristics.  The results for the quiet Sun, loop footpoints
-and sunspot regions suggest a \PL\ \PS.  This can be modeled as
+The (geometric) \mFpa\ are shown in Figure \ref{fig:fit171193} for
+each of the physical regions considered.  It is clear that, in
+general, the \mFpa\ exhibit power-law like characteristics.  The
+results for the quiet Sun, loop footpoints and sunspot regions suggest
+a \PL\ \PS.  This can be modeled as
 \begin{equation}
 \label{eqn:pwrlaw}
 \mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
@@ -476,22 +485,10 @@ where the localized contribution is described by
 G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\sigma^{2}}\right].
 \end{equation}
 Both these models are fit to the geometrically averaged Fourier power
-spectrum in both wavelengths and in all four regions, and compared to
-decide which model best describes the data.  The model comparison
-process is described in Section \ref{ssec:compare}.
-
-\subsection{Comparing spectral models}\label{ssec:compare}
-Deciding which model best fits the data is achieved using a model
-comparison process based on the work of \cite{2010MNRAS.402..307V}.
-In the first part of this work, two models of the background Fourier
-power spectrum from XMM-Newton observations of highly variable Seyfert
-1 galaxies are compared to find which one best describes the
-background spectrum.  The comparison process is as follows.
-
-
-
-
-
+spectrum in both wavelengths and in all four regions (Figure
+\ref{fig:fit171193}), and compared to decide which model best
+describes the data. The details of the model fitting process are
+described in \ref{sec:app:ind}.
 
 
 \subsection{Results}\label{ssec:results}
@@ -499,6 +496,40 @@ Figure \ref{fig:fit171193} show the fit results of each model to the
 data.  Table \ref{tab:parameters} shows the fitted parameter values
 and an error estimate for model $M_{2}$.  For details on the fitting
 procedure, see Section \ref{sec:app:ind}.
+
+Model selection is implemented using the Akaike Information Criterion
+(AIC) and the Bayesian Information Criterion (BIC)
+\citep{2007MNRAS.377L..74L}.  The AIC is defined as
+\begin{equation}\label{eqn:aic}
+AIC \equiv -2 \ln L_{max} - 2k
+\end{equation}
+where $L_{max}$ is the maximum likelihood achievable by the model, and
+$k$ is the number of parameters in the model.  The BIC is defined as
+\begin{equation}\label{eqn:bic}
+BIC \equiv -2 \ln L_{max} - k\ln N
+\end{equation}
+where $N$ is the number of data points used in the fit.  Model
+selection is guided by calculating $\delta AIC = AIC_{1} - AIC_{2}$
+and $\delta BIC = BIC_{1} - BIC_{2}$.  Positive values of $\delta AIC,
+\delta BIC$ express a preference for model 2 over model 1.
+
+
+For both the AIC and the BIC, Model 2 is overwhelmingly preferred to
+Model 1. Table \ref{tab:parameters} gives the parameter estimates and
+68\% credible intervals of the parameter values.  The power law
+indices for all regions and both wavebands lie in the range 1.8 to
+2.3, although there is no consistency between one waveband and
+another.  For example, the 171\AA\ and 193\AA\ loop footpoint results
+both have the same power law index, but the other regions do not.
+However, it should be noted that there is no {\it a priori} reason why
+the power law indices for a region seen in two different wavebands
+should be the same.  This is because each waveband is designed to
+examine different features on the Sun in broadly different temperature
+ranges, and may be imaging very different physical processes: hence,
+the emission seen in one waveband need not have the same statistical
+properties as another
+
+
 
 \section{Discussion}
 The presence of a \PL\ \PS\ has implications for the detection of
@@ -728,7 +759,6 @@ This derivation of a \PL\ \PS\ shares many similar features
 with the nanoflare model of {\it energy} deposition in the solar
 atmosphere. In the nanoflare model,
 
-
 However, inferring the properties of energy deposition events from the
 observed emission \PL\ \PS\ depends strongly on three factors
 that influence the observation.  Firstly, the distribution of events
@@ -756,7 +786,7 @@ AIA-detected plasma response...  \cite{}
 
 \section{Conclusions}\label{sec:conc}
 
-Time series of AIA 171\AA\ and 193\AA images show approximately power
+Time series of AIA 171\AA\ and 193\AA\ images show approximately power
 law like properties over all regions of the solar surface.  Detecting
 narrow band oscillatory power should take in to account the presence
 of the \PL\ like \PS.  The power spectra have been modelled using
@@ -764,8 +794,10 @@ three components: a \PL\ \PS, a lognormal component, and a constant
 background.  It is hypothesized that the power-law component is due to
 the sum along the line of sight of a large number of statistically
 similar energy deposition events.  It is also hypothesized that the
-lognormal component is due to the channeling of oscillatory power from
-lower to higher levels of the solar atmosphere.
+lognormal component is due a combination of the channeling of
+oscillatory power from lower to higher levels of the solar atmosphere
+and lower temperature emission lines in the AIA 171\AA\ and
+193\AA\ bandpasses.
 
 Future studies will include examining power spectra at many more
 locations on and off the disk, as well as using the AIA 355\AA, 94\AA,
@@ -827,17 +859,19 @@ NNX13AE03G S01 funded through NASA ROSES NNH12ZDA001N-SHP.
 
 \appendix
 
-\section{Fitting models to the \PS}\label{sec:app:ind}
-In order to perform the fit, the noise in the mean \FPs\ must be
+\section{Fitting models to the \mFps}\label{sec:app:ind}
+
+
+In order to perform the fit, the noise in the \mFps\ must be
 estimated.  To do that, the power distributions of Section \ref{???}
-are considered.  Each measurement of the Fourier power at a given
-pixel is not independent of the Fourier power at another pixel.  This
-is because neighbouring pixels are highly likely to be physically
-connected to each other, and so time-series in neighboring pixels are
-likely to be strongly correlated (assuming that the background
-structure exists over at least two pixels).  Also, the point spread
-function of AIA spreads emission in one pixel over on to its
-neighbors.  Secondly, the distributions are only approximately normal.
+are considered.  The Fourier power at a given pixel is not independent
+of the Fourier power at another pixel.  This is because neighbouring
+pixels are highly likely to be physically connected to each other, and
+so time-series in neighboring pixels are likely to be strongly
+correlated (assuming that the background structure exists over at
+least two pixels).  Also, the point spread function of AIA spreads
+emission in one pixel over on to its neighbors.  Secondly, the
+distributions are only approximately normal.
 
 Let the standard error in the mean of samples from a distribution be
 given by $\sigma_{mean}$.  It is defined as the standard deviation of
@@ -879,7 +913,7 @@ N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
 \end{equation}
 The number of independent measurements $N$ is set to $N_{eff}$ in
 Equation \ref{eqn:sigmamean}.  The value $\sigma_{mean}$ is used as
-the estimate of the error in the \FPs.  Table \ref{tab:neff} shows the
+the estimate of the error in the \Fps.  Table \ref{tab:neff} shows the
 number of pixels in the region and the estimated number of effective
 pixels. 
 
@@ -889,7 +923,7 @@ pixels.
 
 \subsection{Model fitting and selection}
 
-The \FPs\ are assumed to be normally distributed with a width given by
+The \mFpa\ are assumed to be normally distributed with a width given by
 $\sigma_{mean}$ as calculated above.
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
 geometric mean power spectra shown in Figures \ref{fig:fit171193}.
