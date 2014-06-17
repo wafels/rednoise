@@ -25,6 +25,7 @@ from paper1 import sunday_name
 dataroot = '~/Data/AIA/'
 #corename = '20120923_0000__20120923_0100'
 corename = 'shutdownfun3_6hr'
+corename = 'shutdownfun3_6hr_3files_only'
 #corename = 'shutdownfun6_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
@@ -142,7 +143,7 @@ if corename == 'shutdownfun6_6hr':
                'moss': [[45, 95], [888, 950]]}
 #    regions_central = define_central_data(regions)
 
-if corename == 'shutdownfun3_6hr' and layer_index == nt / 2:
+if (corename == 'shutdownfun3_6hr' or corename == 'shutdownfun3_6hr_3files_only') and layer_index == nt / 2:
     print('Using %s and %f' % (corename, layer_index))
     regions = {'moss': [[175, 210], [140, 200]],
                'sunspot': [[125, 200], [250, 350]],
