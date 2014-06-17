@@ -43,8 +43,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'sunspot', 'qs']
+waves = ['193']
+regions = ['qs']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -520,8 +520,9 @@ for iwave, wave in enumerate(waves):
                 ax.axvline(threemin, label='3 minutes', linestyle='-.', color='k')
 
                 # Plot the location of the maximum bump ratio
+                label = r'$M_{2}$, $\max[G(\nu)/P_{1}(\nu)]$ = %4.2f at $\nu$ = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index])
                 ax.axvline(freqfactor * freqs[max_bump_to_pl_ratio_index],
-                           label='Maximum bump to PL ratio is %4.2f at frequency = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index]),
+                           label=label,
                            linestyle=':', color='g')
 
                 # Plot the bump limits
