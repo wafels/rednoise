@@ -856,10 +856,11 @@ corona.
 
 We are grateful to the developers of SSWIDL
 \citep{1998SoPh..182..497F}, SunPy \citep{mumford-proc-scipy-2013},
-PyMC \citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04} and Scientific
-Python stack for providing data preparation, manipulation, analysis
-and display packages.  This work was supported by NASA award
-NNX13AE03G S01 funded through NASA ROSES NNH12ZDA001N-SHP.
+PyMC \citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}, matplotlib
+\citep{Hunter:2007} and Scientific Python stack for providing data
+preparation, manipulation, analysis and display packages.  This work
+was supported by NASA award NNX13AE03G S01 funded through NASA ROSES
+NNH12ZDA001N-SHP.
 
 
 %% To help institutions obtain information on the effectiveness of their
@@ -940,46 +941,49 @@ given by
 N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
 \end{equation}
 The number of independent measurements $N$ is set to $N_{eff}$ in
-Equation \ref{eqn:sigmamean}.  The value $\sigma_{mean}$ is used as
-the estimate of the error in the \Fps.  Table \ref{tab:neff} shows the
-number of pixels in the region and the estimated number of effective
-pixels. 
-
-
-\begin{deluxetable}{cc}
-\tabletypesize{\scriptsize}
-\tablecaption{Number of pixels and effectively independent pixels as a function of region and waveband, as calculated following the procedure of Section \ref{sec:app:ind}. \label{tab:neff}}
+Equation \ref{eqn:sigmamean}, and that value of $\sigma_{mean}$ is
+used as the estimate of the error in the \Fps.  Table \ref{tab:neff}
+shows the number of pixels in the region and the estimated number of
+effective pixels.
+\begin{deluxetable}{cccc}
+\tabletypesize{\scriptsize} 
+\tablecolumns{4}
 \tablewidth{0pt}
+\tablecaption{Number of pixels and
+  effectively independent pixels as a function of region and waveband,
+  as calculated following the procedure of Section
+  \protect\ref{sec:app:ind}. \label{tab:neff}}
 \tablehead{
 \colhead{Region} &
 \colhead{$N_{pixel}$} &
 \colhead{Waveband} &
-\colhead{$N_{eff}$} &
+\colhead{$N_{eff}$} \\
 }
 \startdata
-loop footpoints & ??? & 171\AA & ??? \\
-                & ??? & 193\AA & ??? \\
-moss            & ??? & 171\AA & ??? \\
-                & ??? & 193\AA & ??? \\
-quiet Sun       & ??? & 171\AA & ??? \\
-                & ??? & 193\AA & ??? \\
-sunspot         & ??? & 171\AA & ??? \\
-                & ??? & 193\AA & ??? \\
+loop footpoints & 2000 & 171\AA & 183 \\
+                &     & 193\AA & 185 \\
+moss            & 2100 & 171\AA & 629 \\
+                &     & 193\AA & 521 \\
+quiet Sun       & 2500 & 171\AA & 598 \\
+                &     & 193\AA & 639 \\
+sunspot         & 7500 & 171\AA & 1505 \\
+                &     & 193\AA & 1531 \\
 \enddata
 \end{deluxetable}
 
 
 
 \subsection{Model fitting and selection}
-The \mFpa\ are assumed to be normally distributed with a width given by
-$\sigma_{mean}$ as calculated above.
-Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
-geometric mean power spectra shown in Figures \ref{fig:fit171193}.
-The frequency $\nu$ is defined as $f/f_{0}$ where $f$ is the FFT
-frequency in Hz, and $f_{0}$ is the lowest non-zero FFT frequency
-defined by the data (Section \ref{sec:obs}).  A five step fitting
-process is used to fit Models 1 and 2 to the data.  Maximum likelihood
-estimates are found using scipy's maximum likelihood estimators
+The \mFpa\ are assumed to be normally distributed with a width given
+by $\sigma_{mean}$ as calculated above.  Equations \ref{eqn:pwrlaw}
+and \ref{eqn:pwrlawbump} are fit to the geometric mean power spectra
+shown in Figures \ref{fig:fit171193}.  A five step fitting process is
+used to fit Models 1 and 2 to the data. The maximum likelihood
+function is constructed using PyMC version 2.3
+\citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}. Maximum likelihood
+estimates are found using SciPy version 0.13.2 \citep{scipy,
+  scientificpython} via Powell's minimization method
+\citep{Powell01011964, wpress86:numerical}.
 
 
 \begin{enumerate}
