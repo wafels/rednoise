@@ -20,7 +20,7 @@
 %% manuscript produces a one-column, double-spaced document:
 
 
-\documentclass{aastex}
+\documentclass[onecolumn]{emulateapj}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{multirow}
@@ -383,16 +383,16 @@ value of the logarithm of the Fourier power.
 
 \begin{figure}
 \centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.75}\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
 \centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.75}\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
 \centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.75}\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
 \centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
+\epsscale{0.75}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
 \caption{Geometric mean of the \protect\Fpa\ (black solid line) in
   each of the four regions studied in AIA 171\AA\ (left column) and
@@ -402,10 +402,10 @@ value of the logarithm of the Fourier power.
   \ref{sec:app:ind} for more detail).  The AIC and BIC describing the
   preference for model over the other is also indicated in each plot.
   The two components to Model 2, $P_{1}(\nu)$ and $G(\nu)$ are also
-  shown in green; the location of the maximum of their ratio is
-  indicated by the green dotted line.  Model fit parameter values and
-  their 68\% credible intervals are quoted in Table
-  \ref{tab:parameters}.}
+  shown in green; the location of the maximum of the
+  $G(\nu)/P_{1}(\nu)$ ratio is indicated by the green dotted line.
+  Model fit parameter values and their 68\% credible intervals are
+  quoted in Table \ref{tab:parameters}.}
 \label{fig:fit171193}
 \end{figure}
 
@@ -418,7 +418,7 @@ value of the logarithm of the Fourier power.
 \tablehead{
 \colhead{Region} & 
 \colhead{Waveband}    & 
-\multicolumn{3}{c}{\PL} & \multicolumn{3}{c}{lognormal} \\
+\multicolumn{3}{c}{\PL\ $P_{1}(\nu)$} & \multicolumn{3}{c}{lognormal $G(\nu)$} \\
 \colhead{}          & 
 \colhead{}          & 
 \colhead{$\log_{10}A$}          & 
@@ -544,6 +544,28 @@ because each waveband is designed to examine different features on the
 Sun in broadly different temperature ranges, and may be imaging very
 different physical processes: hence, the emission seen in one waveband
 need not have the same statistical properties as any other.
+
+The ratio of the two components $G(\nu)/P_{1}(\nu)$ measures the
+relative contribution of the ``excess'' emission over the
+\PL\ component.  The frequency $\nu_{max}$ is the frequency at which
+this ratio is a maximum, and indicates the most likely frequency at
+which the signal of the $G(\nu)$ contribution is strongest.  The
+ratios maximize in the range $2.18 \le \nu_{max} \le 4.63$ mHz.  This
+is in the frequency range suggested by the moss observations of
+\cite{2003ApJ...595L..63D}.  If Model 2 is indeed a reasonable model
+of the \Fpa\ in the regions studied, then the $G(\nu)$ contribution is
+consistent with previous observations.
+
+Note that neither models $M_{1}$ nor $M_{2}$ feature any narrow-band
+oscillatory signals that may be present in the regions studied.  Such
+features were not modeled in this study as their contribution to the
+overall signal is relatively small and localized to specific
+frequencies when compared to the general shape of the power spectra
+over the approximately three orders of magnitude (in frequency)
+studied here.  The question of how best to determine the presence or
+otherwise of narrow-band oscillatory power in \Fps\ is of importance
+to the study of coronal seismology, and is addressed in Sections
+\ref{ssec:corseis} and \ref{sec:oscdetect}.
 
 \section{Discussion}
 The presence of a \PL\ \PS\ has implications for the detection of
@@ -727,12 +749,13 @@ in the AIA 171\AA\ and 193\AA\ wavebands. \cite{2011ApJ...743...23M}
 find that the AIA 193\AA\ has more significant contributions from
 non-dominant lines when compared to AIA 171\AA.  If this were the
 case, then one would expect that the maximum of the ratio between
-$G(\nu)/P_{1}(\nu)$ (see Figure \ref{fig:fit171193}) would be higher
-for the AIA 193\AA\ \PS\ than for the AIA 171\AA \PS, which is not
-observed.  However, \cite{2011ApJ...743...23M} also note that their
-results are also quite sensitive to the abundances used in their
-simulations, which may explain the differences between their
-simulations and the observations presented here.
+$G(\nu)/P_{1}(\nu)$ (see Figure \ref{fig:fit171193} and Table
+\ref{tab:parameters}) would be higher for the AIA 193\AA\ \PS\ than
+for the AIA 171\AA \PS, which is not observed.  However,
+\cite{2011ApJ...743...23M} also note that their results are also quite
+sensitive to the abundances used in their simulations, which may
+explain the differences between their simulations and the observations
+presented here.
 
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
 The first contribution to both models $P_{0}$ and $P_{i}$ is a
@@ -1085,35 +1108,6 @@ estimates of Models 1 and 2.
 \bibliography{references}
 \end{document}
 
+Update parameter results
 
-However, other more complex models are certainly possible.  For
-example, \cite{1993ASPC...42..111H} modelled the background
-chromospheric Fourier \PS\ of a series of Ca-II K-line
-images using a 19-parameter fit consisting of a constant background,
-three components of the form
-\begin{equation}
-\label{eqn:harvey1}
-P(\nu) \propto \frac{1}{1 + (2\pi \nu T_{0})^{b}}.
-\end{equation}
-and two components of the form
-\begin{equation}
-\label{eqn:harvey2}
-P(\nu) \propto
-\left(
-\frac{\nu}{\nu_{0}}
-\right)^{c}
-\left(
-\frac{\Gamma^{2}}{(\nu-\nu_{0})^{2} + \Gamma^{2}}
-\right)^{b}.
-\end{equation}
-
-
-Finally, only two models of the Fourier \PS\ have been
-considered.  The choice of equation \ref{eqn:pwrlaw} is motivated by
-the observations of all four regions considered.  Equation
-\ref{eqn:pwrlawbump} was motivated by previous observations of
-oscillatory content in the solar atmosphere.  Equation
-\ref{eqn:pwrlawbump} is shown to be the preferred model in all cases.
-
-
-The mean power spect
+Give an idea of how the errors are found 
