@@ -386,13 +386,18 @@ value of the logarithm of the Fourier power.
 \centerline{
 \epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
-\caption{Geometric mean of the \protect\Fpa\ in each of the
-  four regions studied in AIA 171\AA\ (left column) and AIA
-  193\AA\ (right column).  Also shown are the posterior mean and
-  maximum likelihood fits for model $M_{1}$ and $M_{2}$ (see Section
-  \ref{sec:anal} and Appendix \ref{sec:app:ind} for more detail).
-  Model fit parameter values and their 68\% credible intervals are
-  quoted in Table \ref{tab:parameters}.}
+\caption{Geometric mean of the \protect\Fpa\ (black solid line) in
+  each of the four regions studied in AIA 171\AA\ (left column) and
+  AIA 193\AA\ (right column).  Also shown are the posterior mean and
+  maximum likelihood fits for model $M_{1}$ and $M_{2}$ (blue and red
+  lines respectively; see Section \ref{sec:anal} and Appendix
+  \ref{sec:app:ind} for more detail).  The AIC and BIC describing the
+  preference for model over the other is also indicated in each plot.
+  The two components to Model 2, $P_{1}(\nu)$ and $G(\nu)$ are also
+  shown in green; the location of the maximum of their ratio is
+  indicated by the green dotted line.  Model fit parameter values and
+  their 68\% credible intervals are quoted in Table
+  \ref{tab:parameters}.}
 \label{fig:fit171193}
 \end{figure}
 
@@ -530,8 +535,6 @@ because each waveband is designed to examine different features on the
 Sun in broadly different temperature ranges, and may be imaging very
 different physical processes: hence, the emission seen in one waveband
 need not have the same statistical properties as any other.
-
-
 
 \section{Discussion}
 The presence of a \PL\ \PS\ has implications for the detection of
@@ -715,16 +718,14 @@ in the AIA 171\AA\ and 193\AA\ wavebands. \cite{2011ApJ...743...23M}
 find that the AIA 193\AA\ has more significant contributions from
 non-dominant lines when compared to AIA 171\AA.  If this were the
 case, then one would expect that the maximum of the ratio between
-$G(\nu)/P_{1}(\nu)$ would be higher for the AIA 193\AA\ \PS\ than for
-the AIA 171AA\ \PS, which is not obeserved.  However,
-\cite{2011ApJ...743...23M} also note that their results are also quite
-sensitive to the abundances used in their simulations, which may
-explain the differences between their simulations and the observations
-presented here.
-
+$G(\nu)/P_{1}(\nu)$ (see Figure \ref{fig:fit171193}) would be higher
+for the AIA 193\AA\ \PS\ than for the AIA 171\AA \PS, which is not
+observed.  However, \cite{2011ApJ...743...23M} also note that their
+results are also quite sensitive to the abundances used in their
+simulations, which may explain the differences between their
+simulations and the observations presented here.
 
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
-
 The first contribution to both models $P_{0}$ and $P_{i}$ is a
 \PL-like \PS.  It is present in both wavebands studied and in all the
 regions, and so parsimony suggests that the mechanism of its creation
