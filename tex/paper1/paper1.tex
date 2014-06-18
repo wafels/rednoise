@@ -499,7 +499,7 @@ procedure, see Section \ref{sec:app:ind}.
 
 Model selection is implemented using the Akaike Information Criterion
 (AIC) and the Bayesian Information Criterion (BIC)
-\citep{2007MNRAS.377L..74L}.  The AIC is defined as
+\citep{2007MNRAS.377L..74L, WICS:WICS199}.  The AIC is defined as
 \begin{equation}\label{eqn:aic}
 AIC \equiv -2 \ln L_{max} - 2k
 \end{equation}
@@ -614,17 +614,15 @@ effects of mistakenly identifying random variations in the background
 
 However, even this approach to identifying oscillatory power is not
 quite complete, as it simply rejects the null hypothesis that the
-\PS\ can be adequately explained by a \PL\ \PS.
-
-Model comparison techniques similar to that described in Section
-\ref{sec:anal} are required to prefer a model with oscillatory content
-over one without. The difficulty in finding narrow-band features in
-Fourier power spectra against a background \PL\ \PS\ has been
-recognized by \cite{2010MNRAS.402..307V} in the study of XMM-Newton
-observations of highly variable Seyfert 1 galaxies.
-\cite{2010MNRAS.402..307V} presents a model fitting and comparison
-technique that is directly applicable to the search for oscillatory
-power in coronal time-series.
+\PS\ can be adequately explained by a \PL\ \PS.  Model comparison
+techniques similar to that described in Section \ref{sec:anal} are
+required to prefer a model with oscillatory content over one
+without. The difficulty in finding narrow-band features in Fourier
+power spectra against a background \PL\ \PS\ has been recognized by
+\cite{2010MNRAS.402..307V} in the study of XMM-Newton observations of
+highly variable Seyfert 1 galaxies.  \cite{2010MNRAS.402..307V}
+presents a model fitting and comparison technique that is directly
+applicable to the search for oscillatory power in coronal time-series.
 
 \subsection{Implications for coronal seismology and automated
   oscillation detection algorithms}\label{sec:oscdetect}
@@ -706,6 +704,24 @@ distribution $G(\nu)$.  This would constrain the distribution of field
 line angles in the lower atmosphere in different regions of the solar
 surface.
 
+Another possible cause of the excess emission is the appearance of
+low-temperature emission lines in the AIA passband.  Such lines are
+more likely to be due to processes lower down in the solar atmosphere
+where the amplitude of three and five minute oscillations is larger.
+This is supported by three dimensional magnetohydrodynamic models of
+the quiet Sun studied by \cite{2011ApJ...743...23M}.  It is shown that
+lower temperature lines can be formed in quiet Sun areas that appear
+in the AIA 171\AA\ and 193\AA\ wavebands. \cite{2011ApJ...743...23M}
+find that the AIA 193\AA\ has more significant contributions from
+non-dominant lines when compared to AIA 171\AA.  If this were the
+case, then one would expect that the maximum of the ratio between
+$G(\nu)/P_{1}(\nu)$ would be higher for the AIA 193\AA\ \PS\ than for
+the AIA 171AA\ \PS, which is not obeserved.  However,
+\cite{2011ApJ...743...23M} also note that their results are also quite
+sensitive to the abundances used in their simulations, which may
+explain the differences between their simulations and the observations
+presented here.
+
 
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
 
@@ -782,13 +798,14 @@ This implies that attempts to work back from the observed emission to
 the underlying energy deposition must properly account for these
 line-of-sight effects.
 
-
 Secondly, the amount of energy and the wavelengths at which it is
 radiated is a highly nonlinear function of the energy deposited in
 each event, depending on the existing plasma properties and the
 location of the energy deposition in the loop structure.  This must
 all be consistently modeled on each loop and summed over multple loops
 to mimic the line-of-sight effects, as noted above.  
+
+\cite{2011ApJ...743...23M} describe three-dimensional 
 
 Much effort has
 been \cite{???} EBTEL.
@@ -798,7 +815,9 @@ EBTEL , O'Dwyer paper???
 Finally, the AIA instrument filter response must also be understood
 and modeled in in order to understand which emission lines contribute
 to the final observed image, and ultimately the \Fps\ for each
-region.  The AIA filter response has been studied by
+region.  
+
+The AIA filter response has been studied by
 \cite{2010AA...521A..21O}  
 
 
@@ -971,8 +990,6 @@ sunspot         & 7500 & 171\AA & 1505 \\
                 &     & 193\AA & 1531 \\
 \enddata
 \end{deluxetable}
-
-
 
 \subsection{Model fitting and selection}
 The \mFpa\ are assumed to be normally distributed with a width given
