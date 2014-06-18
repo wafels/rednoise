@@ -862,8 +862,6 @@ NNX13AE03G S01 funded through NASA ROSES NNH12ZDA001N-SHP.
 \appendix
 
 \section{Fitting models to the \mFps}\label{sec:app:ind}
-
-
 In order to perform the fit, the noise in the \mFps\ must be
 estimated.  To do that, the power distributions of Section
 \ref{sec:anal} are considered.  The Fourier power at a given pixel is
@@ -920,11 +918,31 @@ number of pixels in the region and the estimated number of effective
 pixels. 
 
 
+\begin{deluxetable}{cc}
+\tabletypesize{\scriptsize}
+\tablecaption{Number of pixels and effectively independent pixels as a function of region and waveband, as calculated following the procedure of Section \ref{sec:app:ind}. \label{tab:neff}}
+\tablewidth{0pt}
+\tablehead{
+\colhead{Region} &
+\colhead{$N_{pixel}$} &
+\colhead{Waveband} &
+\colhead{$N_{eff}$} &
+}
+\startdata
+loop footpoints & ??? & 171\AA & ??? \\
+                & ??? & 193\AA & ??? \\
+moss            & ??? & 171\AA & ??? \\
+                & ??? & 193\AA & ??? \\
+quiet Sun       & ??? & 171\AA & ??? \\
+                & ??? & 193\AA & ??? \\
+sunspot         & ??? & 171\AA & ??? \\
+                & ??? & 193\AA & ??? \\
+\enddata
+\end{deluxetable}
 
 
 
 \subsection{Model fitting and selection}
-
 The \mFpa\ are assumed to be normally distributed with a width given by
 $\sigma_{mean}$ as calculated above.
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
