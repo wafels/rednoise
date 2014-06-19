@@ -426,7 +426,7 @@ value of the logarithm of the Fourier power.
 \colhead{$\log_{10}C$}      &
 \colhead{$\log_{10}\alpha$} &
 \colhead{$\beta$}      &
-\colhead{$\sigma$}\\
+\colhead{$\delta$}\\
 \colhead{}          & 
 \colhead{}          & 
 \colhead{}          & 
@@ -495,15 +495,18 @@ contribution that is more localized, $G(\nu)$.  The model is given by
 where the localized contribution is described by
 \begin{equation}
 \label{eqn:bump}
-G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\sigma^{2}}\right].
+G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\delta^{2}}\right].
 \end{equation}
 Both these models are fit to the geometrically averaged Fourier power
 spectrum in both wavelengths and in all four regions (Figure
 \ref{fig:fit171193}), and compared to decide which model best
 describes the data. The details of the model fitting process are
-described in \ref{sec:app:ind}.
-
-
+described in \ref{sec:app:ind}.  The position of $G(\nu)$ is
+restricted by permitting $\beta$ to vary in the range $1-10$ mHz only.
+This restriction, which is imposed in the fitting process (see Section
+\ref{{sec:app:ind}), arises from the observations of significant
+  wavelet power in the period rangs 200 - 600 seconds as found by
+  \cite{2003ApJ...595L..63D}. 
 
 \subsection{Results}\label{ssec:results}
 Figure \ref{fig:fit171193} show the fit results of each model to the
@@ -956,29 +959,34 @@ NNH12ZDA001N-SHP.
 \appendix
 
 \section{Fitting models to the \mFps}\label{sec:app:ind}
-In order to perform the fit, the noise in the \mFps\ must be
-estimated.  To do that, the power distributions of Section
-\ref{sec:anal} are considered.  The Fourier power at a given pixel is
+In order to perform the fit, the noise in the \mFps\ (black lines,
+Figure \ref{fig:fit171193}) must be estimated.  To do that, the
+distribution of Fourier power in a region at each frequency must be
+considered (see Figure \ref{fig:compare171193} for some example
+distributions).  These distributions are constructed by calculating
+the Fourier power at each pixel in the region, and binning those
+powers by frequency.  However, the Fourier power at a given pixel is
 not independent of the Fourier power at another pixel.  This is
 because neighbouring pixels are highly likely to be physically
 connected to each other, and so time-series in neighboring pixels are
 likely to be strongly correlated (assuming that the background
 structure exists over at least two pixels).  Also, the point spread
 function of AIA spreads emission in one pixel over on to its
-neighbors.  Secondly, the distributions are only approximately normal.
+neighbors; therefore even neighboring pixels that are not physically
+connected are still correlated.
 
 Let the standard error in the mean of samples from a distribution be
 given by $\sigma_{mean}$.  It is defined as the standard deviation of
 the sampling distribution of the mean:
 \begin{equation}
-\sigma_{mean} = \sigma / N
+\sigma_{mean} = \sigma_{original} / N
 \label{eqn:sigmamean}
 \end{equation}
-where $\sigma$ is the standard deviation of the original distribution
-and $N$ is the sample size.  This formula assumes that the
-measurements taken are all independent of each other, which is not the
-case for the Fourier power spectra studied here.  Hence the value of
-$N$ cannot be set to the number of pixels in a region.
+where $\sigma_{original}$ is the standard deviation of the
+distribution and $N$ is the sample size.  This formula assumes that
+the measurements taken are all independent of each other, which is not
+the case for the Fourier power spectra studied here.  Hence the value
+of $N$ cannot be set to the number of pixels in a region.
 
 Hence, the number of effectively independent pixels time-series must
 be calculated.  First, a pair of randomly chosen next-nearest neighbor
@@ -1037,48 +1045,89 @@ sunspot         & 7500 & 171\AA & 1505 \\
 \end{deluxetable}
 
 \subsection{Model fitting and selection}
-The \mFpa\ are assumed to be normally distributed with a width given
-by $\sigma_{mean}$ as calculated above.  Equations \ref{eqn:pwrlaw}
-and \ref{eqn:pwrlawbump} are fit to the geometric mean power spectra
-shown in Figures \ref{fig:fit171193}.  A five step fitting process is
-used to fit Models 1 and 2 to the data. The maximum likelihood
-function is constructed using PyMC version 2.3
-\citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}. Maximum likelihood
-estimates are found using SciPy version 0.13.2 \citep{scipy,
-  scientificpython} via Powell's minimization method
-\citep{Powell01011964, wpress86:numerical}.
+Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
+geometric mean power spectra shown in Figures \ref{fig:fit171193}.  A
+Bayesian/Markov chain Monte Carlo package (PyMC version 2.3,
+\cite{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}) is used to construct
+the Bayesian posterior and determine model parameter estimates and
+their uncertainty.  If $P_{i,j}$ is the power at Fourier frequency
+$\nu_{j}$ from Model $i$ then the likelihood $L$ is
+\begin{equation}\label{eqn:likelihood}
+L = \prod_{j=1}^{N_{f}}
+\frac{1}{\sqrt(2\pi\sigma^{2}}
+\exp\left(
+-\frac{(P_{i,j} - D_{j})^{2}}{2\sigma_{j}^{2}}
+\right)
+\end{equation}
+where $D_{j}$ is the observed \mFps\ at frequency $\nu_{j}$,
+$N_{f}$ is the number of Fourier frequencies, and $\sigma_{j}$ is the
+normal distribution width at frequency $\nu_{j}$ .  Each of the priors for
+the parameters in each model has a uniform distribution, and are given
+in Table \ref{tab:priors}.  Each MCMC chain that was run took 100,000
+samples, with burn-in assumed to be at 50,000 samples.  The chain is
+thinned by taking every fifth element in the chain, forming the final
+sample from which the parameter estimates and their uncertainties are
+calculated.
+\begin{deluxetable}{cc}
+\tabletypesize{\scriptsize} 
+\tablecolumns{4}
+\tablewidth{0pt}
+\tablecaption{Priors for each of the parameters used in Model 1
+  (Equation \ref{eqn:pwrlaw}) and
+  Model 2 (Equation \ref{eqn:pwrlawbump}) \label{tab:priors}}
+\tablehead{
+\colhead{Model 1} &
+\colhead{Model 2} \\
+}
+\startdata
+$A$ & $4.5 \times 10^-5 \rightarrow 22026$ &  $4.5 \times 10^-5 \rightarrow 22026$\\
+$n$  &  $-1\rightarrow 6$   & $-1\rightarrow 6$  \\
+$C$ & $2.1 \times 10^-9 \rightarrow 22026$  & $2.1 \times 10^-9 \rightarrow 22026$  \\
+$\alpha$  & not applicable & $2.1 \times 10^-9 \rightarrow 148$ \\
+$\beta$ & not applicable  & $1 - 10$ \\
+$\delta$ & not applicable & $0.001\rightarrow 3$ \\
+\enddata
+\end{deluxetable}
 
+The \mFpa\ are assumed to be normally distributed with a width given
+by $\sigma_{mean}$ as calculated above.  A five step fitting process is
+used to fit Models 1 and 2 to the data, and is described below.
 
 \begin{enumerate}
-\item Maximum likelihood estimates to the values of the parameters of
-  Model 1 are found using the distribution widths $\sigma$.  Since
-  these widths are much larger than $\sigma_{mean}$ is much wider than
-  the standard error in the mean, it allows the fitting algorithm to
-  converge to an approximate fit solution.
-\item The estimated values to the Model 1 parameters are then used as
-  initial guesses to the second estimate of the Model 1
-  parameters. Maximum likelihood estimates to the values of the
-  parameters of Model 1 are found using the distribution widths
-  $\sigma_{mean}$, seeded with estimated parameter values from step 1.
-  This generates a better estimate to the parameters of the model
-  fit.  The resulting parameter estimates are the final estimates for
-  Model 1.
+\item The MCMC sampler is run to fit Model 1, assuming $\sigma_{j} =
+  \sigma_{original, j}$ the width of the distribution of Fourier power
+  at frequency $G(\nu_{j})$.  Since these widths are much larger than
+  $\sigma_{mean}$ is much wider than the standard error in the mean,
+  it allows the fitting algorithm to converge to an approximate fit
+  solution.
+\item The MCMC sampler is run to fit Model 1 with $\sigma_{j} =
+  \sigma_{mean, j}$, with $\sigma_{mean, j}= \sigma_{original,
+    j}/sqrt{N_{eff}}$, seeded with estimated parameter values from
+  step 1.  This generates a better estimate to the parameters of the
+  model fit.  The resulting parameter estimates are given by the mean
+  values of marginal probability distribution functions, and are the
+  final estimates for Model 1.
 \item The residuals of the model 1 fit to the data are then used to
-  estimate the model parameters of $G(\nu)$.
-\item Model 2 is fit to the data using the distribution widths
-  $\sigma$, seeded with the maximum likelihood parameter values of
+  estimate the model parameters of $G(\nu)$.  This is done by
+  (least-squares) fitting $G(\nu)$ to the positive residuals in the
+  frequency range 0.1 - 1 mHz.
+\item The MCMC sampler is run to fit Model 1,2assuming $\sigma_{j} =
+  \sigma_{original, j}$, seeded with the mean parameter values of
   Model 1 from step 2 and the estimated $G(\nu)$ model parameters from
   step 3.
-\item Model 2 is fit to the data using the maximum likelihood Model 2
-  parameter values at Step 4 and the widths $\sigma_{mean}$.  The
-  resulting parameter estimates are the final estimates for Model 2.
+\item The MCMC sampler is run to fit Model 2 with $\sigma_{j} =
+  \sigma_{mean, j}$, seeded with estimated parameter values from step
+  4.  The resulting parameter estimates are given by the mean values
+  of marginal probability distribution functions, and are the final
+  estimates for Model 2.
 \end{enumerate}
-
 Models are selected using the Akaike and Bayesian Information Criteria
-\cite{2007MNRAS.377L..74L} calculated using the final parameter
-estimates of Models 1 and 2.
-
-
+\citep{2007MNRAS.377L..74L}.  Conveniently, these quantities are also
+calculated by the PyMC package used to perform the MCMC sampling.  The
+68\% credible intervals for the parameters are quoted in Table
+\ref{tab:parameters}.  The upper and lower limits to the credible
+intervals are found by determining the values beyond which 16\% of the
+probability lies in each wing of the marginal distributions.
 
 %% The reference list follows the main body and any appendices.
 %% Use LaTeX's thebibliography environment to mark up your reference list.
