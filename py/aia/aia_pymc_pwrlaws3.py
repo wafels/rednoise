@@ -43,8 +43,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193']
-regions = ['qs']
+waves = ['171']
+regions = ['loopfootpoints', 'qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -342,7 +342,7 @@ for iwave, wave in enumerate(waves):
                 # second model
                 #
                 # Frequency range we will consider for the bump
-                physical_bump_frequency_limits = np.asarray([1.0 / 1000.0, 1.0 / 100.0])
+                physical_bump_frequency_limits = np.asarray([1.0 / 2000.0, 1.0 / 100.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
                 bump_loc_lo = normed_freqs >= bump_frequency_limits[0]
@@ -456,9 +456,28 @@ for iwave, wave in enumerate(waves):
                 # Calculate the best fit power law contribution
                 powerlaw_BF = np.log(rnspectralmodels.power_law_with_constant(normed_freqs, A1[0:3]))
 
+                # Calculate the posterior mean bump contribution
+                ntrace = M1.trace('background')[:].shape[0]
+                normalbump_PM = np.zeros(nfreq)
+                for i in range(0, ntrace):
+                    normalbump_PM = normalbump_PM + np.log(rnspectralmodels.NormalBump2_CF(np.log(normed_freqs),
+                                                                                           M1.trace('gaussian_amplitude')[i],
+                                                                                           M1.trace('gaussian_position')[i],
+                                                                                           M1.trace('gaussian_width')[i]))
+                normalbump_PM = normalbump_PM / (1.0 * ntrace)
+
+                # Calculate the posterior mean power law contribution
+                powerlaw_PM = np.zeros(nfreq)
+                for i in range(0, ntrace):
+                    powerlaw_PM = powerlaw_PM + np.log(rnspectralmodels.power_law_with_constant(normed_freqs, [M1.trace('power_law_norm')[i],
+                                                                                                               M1.trace('power_law_index')[i],
+                                                                                                               M1.trace('background')[i]]))
+                powerlaw_PM = powerlaw_PM / (1.0 * ntrace)
+
                 # Print the maximum of the ratio of the bump contribution and
                 # to the power law, and the frequency at which occurs
-                bump_to_pl_ratio = np.exp(normalbump_BF) / np.exp(powerlaw_BF)
+                #bump_to_pl_ratio = np.exp(normalbump_BF) / np.exp(powerlaw_BF)
+                bump_to_pl_ratio = np.exp(normalbump_PM) / np.exp(powerlaw_PM)
                 max_bump_to_pl_ratio_index = np.argmax(bump_to_pl_ratio)
                 print '++++++++++++++++++++++++'
                 print 'Maximum bump to PL ratio is %f at frequency = %f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], 1000 * freqs[max_bump_to_pl_ratio_index])
@@ -487,7 +506,7 @@ for iwave, wave in enumerate(waves):
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
 
-                ax.plot(xvalue, np.exp(pwr_ff), label='data', color='k')
+                ax.plot(xvalue, np.exp(pwr_ff), label='average Fourier power spectrum', color='k')
 
                 # Plot the M0 fit
                 chired = '\chi^{2}_{red}'
@@ -496,8 +515,8 @@ for iwave, wave in enumerate(waves):
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
                 #label = '$M_{1}$: maximum likelihood fit, ' + chivaluestring
                 label = '$M_{1}$, maximum likelihood fit'
-                ax.plot(xvalue, np.exp(M0_bf), label=label, color='b')
-                #ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='$M_{1}$: posterior mean', color = 'b', linestyle='--')
+                #ax.plot(xvalue, np.exp(M0_bf), label=label, color='b')
+                ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='$M_{1}$: posterior mean', color = 'b')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
 
@@ -505,22 +524,26 @@ for iwave, wave in enumerate(waves):
                 chivalue = chiformat % (fitsummarydata["M1"]["chi2"])
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
                 #label = '$M_{2}$: maximum likelihood fit, ' + chivaluestring
-                label = '$M_{2}$, maximum likelihood fit'
-                ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
-                #ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='$M_{2}$: posterior mean', color = 'r', linestyle='--')
+                #label = '$M_{2}$, maximum likelihood fit'
+                #ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
+                ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='$M_{2}$: posterior mean', color = 'r')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
 
                 # Plot each component of M1
-                ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of maximum likelihood fit, $M_{2}$', color='g')
-                ax.plot(xvalue, np.exp(normalbump_BF), label='Gaussian component of maximum likelihood fit, $M_{2}$', color='g', linestyle='--')
+                label = r'posterior mean $P_{1}(\nu)$ component for $M_{2}$'
+                ax.plot(xvalue, np.exp(powerlaw_PM), label=label, color='g')
+                label = r'posterior mean $G(\nu)$ component for $M_{2}$'
+                ax.plot(xvalue, np.exp(normalbump_PM), label=label, color='g', linestyle='--')
+                #ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of the maximum likelihood fit, $M_{2}$', color='g')
+                #ax.plot(xvalue, np.exp(normalbump_BF), label='Gaussian component of the maximum likelihood fit, $M_{2}$', color='g', linestyle='--')
 
                 # Plot the 3 and 5 minute frequencies
                 ax.axvline(fivemin, label='5 minutes', linestyle='--', color='k')
                 ax.axvline(threemin, label='3 minutes', linestyle='-.', color='k')
 
                 # Plot the location of the maximum bump ratio
-                label = r'$M_{2}$, $\max[G(\nu)/P_{1}(\nu)]$ = %4.2f at $\nu$ = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index])
+                label = r'$M_{2}$, $\max[G(\nu)/P_{1}(\nu)]$ = %4.2f at $\nu_{max}$ = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index])
                 ax.axvline(freqfactor * freqs[max_bump_to_pl_ratio_index],
                            label=label,
                            linestyle=':', color='g')
@@ -546,7 +569,7 @@ for iwave, wave in enumerate(waves):
 
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8, labelspacing=0.2, loc=3)
-                plt.xlabel('frequency (mHz)')
+                plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
                 ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,

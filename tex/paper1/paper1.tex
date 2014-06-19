@@ -504,7 +504,7 @@ describes the data. The details of the model fitting process are
 described in \ref{sec:app:ind}.  The position of $G(\nu)$ is
 restricted by permitting $\beta$ to vary in the range $1-10$ mHz only.
 This restriction, which is imposed in the fitting process (see Section
-\ref{{sec:app:ind}), arises from the observations of significant
+\ref{sec:app:ind}), arises from the observations of significant
   wavelet power in the period rangs 200 - 600 seconds as found by
   \cite{2003ApJ...595L..63D}. 
 
@@ -1054,7 +1054,7 @@ their uncertainty.  If $P_{i,j}$ is the power at Fourier frequency
 $\nu_{j}$ from Model $i$ then the likelihood $L$ is
 \begin{equation}\label{eqn:likelihood}
 L = \prod_{j=1}^{N_{f}}
-\frac{1}{\sqrt(2\pi\sigma^{2}}
+\frac{1}{\sqrt{2\pi\sigma^{2}}}
 \exp\left(
 -\frac{(P_{i,j} - D_{j})^{2}}{2\sigma_{j}^{2}}
 \right)
@@ -1068,7 +1068,7 @@ samples, with burn-in assumed to be at 50,000 samples.  The chain is
 thinned by taking every fifth element in the chain, forming the final
 sample from which the parameter estimates and their uncertainties are
 calculated.
-\begin{deluxetable}{cc}
+\begin{deluxetable}{ccc}
 \tabletypesize{\scriptsize} 
 \tablecolumns{4}
 \tablewidth{0pt}
@@ -1076,16 +1076,17 @@ calculated.
   (Equation \ref{eqn:pwrlaw}) and
   Model 2 (Equation \ref{eqn:pwrlawbump}) \label{tab:priors}}
 \tablehead{
+\colhead{parameter} &
 \colhead{Model 1} &
 \colhead{Model 2} \\
 }
 \startdata
-$A$ & $4.5 \times 10^-5 \rightarrow 22026$ &  $4.5 \times 10^-5 \rightarrow 22026$\\
+$A$ & $4.5 \times 10^{-5} \rightarrow 22026$ &  $4.5 \times 10^{-5} \rightarrow 22026$\\
 $n$  &  $-1\rightarrow 6$   & $-1\rightarrow 6$  \\
-$C$ & $2.1 \times 10^-9 \rightarrow 22026$  & $2.1 \times 10^-9 \rightarrow 22026$  \\
-$\alpha$  & not applicable & $2.1 \times 10^-9 \rightarrow 148$ \\
-$\beta$ & not applicable  & $1 - 10$ \\
-$\delta$ & not applicable & $0.001\rightarrow 3$ \\
+$C$ & $2.1 \times 10^{-9} \rightarrow 22026$  & $2.1 \times 10^{-9} \rightarrow 22026$  \\
+$\alpha$  & not applicable & $2.1 \times 10^{-9} \rightarrow 148$ \\
+$\beta$ & not applicable  & $0.5 - 10 mHz$ \\
+$\delta$ & not applicable & $0.001\rightarrow 3$ decades of frequency\\
 \enddata
 \end{deluxetable}
 
@@ -1110,8 +1111,8 @@ used to fit Models 1 and 2 to the data, and is described below.
 \item The residuals of the model 1 fit to the data are then used to
   estimate the model parameters of $G(\nu)$.  This is done by
   (least-squares) fitting $G(\nu)$ to the positive residuals in the
-  frequency range 0.1 - 1 mHz.
-\item The MCMC sampler is run to fit Model 1,2assuming $\sigma_{j} =
+  frequency range 0.1 - 10 mHz.
+\item The MCMC sampler is run to fit Model 1,2 assuming $\sigma_{j} =
   \sigma_{original, j}$, seeded with the mean parameter values of
   Model 1 from step 2 and the estimated $G(\nu)$ model parameters from
   step 3.
@@ -1158,5 +1159,3 @@ probability lies in each wing of the marginal distributions.
 \end{document}
 
 Update parameter results
-
-Give an idea of how the errors are found 
