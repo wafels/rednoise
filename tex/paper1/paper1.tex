@@ -933,11 +933,11 @@ NNH12ZDA001N-SHP.
 \appendix
 
 \section{Fitting models to the \mFps}\label{sec:app:ind}
-In order to perform the fit, the noise in the \mFps\ must be
-estimated.  To do that, the power distributions of Section
-\ref{sec:anal} are considered.  The Fourier power at a given pixel is
-not independent of the Fourier power at another pixel.  This is
-because neighbouring pixels are highly likely to be physically
+In order to perform the fit, the noise in the \mFps\ (black lines,
+Figure \ref{}) must be estimated.  To do that, the power distributions
+of Section \ref{sec:anal} are considered.  The Fourier power at a
+given pixel is not independent of the Fourier power at another pixel.
+This is because neighbouring pixels are highly likely to be physically
 connected to each other, and so time-series in neighboring pixels are
 likely to be strongly correlated (assuming that the background
 structure exists over at least two pixels).  Also, the point spread
@@ -1018,16 +1018,56 @@ The \mFpa\ are assumed to be normally distributed with a width given
 by $\sigma_{mean}$ as calculated above.  Equations \ref{eqn:pwrlaw}
 and \ref{eqn:pwrlawbump} are fit to the geometric mean power spectra
 shown in Figures \ref{fig:fit171193}.  A five step fitting process is
-used to fit Models 1 and 2 to the data. The maximum likelihood
-function is constructed using PyMC version 2.3
-\citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}. Maximum likelihood
+used to fit Models 1 and 2 to the data.  A Bayesian/Markov chain Monte
+Carlo package (PyMC version 2.3,
+\cite{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}) is used to construct
+the Bayesian posterior and determine model parameter estimates and
+their uncertainty.  The likelihood 
+
+Each of the priors for the parameters in each model has a uniform
+distribution, and are given in Table \ref{tab:priors}.  Each MCMC
+chain takes 100,000 samples, with burn-in assumed to be at 50,000
+samples.  The chain is thinned by taking every fifth element in the
+chain, forming the final sample from which the parameter estimates and
+their uncertainties are calculated.
+
+\begin{deluxetable}{cccc}
+\tabletypesize{\scriptsize} 
+\tablecolumns{4}
+\tablewidth{0pt}
+\tablecaption{Priors for each of the parameters used in Model 1
+  (Equation \ref{eqn:pwrlaw}) and
+  Model 2 (Equation \ref{eqn:pwrlawbump}) \label{tab:priors}}
+\tablehead{
+\colhead{Region} &
+\colhead{$N_{pixel}$} &
+\colhead{Waveband} &
+\colhead{$N_{eff}$} \\
+}
+\startdata
+loop footpoints & 2000 & 171\AA & 183 \\
+                &     & 193\AA & 185 \\
+moss            & 2100 & 171\AA & 629 \\
+                &     & 193\AA & 521 \\
+quiet Sun       & 2500 & 171\AA & 598 \\
+                &     & 193\AA & 639 \\
+sunspot         & 7500 & 171\AA & 1505 \\
+                &     & 193\AA & 1531 \\
+\enddata
+\end{deluxetable}
+
+
+The maximum likelihood
+function is constructed using. Maximum likelihood
 estimates are found using SciPy version 0.13.2 \citep{scipy,
   scientificpython} via Powell's minimization method
 \citep{Powell01011964, wpress86:numerical}.
 
 
 \begin{enumerate}
-\item Maximum likelihood estimates to the values of the parameters of
+\item
+
+Maximum likelihood estimates to the values of the parameters of
   Model 1 are found using the distribution widths $\sigma$.  Since
   these widths are much larger than $\sigma_{mean}$ is much wider than
   the standard error in the mean, it allows the fitting algorithm to
@@ -1050,6 +1090,11 @@ estimates are found using SciPy version 0.13.2 \citep{scipy,
   parameter values at Step 4 and the widths $\sigma_{mean}$.  The
   resulting parameter estimates are the final estimates for Model 2.
 \end{enumerate}
+
+The 68\% credible intervals for the parameters are quoted in Table
+\ref{tab:parameters}.  The upper and lower limits to the credible
+intervals are found by determining the values beyond which 16\% of the
+probability lies in each wing of the marginal distributions.
 
 Models are selected using the Akaike and Bayesian Information Criteria
 \cite{2007MNRAS.377L..74L} calculated using the final parameter
