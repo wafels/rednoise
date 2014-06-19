@@ -1088,14 +1088,17 @@ $A$ & $4.5 \times 10^{-5} \rightarrow 22026$ &  $4.5 \times 10^{-5} \rightarrow 
 $n$  &  $-1\rightarrow 6$   & $-1\rightarrow 6$  \\
 $C$ & $2.1 \times 10^{-9} \rightarrow 22026$  & $2.1 \times 10^{-9} \rightarrow 22026$  \\
 $\alpha$  & not applicable & $2.1 \times 10^{-9} \rightarrow 148$ \\
-$\beta$ & not applicable  & $0.5 - 10$ (mHz)\\
+$\beta$ & not applicable  & $0.5 - 10$\tablenote{???} (mHz)\\
 $\delta$ & not applicable & $0.001\rightarrow 3$ (decades of frequency)\\
 \enddata
+\tablenote{???Model 2 for AIA 193\AA\ loop footpoint region required a uniform prior
+for $\beta$ in the range $0.1 - 10$ mHz in order for its marginal
+distribution to lie within the prior range.}
 \end{deluxetable}
-
-The \mFpa\ are assumed to be normally distributed with a width given
-by $\sigma_{mean}$ as calculated above.  A five step fitting process is
-used to fit Models 1 and 2 to the data, and is described below.
+The \mFpa\ are assumed to
+be normally distributed with a width given by $\sigma_{mean}$ as
+calculated above.  A five step fitting process is used to fit Models 1
+and 2 to the data, and is described below.
 
 \begin{enumerate}
 \item The MCMC sampler is run to fit Model 1, assuming $\sigma_{j} =
