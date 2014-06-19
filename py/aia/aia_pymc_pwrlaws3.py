@@ -44,7 +44,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171']
-regions = ['loopfootpoints', 'qs', 'sunspot']
+regions = ['qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -345,12 +345,14 @@ for iwave, wave in enumerate(waves):
                 physical_bump_frequency_limits = np.asarray([1.0 / 2000.0, 1.0 / 100.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
-                bump_loc_lo = normed_freqs >= bump_frequency_limits[0]
-                bump_loc_hi = normed_freqs <= bump_frequency_limits[1]
+
+                where_we_want_to_examine = np.asarray([1.0 / 1000.0, 1.0 / 100.0]) / xnorm
+                wwwte_loc_lo = normed_freqs >= where_we_want_to_examine[0]
+                wwwte_loc_hi = normed_freqs <= where_we_want_to_examine[1]
                 # Get where there is excess unexplained power
                 positive_difference = pwr - M0_bf > 0
                 # Combine all the conditions to get where the bump might be
-                bump_loc = positive_difference * bump_loc_lo * bump_loc_hi
+                bump_loc = positive_difference * wwwte_loc_lo * wwwte_loc_hi
 
                 # If there are sufficient points, get an estimate of the bump
                 if bump_loc.sum() >= 10:
