@@ -43,8 +43,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171']
-regions = ['loopfootpoints']
+waves = ['171', '193']
+regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -70,7 +70,7 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 100
+testing = 1
 
 nsample = 5000 / testing
 
