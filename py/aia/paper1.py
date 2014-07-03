@@ -84,6 +84,11 @@ s3min.linewidth = 1
 s3min.linestyle = "--"
 s3min.label = '3 mins.'
 
+#
+# Following James' suggestion, only one plot type is the index plot
+#
+indexplot = {"region": "loopfootpoints",
+             "wave": "171"}
 
 #
 # String defining the basics number of time series

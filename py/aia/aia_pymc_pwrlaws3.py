@@ -6,9 +6,9 @@
 import pickle
 import numpy as np
 import os
-#from matplotlib import rc_file
-#matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
-#rc_file(os.path.expanduser(matplotlib_file))
+from matplotlib import rc_file
+matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
+rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
 
 import pymc
@@ -25,7 +25,7 @@ from scipy.stats import beta as beta_distrib
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
-from paper1 import sunday_name, prettyprint, log_10_product
+from paper1 import sunday_name, prettyprint, log_10_product, indexplot
 from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details
 from aia_pymc_pwrlaws_helpers import *
 
@@ -43,7 +43,7 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193']
+waves = ['171']
 regions = ['loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
@@ -70,7 +70,7 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 1
+testing = 100
 
 nsample = 5000 / testing
 
@@ -508,7 +508,27 @@ for iwave, wave in enumerate(waves):
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
 
-                ax.plot(xvalue, np.exp(pwr_ff), label='average Fourier power spectrum', color='k')
+                bump_ratio = r'$M_{2}$, $\max[G(\nu)/P_{1}(\nu)]$ = %4.2f at $\nu_{max}$ = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index])
+                if region == indexplot["region"] and wave == indexplot["wave"]:
+                    labels = {"pwr_ff": 'average Fourier power spectrum',
+                              "M0_mean": '$M_{1}$: posterior mean',
+                              "M1_mean": '$M_{2}$: posterior mean',
+                              "M1_P1": r'posterior mean $P_{1}(\nu)$ component for $M_{2}$',
+                              "M1_G": r'posterior mean $G(\nu)$ component for $M_{2}$',
+                              "5 minutes": '5 minutes',
+                              "3 minutes": '3 minutes',
+                              "bump_ratio": bump_ratio}
+                else:
+                    labels = {"pwr_ff": None,
+                              "M0_mean": None,
+                              "M1_mean": None,
+                              "M1_P1": None,
+                              "M1_G": None,
+                              "5 minutes": None,
+                              "3 minutes": None,
+                              "bump_ratio": bump_ratio}
+
+                ax.plot(xvalue, np.exp(pwr_ff), label=labels["pwr_ff"], color='k')
 
                 # Plot the M0 fit
                 chired = '\chi^{2}_{red}'
@@ -516,9 +536,9 @@ for iwave, wave in enumerate(waves):
                 chivalue = chiformat % (fitsummarydata["M0"]["chi2"])
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
                 #label = '$M_{1}$: maximum likelihood fit, ' + chivaluestring
-                label = '$M_{1}$, maximum likelihood fit'
+                #label = '$M_{1}$, maximum likelihood fit'
                 #ax.plot(xvalue, np.exp(M0_bf), label=label, color='b')
-                ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label='$M_{1}$: posterior mean', color = 'b')
+                ax.plot(xvalue, np.exp(M0.stats()['fourier_power_spectrum']['mean']), label=labels["M0_mean"], color = 'b')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
 
@@ -528,26 +548,23 @@ for iwave, wave in enumerate(waves):
                 #label = '$M_{2}$: maximum likelihood fit, ' + chivaluestring
                 #label = '$M_{2}$, maximum likelihood fit'
                 #ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
-                ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label='$M_{2}$: posterior mean', color = 'r')
+                ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label=labels["M1_mean"], color = 'r')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
                 #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
 
                 # Plot each component of M1
-                label = r'posterior mean $P_{1}(\nu)$ component for $M_{2}$'
-                ax.plot(xvalue, np.exp(powerlaw_PM), label=label, color='g')
-                label = r'posterior mean $G(\nu)$ component for $M_{2}$'
-                ax.plot(xvalue, np.exp(normalbump_PM), label=label, color='g', linestyle='--')
+                ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')
+                ax.plot(xvalue, np.exp(normalbump_PM), label=labels["M1_G"], color='g', linestyle='--')
                 #ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of the maximum likelihood fit, $M_{2}$', color='g')
                 #ax.plot(xvalue, np.exp(normalbump_BF), label='Gaussian component of the maximum likelihood fit, $M_{2}$', color='g', linestyle='--')
 
                 # Plot the 3 and 5 minute frequencies
-                ax.axvline(fivemin, label='5 minutes', linestyle='--', color='k')
-                ax.axvline(threemin, label='3 minutes', linestyle='-.', color='k')
+                ax.axvline(fivemin, label=labels['5 minutes'], linestyle='--', color='k')
+                ax.axvline(threemin, label=labels['3 minutes'], linestyle='-.', color='k')
 
                 # Plot the location of the maximum bump ratio
-                label = r'$M_{2}$, $\max[G(\nu)/P_{1}(\nu)]$ = %4.2f at $\nu_{max}$ = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index])
                 ax.axvline(freqfactor * freqs[max_bump_to_pl_ratio_index],
-                           label=label,
+                           label=labels["bump_ratio"],
                            linestyle=':', color='g')
 
                 # Plot the bump limits
@@ -556,21 +573,21 @@ for iwave, wave in enumerate(waves):
 
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
-                xpos = freqfactor * (7.0 * (10.0 ** -3.0))
+                xpos = freqfactor * (0.015 * (10.0 ** -3.0))
                 #ypos = np.zeros(2)
                 #ypos_max = np.log(fit_details()['ylim'][1]) - 1.0
                 #ypos_min = np.log(fit_details()['ylim'][0]) + 1.0
                 #yrange = ypos_max - ypos_min
                 #for yyy in range(0, ypos.size):
                 #    ypos[yyy] = np.exp(ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0)))
-                plt.text(xpos, 1.0, dAIC_value_string)
-                plt.text(xpos, 10.0 ** 0.5, dBIC_value_string)
+                plt.text(xpos, 10.0 ** -4.0, dAIC_value_string)
+                plt.text(xpos, 10.0 ** -4.5, dBIC_value_string)
                 #plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
                 #plt.text(xpos, ypos[0], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
                 #plt.text(xpos, ypos[1], '$M_{2}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
 
                 # Complete the plot and save it
-                plt.legend(framealpha=0.5, fontsize=8, labelspacing=0.2, loc=3)
+                plt.legend(framealpha=0.5, fontsize=10, labelspacing=0.2, loc=1)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
@@ -578,7 +595,7 @@ for iwave, wave in enumerate(waves):
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
-                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % ('pdf'))
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.close('all')
 
                 # -------------------------------------------------------------
