@@ -119,19 +119,19 @@
 %% editorial office after submission.
 
 \begin{abstract}
-The \mFpa\ of regions of the solar corona are investigated using AIA
-171\AA\ and 193\AA\ data.  It is shown that the \mFpa\ in all regions
-show an approximate \PL\ behaviour.  This average behavior is
-inconsistent with the common assumption that coronal time-series are
-well described by the sum of a long time-scale background trend plus
-Gaussian-distributed noise, with some specific locations also showing
-an oscillatory signal.  The implications of this discovery to the
-field of coronal seismology and automated detections of oscillations
-is discussed.  Further, it is shown that the observed \PL\ \PS\ can be
-formed by summing a distribution of exponentially decaying emission
-events along the line of sight.  This is consistent with the notion
-that the solar atmosphere is heated everywhere by small energy
-deposition events.
+  The dynamics of regions of the solar corona are investigated using
+  AIA 171\AA\ and 193\AA\ data.  It is commonly assumed that coronal
+  time-series are well described by the sum of a long time-scale
+  background trend plus Gaussian-distributed noise, with some specific
+  locations also showing an oscillatory signal.  It is shown that the
+  \mFpa\ in all regions follows an approximate \PL\ behaviour.  This
+  average behavior is inconsistent with this commonly held assumption.
+  The implications of this discovery to the field of coronal
+  seismology and automated detections of oscillations is discussed.
+  The observed \PL\ \PS\ can be formed by summing a distribution of
+  exponentially decaying emission events along the line of sight.
+  This is consistent with the idea that the solar atmosphere is heated
+  everywhere by small energy deposition events.
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. The uncommented
@@ -173,9 +173,9 @@ corona.  First suggested by \cite{1970PASJ...22..341U}, the practice
 of coronal seismology attempts to locate oscillatory phenomena in the
 solar corona, identify the wave modes present, and then use
 theoretical descriptions of those wave modes to infer the physical
-conditions of the solar corona.  The practice of coronal seismology
-began in earnest with observations of wave modes by SOHO-EIT
-\citep{1998ApJ...501L.217D, 1999SoPh..186..207B} and TRACE
+conditions of the solar corona.  The practical application of coronal
+seismological ideas began in earnest with observations of wave modes
+by SOHO/EIT \citep{1998ApJ...501L.217D, 1999SoPh..186..207B} and TRACE
 \citep{1999ApJ...520..880A} (see also \cite{lrsp-2005-3},
 \cite{2012RSPTA.370.3193D} for more extensive reviews of coronal
 seismology).  Since then, many papers have been published describing
@@ -196,15 +196,13 @@ magneto-acoustic waves (although alternative interpretations do exist
 that do not invoke oscillatory phenomena, for example,
 \cite{0004-637X-722-2-1013} and \cite{2041-8205-727-2-L37}).
 
-Their scarcity on the Sun has prompted efforts to create automated
-oscillation detection algorithms.  The need for an automated
-oscillation detection algorithm is also exacerbated by the large and
-rapidly growing amount of AIA data, which means that the amount of
-data that has to be searched is large.  There have been several
-attempts at designing such algorithms, all of which operate on
-time-series of two-dimensional image data (data cubes).
+The relative scarcity of observations of coronal oscillations has
+prompted efforts to create automated oscillation detection algorithms.
+The need for an automated oscillation detection algorithm has been
+exacerbated by the large and rapidly growing amount of AIA data.
+There have been several attempts at designing such algorithms.
 \cite{2004SoPh..223....1D} describe the design of an automated
-oscillation-detection algorithm based on the wavelet analysis. The
+oscillation-detection algorithm based on wavelet analysis. The
 algorithm finds significant wave packets ranging from single to
 multiple wave cycles in duration, by a wavelet power/confidence level
 comparison against the null hypothesis that a given time series is
@@ -226,20 +224,21 @@ The above algorithms precipitate detections based on the strength of
 the signal of an oscillation on a pixel by pixel basis, and then group
 these pixels together using some set of criteria.  The automated
 detection algorithm of \cite{2008SoPh..248..395S} begins by
-identifying candidate oscillatory regions as those that show a high
-variance \citep{2003SoPh..213..103G} (under the implicit assumption
-that the time-series has an approximately constant mean value).
-Detections are based on wavelet filtering of these regions in all
-three dimensions of the data cube simultaneously, with the implicit
-assumption that the noise is Gaussian-distributed.  The algorithm of
-\cite{2008SoPh..252..321M} differs from the previous algorithms: it
-begins by Fourier transforming the entire data cube, and calculating
-the coherence of neighboring pixels in narrow frequency bands, and
-filtering the results. The null hypothesis here is that the time
-series is pure Gaussian noise, with the additional assumption that
-pairs of noisy time-series have low coherence, and so can be rejected.
-In this algorithm, the spatial extent of the coherence of the
-oscillatory signal is the key identifier of a wave process.
+identifying candidate oscillatory regions as those whose time-series
+of emission show a high variance \citep{2003SoPh..213..103G} (under
+the implicit assumption that the time-series has an approximately
+constant mean value).  Detections are based on wavelet filtering of
+these regions in all three dimensions of the data cube simultaneously,
+with the implicit assumption that the noise is Gaussian-distributed.
+The algorithm of \cite{2008SoPh..252..321M} differs from the previous
+algorithms: it begins by Fourier transforming the entire data cube,
+and calculating the coherence of neighboring pixels in narrow
+frequency bands, and filtering the results. The null hypothesis here
+is that the time series is pure Gaussian noise, with the additional
+assumption that pairs of noisy time-series have low coherence, and so
+can be rejected.  In this algorithm, the spatial extent of the
+coherence of the oscillatory signal is the key identifier of a wave
+process.
 
 All these detections algorithms, and many detections in the literature
 make either the explicit or implicit assumption that the observed
@@ -251,32 +250,39 @@ using data from the Atmospheric Imaging Assembly (AIA)
 may be better described by other models.  These models have
 implications for the practice of coronal seismology, and may be
 indicative of the nature of the fundamental energy deposition that
-keeps the corona hot.
+keeps the corona hot.  
+
+Section \ref{sec:obs} describes the observations used, while Section
+\ref{sec:anal} describes the method of analysis employed and presents
+the results.  Section \ref{sec:discuss} discusses the implication of
+these results for coronal seismology and the heating of the solar
+atmosphere.  Section \ref{sec:conc} summarizes the discussion and
+outlines future work.
 
 
 \section{Observations}\label{sec:obs}
-The data used in this study is from AIA on board the Solar Dynamics
-Observatory (SDO).  AIA observes images of the Sun in multiple
-wavebands simultaneously and continuously, at high cadence (12
-seconds) and at high spatial resolution (0.6 arcseconds per pixel at
-the Sun).  These data enable detailed comparisons between phenomena
-seen in multiple wavebands, and are therefore ideal for assessing the
-frequency content of the solar atmosphere.  The data was acquired
-using the Lockheed Martin Solar Astrophysics cutout service
-(http://lmsal.com/get\_aia\_data/).  Six hours of image data in the
-time range 2012-09-23 00:00 - 06:00 UT, at the full 12 second cadence,
-in the 171\AA and 193\AA\ wavebands is used.  These wavebands were
-selected because previous studies in similar wavebands (TRACE 171\AA
-and 193\AA) show the presence of coronal oscillations.  The cutout of
-the Sun selected covers two adjacent $\beta\gamma$ regions NOAA AR
-11575 and AR 11577.  This cutout was selected for two reasons.  First,
-it is quiescent in that there were no X-ray flares or other
-large-scale disturbances over the spatial extent of the cutout within
-the time range.  Therefore, any variations in the plasma properties
-cannot be ascribed to large-scale disturbances.  Second, the selected
-cutout region contains a sunspot, and sunspots are known to be
-locations over which three minute oscillations have been detected by
-other instruments \citep{2002A&A...387L..13D}.
+AIA observes images of the Sun in multiple wavebands simultaneously
+and continuously, at high cadence (12 seconds) and at high spatial
+resolution (0.6 arcseconds per pixel at the Sun).  These data enable
+detailed comparisons between phenomena seen in multiple wavebands, and
+are therefore ideal for assessing the frequency content of the solar
+atmosphere.  The data was acquired using the Lockheed Martin Solar
+Astrophysics cutout service (http://lmsal.com/get\_aia\_data/).  Six
+hours of image data in the time range 2012-09-23 00:00 - 06:00 UT, at
+the full 12 second cadence, in the 171\AA\ and 193\AA\ wavebands is
+used.  These wavebands were selected because previous studies in
+similar wavebands (TRACE 171\AA\ and 193\AA) show the presence of
+coronal oscillations.  The cutout of the Sun selected covers two
+adjacent $\beta\gamma$ regions NOAA AR 11575 and AR 11577.  This
+cutout was selected for two reasons.  First, it is quiescent in that
+there were no X-ray flares or other large-scale disturbances (for
+example, filament eruptions or rearrangments of long bright coronal
+loops) over the spatial extent of the cutout within the time range
+(Figure \ref{fig:loc171193}).  Therefore, any variations in the plasma
+properties cannot be ascribed to large-scale disturbances.  Second,
+the selected cutout region contains a sunspot, and sunspots are known
+to be locations over which three minute oscillations have been
+detected by other instruments \citep{2002A&A...387L..13D}.
 
 The downloaded cutout data was prepared for analysis using the
 SolarSoft / IDL routines READ\_SDO and AIA\_PREP.  These procedures
@@ -288,7 +294,7 @@ in the SunPy 0.4 (http://www.sunpy.org) data analysis environment.
 Images were de-rotated to compensate for solar rotation, based on the
 center of the field of view of each image.  After de-rotation, each
 image layer was co-registered with the image half way through the
-dataset, at approximately 03:00 UT.
+dataset, at approximately 03:00 UT (Figure \ref{fig:loc171193}).
 
 \section{Analysis}\label{sec:anal}
 We wish to analyze the frequency content of these resulting datacubes
@@ -296,7 +302,7 @@ as a function of spatial location.  Four locations were chosen in the
 data representing four different types of physical locations in the
 solar atmosphere.  These were a quiet Sun region, a region that lies
 on top of a sunspot, a footpoint region, and a coronal moss region.
-Figures \ref{fig:loc171193} show the location of the regions on sample
+Figure \ref{fig:loc171193} shows the location of the regions on sample
 images from the time range considered.
 
 \begin{figure}
@@ -320,7 +326,7 @@ was apodized using the Hanning window, reducing ringing effects in the
 \PS.  The full 12 second cadence is used, yielding time series of 1800
 samples.  The full spatial resolution is also retained in order to
 obtain fine detail on the variation of frequency content as a function
-of location.  Figures \ref{fig:compare171193} show example power
+of location.  Figure \ref{fig:compare171193} show example power
 spectra, plotted using a log-log scale, from a single location inside
 each of the regions shown in Figure \ref{fig:loc171193}.  The shape of
 the power spectra indicate that the Fourier power approximately
@@ -367,20 +373,20 @@ the frequency range 0.01 - 1 mHz.
 function of AIA waveband and location.}
 \label{fig:dist171193}
 \end{figure}
-Figure \ref{fig:dist171193} show the distributions of the logarithm of
-the Fourier power for a small number of frequencies, for all the
-pixels in each region.  These distributions are centrally peaked, and
-show a slightly heavier tail towards lower Fourier powers (negative
-skew), and are slightly broader when compared to a Gaussian
-distribution.  Plots of all these distribution show that they are all
-unimodal.  These observations guide the choice of how to average the
-\PS\ over each of the selected region.  The nature of these
-distributions suggest that the arithmetic mean of the Fourier power is
-biased by the very largest powers.  Therefore, the mean value of the
-logarithm of the Fourier power is a better description of the range of
-values in the data (this is equivalent to the geometric mean of the
-Fourier power).  The \PA\ used below are calculated from the mean
-value of the logarithm of the Fourier power.
+Figure \ref{fig:dist171193} shows the probability distribution of the
+Fourier power of the pixels in each region at five selected
+frequencies, for all the pixels in each region.  These distributions
+are centrally peaked, show a slightly heavier tail towards lower
+Fourier powers (negative skew), are slightly broader when compared to
+a Gaussian distribution, and are all unimodal.  These observations
+guide the choice of how to average the \PS\ over each of the selected
+region.  The nature of these distributions suggest that the arithmetic
+mean of the Fourier power is biased by the very largest powers.
+Therefore, the mean value of the logarithm of the Fourier power is a
+better description of the range of values in the data (this is
+equivalent to the geometric mean of the Fourier power).  The \PA\ used
+below are calculated from the mean value of the logarithm of the
+Fourier power.
 
 \begin{figure}
 \centerline{
@@ -467,11 +473,10 @@ a \PL\ \PS.  This can be modeled as
 \label{eqn:pwrlaw}
 \mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
 \end{equation}
-where $\nu$ is the normalized frequency, $A>0$ is a proportionality
-constant and $n>0$ is the \PL\ index.  The quantity $C>0$ models
-the high-frequency / low power end of the spectrum where the detection
-properties of the detector apparatus are assumed to dominate the
-observations.
+where $\nu$ is the frequency, $A>0$ is a proportionality constant and
+$n>0$ is the \PL\ index.  The quantity $C>0$ models the high-frequency
+/ low power end of the spectrum where the detection properties of the
+detector apparatus are assumed to dominate the observations.
 
 The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
@@ -519,8 +524,7 @@ and an error estimate for model $M_{2}$.  For details on the fitting
 procedure, see Section \ref{sec:app:ind}.
 
 Model selection is implemented using the Akaike Information Criterion
-(AIC) and the Bayesian Information Criterion (BIC)
-\citep{2007MNRAS.377L..74L, WICS:WICS199}.  The AIC is defined as
+(AIC) and the Bayesian Information Criterion (BIC).  The AIC is defined as
 \begin{equation}\label{eqn:aic}
 AIC \equiv -2 \ln L_{max} - 2k
 \end{equation}
@@ -535,7 +539,7 @@ $N=899$, the number of non-zero frequencies of the Fourier power
 spectrum).  Model selection is guided by calculating $\triangle AIC =
 AIC_{1} - AIC_{2}$ and $\triangle BIC = BIC_{1} - BIC_{2}$.  Positive
 values of $\triangle AIC, \triangle BIC$ express a preference for model 2
-over model 1.
+over model 1 \citep{2007MNRAS.377L..74L, WICS:WICS199}.
 
 Using both the AIC and the BIC, Model 2 is overwhelmingly preferred to
 Model 1 (see Figure \ref{fig:fit171193}). Table \ref{tab:parameters}
@@ -574,14 +578,16 @@ otherwise of narrow-band oscillatory power in \Fps\ is of importance
 to the study of coronal seismology, and is addressed in Sections
 \ref{ssec:corseis} and \ref{sec:oscdetect}.
 
-\section{Discussion}
+\section{Discussion}\label{sec:discuss}
 The presence of a \PL\ \PS\ has implications for the detection of
 narrow frequency band oscillations against such a background emission,
 for both non-automated and automated methods.  These are discussed in
 Sections \ref{ssec:corseis} and \ref{sec:oscdetect}.  Further, the
 \PL\ Fourier spectrum in coronal emission poses questions about how
-that emission is formed.  A hypothesis regarding the formation of this
-power law spectrum is presented in Section \ref{ssec:nplps}.
+that emission is formed.  Section \ref{ssec:excess} discusses possible
+reasons for the localized contribution component $G(\nu)$.  A
+hypothesis regarding the formation of this power law spectrum is
+presented in Section \ref{ssec:nplps}.
 
 \subsection{Effect of background \PS\ assumptions on the
   detection of oscillatory power}
@@ -589,7 +595,7 @@ power law spectrum is presented in Section \ref{ssec:nplps}.
 
 Section \ref{sec:anal} demonstrates the presence of an approximate
 \PL\ \PS\ signal in two of the most commonly used wavebands for
-coronal seismology, SDO-AIA 171\AA\ and 193\AA.  The observed spectra
+coronal seismology, SDO/AIA 171\AA\ and 193\AA.  The observed spectra
 generally show a \PL-like behavior at time-scales of interest in
 coronal seismology, and longer.  Within the confines of the models we
 have chosen, coronal moss regions show the largest contribution from a
@@ -610,11 +616,12 @@ the background \PS\ is therefore scale free on average.  If there is
 no time-scale that can be used to remove a background trend, then the
 time-series has to be analyzed without this processing step.  However,
 a lack of awareness of the background \PL\ \PS\ nature of the emission
-can cause problems in attempting to analyze for the presence of narrow
-frequency band oscillations, as the following example demonstrates.
+will cause significant problems in attempting to analyze for the
+presence of narrow frequency band oscillations, as the following
+example demonstrates.
 
 \begin{figure}
-\epsscale{.80}
+\epsscale{0.80}
 \plotone{white_red_compare.eps}
 \caption{Comparison of the effect of assuming a white or
   \PL\ \PS\ background on the detection of an oscillatory signal for
@@ -672,8 +679,8 @@ The discussion of Section \ref{ssec:corseis} shows that \PL\ power
 spectra have a powerful effect on the claims of a detection of
 narrow-frequency band oscillations in single time-series.  When
 looking at extended regions of coronal imaging data, evidence for the
-presence of a {\it wave} in the corona is strengthened if it can be
-shown that narrow frequency-band oscillations occur significantly
+presence of a propagating wave in the corona is strengthened if it can
+be shown that narrow frequency-band oscillations occur significantly
 above the background signal in several neighboring pixels.  Spatial
 extent is the key feature to claim of a detected wave.  Coronal
 seismology derives its observational evidence from such detections,
@@ -693,7 +700,8 @@ justify a time-scale.
 As has been shown above, the assumption of a Gaussian-distributed
 (white) noise when a \PL\ \PS\ is actually present, coupled with too
 low a confidence level, can lead to misleading results when looking
-for oscillatory signals.  Many wave detection algorithms do make this
+for oscillatory signals (Section \ref{ssec:corseis} and Figure
+\ref{fig:comparison}).  Many wave detection algorithms do make this
 assumption, for example \cite{2004SoPh..223....1D},
 \cite{2007SoPh..241..397N}, \cite{2008SoPh..248..395S},
 \cite{2010SoPh..264..403I} and \cite{2013SoPh..286..405C}.  Such
@@ -729,21 +737,20 @@ much reduced.
 
 \subsection{``Excess'' emission}\label{ssec:excess}
 The models fits of Section \ref{sec:anal} indicate that equation
-\ref{eqn:pwrlaw} is preferred over equation \ref{eqn:pwrlawbump} as
-the superior description of the observed Fourier \PS. The
-moss region shows the greatest contribution from the lognormal
-distribution $G(\nu)$ over the background \PL.
-\cite{2005ApJ...624L..61D} show that it is possible to leak
-oscillatory power from lower in the atmosphere to the upper reaches of
-the atmosphere through the simple expedient of tilting the field line.
-This changes the acoustic cutoff frequency and so allows wave energy
-to propagate up in to the upper atmosphere.  If spectral model $M_{2}$
-represents conditions in the solar atmosphere, then it should be
-possible to infer a distribution of field line angles with the solar
-surface using \cite{2005ApJ...624L..61D} and the observed power
-distribution $G(\nu)$.  This would constrain the distribution of field
-line angles in the lower atmosphere in different regions of the solar
-surface.
+\ref{eqn:pwrlawbump} is preferred over equation \ref{eqn:pwrlaw} as
+the superior description of the observed Fourier \PS. The moss region
+shows the greatest contribution from the lognormal distribution
+$G(\nu)$ over the background \PL.  \cite{2005ApJ...624L..61D} show
+that it is possible to leak oscillatory power from lower in the
+atmosphere to the upper reaches of the atmosphere through the simple
+expedient of tilting the field line.  This changes the acoustic cutoff
+frequency and so allows wave energy to propagate up in to the upper
+atmosphere.  If spectral model $M_{2}$ represents conditions in the
+solar atmosphere, then it should be possible to infer a distribution
+of field line angles with the solar surface using
+\cite{2005ApJ...624L..61D} and the observed power distribution
+$G(\nu)$.  This would constrain the distribution of field line angles
+in the lower atmosphere in different regions of the solar surface.
 
 Another possible cause of the excess emission is the appearance of
 low-temperature emission lines in the AIA passband.  Such lines are
@@ -758,14 +765,14 @@ non-dominant lines when compared to AIA 171\AA.  If this were the
 case, then one would expect that the maximum of the ratio between
 $G(\nu)/P_{1}(\nu)$ (see Figure \ref{fig:fit171193} and Table
 \ref{tab:parameters}) would be higher for the AIA 193\AA\ \PS\ than
-for the AIA 171\AA \PS, which is not observed.  However,
+for the AIA 171\AA\ \PS, which is not observed.  However,
 \cite{2011ApJ...743...23M} also note that their results are also quite
 sensitive to the abundances used in their simulations, which may
 explain the differences between their simulations and the observations
 presented here.
 
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
-The first contribution to both models $P_{0}$ and $P_{i}$ is a
+The first contribution to both models $M_{1}$ and $M_{2}$ is a
 \PL-like \PS.  It is present in both wavebands studied and in all the
 regions, and so parsimony suggests that the mechanism of its creation
 is both similar and ubiquitous in all parts of the solar atmosphere.
@@ -774,7 +781,7 @@ coronal active region and quiet Sun time-series over the frequency
 range 0.01 - 1 mHz, overlapping with the frequency studied in this paper.
 
 We hypothesize that the \PL\ \PS\ is due to the sum of a distribution
-of a large number of emission events having different amounts of
+of a large number of events having different amounts of
 emission. \cite{2011soca.book.....A} describes how a \PL\ \PS\ may
 obtained from such a distribution, and that argument is outlined
 below.
@@ -847,10 +854,10 @@ Secondly, the amount of energy and the wavelengths at which it is
 radiated is a highly nonlinear function of the energy deposited in
 each event, depending on the existing plasma properties and the
 location of the energy deposition in the loop structure.  This must
-all be consistently modeled on each loop and summed over multple loops
-to mimic the line-of-sight effects, as noted above.  For example,
-\cite{2011ApJ...743...23M} use a full three-dimensional MHD model to
-simulate an evolving solar atmosphere and its emission
+all be consistently modeled on each loop and summed over multiple
+loops to mimic the line-of-sight effects, as noted above.  For
+example, \cite{2011ApJ...743...23M} use a full three-dimensional MHD
+model to simulate an evolving solar atmosphere and its emission
 \citep{2011AA...531A.154G}.  \cite{2008ApJ...682.1351K,
   0004-637X-752-2-161} have developed a zero-dimensional model of
 individual strands in a coronal loop that describes the strand's
