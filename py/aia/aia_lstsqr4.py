@@ -1,4 +1,5 @@
 """
+USE THIS ONE!
 CURRENT version
 Specifies a directory of AIA files and uses a least-squares fit to generate
 some fit estimates.
@@ -17,6 +18,7 @@ from scipy.optimize import curve_fit
 
 # Tests for normality
 from scipy.stats import shapiro, anderson
+from scipy.stats import spearmanr as Spearmanr
 from statsmodels.graphics.gofplots import qqplot
 #from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 #from rnfit2 import Do_MCMC, rnsave
@@ -58,6 +60,21 @@ This is what we do with the data and how we do it:
 
 (c)
 """
+
+
+def independence_measures(a, b):
+    # Calculate the cross-correlation coefficient
+    ccvalue = np.correlate(cornorm(a, np.size(a)), cornorm(b, 1.0), mode='full')
+
+    # Calculate normalized covariance matrix
+    an = cornorm(a, 1.0)
+    bn = cornorm(b, 1.0)
+    covariance = np.cov(an, bn) / np.sqrt(np.var(an) * np.var(bn))
+
+    # Calculate the spearman rho
+    spearman = Spearmanr(a, b)
+
+    return ccvalue, covariance, spearman
 
 
 def get_cross_spectrum(a, b, wsize=10):
@@ -143,7 +160,7 @@ manip = 'relative'
 savefig_format = 'png'
 freqfactor = [1000.0, 'mHz']
 sunday_name = {"qs": "quiet Sun", "loopfootpoints": "loop footpoints"}
-neighbour = 'nearest'
+neighbour = 'random'
 
 five_min = freqfactor[0] * 1.0 / 300.0
 three_min = freqfactor[0] * 1.0 / 180.0
@@ -381,10 +398,17 @@ for iwave, wave in enumerate(waves):
             nsample = np.min(np.asarray([8 * nx * ny, 10000]))
             npicked = 0
             lag = 1
+            distance = []
             cclag = []
             cc0 = []
             ccmax = []
             covar = []
+            spearman = []
+            logpwr_cclag = []
+            logpwr_cc0 = []
+            logpwr_ccmax = []
+            logpwr_covar = []
+            logpwr_spearman = []
             coher_array = np.zeros((nsample, nposfreq))
             while npicked < nsample:
                 if neighbour == 'nearest':
@@ -425,30 +449,36 @@ for iwave, wave in enumerate(waves):
                     while (loc2[0] == loc1[0]) and (loc2[1] == loc1[1]):
                         loc2 = (np.random.randint(0, ny), np.random.randint(0, nx))
 
+                distance.append(np.sqrt(1.0 * (loc1[0] - loc2[0]) ** 2 + 1.0 * (loc1[1] - loc2[1]) ** 2))
+
                 # Get the time series
                 ts1 = dc_analysed[loc1[0], loc1[1], :]
                 ts2 = dc_analysed[loc2[0], loc2[1], :]
 
-                # Calculate the cross-correlation coefficient
-                ccvalue = np.correlate(cornorm(ts1, np.size(ts1)), cornorm(ts2, 1.0), mode='full')
+                # Calculate the independence measures
+                ccvalue, covariance, spearmanr = independence_measures(ts1, ts2)
                 cc0.append(ccvalue[nt - 1])
                 cclag.append(ccvalue[nt - 1 + lag])
                 ccmax.append(np.max(ccvalue))
-
-                # Calculate the normalized covariance matrix
-                ts1n = cornorm(ts1, 1.0)
-                ts2n = cornorm(ts2, 1.0)
-                covariance = np.cov(ts1n, ts2n) / np.sqrt(np.var(ts1n) * np.var(ts2n))
                 covar.append(covariance[1, 0])
+                spearman.append(spearmanr[0])
 
-                # Calculate the coherence for each selected pair, and add
-                # them up to find the average
+                # Calculate the coherence for each selected pair
                 coherence = get_coherence(ts1, ts2)
                 #if npicked == 0:
                 #    coher = coherence[posindex]
                 #else:
                 #    coher = coher + coherence[posindex]
                 coher_array[npicked, :] = coherence[posindex]
+
+                # Do the same thing for the log of the power spectra.
+                a = logpwr[loc1[0], loc1[1], :]
+                b = logpwr[loc2[0], loc2[1], :]
+                logpwr_ccvalue, logpwr_covariance, logpwr_spearmanr = independence_measures(a, b)
+                logpwr_cc0.append(logpwr_ccvalue[nposfreq - 1])
+                logpwr_cclag.append(logpwr_ccvalue[nposfreq - 1 + lag])
+                logpwr_ccmax.append(np.max(logpwr_ccvalue))
+                logpwr_spearman.append(logpwr_spearmanr[0])
 
                 # Advance the counter
                 npicked = npicked + 1
@@ -477,6 +507,8 @@ for iwave, wave in enumerate(waves):
                 coher_mode[jjj] = coher_ds.mode
                 coher_mean[jjj] = coher_ds.mean
 
+            ggg = hhh
+
             # All the pixels are all sqrt(2) pixels away from the
             # central pixel.  We treat them all as nearest neighbor.
             # What is the average correlation coefficient at the specified
@@ -493,9 +525,20 @@ for iwave, wave in enumerate(waves):
             # Maximum cross correlation coefficient
             ccmax = np.abs(np.asarray(ccmax))
             ccmax_ds = descriptive_stats(ccmax, bins=ccc_bins)
-            print '%s: Lag 0 cross correlation coefficient: mean, mode = %f, %f' % (neighbour, cc0_ds.mean, cc0_ds.mode)
-            print '%s: Lag %i cross correlation coefficient: mean, mode = %f, %f' % (neighbour, lag, cclag_ds.mean, cclag_ds.mode)
-            print '%s: Maximum cross correlation coefficient: mean. mode = %f, %f' % (neighbour, ccmax_ds.mean, ccmax_ds.mode)
+            print '%s: Lag 0 cross correlation coefficient: mean, mode, median = %f, %f, %f' % (neighbour, cc0_ds.mean, cc0_ds.mode, cc0_ds.median)
+            print '%s: Lag %i cross correlation coefficient: mean, mode, median = %f, %f, %f' % (neighbour, lag, cclag_ds.mean, cclag_ds.mode, cclag_ds.median)
+            print '%s: Maximum cross correlation coefficient: mean, mode, median = %f, %f, %f' % (neighbour, ccmax_ds.mean, ccmax_ds.mode, ccmax_ds.median)
+
+            # Maximum cross correlation coefficient of the log power
+            logpwr_ccmax = np.abs(np.asarray(logpwr_ccmax))
+            logpwr_ccmax_ds = descriptive_stats(logpwr_ccmax, bins=ccc_bins)
+            print '%s: Maximum cross correlation coefficient, logpwr : mean, mode, median = %f, %f, %f' % (neighbour, logpwr_ccmax_ds.mean, logpwr_ccmax_ds.mode, logpwr_ccmax_ds.median)
+
+            # Spearman rho details
+            spearman_ds = descriptive_stats(spearman, bins=ccc_bins)
+            logpwr_spearman_ds = descriptive_stats(logpwr_spearman, bins=ccc_bins)
+            print '%s: Spearman rho: mean, mode, median = %f, %f, %f' % (neighbour, spearman_ds.mean, spearman_ds.mode, spearman_ds.median)
+            print '%s: Spearman rho, logpwr: mean, mode, median = %f, %f, %f' % (neighbour, logpwr_spearman_ds.mean, logpwr_spearman_ds.mode, logpwr_spearman_ds.median)
 
             # Plot histograms of the three cross correlation coefficients
             ccc_bins = 100
@@ -503,17 +546,22 @@ for iwave, wave in enumerate(waves):
             plt.hist(cc0, bins=ccc_bins, label='zero lag CCC', alpha=0.33)
             plt.axvline(cc0_ds.mean, label='cc0 mean %f' % cc0_ds.mean)
             plt.axvline(cc0_ds.mode, label='cc0 mode %f' % cc0_ds.mode)
-            plt.axvline(cc0_ds.cred[0.95][1], label='cc0 95%% CI %f' % cc0_ds.cred[0.95][1])
+            plt.axvline(cc0_ds.median, label='cc0 median %f' % cc0_ds.median)
 
             plt.hist(cclag, bins=ccc_bins, label='lag %i CCC' % (lag), alpha=0.33)
             plt.axvline(cclag_ds.mean, label='cclag mean %f' % cclag_ds.mean, linestyle=':')
             plt.axvline(cclag_ds.mode, label='cclag mode %f' % cclag_ds.mode, linestyle=':')
-            plt.axvline(cclag_ds.cred[0.95][1], label='cclag 95%% CI %f' % cclag_ds.cred[0.95][1], linestyle='--')
+            plt.axvline(cclag_ds.median, label='cclag median %f' % cclag_ds.median, linestyle='--')
 
             plt.hist(ccmax, bins=ccc_bins, label='maximum CCC', alpha=0.33)
             plt.axvline(ccmax_ds.mean, label='ccmax mean %f' % ccmax_ds.mean, linestyle=':')
             plt.axvline(ccmax_ds.mode, label='ccmax mode %f' % ccmax_ds.mode, linestyle=':')
-            plt.axvline(ccmax_ds.cred[0.95][1], label='ccmax 95%% CI %f' % ccmax_ds.cred[0.95][1], linestyle='--')
+            plt.axvline(ccmax_ds.median, label='ccmax median %f' % ccmax_ds.median, linestyle='--')
+
+            plt.hist(spearmanr, bins=ccc_bins, label='Spearman', alpha=0.33)
+            plt.axvline(spearman_ds.mean, label='Spearman mean %f' % spearman_ds.mean, linestyle=':')
+            plt.axvline(spearman_ds.mode, label='Spearman mode %f' % spearman_ds.mode, linestyle=':')
+            plt.axvline(spearman_ds.median, label='Spearman median %f' % spearman_ds.median, linestyle='--')
 
             plt.xlabel('cross correlation coefficient (%s)' % (neighbour))
             plt.ylabel('number [%i samples]' % (npicked))
