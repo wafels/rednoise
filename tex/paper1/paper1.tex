@@ -305,11 +305,20 @@ same direction.  All further processing from this point was performed
 in the SunPy 0.4 (http://www.sunpy.org) data analysis environment.
 Images were de-rotated to compensate for solar rotation, based on the
 center of the field of view of each image.  After de-rotation, each
-image layer was co-registered with the image half way through the
-dataset, at approximately 03:00 UT (Figure \ref{fig:loc171193}).
-{\bf Co-registration was...}
-
-
+.image layer was coaligned with a reference layer, defined to be half
+way through the dataset, in this case at approximately 03:00 UT
+(Figure \ref{fig:loc171193}).  This process is required since the
+solar de-rotation function used does not fully compensate for all the
+solar rotation. {\bf Coalignment was implemented using a template
+  matching technique \citep{lewis1995fast} implemented by the {\it
+    scikit-image} \citep{Vanderwalt2014} routine {\it
+    match\_template}.  A rectangular template sub-image with sides one
+  half the size (in pixels) of the reference layer is defined.  The
+  coalignment algorithm finds the location of the best match of this
+  template with each layer.  The image layer is then shifted (using
+  sub-pixel shifts) according the location of the best match of the
+  template with the image.  This process removes residual bulk motions
+  of the images.}
 
 \section{Analysis}\label{sec:anal}
 We wish to analyze the frequency content of these resulting datacubes
@@ -318,7 +327,13 @@ data representing four different types of physical locations in the
 solar atmosphere.  These were a quiet Sun region, a region that lies
 on top of a sunspot, a footpoint region, and a coronal moss region.
 Figure \ref{fig:loc171193} shows the location of the regions on sample
-images from the time range considered.
+images from the time range considered. {\bf These locations, selected
+  by visual inspection, were chosen because they are representative of
+  commonly observed structures in the corona.  In addition,
+  oscillatory power has been identified previously over sunspot
+  \citep{}, loop footpoint \citep{} and moss structures
+  \citep{2003ApJ...595L..63D}.  A quiet Sun region is also included
+  for comparison.}
 
 \begin{figure}
 \centerline{
@@ -352,10 +367,8 @@ There is evidence that these power laws extend to much longer
 frequencies than those considered here, down to approximately 0.01
 mHz. \cite{2014AA...563A...8A} integrate emission over small portions
 of active regions and the quiet Sun as seen in the 19.5 nm passband
-image from the of the SOHO \cite{1995SoPh..162....1D} Extreme
-ultraviolet Imaging Telescope (EIT; \cite{1995SoPh..162..291D}) and
-show that the resulting time-series has an approximate \PL\ \Fps\ over
-the frequency range 0.01 - 1 mHz.
+images from EIT and show that the resulting time-series has an
+approximate \PL\ \Fps\ over the frequency range 0.01 - 1 mHz.
 
 \begin{figure}
 \centerline{
@@ -912,17 +925,20 @@ expressed through the parameters $\alpha_{E}$ and $\gamma$ in Equation
 \section{Conclusions}\label{sec:conc}
 
 Time series of AIA 171\AA\ and 193\AA\ images show approximately power
-law like properties over all regions of the solar surface.  Detecting
-narrow band oscillatory power should take in to account the presence
-of the \PL\ like \PS.  The power spectra have been modelled using
-three components: a \PL\ \PS, a lognormal component, and a constant
-background.  It is hypothesized that the power-law component is due to
-the sum along the line of sight of a large number of statistically
-similar energy deposition events.  It is also hypothesized that the
-lognormal component is due a combination of the channeling of
-oscillatory power from lower to higher levels of the solar atmosphere
-and lower temperature emission lines in the AIA 171\AA\ and
-193\AA\ bandpasses.
+law like properties over all regions of the solar surface.  {\bf It
+  has been shown that the detection of narrow band oscillatory power
+  in the practice of coronal seismology must take in to account the
+  presence of the \PL\ like \PS.  Detection thresholds should also
+  increase in order to reduce the number of false positive detections
+  in the presence of \PL\ like \PS.} The power spectra have been
+modelled using three components: a \PL\ \PS, a lognormal component,
+and a constant background.  It is hypothesized that the power-law
+component is due to the sum along the line of sight of a large number
+of statistically similar energy deposition events.  It is also
+hypothesized that the lognormal component is due a combination of the
+channeling of oscillatory power from lower to higher levels of the
+solar atmosphere and lower temperature emission lines in the AIA
+171\AA\ and 193\AA\ bandpasses.
 
 Future studies will include examining power spectra at many more
 locations on and off the disk, as well as using the AIA 355\AA, 94\AA,
@@ -1007,7 +1023,7 @@ Let the standard error in the mean of samples from a distribution be
 given by $\sigma_{mean}$.  It is defined as the standard deviation of
 the sampling distribution of the mean:
 \begin{equation}
-\sigma_{mean} = \sigma_{original} / N
+\sigma_{mean} = \sigma_{original} / \sqrt{N}
 \label{eqn:sigmamean}
 \end{equation}
 where $\sigma_{original}$ is the standard deviation of the
