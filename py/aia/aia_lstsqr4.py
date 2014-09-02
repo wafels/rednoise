@@ -1041,7 +1041,7 @@ for iwave, wave in enumerate(waves):
             # Correlation / independence quantities
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.correlative.' + neighbour + '.pickle',
-                      (cc0_ds, cclag_ds, ccmax_ds))
+                      (cc0_ds, cclag_ds, ccmax_ds, ccmax))
 
             # Save the full time series to a CSV file
             csv_timeseries_write(os.path.join(os.path.expanduser(scsv), window, manip),
