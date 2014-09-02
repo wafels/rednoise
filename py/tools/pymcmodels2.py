@@ -152,6 +152,7 @@ def Log_splwc_noise_prior(analysis_frequencies, analysis_power, sigma, npx, init
     else:
         # Use Kernel Density Estimation to create an estimated PDF for the
         # number of pixels
+        print 'Using KDE estimate of independent pixels'
         npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'])
 
     if init == None:
@@ -230,6 +231,7 @@ def Log_splwc_AddLognormalBump2_noise_prior(analysis_frequencies, analysis_power
     else:
         # Use Kernel Density Estimation to create an estimated PDF for the
         # number of independent pixels
+        print 'Using KDE estimate of independent pixels'
         npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'])
 
     if init == None:

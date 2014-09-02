@@ -133,7 +133,8 @@ def pkl_write(location, fname, a):
     pkl_file_location = os.path.join(location, fname)
     print('Writing ' + pkl_file_location)
     pkl_file = open(pkl_file_location, 'wb')
-    for element in a:
+    for i, element in enumerate(a):
+        print 'Element #', i
         pickle.dump(element, pkl_file)
     pkl_file.close()
 

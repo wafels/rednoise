@@ -160,7 +160,7 @@ manip = 'relative'
 savefig_format = 'png'
 freqfactor = [1000.0, 'mHz']
 sunday_name = {"qs": "quiet Sun", "loopfootpoints": "loop footpoints"}
-neighbour = 'random'
+neighbour = 'nearest'
 
 five_min = freqfactor[0] * 1.0 / 300.0
 three_min = freqfactor[0] * 1.0 / 180.0
@@ -506,8 +506,6 @@ for iwave, wave in enumerate(waves):
                 coher_95_hi[jjj] = coher_ds.cred[0.95][1]
                 coher_mode[jjj] = coher_ds.mode
                 coher_mean[jjj] = coher_ds.mean
-
-            ggg = hhh
 
             # All the pixels are all sqrt(2) pixels away from the
             # central pixel.  We treat them all as nearest neighbor.
@@ -1041,7 +1039,10 @@ for iwave, wave in enumerate(waves):
             # Correlation / independence quantities
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.correlative.' + neighbour + '.pickle',
-                      (cc0_ds, cclag_ds, ccmax_ds, ccmax))
+                      (cc0_ds, cclag_ds, ccmax_ds))
+
+            # Correlation / independence quantities
+            np.save(os.path.join(pkl_location,'OUT.' + ofilename + '.correlative2.' + neighbour + '.npy'), ccmax)
 
             # Save the full time series to a CSV file
             csv_timeseries_write(os.path.join(os.path.expanduser(scsv), window, manip),
