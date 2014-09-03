@@ -263,7 +263,18 @@ for iwave, wave in enumerate(waves):
 
                 # Use the independence coefficient distribution to estimate the
                 # number of pixels.  Answers will therefore depend on this prior.
-                noise_prior = {"npixel_model": 1.0 + ccmax * (npixels - 1)}
+                noise_prior = {"npixel_model": 1.0 + (1.0 - ccmax) * (npixels - 1)}
+
+                # Use the KDE estimate to calculate the most probable number
+                # of pixels.  This value is used to calculate the maximum
+                # likelihood fits
+                kde = pymcmodels2.calculate_kde(noise_prior["npixel_model"], None)
+                kde_grid = np.linspace(1, npixels, 1000)
+                kde_pdf = kde(kde_grid)
+                mostprobable_npx = kde_grid[np.argmax(kde_pdf)]
+                print 'Most probable number of pixels: ', mostprobable_npx
+                sigma_for_mle = sigma_of_distribution / np.sqrt(1.0 * mostprobable_npx)
+
                 #noise_prior = npixels
 
                 # Frequency-dependent independence coefficient
@@ -296,8 +307,11 @@ for iwave, wave in enumerate(waves):
                     pwr = pwr_ff
                     if jjj == 0:
                         pymcmodel0 = pymcmodels2.Log_splwc(normed_freqs, pwr, sigma)
+                        pymcmodel0_mle = pymcmodel0
                     else:
                         pymcmodel0 = pymcmodels2.Log_splwc_noise_prior(normed_freqs, pwr, sigma, noise_prior, init=A0)
+                        pymcmodel0_mle = pymcmodels2.Log_splwc(normed_freqs, pwr, sigma_for_mle, init=A0)
+                        #pymcmodel0_mle = pymcmodels2.Log_splwc(normed_freqs, pwr, sigma_for_mle, init=A0)
                     passnumber = str(jjj)
 
                     # Initiate the sampler
@@ -310,7 +324,7 @@ for iwave, wave in enumerate(waves):
                     M0.db.close()
 
                     # Now run the MAP
-                    map_M0 = pymc.MAP(pymcmodel0)
+                    map_M0 = pymc.MAP(pymcmodel0_mle)
                     print(' ')
                     print('M0 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
                     map_M0.fit(method='fmin_powell')
@@ -324,11 +338,11 @@ for iwave, wave in enumerate(waves):
 
                     # Get the likelihood at the maximum
                     #likelihood0_data = map_M0.logp_at_max
-                    l0_data = get_likelihood_M0(map_M0, normed_freqs, pwr, sigma, obstype)
-                    l0_data_logp = get_log_likelihood(pwr, M0_bf, sigma)
+                    l0_data = get_likelihood_M0(map_M0, normed_freqs, pwr, sigma_for_mle, obstype)
+                    l0_data_logp = get_log_likelihood(pwr, M0_bf, sigma_for_mle)
 
                     # Get the chi-squared value
-                    chi0 = get_chi_M0(map_M0, normed_freqs, pwr, sigma)
+                    chi0 = get_chi_M0(map_M0, normed_freqs, pwr, sigma_for_mle)
                     print('M0 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi0))
                     print('   : variables ', A0)
                     print('   : estimate log likelihood = %f' % (l0_data_logp))
@@ -376,6 +390,7 @@ for iwave, wave in enumerate(waves):
                     if jjj == 0:
                         if bump_shape == 'lognormal':
                             pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pwr, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
+                            pymcmodel1_mle = pymcmodel1
                             if A1_estimate[4] < log_bump_frequency_limits[0]:
                                 A1_estimate[4] = log_bump_frequency_limits[0]
                                 print '!! Estimate fit exceeded lower limit of log_bump_frequency_limits. Resetting to limit'
@@ -393,6 +408,7 @@ for iwave, wave in enumerate(waves):
                             print 'First pass fit exceeded upper limit of log_bump_frequency_limits'
                         if bump_shape == 'lognormal':
                             pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2_noise_prior(normed_freqs, pwr, sigma, noise_prior, init=A1, log_bump_frequency_limits=log_bump_frequency_limits)
+                            pymcmodel1_mle = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pwr, sigma_for_mle, init=A1, log_bump_frequency_limits=log_bump_frequency_limits)
                         if bump_shape == 'normal':
                             pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2_allexp(normed_freqs, pwr, sigma, init=A1, normalized_bump_frequency_limits=log_bump_frequency_limits)
 
@@ -409,7 +425,7 @@ for iwave, wave in enumerate(waves):
                     M1.db.close()
 
                     # Now run the MAP
-                    map_M1 = pymc.MAP(pymcmodel1)
+                    map_M1 = pymc.MAP(pymcmodel1_mle)
                     print(' ')
                     print('M1 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
                     map_M1.fit(method='fmin_powell')
@@ -423,11 +439,11 @@ for iwave, wave in enumerate(waves):
 
                     # Get the likelihood at the maximum
                     #likelihood1_data = map_M1.logp_at_max
-                    l1_data = get_likelihood_M1(map_M1, normed_freqs, pwr, sigma, bump_shape)
-                    l1_data_logp = get_log_likelihood(pwr, M1_bf, sigma)
+                    l1_data = get_likelihood_M1(map_M1, normed_freqs, pwr, sigma_for_mle, bump_shape)
+                    l1_data_logp = get_log_likelihood(pwr, M1_bf, sigma_for_mle)
 
                     # Get the chi-squared value
-                    chi1 = get_chi_M1(map_M1, normed_freqs, pwr, sigma, bump_shape)
+                    chi1 = get_chi_M1(map_M1, normed_freqs, pwr, sigma_for_mle, bump_shape)
                     print('M1 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi1))
                     print('   : variables ', A1)
                     print('   : estimate log likelihood = %f' % (l1_data_logp))

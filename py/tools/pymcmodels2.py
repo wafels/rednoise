@@ -22,9 +22,13 @@ from scipy.stats.kde import gaussian_kde
 #
 # Get a smooth pdf from some input data
 #
+def calculate_kde(dataset, bw_method):
+    return gaussian_kde(dataset, bw_method)
+
+
 def KernelSmoothing(name, dataset, bw_method=None, lower=-np.inf, upper=np.inf, observed=False, value=None):
     '''Create a pymc node whose distribution comes from a kernel smoothing density estimate.'''
-    density = gaussian_kde(dataset, bw_method)
+    density = calculate_kde(dataset, bw_method)
     lower_tail = 0
     upper_tail = 0
     if lower > -np.inf:
