@@ -554,13 +554,13 @@ procedure, see Section \ref{sec:app:ind}.
 Model selection is implemented using the Akaike Information Criterion
 (AIC) and the Bayesian Information Criterion (BIC).  The AIC is defined as
 \begin{equation}\label{eqn:aic}
-AIC \equiv -2 \ln L_{max} - 2k
+AIC \equiv 2k -2 \ln L_{max}
 \end{equation}
 where $L_{max}$ is the maximum likelihood achievable by the model, and
 $k$ is the number of parameters in the model ($k=3$ for Model 1, and
 $k=6$ for Model 2).  The BIC is defined as
 \begin{equation}\label{eqn:bic}
-BIC \equiv -2 \ln L_{max} - k\ln N
+BIC \equiv  k\ln N -2 \ln L_{max}
 \end{equation}
 where $N$ is the number of data points used in the fit (in this case
 $N=899$, the number of non-zero frequencies of the Fourier power
@@ -1049,45 +1049,23 @@ between the neighbors,
 When $\rho$ is 1, the cross-correlation coefficient is zero, and there
 is no measurable linear dependence between neighboring time series.
 When $\rho$ is zero, the cross correlation coefficient is $\pm 1$, and
-the two time-series are linearly dependent on each other.  This
-procedure is repeated 10,000 times and the mean value $\hat{\rho}$ is
-calculated. The effective number of independent pixels in region is
-given by
-\begin{equation}
+the two time-series are linearly dependent on each other.  {\bf This
+procedure is repeated 10,000 times.  For each value of $\rho$ found,
+the effective number of pixels $N_{eff}$ is defined as
+values is defined as
+\begin{equation}\label{eqn:neff}
 \label{eqn:nind}
 N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
 \end{equation}
-The number of independent measurements $N$ is set to $N_{eff}$ in
-Equation \ref{eqn:sigmamean}, and that value of $\sigma_{mean}$ is
-used as the estimate of the error in the \Fps.  Table \ref{tab:neff}
-shows the number of pixels in the region and the estimated number of
-effective pixels.
-\begin{deluxetable}{cccc}
-\tabletypesize{\scriptsize} 
-\tablecolumns{4}
-\tablewidth{0pt}
-\tablecaption{Number of pixels and
-  effectively independent pixels as a function of region and waveband,
-  as calculated following the procedure of Section
-  \protect\ref{sec:app:ind}. \label{tab:neff}}
-\tablehead{
-\colhead{Region} &
-\colhead{$N_{pixel}$} &
-\colhead{Waveband} &
-\colhead{$N_{eff}$} \\
-}
-\startdata
-loop footpoints & 2000 & 171\AA & 183 \\
-                &     & 193\AA & 185 \\
-moss            & 2100 & 171\AA & 629 \\
-                &     & 193\AA & 521 \\
-quiet Sun       & 2500 & 171\AA & 598 \\
-                &     & 193\AA & 639 \\
-sunspot         & 7500 & 171\AA & 1505 \\
-                &     & 193\AA & 1531 \\
-\enddata
-\end{deluxetable}
+The probability density function $p\left(N_{eff}\right)$ is found via
+a kernel density estimation technique \cite{???} applied to the
+distribution of $N_{eff}$ values found by the procedure above.  The
+probability density functions for $N_{eff}$ for each wavelength and
+region are shown in Figure \ref{???}.  The estimated probability
+density function $p\left(N_{eff}\right)$ is included as a prior in the
+posterior.
 
+}
 \subsection{Model fitting and selection}
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
 geometric mean power spectra shown in Figures \ref{fig:fit171193}.  A
@@ -1103,15 +1081,15 @@ L = \prod_{j=1}^{N_{f}}
 -\frac{(P_{i,j} - D_{j})^{2}}{2\sigma_{j}^{2}}
 \right)
 \end{equation}
-where $D_{j}$ is the observed \mFps\ at frequency $\nu_{j}$,
-$N_{f}$ is the number of Fourier frequencies, and $\sigma_{j}$ is the
-normal distribution width at frequency $\nu_{j}$ .  Each of the priors for
-the parameters in each model has a uniform distribution, and are given
-in Table \ref{tab:priors}.  Each MCMC chain that was run took 100,000
-samples, with burn-in assumed to be at 50,000 samples.  The chain is
-thinned by taking every fifth element in the chain, forming the final
-sample from which the parameter estimates and their uncertainties are
-calculated.
+where $D_{j}$ is the observed \mFps\ at frequency $\nu_{j}$, $N_{f}$
+is the number of Fourier frequencies, and $\sigma_{j}$ is the normal
+distribution width at frequency $\nu_{j}$ .  Each of the priors for
+the parameters in each model has a uniform distribution (except
+$N_{eff}$), and are given in Table \ref{tab:priors}.  Each MCMC chain
+that was run took 100,000 samples, with burn-in assumed to be at
+50,000 samples.  The chain is thinned by taking every fifth element in
+the chain, forming the final sample from which the parameter estimates
+and their uncertainties are calculated.
 \begin{deluxetable}{ccc}
 \tabletypesize{\scriptsize} 
 \tablecolumns{4}
@@ -1125,16 +1103,19 @@ calculated.
 \colhead{Model 2} \\
 }
 \startdata
-$A$ & $4.5 \times 10^{-5} \rightarrow 22026$ &  $4.5 \times 10^{-5} \rightarrow 22026$\\
-$n$  &  $-1\rightarrow 6$   & $-1\rightarrow 6$  \\
-$C$ & $2.1 \times 10^{-9} \rightarrow 22026$  & $2.1 \times 10^{-9} \rightarrow 22026$  \\
+$A$ & $\exp(-10) \rightarrow \exp(10)$ &  $\exp(-10) \rightarrow \exp(10)$\\
+$n$ & $1\rightarrow 6$   & $1\rightarrow 6$  \\
+$C$ & $\exp(-20) \rightarrow \exp(10)$  & $\exp(-20) \rightarrow \exp(10)$  \\
 $\alpha$  & not applicable & $2.1 \times 10^{-9} \rightarrow 148$ \\
 $\beta$ & not applicable  & $0.5 - 10$ (mHz)\tablenotemark{1}\\
-$\delta$ & not applicable & $0.001\rightarrow 3$ (decades of frequency)\\
+$\delta$ & not applicable & $0.001\rightarrow 3$ (decades of
+frequency)\\
+$N_{eff}$ & empirically determined & empirically determined\tablenotemark{2} \\
 \enddata
 \tablenotetext{1}{Model 2 for AIA 193\AA\ loop footpoint region required a uniform prior
 for $\beta$ in the range $0.1 - 10$ mHz in order for its marginal
 distribution to lie within the prior range.}
+\tablenotetext{2}{See Figure \ref{???} and Equation \ref{eqn:neff}.}
 \end{deluxetable}
 The \mFpa\ are assumed to
 be normally distributed with a width given by $\sigma_{mean}$ as
@@ -1142,19 +1123,22 @@ calculated above.  A five step fitting process is used to fit Models 1
 and 2 to the data, and is described below.
 
 \begin{enumerate}
-\item The MCMC sampler is run to fit Model 1, assuming $\sigma_{j} =
-  \sigma_{original, j}$ the width of the distribution of Fourier power
-  at frequency $G(\nu_{j})$.  Since these widths are much larger than
-  $\sigma_{mean}$ is much wider than the standard error in the mean,
-  it allows the fitting algorithm to converge to an approximate fit
-  solution.
-\item The MCMC sampler is run to fit Model 1 with $\sigma_{j} =
-  \sigma_{mean, j}$, with $\sigma_{mean, j}= \sigma_{original,
-    j}/sqrt{N_{eff}}$, seeded with estimated parameter values from
-  step 1.  This generates a better estimate to the parameters of the
-  model fit.  The resulting parameter estimates are given by the mean
-  values of marginal probability distribution functions, and are the
-  final estimates for Model 1.
+\item The posterior is formed by multiplying the likelihood (equation
+  \ref{eqn:likelihood}) by the priors for $A$, $n$ and $C$ (Table
+  \ref{tab:priors}).  The MCMC sampler is run to fit Model 1, assuming
+  $\sigma_{j} = \sigma_{original, j}$ the width of the distribution of
+  Fourier power at frequency $G(\nu_{j})$.  Since the widths
+  $\sigma_{original, j}$ are large it allows the fitting algorithm to
+  converge to an approximate fit solution.
+\item The posterior is formed by multiplying the likelihood (equation
+  \ref{eqn:likelihood}) by the priors for $A$, $n$, $C$ and $N_{eff}$
+  (Table \ref{tab:priors}).  The MCMC sampler is run to fit Model 1 with
+  $\sigma_{j} = \sigma_{original, j}/sqrt{N_{eff}}$, seeded with
+  estimated parameter values from step 1.  This generates a better
+  estimate to the parameters of the model fit.  The resulting
+  parameter estimates are given by the mean values of marginal
+  probability distribution functions, and are the final estimates for
+  Model 1.
 \item The residuals of the model 1 fit to the data are then used to
   estimate the model parameters of $G(\nu)$.  This is done by
   (least-squares) fitting $G(\nu)$ to the positive residuals in the
@@ -1163,11 +1147,13 @@ and 2 to the data, and is described below.
   \sigma_{original, j}$, seeded with the mean parameter values of
   Model 1 from step 2 and the estimated $G(\nu)$ model parameters from
   step 3.
-\item The MCMC sampler is run to fit Model 2 with $\sigma_{j} =
-  \sigma_{mean, j}$, seeded with estimated parameter values from step
-  4.  The resulting parameter estimates are given by the mean values
-  of marginal probability distribution functions, and are the final
-  estimates for Model 2.
+\item The posterior is formed by multiplying the likelihood (equation
+  \ref{eqn:likelihood}) by all the priors in Table \ref{tab:priors}.
+  The MCMC sampler is run to fit Model 2 with $\sigma_{j} =
+  \sigma_{original, j}/\sqrt{N_{eff}}$, seeded with estimated
+  parameter values from step 4.  The resulting parameter estimates are
+  given by the mean values of marginal probability distribution
+  functions, and are the final estimates for Model 2.
 \end{enumerate}
 Models are selected using the Akaike and Bayesian Information Criteria
 \citep{2007MNRAS.377L..74L}.  Conveniently, these quantities are also
@@ -1205,4 +1191,42 @@ probability lies in each wing of the marginal distributions.
 \bibliography{references}
 \end{document}
 
-Update parameter results
+
+  This
+procedure is repeated 10,000 times and the mean value $\hat{\rho}$ is
+calculated. The effective number of independent pixels in region is
+given by
+\begin{equation}
+\label{eqn:nind}
+N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
+\end{equation}
+The number of independent measurements $N$ is set to $N_{eff}$ in
+Equation \ref{eqn:sigmamean}, and that value of $\sigma_{mean}$ is
+used as the estimate of the error in the \Fps.  Table \ref{tab:neff}
+shows the number of pixels in the region and the estimated number of
+effective pixels.
+\begin{deluxetable}{cccc}
+\tabletypesize{\scriptsize} 
+\tablecolumns{4}
+\tablewidth{0pt}
+\tablecaption{Number of pixels and
+  effectively independent pixels as a function of region and waveband,
+  as calculated following the procedure of Section
+  \protect\ref{sec:app:ind}. \label{tab:neff}}
+\tablehead{
+\colhead{Region} &
+\colhead{$N_{pixel}$} &
+\colhead{Waveband} &
+\colhead{$N_{eff}$} \\
+}
+\startdata
+loop footpoints & 2000 & 171\AA & 183 \\
+                &     & 193\AA & 185 \\
+moss            & 2100 & 171\AA & 629 \\
+                &     & 193\AA & 521 \\
+quiet Sun       & 2500 & 171\AA & 598 \\
+                &     & 193\AA & 639 \\
+sunspot         & 7500 & 171\AA & 1505 \\
+                &     & 193\AA & 1531 \\
+\enddata
+\end{deluxetable}

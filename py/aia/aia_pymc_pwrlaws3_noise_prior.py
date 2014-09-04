@@ -47,7 +47,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['sunspot', 'moss', 'qs', 'loopfootpoints']
+regions = ['moss', 'qs', 'sunspot', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -263,7 +263,8 @@ for iwave, wave in enumerate(waves):
 
                 # Use the independence coefficient distribution to estimate the
                 # number of pixels.  Answers will therefore depend on this prior.
-                noise_prior = {"npixel_model": 1.0 + (1.0 - ccmax) * (npixels - 1)}
+                noise_prior = {"npixel_model": 1.0 + (1.0 - ccmax) * (npixels - 1),
+                               "npixels": npixels}
 
                 # Use the KDE estimate to calculate the most probable number
                 # of pixels.  This value is used to calculate the maximum
@@ -352,10 +353,14 @@ for iwave, wave in enumerate(waves):
                 # second model
                 #
                 # Frequency range we will consider for the bump
-                physical_bump_frequency_limits = np.asarray([1.0 / 1000.0, 1.0 / 100.0])
+                if region == 'loopfootpoints':
+                    physical_bump_frequency_limits = np.asarray([0.1 / 1000.0, 1.0 / 100.0])
+                else:
+                    physical_bump_frequency_limits = np.asarray([0.1 / 1000.0, 1.0 / 100.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
 
+                # The area we want to see where the excess emission is
                 where_we_want_to_examine = np.asarray([1.0 / 1000.0, 1.0 / 100.0]) / xnorm
                 wwwte_loc_lo = normed_freqs >= where_we_want_to_examine[0]
                 wwwte_loc_hi = normed_freqs <= where_we_want_to_examine[1]
