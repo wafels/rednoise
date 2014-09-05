@@ -21,10 +21,10 @@ from scipy.stats.kde import gaussian_kde
 
 # Limits on the fit
 limits = {"power_law_index": [1.0, 6.0],
-          "power_law_norm": [-10.0, 10.0],
+          "power_law_norm": [-10.0, np.log(100.0)],
           "background": [-20.0, 10.0]}
 
-glimits = {"gaussian_amplitude": [-20.0, 0.0],
+glimits = {"gaussian_amplitude": [-20.0, limits["power_law_norm"][1] - np.log(100.0)],
           "gaussian_width": [0.001, 3.0]}
 
 
@@ -200,7 +200,7 @@ def Log_splwc_noise_prior(analysis_frequencies, analysis_power, sigma, npx, init
         # Use Kernel Density Estimation to create an estimated PDF for the
         # number of pixels
         print 'Using KDE estimate of independent pixels'
-        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'])
+        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'], observed=True)
 
     # Model for the power law spectrum
     @pymc.deterministic(plot=False)
@@ -244,7 +244,7 @@ def Log_splwc_AddLognormalBump2_noise_prior(analysis_frequencies, analysis_power
         # Use Kernel Density Estimation to create an estimated PDF for the
         # number of independent pixels
         print 'Using KDE estimate of independent pixels'
-        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'])
+        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'], observed=True)
 
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',
@@ -313,6 +313,15 @@ def Log_splwc_AddLognormalBump2_noise_prior(analysis_frequencies, analysis_power
                                       lower=glimits['gaussian_width'][0],
                                       upper=glimits['gaussian_width'][1],
                                       doc='gaussian_width')
+
+    # Set a bound on the Gaussian Amplitude
+    @pymc.potential
+    def gaussian_amplitude_bound(gaussian_amplitude=gaussian_amplitude,
+                                 power_law_norm=power_law_norm):
+        if gaussian_amplitude < power_law_norm:
+            return 0.0
+        else:
+            return -np.inf
 
     # Model for the power law spectrum
     @pymc.deterministic(plot=False)
@@ -418,6 +427,15 @@ def Log_splwc_AddLognormalBump2(analysis_frequencies, analysis_power, sigma,
                                       lower=glimits['gaussian_width'][0],
                                       upper=glimits['gaussian_width'][1],
                                       doc='gaussian_width')
+
+    # Set a bound on the Gaussian Amplitude
+    @pymc.potential
+    def gaussian_amplitude_bound(gaussian_amplitude=gaussian_amplitude,
+                                 power_law_norm=power_law_norm):
+        if gaussian_amplitude < power_law_norm:
+            return 0.0
+        else:
+            return -np.inf
 
     # Model for the power law spectrum
     @pymc.deterministic(plot=False)

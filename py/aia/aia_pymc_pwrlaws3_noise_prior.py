@@ -41,13 +41,13 @@ plt.ioff()
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
+sfigroot = '~/ts/img_cc_final_noise_prior_observed_is_true/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss', 'qs', 'sunspot', 'loopfootpoints']
+regions = ['sunspot', 'qs', 'moss', 'loopfootpoints', ]
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -208,7 +208,7 @@ for iwave, wave in enumerate(waves):
 
                 # Load the correlative measures 2
                 ifilename = 'OUT.' + region_id
-                pkl_file_location = os.path.join(pkl_location, ifilename + '.correlative2.' + neighbour + '.npy')
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.spearman.' + neighbour + '.npy')
                 print('Loading ' + pkl_file_location)
                 ccmax = np.load(pkl_file_location)
 
@@ -354,9 +354,9 @@ for iwave, wave in enumerate(waves):
                 #
                 # Frequency range we will consider for the bump
                 if region == 'loopfootpoints':
-                    physical_bump_frequency_limits = np.asarray([0.1 / 1000.0, 1.0 / 100.0])
+                    physical_bump_frequency_limits = np.asarray([1.0 / 1000.0, 1.0 / 100.0])
                 else:
-                    physical_bump_frequency_limits = np.asarray([0.1 / 1000.0, 1.0 / 100.0])
+                    physical_bump_frequency_limits = np.asarray([1.0 / 1000.0, 1.0 / 100.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
 
@@ -532,6 +532,7 @@ for iwave, wave in enumerate(waves):
                               "M1_mean": '$M_{2}$: posterior mean',
                               "M1_P1": r'posterior mean $P_{1}(\nu)$ component for $M_{2}$',
                               "M1_G": r'posterior mean $G(\nu)$ component for $M_{2}$',
+                              'M1: 95% low': r'$M_{1}$: 95\% credible interval',
                               "5 minutes": '5 minutes',
                               "3 minutes": '3 minutes',
                               "bump_ratio": bump_ratio}
@@ -541,6 +542,7 @@ for iwave, wave in enumerate(waves):
                               "M1_mean": None,
                               "M1_P1": None,
                               "M1_G": None,
+                              'M1: 95% low': None,
                               "5 minutes": None,
                               "3 minutes": None,
                               "bump_ratio": bump_ratio}
@@ -566,8 +568,8 @@ for iwave, wave in enumerate(waves):
                 #label = '$M_{2}$, maximum likelihood fit'
                 #ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
                 ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label=labels["M1_mean"], color = 'r')
-                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
-                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
+                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label=labels['M1: 95% low'], color = 'r', linestyle='-.')
+                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], color = 'r', linestyle='--')
 
                 # Plot each component of M1
                 ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')

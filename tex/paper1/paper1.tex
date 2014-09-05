@@ -254,14 +254,16 @@ All these detections algorithms, and many detections in the literature
 make either the explicit or implicit {\bf modeling} assumption that
 the observed time-series consists of a background trend of some kind
 and at least approximately Gaussian-distributed noise.  {\bf The aim
-  of this paper is to test the validity of this assumption principally
-  in regions of interest to study of the coronal seismology}.  It is
-shown below, using data from the Atmospheric Imaging Assembly (AIA,
+  of this paper is to investigate the nature of the Fourier power
+  spectrum in regions of interest to study of the coronal seismology,
+  thereby testing the assumption above}.  It is shown below, using
+data from the Atmospheric Imaging Assembly (AIA,
 \citealp{2012SoPh..275...17L}) on board the Solar Dynamics Observatory
-(SDO, \citealp{2012SoPh..275....3P}), that time-series of coronal emission
-may be better described by other models.  These models, {\bf based
-  around \PL\ Fourier \PS}, have implications for the practice of
-coronal seismology, and may be indicative of the nature of the
+(SDO, \citealp{2012SoPh..275....3P}), that time-series of coronal
+emission may be better described by other models{\bf , based power-law
+  power spectra that are actually observed} .  These models, {\bf
+  based around \PL\ Fourier \PS}, have implications for the practice
+of coronal seismology, and may be indicative of the nature of the
 fundamental energy deposition that keeps the corona hot.
 
 Section \ref{sec:obs} describes the observations used, while Section
@@ -330,8 +332,8 @@ Figure \ref{fig:loc171193} shows the location of the regions on sample
 images from the time range considered. {\bf These locations, selected
   by visual inspection, were chosen because they are representative of
   commonly observed structures in the corona.  In addition,
-  oscillatory power has been identified previously over sunspot
-  \citep{}, loop footpoint \citep{} and moss structures
+  oscillatory power has been identified previously over sunspots and
+  loop footpoints \citep{2002A&A...387L..13D} and moss structures
   \citep{2003ApJ...595L..63D}.  A quiet Sun region is also included
   for comparison.}
 
@@ -810,8 +812,12 @@ atmosphere {\bf , that is quiet Sun, moss, loop footpoints and above
 time-series over the frequency range 0.01 - 1 mHz, overlapping with
 the frequency studied in this paper.
 
-We hypothesize that the \PL\ \PS\ is due to the sum of a distribution
-of a large number of events having different amounts of
+{\bf \PL\ \PS\ have been observed in other solar phenomena.}
+
+
+We hypothesize that the \PL\ \PS\ in the coronal 171\AA\ and
+193\AA\ emission is due to the sum of a distribution of a large number
+of events having different amounts of
 emission. \cite{2011soca.book.....A} describes how a \PL\ \PS\ may
 obtained from such a distribution, and that argument is outlined
 below.
@@ -1099,23 +1105,22 @@ and their uncertainties are calculated.
   Model 2 (Equation \ref{eqn:pwrlawbump}) \label{tab:priors}}
 \tablehead{
 \colhead{parameter} &
-\colhead{Model 1} &
-\colhead{Model 2} \\
+\colhead{Model 1 and 2} &
+\colhead{Model 2 only} \\
 }
 \startdata
-$A$ & $\exp(-10) \rightarrow \exp(10)$ &  $\exp(-10) \rightarrow \exp(10)$\\
-$n$ & $1\rightarrow 6$   & $1\rightarrow 6$  \\
-$C$ & $\exp(-20) \rightarrow \exp(10)$  & $\exp(-20) \rightarrow \exp(10)$  \\
-$\alpha$  & not applicable & $2.1 \times 10^{-9} \rightarrow 148$ \\
-$\beta$ & not applicable  & $0.5 - 10$ (mHz)\tablenotemark{1}\\
-$\delta$ & not applicable & $0.001\rightarrow 3$ (decades of
-frequency)\\
-$N_{eff}$ & empirically determined & empirically determined\tablenotemark{2} \\
+$\ln(A)$ & $-10 \rightarrow \ln(10)$  & \\
+$n$ & $1\rightarrow 6$ &   \\
+$\ln(C)$ & $-20 \rightarrow 10$ & \\
+$N_{eff}$ & {empirically determined}\tablenotemark{1} & \\
+$\ln(\alpha)$  &  & $2.1 \times 10^{-9} \rightarrow 148$ \\
+$\beta$ &  & $0.5 - 10$ (mHz)\tablenotemark{2}\\
+$\log_{10}\delta$ &  & $0.001\rightarrow 3$ \\
 \enddata
-\tablenotetext{1}{Model 2 for AIA 193\AA\ loop footpoint region required a uniform prior
+\tablenotetext{1}{See Figure \ref{???} and Equation \ref{eqn:neff}.}
+\tablenotetext{2}{Model 2 for AIA 193\AA\ loop footpoint region required a uniform prior
 for $\beta$ in the range $0.1 - 10$ mHz in order for its marginal
 distribution to lie within the prior range.}
-\tablenotetext{2}{See Figure \ref{???} and Equation \ref{eqn:neff}.}
 \end{deluxetable}
 The \mFpa\ are assumed to
 be normally distributed with a width given by $\sigma_{mean}$ as

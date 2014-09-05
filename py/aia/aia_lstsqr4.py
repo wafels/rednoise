@@ -533,7 +533,9 @@ for iwave, wave in enumerate(waves):
             print '%s: Maximum cross correlation coefficient, logpwr : mean, mode, median = %f, %f, %f' % (neighbour, logpwr_ccmax_ds.mean, logpwr_ccmax_ds.mode, logpwr_ccmax_ds.median)
 
             # Spearman rho details
+            spearman = np.abs(np.asarray(spearman))
             spearman_ds = descriptive_stats(spearman, bins=ccc_bins)
+            logpwr_spearman = np.abs(np.asarray(logpwr_spearman))
             logpwr_spearman_ds = descriptive_stats(logpwr_spearman, bins=ccc_bins)
             print '%s: Spearman rho: mean, mode, median = %f, %f, %f' % (neighbour, spearman_ds.mean, spearman_ds.mode, spearman_ds.median)
             print '%s: Spearman rho, logpwr: mean, mode, median = %f, %f, %f' % (neighbour, logpwr_spearman_ds.mean, logpwr_spearman_ds.mode, logpwr_spearman_ds.median)
@@ -1039,10 +1041,16 @@ for iwave, wave in enumerate(waves):
             # Correlation / independence quantities
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.correlative.' + neighbour + '.pickle',
-                      (cc0_ds, cclag_ds, ccmax_ds))
+                      (cc0_ds, cclag_ds, ccmax_ds, spearman_ds))
 
             # Correlation / independence quantities
-            np.save(os.path.join(pkl_location,'OUT.' + ofilename + '.correlative2.' + neighbour + '.npy'), ccmax)
+            np.save(os.path.join(pkl_location, 'OUT.' + ofilename + '.correlative2.' + neighbour + '.npy'), ccmax)
+
+            # Correlation / independence quantities
+            np.save(os.path.join(pkl_location, 'OUT.' + ofilename + '.spearman.' + neighbour + '.npy'), spearman)
+
+            # Correlation / independence quantities
+            np.save(os.path.join(pkl_location, 'OUT.' + ofilename + '.logpwr_spearman.' + neighbour + '.npy'), logpwr_spearman)
 
             # Save the full time series to a CSV file
             csv_timeseries_write(os.path.join(os.path.expanduser(scsv), window, manip),

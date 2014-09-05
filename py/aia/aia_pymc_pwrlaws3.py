@@ -41,13 +41,14 @@ plt.ioff()
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
+sfigroot = '~/ts/img_cc_final_no_noise_prior_coherence/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
 regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
+regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -209,6 +210,7 @@ for iwave, wave in enumerate(waves):
                 cc0_ds = pickle.load(pkl_file)
                 cclag_ds = pickle.load(pkl_file)
                 ccmax_ds = pickle.load(pkl_file)
+                spearman_ds = pickle.load(pkl_file)
                 pkl_file.close()
 
                 # Pick which definition of the power to use
@@ -220,7 +222,7 @@ for iwave, wave in enumerate(waves):
                 prettyprint('%s: Pixel independence calculation' % (neighbour))
                 print 'Number of pixels ', npixels
                 #print 'Mode, maximum cross correlation coefficient = %f' % (ccmax_ds.mode)
-                dependence_coefficient = ccmax_ds.mean
+                dependence_coefficient = coher_mean
                 # Independence coefficient - how independent is one pixel compared
                 # to its nearest neighbour?
                 # independence_coefficient = 1.0 - 0.5 * (np.abs(ccc0) + np.abs(ccclag))
@@ -255,6 +257,7 @@ for iwave, wave in enumerate(waves):
                 print 'Average independence coefficient ', np.mean(independence_coefficient)
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
+                print npixels_effective
                 sigma_of_distribution = fix_nonfinite(std_dev)
                 sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
 
@@ -518,6 +521,7 @@ for iwave, wave in enumerate(waves):
                               "M1_mean": '$M_{2}$: posterior mean',
                               "M1_P1": r'posterior mean $P_{1}(\nu)$ component for $M_{2}$',
                               "M1_G": r'posterior mean $G(\nu)$ component for $M_{2}$',
+                              'M1: 95% low': r'$M_{1}$: 95\% credible interval',
                               "5 minutes": '5 minutes',
                               "3 minutes": '3 minutes',
                               "bump_ratio": bump_ratio}
@@ -527,6 +531,7 @@ for iwave, wave in enumerate(waves):
                               "M1_mean": None,
                               "M1_P1": None,
                               "M1_G": None,
+                              'M1: 95% low': None,
                               "5 minutes": None,
                               "3 minutes": None,
                               "bump_ratio": bump_ratio}
@@ -552,8 +557,8 @@ for iwave, wave in enumerate(waves):
                 #label = '$M_{2}$, maximum likelihood fit'
                 #ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
                 ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label=labels["M1_mean"], color = 'r')
-                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M1: 95% low', color = 'r', linestyle='-.')
-                #plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M1: 95% high', color = 'r', linestyle='--')
+                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label=labels['M1: 95% low'], color = 'r', linestyle='--')
+                plt.plot(xvalue, M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], color = 'r', linestyle='--')
 
                 # Plot each component of M1
                 ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')
