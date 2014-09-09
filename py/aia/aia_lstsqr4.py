@@ -165,6 +165,8 @@ neighbour = 'nearest'
 five_min = freqfactor[0] * 1.0 / 300.0
 three_min = freqfactor[0] * 1.0 / 180.0
 
+coherence_wsize = 3
+
 # main loop
 for iwave, wave in enumerate(waves):
     # Now that the loading and saving locations are seot up, proceed with
@@ -464,7 +466,7 @@ for iwave, wave in enumerate(waves):
                 spearman.append(spearmanr[0])
 
                 # Calculate the coherence for each selected pair
-                coherence = get_coherence(ts1, ts2)
+                coherence = get_coherence(ts1, ts2, wsize=coherence_wsize)
                 #if npicked == 0:
                 #    coher = coherence[posindex]
                 #else:
@@ -609,7 +611,7 @@ for iwave, wave in enumerate(waves):
             plt.ylabel(data_name + ' : coherence')
             plt.title('Distribution of')
             plt.legend(fontsize=10, framealpha=0.5)
-            plt.savefig(savefig + '.independence.coherence.%s.%s' % (neighbour, savefig_format))
+            plt.savefig(savefig + '.independence.coherence.%i.%s.%s' % (coherence_wsize, neighbour, savefig_format))
             plt.close('all')
 
             plt.figure(2)
@@ -622,7 +624,7 @@ for iwave, wave in enumerate(waves):
             plt.ylabel('coherence')
             plt.title(data_name + ' : Coherence distribution (%s)' % (neighbour))
             plt.legend(fontsize=10, framealpha=0.5)
-            plt.savefig(savefig + '.independence.coherence_histogram.%s.%s' % (neighbour, savefig_format))
+            plt.savefig(savefig + '.independence.coherence_histogram.%i.%s.%s' % (coherence_wsize, neighbour, savefig_format))
             plt.close('all')
 
             # Fourier power: get a Time series from the arithmetic sum of
@@ -1034,7 +1036,7 @@ for iwave, wave in enumerate(waves):
 
             # Coherence quantities
             pkl_write(pkl_location,
-                      'OUT.' + ofilename + '.coherence.' + neighbour + '.pickle',
+                      'OUT.' + ofilename + '.coherence.' + str(coherence_wsize) + '.'  + neighbour + '.pickle',
                       (freqs_original, coher, coher_max, coher_mode,
                        coher_95_hi, coher_mean))
 

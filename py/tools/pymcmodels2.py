@@ -200,7 +200,7 @@ def Log_splwc_noise_prior(analysis_frequencies, analysis_power, sigma, npx, init
         # Use Kernel Density Estimation to create an estimated PDF for the
         # number of pixels
         print 'Using KDE estimate of independent pixels'
-        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'], observed=True)
+        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'])
 
     # Model for the power law spectrum
     @pymc.deterministic(plot=False)
@@ -244,7 +244,7 @@ def Log_splwc_AddLognormalBump2_noise_prior(analysis_frequencies, analysis_power
         # Use Kernel Density Estimation to create an estimated PDF for the
         # number of independent pixels
         print 'Using KDE estimate of independent pixels'
-        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'], observed=True)
+        npixel = KernelSmoothing('KDE_estimate', npx['npixel_model'], lower=1, upper=npx['npixels'])
 
     if init == None:
         power_law_index = pymc.Uniform('power_law_index',

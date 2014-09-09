@@ -41,7 +41,7 @@ plt.ioff()
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final_no_noise_prior_coherence/'
+sfigroot = '~/ts/img_cc_final_no_noise_prior_coherence_3/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
@@ -96,6 +96,8 @@ sigma_type = None
 
 # Choose the shape of the bump
 bump_shape = 'lognormal'
+
+coherence_wsize = 3
 
 
 for iwave, wave in enumerate(waves):
@@ -187,7 +189,7 @@ for iwave, wave in enumerate(waves):
 
                 # Load the coherence
                 ifilename = 'OUT.' + region_id
-                pkl_file_location = os.path.join(pkl_location, ifilename + '.coherence.' + neighbour + '.pickle')
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.coherence.' + str(coherence_wsize) + '.' + neighbour + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
