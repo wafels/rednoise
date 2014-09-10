@@ -41,14 +41,14 @@ plt.ioff()
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
+sfigroot = '~/ts/img_cc_final_no_noise_prior_coherence_3/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
 regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
-regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
+#regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -98,6 +98,8 @@ sigma_type = None
 bump_shape = 'lognormal'
 
 coherence_wsize = 3
+
+passnumber = '1'
 
 
 for iwave, wave in enumerate(waves):
@@ -215,12 +217,6 @@ for iwave, wave in enumerate(waves):
                 spearman_ds = pickle.load(pkl_file)
                 pkl_file.close()
 
-                # Load the correlative measures 2
-                ifilename = 'OUT.' + region_id
-                pkl_file_location = os.path.join(pkl_location, ifilename + '.correlative2.' + neighbour + '.npy')
-                print('Loading ' + pkl_file_location)
-                ccmax = np.load(pkl_file_location)
-
                 # Pick which definition of the power to use
                 pwr_ff = pwr_ff_mean
 
@@ -231,7 +227,6 @@ for iwave, wave in enumerate(waves):
                 print 'Number of pixels ', npixels
                 #print 'Mode, maximum cross correlation coefficient = %f' % (ccmax_ds.mode)
                 dependence_coefficient = coher_mean
-                dependence_coefficient = ccmax_ds.mean
                 # Independence coefficient - how independent is one pixel compared
                 # to its nearest neighbour?
                 # independence_coefficient = 1.0 - 0.5 * (np.abs(ccc0) + np.abs(ccclag))
@@ -265,9 +260,8 @@ for iwave, wave in enumerate(waves):
                 independence_coefficient = 1.0 - np.abs(dependence_coefficient)
                 print 'Average independence coefficient ', np.mean(independence_coefficient)
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
-                npixels_effective = get_kde_most_probable(ccmax, npixels)
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
-                print npixels_effective
+                #print npixels_effective
                 sigma_of_distribution = fix_nonfinite(std_dev)
                 sigma_for_mean = sigma_of_distribution / np.sqrt(npixels_effective)
 
@@ -304,165 +298,42 @@ for iwave, wave in enumerate(waves):
                 normed_freqs = freqs / xnorm
                 nfreq = freqs.size
 
-                #
-                # Model 0 - the power law
-                #
-                # Two passes - first pass to get an initial estimate of the
-                # spectrum, and a second to get a better estimate using the
-                # sigma mean
-                prettyprint('Model fitting and results')
-                for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
-                    tau = 1.0 / (sigma ** 2)
-                    pwr = pwr_ff
-                    if jjj == 0:
-                        pymcmodel0 = pymcmodels2.Log_splwc(normed_freqs, pwr, sigma)
-                    else:
-                        pymcmodel0 = pymcmodels2.Log_splwc(normed_freqs, pwr, sigma, init=A0)
-                    passnumber = str(jjj)
+                # Load the results
+                pkl_file_location = pkl_location + '/M0_maximum_likelihood.' + region_id + '.pickle'
+                pkl_file = open(pkl_file_location, 'rb')
+                A0 = pickle.load(pkl_file)
+                fitsummarydata = pickle.load(pkl_file)
+                pwr = pickle.load(pkl_file)
+                sigma = pickle.load(pkl_file)
+                M0_bf = pickle.load(pkl_file)
+                pkl_file.close()
 
-                    # Initiate the sampler
-                    dbname0 = os.path.join(pkl_location, 'MCMC.M0.' + passnumber + region_id + obstype)
-                    M0 = pymc.MCMC(pymcmodel0, db='pickle', dbname=dbname0)
+                db_M0 = pymc.database.pickle.load(os.path.join(pkl_location, 'MCMC.M0.' + str(passnumber) + region_id + obstype))
+                M0 = pymc.MCMC(pymcmodels2.Log_splwc(normed_freqs, pwr, sigma), db=db_M0)
 
-                    # Run the sampler
-                    print('M0 : pass %i : Running simple power law model' % (jjj + 1))
-                    M0.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
-                    M0.db.close()
-
-                    # Now run the MAP
-                    map_M0 = pymc.MAP(pymcmodel0)
-                    print(' ')
-                    print('M0 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
-                    map_M0.fit(method='fmin_powell')
-
-                    # Get the variables and the best fit
-                    A0 = get_variables_M0(map_M0)
-                    M0_bf = get_spectrum_M0(normed_freqs, A0)
-
-                    # Plot the traces
-                    write_plots(M0, region_id, obstype, savefig, 'M0', passnumber, bins=40, extra_factors=[xnorm])
-
-                    # Get the likelihood at the maximum
-                    #likelihood0_data = map_M0.logp_at_max
-                    l0_data = get_likelihood_M0(map_M0, normed_freqs, pwr, sigma, obstype)
-                    l0_data_logp = get_log_likelihood(pwr, M0_bf, sigma)
-
-                    # Get the chi-squared value
-                    chi0 = get_chi_M0(map_M0, normed_freqs, pwr, sigma)
-                    print('M0 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi0))
-                    print('   : variables ', A0)
-                    print('   : estimate log likelihood = %f' % (l0_data_logp))
-
-                #
-                # Get an estimate of where the Gaussian bump might be for the
-                # second model
+                pkl_file_location = pkl_location + '/M1_maximum_likelihood.' + region_id + '.pickle'
+                pkl_file = open(pkl_file_location, 'rb')
+                A1 = pickle.load(pkl_file)
+                fitsummarydata = pickle.load(pkl_file)
+                pwr = pickle.load(pkl_file)
+                sigma = pickle.load(pkl_file)
+                M1_bf = pickle.load(pkl_file)
+                pkl_file.close()
                 #
                 # Frequency range we will consider for the bump
                 physical_bump_frequency_limits = np.asarray([1.0 / 10000.0, 1.0 / 100.0])
                 bump_frequency_limits = physical_bump_frequency_limits / xnorm
                 log_bump_frequency_limits = np.log(bump_frequency_limits)
 
-                where_we_want_to_examine = np.asarray([1.0 / 1000.0, 1.0 / 100.0]) / xnorm
-                wwwte_loc_lo = normed_freqs >= where_we_want_to_examine[0]
-                wwwte_loc_hi = normed_freqs <= where_we_want_to_examine[1]
-                # Get where there is excess unexplained power
-                positive_difference = pwr - M0_bf > 0
-                # Combine all the conditions to get where the bump might be
-                bump_loc = positive_difference * wwwte_loc_lo * wwwte_loc_hi
-
-                # If there are sufficient points, get an estimate of the bump
-                if bump_loc.sum() >= 10:
-                    x_bump_estimate = normed_freqs[bump_loc]
-                    y_bump_estimate = (pwr - M0_bf)[bump_loc]
-                    if bump_shape == 'lognormal':
-                        g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_CF, np.log(x_bump_estimate), y_bump_estimate)
-                    if bump_shape == 'normal':
-                        p0_bump_estimate = [np.log(np.max(y_bump_estimate)), np.log(x_bump_estimate[np.argmax(y_bump_estimate)]), 0.0]
-                        g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_allexp_CF, x_bump_estimate, y_bump_estimate, p0=p0_bump_estimate)
-                    if g_estimate[0] > pymcmodels2.glimits['gaussian_amplitude'][1]:
-                        g_estimate[0] = pymcmodels2.glimits['gaussian_amplitude'][1] - 0.000001
-                    A1_estimate = [A0[0], A0[1], A0[2], g_estimate[0], g_estimate[1], g_estimate[2]]
-                else:
-                    A1_estimate = None
-                print "Fitting bump with " + bump_shape
-                print "Second model estimate : ", A1_estimate
-                print "Physical bump frequency position limits : ", physical_bump_frequency_limits
-                print "Normalized log bump frequency limits : ", log_bump_frequency_limits
-
-                #
-                # Second model - power law with Gaussian bumps
-                #
-                for jjj, sigma in enumerate((sigma_of_distribution, sigma_for_mean)):
-                    tau = 1.0 / (sigma ** 2)
-                    pwr = pwr_ff
-                    if jjj == 0:
-                        if bump_shape == 'lognormal':
-                            pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pwr, sigma, init=A1_estimate, log_bump_frequency_limits=log_bump_frequency_limits)
-                            if A1_estimate[4] < log_bump_frequency_limits[0]:
-                                A1_estimate[4] = log_bump_frequency_limits[0]
-                                print '!! Estimate fit exceeded lower limit of log_bump_frequency_limits. Resetting to limit'
-                            if A1_estimate[4] > log_bump_frequency_limits[1]:
-                                A1_estimate[4] = log_bump_frequency_limits[1]
-                                print '!! Estimate fit exceeded upper limit of log_bump_frequency_limits. Resetting to limit'
-                        if bump_shape == 'normal':
-                            pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2_allexp(normed_freqs, pwr, sigma, init=A1_estimate, normalized_bump_frequency_limits=log_bump_frequency_limits)
-                    else:
-                        if A1[4] < log_bump_frequency_limits[0]:
-                            A1[4] = log_bump_frequency_limits[0]
-                            print 'First pass fit exceeded lower limit of log_bump_frequency_limits'
-                        if A1[4] > log_bump_frequency_limits[1]:
-                            A1[4] = log_bump_frequency_limits[1]
-                            print 'First pass fit exceeded upper limit of log_bump_frequency_limits'
-                        if bump_shape == 'lognormal':
-                            pymcmodel1 = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pwr, sigma, init=A1, log_bump_frequency_limits=log_bump_frequency_limits)
-                        if bump_shape == 'normal':
-                            pymcmodel1 = pymcmodels2.Log_splwc_AddNormalBump2_allexp(normed_freqs, pwr, sigma, init=A1, normalized_bump_frequency_limits=log_bump_frequency_limits)
-
-                    # Define the pass number
-                    passnumber = str(jjj)
-
-                    # Initiate the sampler
-                    dbname1 = os.path.join(pkl_location, 'MCMC.M1.' + passnumber + region_id + obstype)
-                    M1 = pymc.MCMC(pymcmodel1, db='pickle', dbname=dbname1)
-
-                    # Run the sampler
-                    print('M1 : pass %i : Running power law plus bump model' % (jjj + 1))
-                    M1.sample(iter=itera, burn=burn, thin=thin, progress_bar=True)
-                    M1.db.close()
-
-                    # Now run the MAP
-                    map_M1 = pymc.MAP(pymcmodel1)
-                    print(' ')
-                    print('M1 : pass %i : fitting to find the maximum likelihood' % (jjj + 1))
-                    map_M1.fit(method='fmin_powell')
-
-                    # Get the variables and the best fit
-                    A1 = get_variables_M1(map_M1)
-                    M1_bf = get_spectrum_M1(normed_freqs, A1, bump_shape)
-
-                    # Plot the traces
-                    write_plots(M1, region_id, obstype, savefig, 'M1', passnumber, bins=40, extra_factors=[xnorm])
-
-                    # Get the likelihood at the maximum
-                    #likelihood1_data = map_M1.logp_at_max
-                    l1_data = get_likelihood_M1(map_M1, normed_freqs, pwr, sigma, bump_shape)
-                    l1_data_logp = get_log_likelihood(pwr, M1_bf, sigma)
-
-                    # Get the chi-squared value
-                    chi1 = get_chi_M1(map_M1, normed_freqs, pwr, sigma, bump_shape)
-                    print('M1 : pass %i : reduced chi-squared = %f' % (jjj + 1, chi1))
-                    print('   : variables ', A1)
-                    print('   : estimate log likelihood = %f' % (l1_data_logp))
-
-                # Store these results
-                fitsummarydata = FitSummary(map_M0, l0_data, chi0, map_M1, l1_data, chi1)
+                db_M1 = pymc.database.pickle.load(os.path.join(pkl_location, 'MCMC.M1.' + str(passnumber) + region_id + obstype))
+                M1 = pymc.MCMC(pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pwr, sigma, log_bump_frequency_limits=log_bump_frequency_limits), db=db_M1)
 
                 # Print out these results
                 print ' '
                 print('M0 likelihood = %f, M1 likelihood = %f' % (fitsummarydata["M0"]["maxlogp"], fitsummarydata["M1"]["maxlogp"]))
-                print('M0 likelihood (explicit calculation) = %f, M1 likelihood (explicit calculation) = %f' % (l0_data_logp, l1_data_logp))
+                #print('M0 likelihood (explicit calculation) = %f, M1 likelihood (explicit calculation) = %f' % (l0_data_logp, l1_data_logp))
                 print 'T_lrt for the initial data = %f' % (fitsummarydata["t_lrt"])
-                print 'T_lrt for the initial data (explicit calculation) = %f' % (T_LRT(l0_data_logp, l1_data_logp))
+                #print 'T_lrt for the initial data (explicit calculation) = %f' % (T_LRT(l0_data_logp, l1_data_logp))
                 print 'AIC_{0} - AIC_{1} = %f' % (fitsummarydata["dAIC"])
                 print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
                 print 'M0: chi-squared = %f' % (fitsummarydata["M0"]["chi2"])
@@ -504,7 +375,7 @@ for iwave, wave in enumerate(waves):
                 print '++++++++++++++++++++++++'
 
                 # Plot
-                title = 'AIA ' + wave + " : " + sunday_name[region]
+                title = 'AIA ' + wave + " : " + sunday_name[region] 
                 xvalue = freqfactor * freqs
                 fivemin = freqfactor * 1.0 / 300.0
                 threemin = freqfactor * 1.0 / 180.0
@@ -616,6 +487,7 @@ for iwave, wave in enumerate(waves):
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
+                print(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.close('all')
 
                 # -------------------------------------------------------------
@@ -634,8 +506,8 @@ for iwave, wave in enumerate(waves):
                 plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k' )
 
                 # Plot the bump limits
-                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
-                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+                #plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
+                #plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
 
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8)
@@ -660,8 +532,8 @@ for iwave, wave in enumerate(waves):
                 plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k')
 
                 # Plot the bump limits
-                plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
-                plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
+                #plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
+                #plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
 
                 # Complete the plot
                 plt.xlabel('log10(frequency (Hz))')
@@ -701,8 +573,8 @@ for iwave, wave in enumerate(waves):
                 plt.axvline(threemin, label='3 mins.', linestyle='-.', color='k')
 
                 # Plot the bump limits
-                plt.axvline(physical_bump_frequency_limits[0], label='bump center position limit', linestyle=':' ,color='k')
-                plt.axvline(physical_bump_frequency_limits[1], linestyle=':' ,color='k')
+                #plt.axvline(physical_bump_frequency_limits[0], label='bump center position limit', linestyle=':' ,color='k')
+                #plt.axvline(physical_bump_frequency_limits[1], linestyle=':' ,color='k')
 
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8)
@@ -719,8 +591,8 @@ for iwave, wave in enumerate(waves):
                 plt.axhline(1.0, label='expected by normality', color='r')
 
                 # Plot the bump limits
-                plt.axvline(physical_bump_frequency_limits[0], label='bump center position limit', linestyle=':' ,color='k')
-                plt.axvline(physical_bump_frequency_limits[1], linestyle=':' ,color='k')
+                #plt.axvline(physical_bump_frequency_limits[0], label='bump center position limit', linestyle=':' ,color='k')
+                #plt.axvline(physical_bump_frequency_limits[1], linestyle=':' ,color='k')
 
                 # Complete the plot and save it
                 plt.legend(framealpha=0.5, fontsize=8)
@@ -735,249 +607,3 @@ for iwave, wave in enumerate(waves):
                 qqplot(nmzd.flatten(), line='45', fit=True)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.qqplot.png')
                 plt.close('all')
-
-                ###############################################################
-                # Save the model fitting information
-                pkl_write(pkl_location,
-                      'M0_maximum_likelihood.' + region_id + '.pickle',
-                      (A0, fitsummarydata, pwr, sigma, M0_bf))
-
-                pkl_write(pkl_location,
-                      'M1_maximum_likelihood.' + region_id + '.pickle',
-                      (A1, fitsummarydata, pwr, sigma, M1_bf))
-
-                # M1 residuals - saved as CSV so they can be used by other
-                # analysis environments
-                csv_timeseries_write(os.path.join(os.path.expanduser(scsv)),
-                                     '.'.join((ident, 'M1_residuals.csv')),
-                                     (freqs, M1_residuals))
-
-                # M1 estimated deviance- saved as CSV so they can be used by
-                # other analysis environments
-                csv_timeseries_write(os.path.join(os.path.expanduser(scsv)),
-                                     '.'.join((ident, 'sigma_for_mean.csv')),
-                                     (freqs, sigma_for_mean))
-
-                """
-                ###############################################################
-                # Second part - model selection through posterior predictive
-                # checking.
-                prettyprint('Model selection through posterior predictive checking - T_LRT')
-                # Results Storage
-                good_results = []
-                bad_results = []
-
-                # Number of successful comparisons
-                nfound = 0
-
-                # Number of posterior samples available
-                ntrace = np.size(M0.trace('power_law_index')[:])
-
-                # main loop
-                rthis = 0
-                rtried = []
-                while nfound < nsample:
-                    # random number
-                    rthis = np.random.randint(0, high=ntrace)
-                    while rthis in rtried:
-                        rthis = np.random.randint(0, high=ntrace)
-                    rtried.append(rthis)
-                    #print ' '
-                    #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
-
-                    # Generate test data under hypothesis 0
-                    pred = M0.trace('predictive')[rthis]
-
-                    # Fit the test data using hypothesis 0 and calculate a likelihood
-                    #M0_pp = pymcmodels2.Log_splwc(normed_freqs, pred, sigma)
-                    #map_M0_pp = pymc.MAP(M0_pp)
-                    try:
-                        #print('M0: fitting to find the maximum likelihood')
-                        #
-                        # Use the MAP functionality of PyMC
-                        #
-                        #map_M0_pp.fit(method='fmin_powell')
-                        #map_M0_pp.fit(method='fmin_powell')
-                        #l0 = get_likelihood_M0(map_M0_pp, normed_freqs, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        fit0, _ = curve_fit(rnspectralmodels.Log_splwc_CF, normed_freqs, pred, sigma=sigma, p0=A0)
-                        fit0_bf = get_spectrum_M0(normed_freqs, fit0)
-                        l0 = get_log_likelihood(pred, fit0_bf, sigma)
-                    except:
-                        #print('Error fitting M0 to sample.')
-                        l0 = None
-
-                    # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pred, sigma)
-                    #map_M1_pp = pymc.MAP(M1_pp)
-                    try:
-                        #print('M1: fitting to find the maximum likelihood')
-                        #
-                        # Use the MAP functionality of PyMC
-                        #
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, normed_freqs, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        if bump_shape == 'lognormal':
-                            fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
-                        if bump_shape == 'normal':
-                            fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
-                        fit1_bf = get_spectrum_M1(normed_freqs, fit1)
-                        l1 = get_log_likelihood(pred, fit1_bf, sigma)
-                    except:
-                        #print('Error fitting M1 to sample.')
-                        l1 = None
-
-                    # Sort the results into good and bad.
-                    if (l0 != None) and (l1 != None):
-                        t_lrt_pred = T_LRT(l0, l1)
-                        if t_lrt_pred >= 0.0:
-                            fit_results = (rthis, l0, chi0, l1, chi1, t_lrt_pred)
-                            good_results.append(fit_results)
-                            nfound = nfound + 1
-                            #print('    T_lrt = %f' % (T_LRT(l0, l1)))
-                            if np.mod(nfound, 1000) == 0:
-                                plt.figure(1)
-                                plt.plot(xvalue, pred, label='predicted', color='k')
-                                plt.plot(xvalue, fit0_bf, label='M0 fit', color='b')
-                                plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
-                                plt.xlabel("log10(frequency)")
-                                plt.ylabel("log(power)")
-                                plt.legend(fontsize=8, framealpha=0.5)
-                                plt.title(title + " : pp check sample #%i" % (nfound))
-                                plt.savefig(savefig + obstype + '.posterior_predictive.sample.' + str(nfound) + '.png')
-                                plt.close('all')
-                        else:
-                            #print('! T_lrt = %f <0 ! - must be a bad fit' % (t_lrt_pred))
-                            bad_results.append((rthis, l0, chi0, l1, chi1, t_lrt_pred))
-                    else:
-                        #print('! Fitting algorithm fell down !')
-                        bad_results.append((rthis, l0, chi0, l1, chi1, None))
-
-                # Save the good and bad results and use a different program to plot the results
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_LRT.' + region_id + '.good.pickle',
-                          good_results)
-
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_LRT.' + region_id + '.bad.pickle',
-                          bad_results)
-
-                # Quick summary plots
-                t_lrt_data = fitsummarydata["t_lrt"]
-                t_lrt_distribution = np.asarray([z[5] for z in good_results])
-
-                pvalue = np.sum(t_lrt_distribution >= t_lrt_data) / (1.0 * nsample)
-                print('Posterior predictive p-value = %f' % (pvalue))
-
-                plt.figure(2)
-                plt.hist(t_lrt_distribution, bins=30)
-                plt.xlabel('LRT statistic')
-                plt.ylabel('Number found [%i samples]' % (nsample))
-                plt.title(title)
-                plt.axvline(t_lrt_data, color='k', label='p=%4.3f [$T_{LRT}=$%f]' % (pvalue, t_lrt_data))
-                plt.legend(fontsize=8)
-                plt.savefig(savefig + obstype + '.posterior_predictive.T_LRT.png')
-                plt.close('all')
-
-                ###############################################################
-                # Third part - model fitness through posterior predictive
-                # checking.
-                prettyprint('Model checking through posterior predictive checking - T_SSE')
-                good_results2 = []
-                bad_results2 = []
-
-                # Number of successful comparisons
-                nfound2 = 0
-
-                # Number of posterior samples available
-                ntrace = np.size(M1.trace('power_law_index')[:])
-
-                # T_SSE for the data
-                t_sse_data = T_SSE(pwr_ff, M1_bf, sigma)
-                print 'T_SSE for the data = %f' % (t_sse_data)
-                # main loop
-                rthis = 0
-                rtried = []
-                while nfound2 < nsample:
-                    # random number
-                    rthis = np.random.randint(0, high=ntrace)
-                    while rthis in rtried:
-                        rthis = np.random.randint(0, high=ntrace)
-                    rtried.append(rthis)
-                    #print ' '
-                    #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
-
-                    # Generate test data under hypothesis 1
-                    pred = M1.trace('predictive')[rthis]
-
-                    # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pred, sigma)
-                    #map_M1_pp = pymc.MAP(M1_pp)
-                    try:
-                        #print('M1: fitting to find the maximum likelihood')
-                        #
-                        # Use the MAP functionality of PyMC
-                        #
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, normed_freqs, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
-                        fit1_bf = get_spectrum_M1(normed_freqs, fit1)
-                        t_sse_pred = T_SSE(pred, fit1_bf, sigma)
-                    except:
-                        print('Error fitting M1 to sample.')
-                        t_sse_pred = None
-
-                    # Sort the results into good and bad.
-                    if (t_sse_pred != None):
-                        print t_sse_pred, t_sse_data
-                        fit_results = (rthis, t_sse_pred)
-                        good_results2.append(fit_results)
-                        nfound2 = nfound2 + 1
-                        if np.mod(nfound2, 1000) == 0:
-                            plt.figure(1)
-                            plt.plot(xvalue, pred, label='predicted', color='k')
-                            plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
-                            plt.xlabel("log10(frequency)")
-                            plt.ylabel("log(power)")
-                            plt.legend(fontsize=8, framealpha=0.5)
-                            plt.title(title + " : pp check sample #%i" % (nfound2))
-                            plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.sample.' + str(nfound2) + '.png')
-                            plt.close('all')
-                    else:
-                        bad_results2.append((rthis, t_sse_pred))
-
-                # Save the good and bad results and use a different program to plot the results
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_SSE.' + region_id + '.good.pickle',
-                          good_results2)
-
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_SSE.' + region_id + '.bad.pickle',
-                          bad_results2)
-
-                # Quick summary plots
-                t_sse_distribution = np.asarray([z[1] for z in good_results2])
-
-                pvalue = np.sum(t_sse_distribution >= t_sse_data) / (1.0 * nsample)
-                print('Posterior predictive p-value = %f' % (pvalue))
-
-                plt.figure(2)
-                plt.hist(t_sse_distribution, bins=30)
-                plt.xlabel('SSE statistic')
-                plt.ylabel('Number found [%i samples]' % (nsample))
-                plt.title(title)
-                plt.axvline(t_sse_data, color='k', label='p=%4.3f [$T_{SSE}=$%f]' % (pvalue, t_sse_data))
-                plt.legend(fontsize=8)
-                plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.png')
-                plt.close('all')
-                """

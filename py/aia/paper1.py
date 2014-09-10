@@ -6,6 +6,7 @@ import os
 import csv
 import cPickle as pickle
 import numpy as np
+import pymcmodels2
 
 
 # Prints a title, with space before it and an underline
@@ -167,3 +168,19 @@ class descriptive_stats:
             sorted_data = np.sort(data)
             self.cred[cilevel] = [sorted_data[np.rint(lo * self.n)],
                                   sorted_data[np.rint(hi * self.n)]]
+
+
+def get_kde_most_probable(data, npixels):
+    # Use the independence coefficient distribution to estimate the
+    # number of pixels.  Answers will therefore depend on this prior.
+    noise_prior = {"npixel_model": 1.0 + (1.0 - data) * (npixels - 1),
+                   "npixels": npixels}
+
+    # Use the KDE estimate to calculate the most probable number
+    # of pixels.  This value is used to calculate the maximum
+    # likelihood fits
+    kde = pymcmodels2.calculate_kde(noise_prior["npixel_model"], None)
+    kde_grid = np.linspace(1, npixels, 1000)
+    kde_pdf = kde(kde_grid)
+    mostprobable_npx = kde_grid[np.argmax(kde_pdf)]
+    return mostprobable_npx

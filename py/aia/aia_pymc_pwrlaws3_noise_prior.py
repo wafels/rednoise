@@ -50,7 +50,7 @@ waves = ['171', '193']
 regions = ['sunspot', 'qs', 'moss', 'loopfootpoints', ]
 windows = ['hanning']
 manip = 'relative'
-neighbour = 'nearest'
+neighbour = 'random'
 
 """
 #
