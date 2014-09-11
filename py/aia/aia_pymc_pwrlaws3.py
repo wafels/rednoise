@@ -41,14 +41,14 @@ plt.ioff()
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
+sfigroot = '~/ts/img_cc_final_ccmax_mean/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
-regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
+regions = ['moss', 'loopfootpoints', 'qs', 'sunspot']
+#regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -59,7 +59,7 @@ neighbour = 'nearest'
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle/'
-sfigroot = '~/ts/img/'
+sfigroot = '~/ts/img_ccmax_mean/'
 scsvroot = '~/ts/csv/'
 corename = 'shutdownfun6_6hr'
 sunlocation = 'limb'
@@ -230,7 +230,7 @@ for iwave, wave in enumerate(waves):
                 prettyprint('%s: Pixel independence calculation' % (neighbour))
                 print 'Number of pixels ', npixels
                 #print 'Mode, maximum cross correlation coefficient = %f' % (ccmax_ds.mode)
-                dependence_coefficient = coher_mean
+                #dependence_coefficient = coher_mean
                 dependence_coefficient = ccmax_ds.mean
                 # Independence coefficient - how independent is one pixel compared
                 # to its nearest neighbour?
@@ -265,7 +265,7 @@ for iwave, wave in enumerate(waves):
                 independence_coefficient = 1.0 - np.abs(dependence_coefficient)
                 print 'Average independence coefficient ', np.mean(independence_coefficient)
                 npixels_effective = independence_coefficient * (npixels - 1) + 1
-                npixels_effective = get_kde_most_probable(ccmax, npixels)
+                #npixels_effective = get_kde_most_probable(ccmax, npixels)
                 print("Average effective number of independent observations = %f " % (np.mean(npixels_effective)))
                 print npixels_effective
                 sigma_of_distribution = fix_nonfinite(std_dev)
@@ -533,7 +533,7 @@ for iwave, wave in enumerate(waves):
                               "M1_mean": '$M_{2}$: posterior mean',
                               "M1_P1": r'posterior mean $P_{1}(\nu)$ component for $M_{2}$',
                               "M1_G": r'posterior mean $G(\nu)$ component for $M_{2}$',
-                              'M1: 95% low': r'$M_{1}$: 95\% credible interval',
+                              'M1: 95% low': r'$M_{1}$: 95% credible interval',
                               "5 minutes": '5 minutes',
                               "3 minutes": '3 minutes',
                               "bump_ratio": bump_ratio}

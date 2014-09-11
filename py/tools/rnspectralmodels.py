@@ -221,7 +221,7 @@ def Log_double_broken_power_law_with_constant_CF(f, a0, a1, a2, a3, a4):
 
 
 # ----------------------------------------------------------------------------
-# Power law plus Normal Bump 
+# Power law plus Normal Bump
 #
 def splwc_AddNormalBump2(f, a):
     """Power law with a constant, plus a Gaussian shaped bump.

@@ -182,10 +182,30 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
         plt.axvline(v95_hi, color='k', linestyle='--', linewidth=2, label='95% CI')
         plt.axvline(v68_lo, color='k', linestyle='-.', linewidth=2)
         plt.axvline(v68_hi, color='k', linestyle='-.', linewidth=2, label='68% CI')
+
+        # Generate quotes for the variables as described in the paper
+        formatting = '%0.2f'
         print '------------------------'
-        print v, '68%', v68_lo, v68_hi
-        print v, '95%', v95_lo, v95_hi
+        lower_difference_from_mean = v68_lo - mean
+        upper_difference_from_mean = v68_hi - mean
+        if v == 'gaussian_position':
+            print v, 'mean (mHz) = ' + formatting % (1000 * (10.0 ** mean))
+            print v, '68% lower difference from mean = ' + formatting % (1000 * (10.0 ** v68_lo) - 1000 * (10.0 ** mean))
+            print v, '68% upper difference from mean = ' + formatting % (1000 * (10.0 ** v68_hi) - 1000 * (10.0 ** mean))
+        elif v == 'gaussian_position' or v == 'power_law_norm':
+            print v, 'mean  = ' + formatting % (np.log10(mean))
+            print v, '68% lower difference from mean = ' + formatting % (np.log10(v68_lo) - np.log10(mean))
+            print v, '68% upper difference from mean = ' + formatting % (np.log10(v68_hi) - np.log10(mean))
+        else:
+            print v, 'mean = ' + formatting % (mean)
+            print v, '68% lower difference from mean = ' + formatting % (lower_difference_from_mean)
+            print v, '68% upper difference from mean = ' + formatting % (upper_difference_from_mean)
         print '------------------------'
+        print '-'
+        print 'mean', mean
+        print '68% ', v68_lo, v68_hi
+        print '95% ', v95_lo, v95_hi
+        print '-'
 
         plt.text(mean, 0.90 * ypos, ' %f' % (mean), fontsize=fontsize, bbox=bbox)
         plt.text(v95_lo, 0.25 * ypos, ' %f' % (v95_lo), fontsize=fontsize, bbox=bbox)
