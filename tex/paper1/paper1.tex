@@ -1041,15 +1041,19 @@ the case for the Fourier power spectra studied here.  Hence the value
 of $N$ cannot be set to the number of pixels in a region.
 
 Hence, the number of effectively independent pixels time-series must
-be calculated.  First, a pair of randomly chosen next-nearest neighbor
+be calculated. First, a pair of randomly chosen next-nearest neighbor
 pixels are selected from the region.  Next nearest neighbor pixels are
 chosen as close physical proximity is most likely to express the
 strongest interdependence.  Next, the cross correlation $c(\tau)$
 function between two randomly chosen next-nearest neighbor pixels is
 calculated.  The cross correlation coefficient measures the linear
 dependence of two time series $X(t)$ and $Y(t \pm \tau)$ at different
-lags $\tau$.  This is used to define a coefficient of independence
-between the neighbors,
+lag {\bf times $\tau$.  This analysis assumes that the linear
+  dependence as measured by the cross-correlation coefficient
+  estimates the actual dependence between time-series.}
+
+The cross correlation coefficient is used to define a coefficient of
+independence between the neighbors,
 \begin{equation}
 \label{eqn:ind}
 \rho = 1 - \max|c(\tau)|.
@@ -1057,7 +1061,7 @@ between the neighbors,
 When $\rho$ is 1, the cross-correlation coefficient is zero, and there
 is no measurable linear dependence between neighboring time series.
 When $\rho$ is zero, the cross correlation coefficient is $\pm 1$, and
-the two time-series are linearly dependent on each other.  {\bf This
+the two time-series are linearly dependent on each other.  This
 procedure is repeated 10,000 times.  For each value of $\rho$ found,
 the effective number of pixels $N_{eff}$ is defined as
 values is defined as
@@ -1065,15 +1069,9 @@ values is defined as
 \label{eqn:nind}
 N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
 \end{equation}
-The probability density function $p\left(N_{eff}\right)$ is found via
-a kernel density estimation technique \cite{???} applied to the
-distribution of $N_{eff}$ values found by the procedure above.  The
-probability density functions for $N_{eff}$ for each wavelength and
-region are shown in Figure \ref{???}.  The estimated probability
-density function $p\left(N_{eff}\right)$ is included as a prior in the
-posterior.
+where $\hat{\rho}$ is the arithmetic mean of the values of $\rho$ found.
 
-}
+
 \subsection{Model fitting and selection}
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
 geometric mean power spectra shown in Figures \ref{fig:fit171193}.  A
@@ -1133,7 +1131,7 @@ and 2 to the data, and is described below.
   $\sigma_{original, j}$ are large it allows the fitting algorithm to
   converge to an approximate fit solution.
 \item The posterior is formed by multiplying the likelihood (equation
-  \ref{eqn:likelihood}) by the priors for $A$, $n$, $C$ and $N_{eff}$
+  \ref{eqn:likelihood}) by the priors for $A$, $n$, and $C$
   (Table \ref{tab:priors}).  The MCMC sampler is run to fit Model 1 with
   $\sigma_{j} = \sigma_{original, j}/sqrt{N_{eff}}$, seeded with
   estimated parameter values from step 1.  This generates a better
@@ -1145,19 +1143,19 @@ and 2 to the data, and is described below.
   estimate the model parameters of $G(\nu)$.  This is done by
   (least-squares) fitting $G(\nu)$ to the positive residuals in the
   frequency range 0.1 - 10 mHz.
-\item The MCMC sampler is run to fit Model 1,2 assuming $\sigma_{j} =
+\item The MCMC sampler is run to fit Model 2 assuming $\sigma_{j} =
   \sigma_{original, j}$, seeded with the mean parameter values of
   Model 1 from step 2 and the estimated $G(\nu)$ model parameters from
   step 3.
 \item The posterior is formed by multiplying the likelihood (equation
-  \ref{eqn:likelihood}) by all the priors in Table \ref{tab:priors}.
+  \ref{eqn:likelihood}) by all the priors for Model 2 (Table \ref{tab:priors}).
   The MCMC sampler is run to fit Model 2 with $\sigma_{j} =
   \sigma_{original, j}/\sqrt{N_{eff}}$, seeded with estimated
   parameter values from step 4.  The resulting parameter estimates are
   given by the mean values of marginal probability distribution
   functions, and are the final estimates for Model 2.
 \end{enumerate}
-Models are selected using the Akaike and Bayesian Information Criteria
+Models are selected using the Akaike Information Criteria
 \citep{2007MNRAS.377L..74L}.  Conveniently, these quantities are also
 calculated by the PyMC package used to perform the MCMC sampling.  The
 68\% credible intervals for the parameters are quoted in Table
