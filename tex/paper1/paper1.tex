@@ -251,20 +251,21 @@ coherence of the oscillatory signal is the key identifier of a wave
 process.
 
 All these detections algorithms, and many detections in the literature
-make either the explicit or implicit {\bf modeling} assumption that
-the observed time-series consists of a background trend of some kind
-and at least approximately Gaussian-distributed noise.  {\bf The aim
-  of this paper is to investigate the nature of the Fourier power
-  spectrum in regions of interest to study of the coronal seismology,
-  thereby testing the assumption above}.  It is shown below, using
-data from the Atmospheric Imaging Assembly (AIA,
-\citealp{2012SoPh..275...17L}) on board the Solar Dynamics Observatory
-(SDO, \citealp{2012SoPh..275....3P}), that time-series of coronal
-emission may be better described by other models{\bf , based power-law
-  power spectra that are actually observed} .  These models, {\bf
-  based around \PL\ Fourier \PS}, have implications for the practice
-of coronal seismology, and may be indicative of the nature of the
-fundamental energy deposition that keeps the corona hot.
+make either the explicit or implicit assumption that the observed
+time-series consists of a background trend of some kind and
+(approximately) Gaussian-distributed noise which must be taken in to
+account in order to test for the presence of an oscillatiory signal.
+{\bf The aim of this paper is to investigate the nature of the Fourier
+  power spectrum in regions of interest to coronal seismology, to look
+  for evidence that the above assumption is appropriate.  Data from
+  the Atmospheric Imaging Assembly (AIA,
+  \citealp{2012SoPh..275...17L}) on board the Solar Dynamics
+  Observatory (SDO, \citealp{2012SoPh..275....3P}) is used.  It is
+  shown that time-series of coronal emission have power-law power
+  spectra, at least approximately.}  The \PL\ \PS\ nature of coronal
+emission has implications for coronal seismology, and may be
+indicative of the nature of the fundamental energy deposition that
+keeps the corona hot.
 
 Section \ref{sec:obs} describes the observations used, while Section
 \ref{sec:anal} describes the method of analysis employed and presents
@@ -1041,19 +1042,19 @@ the case for the Fourier power spectra studied here.  Hence the value
 of $N$ cannot be set to the number of pixels in a region.
 
 Hence, the number of effectively independent pixels time-series must
-be calculated. First, a pair of randomly chosen next-nearest neighbor
-pixels are selected from the region.  Next nearest neighbor pixels are
-chosen as close physical proximity is most likely to express the
-strongest interdependence.  Next, the cross correlation $c(\tau)$
-function between two randomly chosen next-nearest neighbor pixels is
-calculated.  The cross correlation coefficient measures the linear
-dependence of two time series $X(t)$ and $Y(t \pm \tau)$ at different
-lag {\bf times $\tau$.  This analysis assumes that the linear
-  dependence as measured by the cross-correlation coefficient
-  estimates the actual dependence between time-series.}
-
-The cross correlation coefficient is used to define a coefficient of
-independence between the neighbors,
+be calculated. {\bf The dependence of pixels on each other is
+  calculated using the following modeling assumptions.}  First, a pair
+of randomly chosen next-nearest neighbor pixels are selected from the
+region.  Next nearest neighbor pixels are chosen as close physical
+proximity is most likely to express the strongest interdependence.
+Next, the cross correlation $c(\tau)$ function between two randomly
+chosen next-nearest neighbor pixels is calculated.  The cross
+correlation coefficient measures the linear dependence of two time
+series $X(t)$ and $Y(t \pm \tau)$ at different lag {\bf times $\tau$.
+  The assumption here is that the linear dependence as measured by the
+  cross-correlation coefficient estimates the actual dependence
+  between time-series.}  The cross correlation coefficient is used to
+define a coefficient of independence between the neighbors,
 \begin{equation}
 \label{eqn:ind}
 \rho = 1 - \max|c(\tau)|.
@@ -1069,7 +1070,8 @@ values is defined as
 \label{eqn:nind}
 N_{eff}= 1 + \hat{\rho}(N_{pixel}-1).
 \end{equation}
-where $\hat{\rho}$ is the arithmetic mean of the values of $\rho$ found.
+where $\hat{\rho}$ is the arithmetic mean of the values of $\rho$
+found.
 
 
 \subsection{Model fitting and selection}
