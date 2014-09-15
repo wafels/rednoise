@@ -153,8 +153,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171']
-regions = ['moss', 'loopfootpoints']
+waves = ['171', '193']
+regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 savefig_format = 'png'
@@ -679,14 +679,14 @@ for iwave, wave in enumerate(waves):
             # normalized power.  This is the geometric mean
 
             # Fit the function to the log of the mean power
-            answer2 = curve_fit(aia_plaw.LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
+            #answer2 = curve_fit(aia_plaw.LogPowerLawPlusConstant, x, logiobs, sigma=logsigma, p0=answer[0])
 
             # Get the fit parameters out and calculate the best fit
-            param2 = answer2[0]
-            bf2 = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
+            #param2 = answer2[0]
+            #bf2 = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param2[0], param2[1], param2[2]))
 
             # Error estimate for the power law index
-            nerr2 = np.sqrt(answer2[1][1, 1])
+            #nerr2 = np.sqrt(answer2[1][1, 1])
 
             # Create the histogram of all the log powers.  Histograms look normal-ish if
             # you take the logarithm of the power.  This suggests a log-normal distribution
@@ -722,7 +722,7 @@ for iwave, wave in enumerate(waves):
             plt.legend(fontsize=12, framealpha=0.5, handletextpad=0.0, loc=2)
             plt.ylim(power_distribution_details()['ylim'][0], power_distribution_details()['ylim'][1])
             plt.xlim(power_distribution_details()['xlim'][0], power_distribution_details()['xlim'][1])
-            plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))
+            plt.savefig(savefig + '.power_spectra_distributions.eps')
             plt.close('all')
 
             ###############################################################

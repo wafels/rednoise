@@ -468,8 +468,6 @@ for iwave, wave in enumerate(waves):
                 print 'M0: chi-squared = %f' % (fitsummarydata["M0"]["chi2"])
                 print 'M1: chi-squared = %f' % (fitsummarydata["M1"]["chi2"])
 
-                aaa = bbb
-
                 # Calculate the best fit bump contribution
                 if bump_shape == 'lognormal':
                     normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(normed_freqs), A1[3], A1[4], A1[5]))
@@ -528,7 +526,10 @@ for iwave, wave in enumerate(waves):
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
 
-                bump_ratio = r'$M_{2}$, $\max[G(\nu)/P_{1}(\nu)]$ = %4.2f at $\nu_{max}$ = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index])
+                bump_ratio = r'$M_{2}$, $\arg \max[G(\nu)/P_{1}(\nu)]$'
+                print('Maximum bump ratio = %f ' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index]))
+                print('Maximum bump ratio location (mHz) = %f ' % (freqfactor * freqs[max_bump_to_pl_ratio_index]))
+
                 if region == indexplot["region"] and wave == indexplot["wave"]:
                     labels = {"pwr_ff": 'average Fourier power spectrum',
                               "M0_mean": '$M_{1}$: posterior mean',
@@ -571,8 +572,8 @@ for iwave, wave in enumerate(waves):
                 #label = '$M_{2}$, maximum likelihood fit'
                 #ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
                 ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label=labels["M1_mean"], color = 'r')
-                plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label=labels['M1: 95% low'], color = 'r', linestyle='--')
-                plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), color = 'r', linestyle='--')
+                #plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label=labels['M1: 95% low'], color = 'r', linestyle='--')
+                #plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), color = 'r', linestyle='--')
 
                 # Plot each component of M1
                 ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')
@@ -602,14 +603,18 @@ for iwave, wave in enumerate(waves):
                 #yrange = ypos_max - ypos_min
                 #for yyy in range(0, ypos.size):
                 #    ypos[yyy] = np.exp(ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0)))
-                plt.text(xpos, 10.0 ** -4.0, dAIC_value_string)
-                plt.text(xpos, 10.0 ** -4.5, dBIC_value_string)
+                plt.text(xpos, 10.0 ** -3.8, dAIC_value_string)
+                #plt.text(xpos, 10.0 ** -4.5, dBIC_value_string)
                 #plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
-                #plt.text(xpos, ypos[0], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
-                #plt.text(xpos, ypos[1], '$M_{2}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
+
+                chi_M0_string = '%0.2f' % (fitsummarydata["M0"]["chi2"])
+                chi_M1_string = '%0.2f' % (fitsummarydata["M1"]["chi2"])
+                plt.text(xpos, 10.0 ** -4.3, '$M_{1}$: $\chi^{2}_{r} = ' + chi_M0_string + '$')
+                plt.text(xpos, 10.0 ** -4.8, '$M_{2}$: $\chi^{2}_{r} = ' + chi_M1_string + '$')
 
                 # Complete the plot and save it
-                plt.legend(framealpha=0.5, fontsize=10, labelspacing=0.2, loc=1)
+                if region == 'loopfootpoints':
+                    plt.legend(framealpha=0.5, fontsize=10, labelspacing=0.2, loc=1)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
