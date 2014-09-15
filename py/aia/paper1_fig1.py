@@ -165,7 +165,7 @@ for region in regions:
     plt.xlabel('frequency (%s)' % (freqfactor[1]))
     plt.ylabel('power (arb. units)')
     plt.title(sunday_name[region])
-    plt.legend(loc=3, fontsize=10, framealpha=0.5)
+    plt.legend(loc=3, fontsize=20, framealpha=0.5)
     #plt.tight_layout(0.2)
     plt.ylim(0.00000001, 100.0)
     # Create the branches in order

@@ -10,7 +10,7 @@ import tsutils
 import pickle
 from coalign_datacube import shift_datacube_layers
 from coalign_mapcube import clip_edges
-
+from skimage.transform import resize
 
 #
 # From a directory full of FITS files, return a datacube and a mapcube
@@ -26,7 +26,7 @@ def get_datacube(path, derotate=False, clip=False):
         # Get a mapcube
         maps = sunpy.Map(path + '/*.fits', cube=True)
         if derotate:
-            dc, ysrdisp, xsrdisp = derotated_datacube_from_mapcube(maps, clip=clip)
+            dc, ysrdisp, xsrdisp = derotated_datacube_from_mapcube(maps, clip=True)
         else:
             ysrdisp = None
             xsrdisp = None
@@ -66,7 +66,14 @@ def derotated_datacube_from_mapcube(maps, ref_index=0, clip=False):
     for t, m in enumerate(maps):
 
         # Store all the data in a 3-d numpy array
-        datacube[..., t] = m.data
+        zmin = np.min(m.data)
+        zzz = m.data - zmin
+        zzzmax = np.max(zzz)
+        zzz = zzz / zzzmax
+        newdata = resize(zzz, (ny, nx))
+        newdata = newdata * zzzmax
+        newdata = newdata + zmin
+        datacube[..., t] = newdata
 
         # Find the center of the field of view
         newx, newy = rot_hpc(ref_center['x'], ref_center['y'], ref_time,

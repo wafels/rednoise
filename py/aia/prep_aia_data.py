@@ -18,7 +18,7 @@ from sunpy.cm import cm
 import numpy as np
 import coalign_datacube
 import cubetools
-from paper1 import sunday_name
+from paper1 import sunday_name, label_sunday_name
 
 
 # input data
@@ -29,7 +29,7 @@ corename = 'shutdownfun3_6hr_3files_only'
 #corename = 'shutdownfun6_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-wave = '171'
+wave = '193'
 cross_correlate = True
 
 
@@ -221,6 +221,8 @@ plt.imshow(np.log(dc[:, :, ind]),
 plt.title('AIA ' + wave + ' (%s)' % (times["date_obs"][ind].strftime('%Y/%m/%d %H:%M:%S')))
 plt.ylabel('y (arcseconds)')
 plt.xlabel('x (arcseconds)')
+xoffset = 2
+yoffset = 5
 for region in regions:
     pixel_index = regions[region]
     y = pixel_index[0]
@@ -229,7 +231,10 @@ for region in regions:
     loc2 = px2arcsec(Q, [x[1], y[1]])
     aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='w', linewidth=3)
     aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='k', linewidth=1)
-    plt.text(loc2[0], loc2[1], sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5))
+    if region == 'moss':
+        plt.text(loc2[0] + xoffset, loc2[1] + yoffset, label_sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5), size=20)
+    else:
+        plt.text(loc2[0] + xoffset, loc1[1] - yoffset, label_sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5), size=20)
 plt.xlim(lower_left[0], upper_right[0])
 plt.ylim(lower_left[1], upper_right[1])
 plt.savefig(os.path.join(save_locations["image"], ident + '.eps'))

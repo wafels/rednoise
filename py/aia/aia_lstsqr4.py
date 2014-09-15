@@ -153,8 +153,8 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
+waves = ['171']
+regions = ['moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 savefig_format = 'png'
@@ -632,10 +632,10 @@ for iwave, wave in enumerate(waves):
             # manipulation and the window. Find the Fourier power
             # and do the fit.
             doriginal_ts_iobs = doriginal_ts.PowerSpectrum.ppower
-            answer_doriginal_ts = curve_fit(aia_plaw.LogPowerLawPlusConstant, x, np.log(doriginal_ts_iobs), p0=answer[0])
-            param_dts = answer_doriginal_ts[0]
-            bf_dts = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param_dts[0], param_dts[1], param_dts[2]))
-            nerr_dts = np.sqrt(answer_doriginal_ts[1][1, 1])
+            #answer_doriginal_ts = curve_fit(aia_plaw.LogPowerLawPlusConstant, x, np.log(doriginal_ts_iobs), p0=answer[0])
+            #param_dts = answer_doriginal_ts[0]
+            #bf_dts = np.exp(aia_plaw.LogPowerLawPlusConstant(x, param_dts[0], param_dts[1], param_dts[2]))
+            #nerr_dts = np.sqrt(answer_doriginal_ts[1][1, 1])
 
             # -------------------------------------------------------------
             # Plots of power spectra: arithmetic means of summed emission
@@ -652,7 +652,7 @@ for iwave, wave in enumerate(waves):
 
             # Arithmetic mean of all the time series, then analysis
             ax.plot(freqs, doriginal_ts_iobs, color='r', label='sum over region')
-            ax.plot(freqs, bf_dts, color='r', linestyle="--", label='fit to sum over region n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
+            #ax.plot(freqs, bf_dts, color='r', linestyle="--", label='fit to sum over region n=%4.2f +/- %4.2f' % (param_dts[1], nerr_dts))
 
             # Arithmetic mean of the power spectra from each pixel
             ax.plot(freqs, iobs, color='b', label='arithmetic mean of power spectra from each pixel (Erlang distributed)')
@@ -710,16 +710,16 @@ for iwave, wave in enumerate(waves):
                 findex.append(np.unravel_index(np.argmin(np.abs(thisf - freqs)), freqs.shape)[0])
             plt.figure(3)
             plt.xlabel('$\log_{10}(power)$')
-            plt.ylabel('prop. found at given frequency')
+            plt.ylabel('proportion found')
             plt.title(data_name)
             for jj, f in enumerate(findex):
                 xx = histogram_loc / np.log(10.0)
                 yy = hpwr[f, :]
                 gfit = curve_fit(aia_plaw.GaussianShape2, xx, yy)
                 #print gfit[0]
-                plt.plot(xx, yy, color=hcolor[jj], label='%7.2f %s, $\sigma=$ %3.2f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
+                plt.plot(xx, yy, color=hcolor[jj], label='%7.2f%s, $\sigma=$%3.2f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
                 #plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]), color=hcolor[jj], linestyle='--')
-            plt.legend(loc=2, fontsize=10, framealpha=0.5)
+            plt.legend(fontsize=12, framealpha=0.5, handletextpad=0.0, loc=2)
             plt.ylim(power_distribution_details()['ylim'][0], power_distribution_details()['ylim'][1])
             plt.xlim(power_distribution_details()['xlim'][0], power_distribution_details()['xlim'][1])
             plt.savefig(savefig + '.power_spectra_distributions.%s' % (savefig_format))

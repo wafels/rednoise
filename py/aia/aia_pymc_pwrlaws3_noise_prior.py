@@ -47,7 +47,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['sunspot', 'qs', 'moss', 'loopfootpoints', ]
+regions = ['moss', 'qs', 'moss', 'loopfootpoints', ]
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'random'
@@ -466,6 +466,8 @@ for iwave, wave in enumerate(waves):
                 print 'BIC_{0} - BIC_{1} = %f' % (fitsummarydata["dBIC"])
                 print 'M0: chi-squared = %f' % (fitsummarydata["M0"]["chi2"])
                 print 'M1: chi-squared = %f' % (fitsummarydata["M1"]["chi2"])
+
+                aaa = bbbdlsajkh
 
                 # Calculate the best fit bump contribution
                 if bump_shape == 'lognormal':

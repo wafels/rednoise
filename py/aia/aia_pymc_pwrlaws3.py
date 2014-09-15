@@ -468,6 +468,8 @@ for iwave, wave in enumerate(waves):
                 print 'M0: chi-squared = %f' % (fitsummarydata["M0"]["chi2"])
                 print 'M1: chi-squared = %f' % (fitsummarydata["M1"]["chi2"])
 
+                aaa = bbb
+
                 # Calculate the best fit bump contribution
                 if bump_shape == 'lognormal':
                     normalbump_BF = np.log(rnspectralmodels.NormalBump2_CF(np.log(normed_freqs), A1[3], A1[4], A1[5]))

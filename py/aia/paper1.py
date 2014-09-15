@@ -32,7 +32,7 @@ def log_10_product(x, pos):
 
 
 def power_distribution_details():
-    return {"xlim": [-8.0, 1.5], "ylim": [0.0, 0.12]}
+    return {"xlim": [-8.0, 0.5], "ylim": [0.0, 0.12]}
 
 
 def fit_details():
@@ -103,6 +103,16 @@ def tsDetails(nx, ny, nt):
 sunday_name = {'moss': 'moss',
                'qs': 'quiet Sun',
                'loopfootpoints': 'loop footpoints',
+               'loopfootpoints1': 'loop footpoints 1',
+               'loopfootpoints2': 'loop footpoints 2',
+               'highlimb': 'high limb',
+               'lowlimb': 'low limb',
+               'crosslimb': 'cross limb',
+               'sunspot': 'sunspot'}
+
+label_sunday_name = {'moss': 'moss',
+               'qs': 'quiet \n Sun',
+               'loopfootpoints': 'loop \n footpoints',
                'loopfootpoints1': 'loop footpoints 1',
                'loopfootpoints2': 'loop footpoints 2',
                'highlimb': 'high limb',
