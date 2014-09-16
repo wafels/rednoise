@@ -152,6 +152,10 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
     # Storage to track the 2-d plots
     vpairs = []
 
+    # Dump out results to file
+    savefilename = '%s_%s_%s_%s__%s__%s' % (savefig, model, str(passnumber), obstype, '1d', savetype)
+    f = open(savefilename + '.txt', 'w')
+
     # Go through all the variables
     for v in variables:
         # Fix the data, and get better labels
@@ -192,7 +196,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
             print v, 'mean (mHz) = ' + formatting % (1000 * (10.0 ** mean))
             print v, '68% lower difference from mean = ' + formatting % (1000 * (10.0 ** v68_lo) - 1000 * (10.0 ** mean))
             print v, '68% upper difference from mean = ' + formatting % (1000 * (10.0 ** v68_hi) - 1000 * (10.0 ** mean))
-        elif v == 'gaussian_position' or v == 'power_law_norm':
+        elif v == 'gaussian_position':
             print v, 'mean  = ' + formatting % (np.log10(mean))
             print v, '68% lower difference from mean = ' + formatting % (np.log10(v68_lo) - np.log10(mean))
             print v, '68% upper difference from mean = ' + formatting % (np.log10(v68_hi) - np.log10(mean))
@@ -217,6 +221,25 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
         plt.legend(framealpha=alpha, fontsize=fontsize, loc=3)
         plt.savefig(filename)
         plt.close('all')
+
+        f.write('------------------------' + '\n')
+        if v == 'gaussian_position':
+            f.write(v + ' ' + 'mean (mHz) = ' + formatting % (1000 * (10.0 ** mean)) + '\n')
+            f.write(v + ' ' + '68% lower difference from mean = ' + formatting % (1000 * (10.0 ** v68_lo) - 1000 * (10.0 ** mean)) + '\n')
+            f.write(v + ' ' + '68% upper difference from mean = ' + formatting % (1000 * (10.0 ** v68_hi) - 1000 * (10.0 ** mean)) + '\n')
+        elif v == 'gaussian_position':
+            f.write(v + ' ' + 'mean  = ' + formatting % (np.log10(mean)) + '\n')
+            f.write(v + ' ' + '68% lower difference from mean = ' + formatting % (np.log10(v68_lo) - np.log10(mean)) + '\n')
+            f.write(v + ' ' + '68% upper difference from mean = ' + formatting % (np.log10(v68_hi) - np.log10(mean)) + '\n')
+        else:
+            f.write(v + ' ' + 'mean = ' + formatting % (mean) + '\n')
+            f.write(v + ' ' + '68% lower difference from mean = ' + formatting % (lower_difference_from_mean) + '\n')
+            f.write(v + ' ' + '68% upper difference from mean = ' + formatting % (upper_difference_from_mean) + '\n')
+        f.write('-' + '\n')
+        f.write('mean ' + str(mean) + '\n')
+        f.write('68% ' + str(v68_lo) + ' ' + str(v68_hi) + '\n')
+        f.write('95% ' + str(v95_lo) + ' ' + str(v95_hi) + '\n')
+        f.write('-' + '\n')
 
         #
         # Do the 2-d variables
@@ -259,6 +282,7 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 plt.title(region_id + ' ' + obstype + ' %s' % (model))
                 plt.savefig(filename)
                 plt.close('all')
+    f.close()
 
 
 #
@@ -335,11 +359,11 @@ def fix_variables(variable, data, s, extra_factors):
 
     v68_lo, v68_hi = get_ci(data, ci=0.68)
 
-    if variable == 'power_law_norm' or variable == 'background':
+    if variable == 'power_law_norm' or variable == 'background' or variable == 'gaussian_amplitude':
         return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), f1(v68_lo), f1(v68_hi), ' $[\log_{10}(power)]$'
 
-    if variable == 'gaussian_amplitude':
-        return f3(data), f3(mean), f3(v95_lo), f3(v95_hi), f3(v68_lo), f3(v68_hi), ' $[power]$'
+#    if variable == 'gaussian_amplitude':
+#        return f1(data), f1(mean), f1(v95_lo), f1(v95_hi), f1(v68_lo), f1(v68_hi), ' $[power]$'
 
     if variable == 'gaussian_position':
         return f1(data, norm=extra_factors[0]),\

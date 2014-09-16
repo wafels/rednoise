@@ -47,8 +47,8 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
-regions = ['moss', 'loopfootpoints', 'qs', 'sunspot']
-#regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
+#regions = ['loopfootpoints']
+regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -74,7 +74,7 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 1
+testing = 10
 
 nsample = 5000 / testing
 
@@ -527,8 +527,6 @@ for iwave, wave in enumerate(waves):
                 ax.xaxis.set_major_formatter(xformatter)
 
                 bump_ratio = r'$M_{2}$, $\arg \max[G(\nu)/P_{1}(\nu)]$'
-                print('Maximum bump ratio = %f ' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index]))
-                print('Maximum bump ratio location (mHz) = %f ' % (freqfactor * freqs[max_bump_to_pl_ratio_index]))
 
                 if region == indexplot["region"] and wave == indexplot["wave"]:
                     labels = {"pwr_ff": 'average Fourier power spectrum',
@@ -549,7 +547,7 @@ for iwave, wave in enumerate(waves):
                               'M1: 95% low': None,
                               "5 minutes": None,
                               "3 minutes": None,
-                              "bump_ratio": bump_ratio}
+                              "bump_ratio": None}
 
                 ax.plot(xvalue, np.exp(pwr_ff), label=labels["pwr_ff"], color='k')
 
@@ -613,8 +611,8 @@ for iwave, wave in enumerate(waves):
                 plt.text(xpos, 10.0 ** -4.8, '$M_{2}$: $\chi^{2}_{r} = ' + chi_M1_string + '$')
 
                 # Complete the plot and save it
-                if region == 'loopfootpoints':
-                    plt.legend(framealpha=0.5, fontsize=10, labelspacing=0.2, loc=1)
+                #if region == 'loopfootpoints':
+                #    plt.legend(framealpha=0.5, fontsize=10, labelspacing=0.2, loc=1)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
@@ -624,6 +622,11 @@ for iwave, wave in enumerate(waves):
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.close('all')
+
+                f = open(savefig + obstype + '.' + passnumber + '.bump_ratio.pymc.txt', 'w')
+                f.write('Maximum bump ratio = %f ' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index]) + '\n')
+                f.write('Maximum bump ratio location (mHz) = %f ' % (freqfactor * freqs[max_bump_to_pl_ratio_index]) + '\n')
+                f.close()
 
                 # -------------------------------------------------------------
                 # Measures of the residuals
@@ -645,7 +648,7 @@ for iwave, wave in enumerate(waves):
                 plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
 
                 # Complete the plot and save it
-                plt.legend(framealpha=0.5, fontsize=8)
+                plt.legend(fontsize=10)
                 plt.xlabel('log10(frequency (Hz))')
                 plt.ylabel('fit residuals')
                 plt.title(title)
