@@ -47,6 +47,7 @@ corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['171', '193']
+#waves = ['193']
 #regions = ['loopfootpoints']
 regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
 windows = ['hanning']
@@ -74,7 +75,7 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 10
+testing = 1
 
 nsample = 5000 / testing
 
@@ -611,8 +612,8 @@ for iwave, wave in enumerate(waves):
                 plt.text(xpos, 10.0 ** -4.8, '$M_{2}$: $\chi^{2}_{r} = ' + chi_M1_string + '$')
 
                 # Complete the plot and save it
-                #if region == 'loopfootpoints':
-                #    plt.legend(framealpha=0.5, fontsize=10, labelspacing=0.2, loc=1)
+                if indexplot["region"] and wave == indexplot["wave"]:
+                    plt.legend(fontsize=10, labelspacing=0.2, loc=1)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
@@ -620,7 +621,8 @@ for iwave, wave in enumerate(waves):
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
-                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
+                #plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.eps')
                 plt.close('all')
 
                 f = open(savefig + obstype + '.' + passnumber + '.bump_ratio.pymc.txt', 'w')
