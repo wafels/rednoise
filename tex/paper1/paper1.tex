@@ -441,13 +441,13 @@ Fourier power.
   AIA 193\AA\ (right column).  Also shown are the posterior mean fits
   for model $M_{1}$ and $M_{2}$ (blue and red lines respectively; see
   Section \ref{sec:anal} and Appendix \ref{sec:app:ind} for more
-  detail).  The AIC and BIC describing the preference for model over
-  the other is also indicated in each plot.  The two components to
-  Model 2, $P_{1}(\nu)$ and $G(\nu)$ are also shown in green; the
-  location of the maximum of the $G(\nu)/P_{1}(\nu)$ ratio is
-  indicated by the green dotted line.  Model fit parameter values and
-  their 68\% credible intervals are quoted in Table
-  \ref{tab:parameters}.}
+  detail).  The AIC describing the preference for model over the other
+  is also indicated in each plot.  The reduced $chi^{2}_{r}$ statistic
+  for Model 1 and Model 2 are given. The two components to Model 2,
+  $P_{1}(\nu)$ and $G(\nu)$ are also shown in green; the location of
+  the maximum of the $G(\nu)/P_{1}(\nu)$ ratio is indicated by the
+  green dotted line.  Model fit parameter values and their 68\%
+  credible intervals are quoted in Table \ref{tab:parameters}.}
 \label{fig:fit171193}
 \end{figure}
 
@@ -555,10 +555,8 @@ Figure \ref{fig:fit171193} show the fit results of each model to the
 data.  For details on the fitting procedure, see Section
 \ref{sec:app:ind}.
 
-The two models are assessed for how well they describe the data in two
-different ways.
-
-Model selection is implemented using the Akaike Information Criterion
+{\bf The two models are assessed for how well they describe the data in two
+different ways. Model selection is implemented using the Akaike Information Criterion
 (AIC; \citealp*{akaike}).  The AIC measures the amount of information
 lost when fitting a model to data \citep{2000Ap&SS.271..213T}.  The
 AIC is defined as
@@ -569,14 +567,15 @@ where $L_{max}$ is the maximum likelihood achievable by the model, and
 $k$ is the number of parameters in the model ($k=3$ for Model 1, and
 $k=6$ for Model 2).  Model selection is guided by calculating
 $\triangle AIC = AIC_{1} - AIC_{2}$.  Positive values of $\triangle
-AIC$ indicate that model 2 loses less information compared to model 1,
-leading to a preference for model 2 over model 1
+AIC$ indicate that Model 2 loses less information compared to Model 1,
+leading to a preference for Model 2 over Model 1
 \citep{2007MNRAS.377L..74L}.  The AIC indicates that Model 2 is
-overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).
+overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).}
 
-The AIC reveals which out of a set of models is preferred.  It does
-not give an assessment of the goodness-of-fit of each model.
-Goodness-of-fit is estimated by calculating reduced-$\chi^{2}$ is calculated for both models.
+{\bf The AIC reveals which out of a set of models is preferred.  It
+  does not give an assessment of the goodness-of-fit of each model.
+  Goodness-of-fit is estimated by calculating reduced-$\chi^{2}$ is
+  calculated for both models.}
 
 
 
