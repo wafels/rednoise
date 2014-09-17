@@ -103,7 +103,7 @@ var = ts.data
 avg1, avg2 = (150.0, 400.0)
 
 # Significance level
-slev = 99
+slev = 95.0
 slevel = slev / 100.0
 
 # Standard deviation
@@ -274,7 +274,7 @@ bx.invert_yaxis()
 # Third sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
 cx = pylab.axes([0.77, 0.38, 0.2, fig_height], sharey=bx)
-cx.plot(glbl_signif/max_glbl_power, np.log2(period), 'k--', label='white noise')
+cx.plot(glbl_signif / max_glbl_power, np.log2(period), 'k--', label='white noise')
 #cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
 cx.plot(glbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
@@ -315,7 +315,7 @@ Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
         'k',
         alpha=0.3,
         hatch='x')
-Bx.set_title('d) Wavelet power spectrum compared to red noise [%i percent conf. level]' % (slev) )
+Bx.set_title('d) Wavelet power spectrum compared to power-law power-spectrum noise [%i percent conf. level]' % (slev) )
 Bx.set_ylabel('Period (seconds)')
 Bx.set_xlabel('Time (seconds) [%i samples]' % (nt) )
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
@@ -328,7 +328,7 @@ Bx.invert_yaxis()
 # Fifth sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
 Cx = pylab.axes([0.77, 0.07, 0.2, fig_height], sharey=bx)
-Cx.plot(rglbl_signif/max_glbl_power, np.log2(period), 'k--', label='red noise')
+Cx.plot(rglbl_signif/max_glbl_power, np.log2(period), 'k--', label='power-law power-spectrum')
 #Cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
 Cx.plot(rglbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
