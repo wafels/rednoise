@@ -660,7 +660,7 @@ presence of narrow frequency band oscillations, as the following
 example demonstrates.
 
 \begin{figure}
-\epsscale{0.80}
+\epsscale{1.00}
 \plotone{white_red_compare.eps}
 \caption{Comparison of the effect of assuming a white or
   \PL\ \PS\ background on the detection of an oscillatory signal for
@@ -668,26 +668,48 @@ example demonstrates.
   generated from a \protect\PS\ \protect$P(f)\propto f^{-1.77}$ and no
   explicit oscillation included.  Plot (b) shows the wavelet power
   spectrum with the cone-of-influence (shaded area) and regions above
-  the 95\% confidence level, assuming a white-noise (Gaussian)
-  background .  Plot (c) shows the global wavelet \protect\PS\ for
-  this wavelet transform.  Plots (d) and (e) are the same as plots (b)
-  and (c) under the assumption of a
-  \protect\PL\ \protect\PS\ background.}
+  the 95\% confidence level, assuming the null hypothesis that the
+  time-series is purely noise, and that the noise has the same average
+  power at all wavelet scales.  Plot (c) shows the global wavelet
+  \protect\PS\ for this wavelet transform.  Plots (d) and (e) are the
+  same as plots (b) and (c) with the null hypothesis that the
+  time-series is purely noise, modeled using an auto-regressive AR(1)
+  model.  Such time series assume that the current value in a
+  time-series depends on its previous value plus some
+  Gaussian-distributed noise (\citealp*{chatfieldtimeseries}.)  This
+  time-series model gives rise to a \protect\PL\ \protect\PS\ of the
+  form $\mbox{power}\propto\nu^{-n}$, where $\nu$ is the frequency of
+  oscillation, and $n$ is its power law index.  The code used in this
+  analysis is an implementation of that described by
+  \citet{1998BAMS...79...61T}.}
 \label{fig:comparison}
 \end{figure}
 
-Figure \ref{fig:comparison} shows how a time series generated from a
-random sample from a \PL\ \PS\ can be mistakenly thought to contain a
-narrow-band oscillatory signal.  The time series (Figure
+Figure \ref{fig:comparison} illustrates how a time series generated
+from a random sample from a \PL\ \PS\ can be mistakenly thought to
+contain a narrow-band oscillatory signal.  The time series (Figure
 \ref{fig:comparison}(a)) is constructed from a \PS\ $P(f)\approx
 f^{-1.77}$ with no explicit oscillatory content, following the
-construction procedure of \cite{2010MNRAS.402..307V}.  Figure
-\ref{fig:comparison}(b) shows that the assumption of a white-noise
-background and a 95\% confidence level leads to the positive detection
-of significant oscillatory power in this time series. Figure
-\ref{fig:comparison}(c) shows that the assumption of a background
-\PL\ \PS\ with the same confidence level significantly reduces the
-area for which a detection may be claimed.  Even with this
+construction procedure of \cite{2010MNRAS.402..307V}.  {\bf Figure
+  \ref{fig:comparison}(b) shows that if the null hypothesis is that
+  the time-series is purely noise, and that the noise has the same
+  average power at all wavelet scales (for example, if the time-series
+  were pure Gaussian noise), then the 95\% confidence level leads to
+  the positive detection of significant oscillatory power in this time
+  series.}  {\bf The detection claim changes if a different null
+  hypothesis is used. Figure \ref{fig:comparison}(d) is the same as
+  Figure \ref{fig:comparison}(b) except with the null hypothesis that
+  the time-series gives rise to a \PL\ \PS\ of the form
+  $\mbox{power}\propto\nu^{-n}$, where $\nu$ is the frequency of
+  oscillation, and $n$ is its power law index}.{\bf The model used to
+  generate a \PL\ \PS\ is an auto-regressive AR(1) model.  Such
+  time-series assume that the current value in a time-series depends
+  on its previous value plus some Gaussian-distributed noise
+  \citep{chatfieldtimeseries}.  The null hypothesis that generates the
+  \PL\ \PS\ is not important in order to illustrate its effect on the
+  detection claim.}  This null hypothesis assumption, with the same
+confidence level, significantly reduces the area in the wavelet
+transform for which a detection may be claimed.  Even with this
 significantly different background assumption, there is still a
 significant amount of wavelet power above the 95\% confidence level.
 However, since the data is simulated without an explicit oscillatory
