@@ -451,52 +451,6 @@ Fourier power.
 \label{fig:fit171193}
 \end{figure}
 
-\begin{deluxetable}{cccccccccc}
-\tabletypesize{\scriptsize}
-\tablecolumns{5}
-\tablewidth{0pt}
-\tablecaption{Parameter values and uncertainty estimates derived for
-    model \protect$M_{2}$.  {\bf Uncertainties with an absolute value less than $0.005$ are quoted as $0.00$.} \label{tab:parameters}}
-\tablehead{
-\colhead{Region} & 
-\colhead{Waveband}    & 
-\multicolumn{3}{c}{\PL\ $P_{1}(\nu)$} & 
-\multicolumn{3}{c}{lognormal $G(\nu)$} & 
-\multicolumn{2}{c}{ratio $P_{1}(\nu)/G(\nu)$}\\
-\colhead{}          & 
-\colhead{}          & 
-\colhead{$\log_{10}A$}          & 
-\colhead{$n$}      & 
-\colhead{$\log_{10}C$}      &
-\colhead{$\log_{10}\alpha$} &
-\colhead{$\beta$ (mHz)}      &
-\colhead{$\delta$\tablenotemark{1}} &
-\colhead{$\max$}          & 
-\colhead{$\arg\max$ (mHz)}
-\\
-}
-\startdata
-loop footpoints & 171\AA  & $0.55^{+0.02}_{-0.02}$  & $2.29^{+0.02}_{-0.02}$  & $-4.26^{+0.00}_{-0.00}$  & $-2.30^{+0.09}_{-0.08}$ & $0.69^{+0.09}_{-0.08}$  & $0.32^{+0.01}_{-0.01}$    & 1.45 & 2.22 \\
-                & 193\AA  & $0.06^{+0.03}_{-0.02}$  & $2.28^{+0.04}_{-0.05}$ & $-4.40^{+0.00}_{-0.00}$  & $-2.18^{+0.16}_{-0.22}$ & $0.28^{+0.11}_{-0.06}$  & $0.43^{+0.03}_{-0.04}$  & 1.58 & 1.90 \\
-                & & & & & & &   & & \\
-
-moss            & 171\AA  & $0.29^{+0.01}_{-0.01}$  & $1.76^{+0.01}_{-0.01}$ & $-4.04^{+0.00}_{-0.00}$  & $-1.34^{+0.02}_{-0.02}$  & $0.88^{+0.02}_{-0.02}$  & $0.34^{+0.00}_{-0.00}$    & 5.19 & 2.45\\
-                & 193\AA  & $0.39^{+0.01}_{-0.01}$  & $2.05^{+0.01}_{-0.01}$ & $-4.49^{+0.00}_{-0.00}$  & $-2.00^{+0.02}_{-0.02}$  & $1.24^{+0.03}_{-0.03}$  & $0.27^{+0.00}_{-0.00}$    & 4.72 & 2.68 \\
-                & & & & & & &   & & \\
-
-quiet Sun       & 171\AA  & $0.57^{+0.01}_{-0.01}$  & $1.72^{+0.01}_{-0.01}$ & $-3.00^{+0.00}_{-0.00}$  & $-3.55^{+0.04}_{-0.04}$  & $4.41^{+0.08}_{-0.08}$  & $0.10^{+0.01}_{-0.01}$    & 0.20 & 4.63 \\
-                & 193\AA  & $-0.10^{+0.01}_{-0.01}$  & $2.20^{+0.01}_{-0.01}$ & $-3.52^{+0.00}_{-0.00}$  & $-4.75^{+0.05}_{-0.05}$  & $4.68^{+0.18}_{-0.17}$  & $0.11^{+0.01}_{-0.01}$    & 0.08 & 4.72 \\
-                & & & & & & &   & & \\
-
-sunspot         & 171\AA  & $0.43^{+0.01}_{-0.01}$  & $2.26^{+0.02}_{-0.01}$ & $-3.89^{+0.00}_{-0.00}$  & $-2.80^{+0.02}_{-0.02}$  & $1.83^{+0.05}_{-0.05}$  & $0.32^{+0.00}_{-0.00}$    & 2.07 & 3.56 \\
-                & 193\AA  & $-0.09^{+0.01}_{-0.01}$  & $2.14^{+0.02}_{-0.02}$ & $-3.97^{+0.00}_{-0.00}$  & $-3.04^{+0.03}_{-0.03}$  & $1.59^{+0.07}_{-0.07}$  & $0.35^{+0.01}_{-0.01}$   & 1.55 & 3.15 \\
-\enddata
-%% Text for table notes should follow after the \enddata but before
-%% the \end{deluxetable}. Make sure there is at least one \tablenotemark
-%% in the table for each \tablenotetext.
-\tablenotetext{1}{Values are quoted in decades of frequency}
-\end{deluxetable}
-
 The (geometric) \mFpa\ are shown in Figure \ref{fig:fit171193} for
 each of the physical regions considered.  It is clear that, in
 general, the \mFpa\ exhibit power-law like characteristics.  The
@@ -574,10 +528,21 @@ overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).}
 {\bf The AIC reveals which out of a set of models is preferred.  It
   does not give an assessment of the goodness-of-fit of each model.
   Goodness-of-fit is estimated by calculating reduced-$\chi^{2}$,
-  $\chi^{2}_{r}=\sum_{i=1}^{N}\left[(P(\nu_{i})-D_{i})/\sigma_{i}^{2}\right]$
-  is calculated for both models.  The $\chi^{2}_{r}$ measures show
-  that reasonable fits are obtained for Model $M_{2}$ in all cases,
-  excepting the loop footpoints.  The relatively low value of $\chi^{2}_{r}$}
+  $\chi^{2}_{r}=\sum_{j=1}^{N}\left[(P_{i}(\nu_{j})-D_{j})/\sigma_{j}^{2}\right]/(N-k-1)$,
+  where $N=899$ is the number of frequencies, $P_{i}(\nu_{j})$ is the
+  model power $P_{i}$ at frequency $\nu_{j}$, $D_{j}$ is the \mFpa\ at
+  $\nu_{j}$, and $\sigma_{j}$ is the estimated standard deviation of
+  the data $D_{j}$ (see Appendix \ref{sec:app:ind} for more details of
+  the estimation of $\sigma_{j}$).  The value of $\chi^{2}_{r}$ is
+  calculated for both models.  Note that the \mFpa\ are only
+  approximately normally distributed, and so caution must be used in
+  interpreting $\chi^{2}_{r}$. Since $N>>k$, $\chi^{2}_{r}$ is
+  understood as a measure of the average scaled variance of the model
+  fit to the data. Within the approximations of the analysis, the
+  $\chi^{2}_{r}$ measures show that reasonable fits are obtained for
+  Model $M_{2}$ in all cases, excepting the loop footpoints.  The
+  relatively low value of $\chi^{2}_{r}$ for these locations indicate
+  that probably the size of $\sigma_{i}$ are over-estimated.}
 
 Table \ref{tab:parameters} gives the parameter estimates and 68\%
 credible intervals of the parameter values for model $M_{2}$, {\bf the
@@ -599,7 +564,7 @@ relative contribution of the ``excess'' emission over the
 \PL\ component.  The frequency $\nu_{max}$ is the frequency at which
 this ratio is a maximum, and indicates the most likely frequency at
 which the signal of the $G(\nu)$ contribution is strongest.  The
-ratios maximize in the range $1.34 \le \nu_{max} \le 4.72$ mHz.  This
+ratios maximize in the range $1.90 \le \nu_{max} \le 4.72$ mHz.  This
 is in the frequency range suggested by the moss observations of
 \cite{2003ApJ...595L..63D}.  If Model 2 is indeed a reasonable model
 of the \Fpa\ in the regions studied, then the $G(\nu)$ contribution is
@@ -615,6 +580,52 @@ studied here.  The question of how best to determine the presence or
 otherwise of narrow-band oscillatory power in \Fps\ is of importance
 to the study of coronal seismology, and is addressed in Sections
 \ref{ssec:corseis} and \ref{sec:oscdetect}.
+
+\begin{deluxetable}{cccccccccc}
+\tabletypesize{\scriptsize}
+\tablecolumns{5}
+\tablewidth{0pt}
+\tablecaption{Parameter values and uncertainty estimates derived for
+    model \protect$M_{2}$.  {\bf Uncertainties with an absolute value less than $0.005$ are quoted as $0.00$.} \label{tab:parameters}}
+\tablehead{
+\colhead{Region} & 
+\colhead{Waveband}    & 
+\multicolumn{3}{c}{\PL\ $P_{1}(\nu)$} & 
+\multicolumn{3}{c}{lognormal $G(\nu)$} & 
+\multicolumn{2}{c}{ratio $P_{1}(\nu)/G(\nu)$}\\
+\colhead{}          & 
+\colhead{}          & 
+\colhead{$\log_{10}A$}          & 
+\colhead{$n$}      & 
+\colhead{$\log_{10}C$}      &
+\colhead{$\log_{10}\alpha$} &
+\colhead{$\beta$ (mHz)}      &
+\colhead{$\delta$\tablenotemark{1}} &
+\colhead{$\max$}          & 
+\colhead{$\arg\max$ (mHz)}
+\\
+}
+\startdata
+loop footpoints & 171\AA  & $0.55^{+0.02}_{-0.02}$  & $2.29^{+0.02}_{-0.02}$  & $-4.26^{+0.00}_{-0.00}$  & $-2.30^{+0.09}_{-0.08}$ & $0.69^{+0.09}_{-0.08}$  & $0.32^{+0.01}_{-0.01}$    & 1.45 & 2.22 \\
+                & 193\AA  & $0.06^{+0.03}_{-0.02}$  & $2.28^{+0.04}_{-0.05}$ & $-4.40^{+0.00}_{-0.00}$  & $-2.18^{+0.16}_{-0.22}$ & $0.28^{+0.11}_{-0.06}$  & $0.43^{+0.03}_{-0.04}$  & 1.58 & 1.90 \\
+                & & & & & & &   & & \\
+
+moss            & 171\AA  & $0.29^{+0.01}_{-0.01}$  & $1.76^{+0.01}_{-0.01}$ & $-4.04^{+0.00}_{-0.00}$  & $-1.34^{+0.02}_{-0.02}$  & $0.88^{+0.02}_{-0.02}$  & $0.34^{+0.00}_{-0.00}$    & 5.19 & 2.45\\
+                & 193\AA  & $0.39^{+0.01}_{-0.01}$  & $2.05^{+0.01}_{-0.01}$ & $-4.49^{+0.00}_{-0.00}$  & $-2.00^{+0.02}_{-0.02}$  & $1.24^{+0.03}_{-0.03}$  & $0.27^{+0.00}_{-0.00}$    & 4.72 & 2.68 \\
+                & & & & & & &   & & \\
+
+quiet Sun       & 171\AA  & $0.57^{+0.01}_{-0.01}$  & $1.72^{+0.01}_{-0.01}$ & $-3.00^{+0.00}_{-0.00}$  & $-3.55^{+0.04}_{-0.04}$  & $4.41^{+0.08}_{-0.08}$  & $0.10^{+0.01}_{-0.01}$    & 0.20 & 4.63 \\
+                & 193\AA  & $-0.10^{+0.01}_{-0.01}$  & $2.20^{+0.01}_{-0.01}$ & $-3.52^{+0.00}_{-0.00}$  & $-4.75^{+0.05}_{-0.05}$  & $4.68^{+0.18}_{-0.17}$  & $0.11^{+0.01}_{-0.01}$    & 0.08 & 4.72 \\
+                & & & & & & &   & & \\
+
+sunspot         & 171\AA  & $0.43^{+0.01}_{-0.01}$  & $2.26^{+0.02}_{-0.01}$ & $-3.89^{+0.00}_{-0.00}$  & $-2.80^{+0.02}_{-0.02}$  & $1.83^{+0.05}_{-0.05}$  & $0.32^{+0.00}_{-0.00}$    & 2.07 & 3.56 \\
+                & 193\AA  & $-0.09^{+0.01}_{-0.01}$  & $2.14^{+0.02}_{-0.02}$ & $-3.97^{+0.00}_{-0.00}$  & $-3.04^{+0.03}_{-0.03}$  & $1.59^{+0.07}_{-0.07}$  & $0.35^{+0.01}_{-0.01}$   & 1.55 & 3.15 \\
+\enddata
+%% Text for table notes should follow after the \enddata but before
+%% the \end{deluxetable}. Make sure there is at least one \tablenotemark
+%% in the table for each \tablenotetext.
+\tablenotetext{1}{Values are quoted in decades of frequency}
+\end{deluxetable}
 
 \section{Discussion}\label{sec:discuss}
 The presence of a \PL\ \PS\ has implications for the detection of
@@ -1107,13 +1118,13 @@ found.
 Equations \ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump} are fit to the
 geometric mean power spectra shown in Figures \ref{fig:fit171193}.  A
 Bayesian/Markov chain Monte Carlo package (PyMC version 2.3,
-\cite{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}) is used to construct
+\citealp*{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}) is used to construct
 the Bayesian posterior and determine model parameter estimates and
 their uncertainty.  If $P_{i,j}$ is the power at Fourier frequency
 $\nu_{j}$ from Model $i$ then the likelihood $L$ is
 \begin{equation}\label{eqn:likelihood}
 L = \prod_{j=1}^{N_{f}}
-\frac{1}{\sqrt{2\pi\sigma^{2}}}
+\frac{1}{\sqrt{2\pi\sigma_{j}^{2}}}
 \exp\left(
 -\frac{(P_{i,j} - D_{j})^{2}}{2\sigma_{j}^{2}}
 \right)
