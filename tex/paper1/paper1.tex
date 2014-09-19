@@ -860,21 +860,21 @@ presented here.
   Spectrometer observations of the intensity of Lyman-$\alpha$ in the
   frequency range $2.6\times10^{-6}\rightarrow1.3\times10^{-4}$ Hz.}
 
-
-The first contribution to both models $M_{1}$ and $M_{2}$ is a
-\PL-like \PS.  It is present in both wavebands studied and in all the
-regions, and so parsimony suggests that the mechanism of its creation
-is both similar and ubiquitous in all {\bf similar} parts of the solar
-atmosphere {\bf , that is quiet Sun, moss, loop footpoints and above
-  sunspots}.  Further, \cite{2014AA...563A...8A} show that a
-\PL\ \PS\ is present in time-series of coronal active region and quiet
-Sun emission over the frequency range 0.01 - 1 mHz, overlapping with
-the frequency studied in this paper.  We hypothesize that the
-\PL\ \PS\ in the coronal 171\AA\ and 193\AA\ emission is due to the
-sum of a distribution of a large number of events having different
-amounts of emission.  \cite{2011soca.book.....A} describes how a
-\PL\ \PS\ may obtained from such a distribution, and that argument is
-outlined below.
+The coronal regions studied here also exhibit \PL-like \PA.  Under the
+modeling assumptions of models $M_{1}$ and $M_{2}$, the first
+contribution to the observed power spectrum is a \PL.  It is present
+in both wavebands studied and in all the regions, and so parsimony
+suggests that the mechanism of its creation is both similar and
+ubiquitous in all {\bf similar} parts of the solar atmosphere {\bf ,
+  that is quiet Sun, moss, loop footpoints and above sunspots}.
+Further, \cite{2014AA...563A...8A} show that a \PL\ \PS\ is present in
+time-series of coronal active region and quiet Sun emission over the
+frequency range 0.01 - 1 mHz, overlapping with the frequency studied
+in this paper.  We hypothesize that the \PL\ \PS\ in the coronal
+171\AA\ and 193\AA\ emission is due to the sum of a distribution of a
+large number of events having different amounts of emission.
+\cite{2011soca.book.....A} describes how a \PL\ \PS\ may obtained from
+such a distribution, and that argument is outlined below.
 
 Each emission event is modeled as an exponentially decaying function
 of time $t$
@@ -1062,7 +1062,7 @@ NNH12ZDA001N-SHP.
 
 \appendix
 
-\section{Fitting models to the \mFps}\label{sec:app:ind}
+\section{Fitting models to the mean Fourier power spectra}\label{sec:app:ind}
 In order to perform the fit, the noise in the \mFps\ (black lines,
 Figure \ref{fig:fit171193}) must be estimated.  To do that, the
 distribution of Fourier power in a region at each frequency must be
@@ -1209,12 +1209,13 @@ and 2 to the data, and is described below.
   functions, and are the final estimates for Model 2.
 \end{enumerate}
 Models are selected using the Akaike Information Criteria
-\citep{2007MNRAS.377L..74L}.  Conveniently, these quantities are also
-calculated by the PyMC package used to perform the MCMC sampling.  The
-68\% credible intervals for the parameters are quoted in Table
-\ref{tab:parameters}.  The upper and lower limits to the credible
-intervals are found by determining the values beyond which 16\% of the
-probability lies in each wing of the marginal distributions.
+\citep{2007MNRAS.377L..74L}, as described in the main text.
+Conveniently, the AIC is calculated by the PyMC package used to
+perform the MCMC sampling.  The 68\% credible intervals for the model
+parameters are quoted in Table \ref{tab:parameters}.  The upper and
+lower limits to the credible intervals are found by determining the
+values beyond which 16\% of the probability lies in each wing of the
+marginal distributions.
 
 %% The reference list follows the main body and any appendices.
 %% Use LaTeX's thebibliography environment to mark up your reference list.
