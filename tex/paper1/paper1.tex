@@ -255,15 +255,22 @@ make either the explicit or implicit assumption that the observed
 time-series consists of a background trend of some kind and
 (approximately) Gaussian-distributed noise which must be taken in to
 account in order to test for the presence of an oscillatiory signal.
-{\bf The aim of this paper is to investigate the nature of the Fourier
-  power spectrum in regions of interest to coronal seismology, to look
-  for evidence that the above assumption is appropriate.  Data from
-  the Atmospheric Imaging Assembly (AIA,
-  \citealp{2012SoPh..275...17L}) on board the Solar Dynamics
-  Observatory (SDO, \citealp{2012SoPh..275....3P}) is used.  It is
-  shown that time-series of coronal emission have power-law power
-  spectra, at least approximately.}  The \PL\ \PS\ nature of coronal
-emission has implications for coronal seismology, and may be
+{\bf However, two recent papers cast doubt on this assumption.
+  \cite{2014AA...563A...8A} integrate emission over small portions of
+  active regions and the quiet Sun as seen in the 19.5 nm passband
+  images from EIT and show that the resulting time-series has an
+  approximate \PL\ \Fps\ over the frequency range 0.01 - 1 mHz.
+  \citet{gupta2014} showed \PL\ \PA\ in the intensity at six single
+  points in AIA 171 coronal plumes extending over the frequency range
+  $0.3\rightarrow 4.0$ mHz.}  {\bf The aim of this paper is to
+  investigate the nature of the Fourier power spectrum in regions of
+  interest to coronal seismology, to look for evidence that the above
+  assumption is appropriate.  Data from the Atmospheric Imaging
+  Assembly (AIA, \citealp{2012SoPh..275...17L}) on board the Solar
+  Dynamics Observatory (SDO, \citealp{2012SoPh..275....3P}) is used.
+  It is shown that time-series of coronal emission have power-law
+  power spectra, at least approximately.}  The \PL\ \PS\ nature of
+coronal emission has implications for coronal seismology, and may be
 indicative of the nature of the fundamental energy deposition that
 keeps the corona hot.
 
@@ -332,12 +339,11 @@ on top of a sunspot, a footpoint region, and a coronal moss region.
 Figure \ref{fig:loc171193} shows the location of the regions on sample
 images from the time range considered. {\bf These locations, selected
   by visual inspection, were chosen because they are representative of
-  commonly observed structures in the corona.  In addition,
+  commonly observed structures in the corona.  Further,
   oscillatory power has been identified previously over sunspots and
   loop footpoints \citep{2002A&A...387L..13D} and moss structures
   \citep{2003ApJ...595L..63D}.  A quiet Sun region is also included
   for comparison.}
-
 \begin{figure}
 \centerline{
 \plottwo{shutdownfun3_6hr_disk_1.5_171.eps}{shutdownfun3_6hr_disk_1.5_193.eps}
@@ -555,9 +561,11 @@ regions do not.  However, it should be noted that there is no {\it a
   priori} reason why the power law indices for a region seen in two
 different wavebands should be the same.  This is because each waveband
 is designed to examine different features on the Sun in broadly
-different temperature ranges, and may be imaging very different
-physical processes: hence, the emission seen in one waveband need not
-have the same statistical properties as any other.
+different temperature ranges, and may be imaging {\bf different parts
+  of the same temperature-dependent physical process.  Also,
+  line-of-sight effects may be different in different wavebands (and
+  locations).}  Hence, the emission seen in one waveband need not have
+the same statistical properties as any other.
 
 The ratio of the two components $G(\nu)/P_{1}(\nu)$ measures the
 relative contribution of the ``excess'' emission over the
@@ -985,7 +993,6 @@ expressed through the parameters $\alpha_{E}$ and $\gamma$ in Equation
 
 
 \section{Conclusions}\label{sec:conc}
-
 Time series of AIA 171\AA\ and 193\AA\ images show approximately power
 law like properties {\bf in four representative regions} of the
 corona.  {\bf It has been shown that the detection of narrow band
@@ -1003,16 +1010,21 @@ solar atmosphere and lower temperature emission lines in the AIA
 171\AA\ and 193\AA\ bandpasses.
 
 Future studies will include examining power spectra at many more
-locations on and off the disk, as well as using the AIA 355\AA, 94\AA,
-131\AA and 211\AA\ wavebands.  The power-law index in individual
-pixels will also be determined, and correlated with other physical
-quantities such as the emission from those pixels.  Finally, a better
-understanding of the source of the power-law power spectrum will come
-from comparing the \Fps\ of simulated observations to the \Fps\ of the
-data in all the AIA wave-bands that are sensitive to higher
-temperatures.  This will bring new constraints on the simulations and
-improve our understanding of the temporal behavior of the solar
-corona.
+locations on and off the disk. {\bf Automated definitions of coronal
+  structures will be used to segment particular coronal features from
+  the data, and so provide improved information of the differences the
+  coronal structure makes to the observed \PL\ \PS.  Other AIA
+  wavebands, such as AIA 355\AA, 94\AA, 131\AA and 211\AA\ will be
+  used to look for further evidence of \PL\ \PA\ in different broad
+  temperature ranges in the solar corona.}  The power-law index in
+individual pixels will also be determined, and correlated with other
+physical quantities such as the emission from those pixels.  Finally,
+a better understanding of the source of the power-law power spectrum
+will come from comparing the \Fps\ of simulated observations to the
+\Fps\ of the data in all the AIA wave-bands that are sensitive to
+higher temperatures.  This will bring new constraints on the
+simulations and improve our understanding of the temporal behavior of
+the solar corona.
 
 
 %% If you wish to include an acknowledgments section in your paper,
@@ -1143,13 +1155,15 @@ L = \prod_{j=1}^{N_{f}}
 \end{equation}
 where $D_{j}$ is the observed \mFps\ at frequency $\nu_{j}$, $N_{f}$
 is the number of Fourier frequencies, and $\sigma_{j}$ is the normal
-distribution width at frequency $\nu_{j}$ .  Each of the priors for
-the parameters in each model has a uniform distribution (except
-$N_{eff}$), and are given in Table \ref{tab:priors}.  Each MCMC chain
-that was run took 100,000 samples, with burn-in assumed to be at
-50,000 samples.  The chain is thinned by taking every fifth element in
-the chain, forming the final sample from which the parameter estimates
-and their uncertainties are calculated.
+distribution width at frequency $\nu_{j}$.  {\bf Each of the priors
+  for the parameters in each model has a uniform distribution, and are
+  given in Table \ref{tab:priors}.  For some parameters, the logarithm
+  of the model parameter has a uniform distribution, which aids in the
+  exploration of parameter space}.  Each MCMC chain that was run took
+100,000 samples, with burn-in assumed to be at 50,000 samples.  The
+chain is thinned by taking every fifth element in the chain, forming
+the final sample from which the parameter estimates and their
+uncertainties are calculated.
 \begin{deluxetable}{ccc}
 \tabletypesize{\scriptsize} 
 \tablecolumns{4}
@@ -1185,14 +1199,15 @@ and 2 to the data, and is described below.
   $\sigma_{original, j}$ are large it allows the fitting algorithm to
   converge to an approximate fit solution.
 \item The posterior is formed by multiplying the likelihood (equation
-  \ref{eqn:likelihood}) by the priors for $A$, $n$, and $C$
-  (Table \ref{tab:priors}).  The MCMC sampler is run to fit Model 1 with
+  \ref{eqn:likelihood}) by the priors for $A$, $n$, and $C$ (Table
+  \ref{tab:priors}).  The MCMC sampler is run to fit Model 1 with
   $\sigma_{j} = \sigma_{original, j}/sqrt{N_{eff}}$, seeded with
   estimated parameter values from step 1.  This generates a better
   estimate to the parameters of the model fit.  The resulting
   parameter estimates are given by the mean values of marginal
   probability distribution functions, and are the final estimates for
-  Model 1.
+  Model 1.  The reduced chi-squared measurement $\chi^{2}_{r}$ for
+  model $M_{1}$ is calculated using the values of $\sigma_{j}$ above.
 \item The residuals of the model 1 fit to the data are then used to
   estimate the model parameters of $G(\nu)$.  This is done by
   (least-squares) fitting $G(\nu)$ to the positive residuals in the
@@ -1202,21 +1217,24 @@ and 2 to the data, and is described below.
   Model 1 from step 2 and the estimated $G(\nu)$ model parameters from
   step 3.
 \item The posterior is formed by multiplying the likelihood (equation
-  \ref{eqn:likelihood}) by all the priors for Model 2 (Table \ref{tab:priors}).
-  The MCMC sampler is run to fit Model 2 with $\sigma_{j} =
-  \sigma_{original, j}/\sqrt{N_{eff}}$, seeded with estimated
-  parameter values from step 4.  The resulting parameter estimates are
-  given by the mean values of marginal probability distribution
-  functions, and are the final estimates for Model 2.
+  \ref{eqn:likelihood}) by all the priors for Model 2 (Table
+  \ref{tab:priors}).  The MCMC sampler is run to fit Model 2 with
+  $\sigma_{j} = \sigma_{original, j}/\sqrt{N_{eff}}$, seeded with
+  estimated parameter values from step 4.  The resulting parameter
+  estimates are given by the mean values of marginal probability
+  distribution functions, and are the final estimates for Model 2.
+  The reduced chi-squared measurement $\chi^{2}_{r}$ for model $M_{2}$
+  is calculated using the values of $\sigma_{j}$ above.
 \end{enumerate}
-Models are selected using the Akaike Information Criteria
-\citep{2007MNRAS.377L..74L}, as described in the main text.
-Conveniently, the AIC is calculated by the PyMC package used to
-perform the MCMC sampling.  The 68\% credible intervals for the model
-parameters are quoted in Table \ref{tab:parameters}.  The upper and
-lower limits to the credible intervals are found by determining the
-values beyond which 16\% of the probability lies in each wing of the
-marginal distributions.
+{\bf The preferred model is selected using the Akaike Information
+  Criteria \citep{2007MNRAS.377L..74L}, as described in the main
+  text.}  Conveniently, the AIC is calculated by the PyMC package used
+to perform the MCMC sampling.  The 68\% credible intervals for the
+{\bf parameters of the model preferred using the AIC} are quoted in
+Table \ref{tab:parameters}.  The upper and lower limits to the
+credible intervals are found by determining the values beyond which
+16\% of the probability lies in each wing of the marginal
+distributions.
 
 %% The reference list follows the main body and any appendices.
 %% Use LaTeX's thebibliography environment to mark up your reference list.
