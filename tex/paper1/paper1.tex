@@ -359,7 +359,7 @@ images from the time range considered. {\bf These locations, selected
   span used to form the time-series analyzed.  The spatial extent of
   the data is (-501'', -138'') in the x-direction, and (-80'', 107'')
   in the y-direction, in heliocentric cartesian co-ordinates.  The
-  images show NOAA AR 1575 and some surrounding area.
+  images show NOAA AR 11575 and some surrounding area.
   \citep{2006A&A...449..791T}.}
 \label{fig:loc171193}
 \end{figure}
@@ -812,8 +812,13 @@ These pixels are then clumped together and the quality of the signal
 is then assessed.  The {\it wave coherence} detection approach of
 \cite{2008SoPh..252..321M} implement wave detection through finding
 spatially contiguous regions of the corona which are coherent in a
-given frequency range.  Oscillations that are detected propagating
-along loops are often found by considering distance-time plots
+given frequency range.  {\bf \cite{2008SoPh..252..321M} use a
+  symmetric filter to estimate the coherence, in that oscillatory
+  power from either side of the central search frequency contributes
+  the same weight to the final result.  The effect of this filter in
+  the presence of a \PL\ \PS\ may be to bias detections to lower
+  frequencies.}  Oscillations that are detected propagating along
+loops are often found by considering distance-time plots
 \citep{2000AA...355L..23D, 2003AA...404L...1K} and looking for
 alternating brightening/darkening in those plots as a indicator of a
 propagating wave.  This is essentially a coherence-based approach that
@@ -823,12 +828,7 @@ signal is seen in multiple contiguous pixels.  However, the results of
 Section \ref{sec:anal} suggest that each pixel in these plots has a
 background \PL\ \PS: the discussion of Section \ref{ssec:corseis}
 therefore suggests that the significance of any claimed oscillation is
-much reduced.  {\bf The wave coherence method of \cite{2008SoPh..252..321M}
-uses a symmetric filter to estimate the coherence, in that oscillatory
-power from either side of the central search frequency contributes the
-same weight to the final result.  The effect of this filter in the
-presence of a \PL\ \PS\ may be to bias detections to lower
-frequencies.}
+much reduced.
 
 \subsection{``Excess'' emission}\label{ssec:excess}
 The models fits of Section \ref{sec:anal} indicate that equation
