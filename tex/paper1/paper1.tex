@@ -223,7 +223,7 @@ locations in TRACE data that may support an oscillatory signal. The
 threshold level is defined as three to four times the average fast
 Fourier transform (FFT) power; if the maximum FFT power is above this
 level then the frequency at which that power occurs is assumed to be
-real.  \cite{2010SoPh..264..403I} assume that an oscillatory signal is
+real. \cite{2010SoPh..264..403I} assume that an oscillatory signal is
 present in each location in the datacube and then use a Bayesian-based
 treatment to calculate the probability that the frequency has a
 particular value.  This algorithm relies on subtracting a background
@@ -240,21 +240,27 @@ the implicit assumption that the time-series has an approximately
 constant mean value).  Detections are based on wavelet filtering of
 these regions in all three dimensions of the data cube simultaneously,
 with the implicit assumption that the noise is Gaussian-distributed.
-The algorithm of \cite{2008SoPh..252..321M} differs from the previous
-algorithms: it begins by Fourier transforming the entire data cube,
-and calculating the coherence of neighboring pixels in narrow
-frequency bands, and filtering the results. The null hypothesis here
-is that the time series is pure Gaussian noise, with the additional
-assumption that pairs of noisy time-series have low coherence, and so
-can be rejected.  In this algorithm, the spatial extent of the
-coherence of the oscillatory signal is the key identifier of a wave
-process.
+{\bf The algorithm of \cite{2008SoPh..252..321M} differs from the
+  previous algorithms: it begins by Fourier transforming the entire
+  data cube, and calculating the coherence of neighboring pixels in
+  narrow frequency bands, and filtering the results. The null
+  hypothesis here is that pairs of time series that have low coherence
+  can be rejected as being part of an oscillatory group.  This method
+  uses a symmetric filter to estimate the coherence, in that
+  oscillatory power from either side of the central search frequency
+  contributes the same weight to the final result.  There is an
+  implicit assumption here that the power on either side of the
+  central search frequency is approximately the same.  In this
+  algorithm, the spatial extent of the coherence of the oscillatory
+  signal is the key identifier of a wave process.}
 
 All these detections algorithms, and many detections in the literature
 make either the explicit or implicit assumption that the observed
 time-series consists of a background trend of some kind and
 (approximately) Gaussian-distributed noise which must be taken in to
-account in order to test for the presence of an oscillatiory signal.
+account in order to test for the presence of an oscillatiory signal
+{\bf \cite{2004SoPh..223....1D, 2007SoPh..241..397N,
+    2008SoPh..248..395S, 2010SoPh..264..403I, 2013SoPh..286..405C}.}
 {\bf However, two recent papers cast doubt on this assumption.
   \cite{2014AA...563A...8A} integrate emission over small portions of
   active regions and the quiet Sun as seen in the 19.5 nm passband
@@ -744,7 +750,7 @@ higher confidence levels (99\% or higher), in order to minimize the
 effects of mistakenly identifying random variations in the background
 \PS\ as evidence for an oscillatory signal.  {\bf Since there is a
   \PL\ \PS\ in time-series of coronal emission, evidence for the
-  existence of a process that generates narrow-band oscillatory power,
+  existence of a process that generates narrow-band oscillatory power
   has to by measured by its power over and above that expected by the
   \PL\ \PS.}
 
@@ -782,35 +788,32 @@ algorithm must take into account the nature of the \PS.  The power-law
 \PS\ itself lacks an easily definable time-scale at or below which a
 background trend can be defined.  Automated detection algorithms that
 rely on background trend subtraction, such as
-\cite{2010SoPh..264..403I} must therefore look to other reasons for to
+\cite{2010SoPh..264..403I} must therefore look to other reasons to
 justify a time-scale.
 
 As has been shown above, the assumption of a Gaussian-distributed
 (white) noise when a \PL\ \PS\ is actually present, coupled with too
 low a confidence level, can lead to misleading results when looking
 for oscillatory signals (Section \ref{ssec:corseis} and Figure
-\ref{fig:comparison}).  Many wave detection algorithms do make this
-assumption, for example \cite{2004SoPh..223....1D},
-\cite{2007SoPh..241..397N}, \cite{2008SoPh..248..395S},
-\cite{2010SoPh..264..403I} and \cite{2013SoPh..286..405C}.  Such
-approaches have yet to be tested assuming a background \PL\ \PS, and
-so their efficacy is unknown.  However, \cite{2004SoPh..223....1D} and
-\cite{2008SoPh..248..395S} are wavelet-based approaches, and the
-discussion Section \ref{ssec:corseis} does suggest that a background
-\PL\ \PS\ will make a significant difference to the number of wave
-detections found in the data.
+\ref{fig:comparison}).  The detection algorithms outlined in Section
+\ref{sec:introduction} have yet to be tested assuming a background
+\PL\ \PS, and so their efficacy is unknown.
+\cite{2004SoPh..223....1D} and \cite{2008SoPh..248..395S} are
+wavelet-based approaches, and the discussion Section
+\ref{ssec:corseis} does suggest that a background \PL\ \PS\ will make
+a significant difference to the number of wave detections found in the
+data.
 
 All the automated detection algorithms described above attempt to find
 individual pixels that are obviously oscillating at some frequency,
 using the strength of the oscillation at that frequency (compared to
 some assumption of the background) as the key quantity to measure.
 These pixels are then clumped together and the quality of the signal
-is then assessed.  Detection algorithms based on {\it wave coherence},
-such as \cite{2008SoPh..252..321M}, implement wave detection through
-finding spatially contiguous regions of the corona which are coherent
-in a given frequency range.  The frequency range searched is based on
-previous experience.  Oscillations that are detected propagating along
-loops are often found by considering distance-time plots
+is then assessed.  The {\it wave coherence} detection approach of
+\cite{2008SoPh..252..321M} implement wave detection through finding
+spatially contiguous regions of the corona which are coherent in a
+given frequency range.  Oscillations that are detected propagating
+along loops are often found by considering distance-time plots
 \citep{2000AA...355L..23D, 2003AA...404L...1K} and looking for
 alternating brightening/darkening in those plots as a indicator of a
 propagating wave.  This is essentially a coherence-based approach that
@@ -820,8 +823,12 @@ signal is seen in multiple contiguous pixels.  However, the results of
 Section \ref{sec:anal} suggest that each pixel in these plots has a
 background \PL\ \PS: the discussion of Section \ref{ssec:corseis}
 therefore suggests that the significance of any claimed oscillation is
-much reduced.
-
+much reduced.  {\bf The wave coherence method of \cite{2008SoPh..252..321M}
+uses a symmetric filter to estimate the coherence, in that oscillatory
+power from either side of the central search frequency contributes the
+same weight to the final result.  The effect of this filter in the
+presence of a \PL\ \PS\ may be to bias detections to lower
+frequencies.}
 
 \subsection{``Excess'' emission}\label{ssec:excess}
 The models fits of Section \ref{sec:anal} indicate that equation
