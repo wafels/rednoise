@@ -41,14 +41,14 @@ plt.ioff()
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final_no_noise_prior_coherence_3/'
+sfigroot = '~/ts/img_cc_final_rev1/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['loopfootpoints', 'moss', 'qs', 'sunspot']
-#regions = ['sunspot', 'qs', 'moss', 'loopfootpoints']
+waves = ['193']
+#regions = ['sunspot']
+regions = ['loopfootpoints', 'qs', 'moss']
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -217,6 +217,12 @@ for iwave, wave in enumerate(waves):
                 spearman_ds = pickle.load(pkl_file)
                 pkl_file.close()
 
+                # Load the correlative measures 2
+                ifilename = 'OUT.' + region_id
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.correlative2.' + neighbour + '.npy')
+                print('Loading ' + pkl_file_location)
+                ccmax = np.load(pkl_file_location)
+
                 # Pick which definition of the power to use
                 pwr_ff = pwr_ff_mean
 
@@ -226,7 +232,7 @@ for iwave, wave in enumerate(waves):
                 prettyprint('%s: Pixel independence calculation' % (neighbour))
                 print 'Number of pixels ', npixels
                 #print 'Mode, maximum cross correlation coefficient = %f' % (ccmax_ds.mode)
-                dependence_coefficient = coher_mean
+                dependence_coefficient = ccmax_ds.mean
                 # Independence coefficient - how independent is one pixel compared
                 # to its nearest neighbour?
                 # independence_coefficient = 1.0 - 0.5 * (np.abs(ccc0) + np.abs(ccclag))
@@ -375,7 +381,7 @@ for iwave, wave in enumerate(waves):
                 print '++++++++++++++++++++++++'
 
                 # Plot
-                title = 'AIA ' + wave + " : " + sunday_name[region] 
+                title = 'AIA ' + wave + "$\AA$ : " + sunday_name[region]
                 xvalue = freqfactor * freqs
                 fivemin = freqfactor * 1.0 / 300.0
                 threemin = freqfactor * 1.0 / 180.0
@@ -396,8 +402,7 @@ for iwave, wave in enumerate(waves):
                 # Set the formatting of the tick labels
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
-
-                bump_ratio = r'$M_{2}$, $\max[G(\nu)/P_{1}(\nu)]$ = %4.2f at $\nu_{max}$ = %4.2f mHz' % (bump_to_pl_ratio[max_bump_to_pl_ratio_index], freqfactor * freqs[max_bump_to_pl_ratio_index])
+                bump_ratio = r'$M_{2}$, $\arg \max[G(\nu)/P_{1}(\nu)]$'
                 if region == indexplot["region"] and wave == indexplot["wave"]:
                     labels = {"pwr_ff": 'average Fourier power spectrum',
                               "M0_mean": '$M_{1}$: posterior mean',
@@ -417,7 +422,7 @@ for iwave, wave in enumerate(waves):
                               'M1: 95% low': None,
                               "5 minutes": None,
                               "3 minutes": None,
-                              "bump_ratio": bump_ratio}
+                              "bump_ratio": None}
 
                 ax.plot(xvalue, np.exp(pwr_ff), label=labels["pwr_ff"], color='k')
 
@@ -457,11 +462,6 @@ for iwave, wave in enumerate(waves):
                 ax.axvline(freqfactor * freqs[max_bump_to_pl_ratio_index],
                            label=labels["bump_ratio"],
                            linestyle=':', color='g')
-
-                # Plot the bump limits
-                #plt.axvline(np.log10(physical_bump_frequency_limits[0]), label='bump center position limit', linestyle=':' ,color='k')
-                #plt.axvline(np.log10(physical_bump_frequency_limits[1]), linestyle=':' ,color='k')
-
                 # Plot the fitness coefficients
                 # Plot the fitness criteria - should really put this in a separate function
                 xpos = freqfactor * (0.015 * (10.0 ** -3.0))
@@ -471,14 +471,18 @@ for iwave, wave in enumerate(waves):
                 #yrange = ypos_max - ypos_min
                 #for yyy in range(0, ypos.size):
                 #    ypos[yyy] = np.exp(ypos_min + yyy * yrange / (1.0 * (np.size(ypos) - 1.0)))
-                plt.text(xpos, 10.0 ** -4.0, dAIC_value_string)
-                plt.text(xpos, 10.0 ** -4.5, dBIC_value_string)
+                plt.text(xpos, 10.0 ** -3.8, dAIC_value_string)
+                #plt.text(xpos, 10.0 ** -4.5, dBIC_value_string)
                 #plt.text(xpos, ypos[2], '$T_{LRT}$ = %f' % (fitsummarydata["t_lrt"]))
-                #plt.text(xpos, ypos[0], '$M_{1}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M0"]["chi2"]))
-                #plt.text(xpos, ypos[1], '$M_{2}$: reduced $\chi^{2}$ = %f' % (fitsummarydata["M1"]["chi2"]))
+
+                chi_M0_string = '%0.2f' % (fitsummarydata["M0"]["chi2"])
+                chi_M1_string = '%0.2f' % (fitsummarydata["M1"]["chi2"])
+                plt.text(xpos, 10.0 ** -4.3, '$M_{1}$: $\chi^{2}_{r} = ' + chi_M0_string + '$')
+                plt.text(xpos, 10.0 ** -4.8, '$M_{2}$: $\chi^{2}_{r} = ' + chi_M1_string + '$')
 
                 # Complete the plot and save it
-                plt.legend(framealpha=0.5, fontsize=10, labelspacing=0.2, loc=1)
+                if region == indexplot["region"] and wave == indexplot["wave"]:
+                    plt.legend(fontsize=10, labelspacing=0.2, loc=1)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
@@ -486,9 +490,10 @@ for iwave, wave in enumerate(waves):
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
-                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
-                print(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
+                #plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.eps')
                 plt.close('all')
+                print('Saved ' + savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.eps')
 
                 # -------------------------------------------------------------
                 # Measures of the residuals

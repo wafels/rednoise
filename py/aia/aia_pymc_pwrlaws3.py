@@ -612,7 +612,7 @@ for iwave, wave in enumerate(waves):
                 plt.text(xpos, 10.0 ** -4.8, '$M_{2}$: $\chi^{2}_{r} = ' + chi_M1_string + '$')
 
                 # Complete the plot and save it
-                if indexplot["region"] and wave == indexplot["wave"]:
+                if region == indexplot["region"] and wave == indexplot["wave"]:
                     plt.legend(fontsize=10, labelspacing=0.2, loc=1)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')

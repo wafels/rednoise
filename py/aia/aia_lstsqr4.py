@@ -148,8 +148,8 @@ def DefineWindow(window, nt):
 # Main analysis loop
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
-scsvroot = '~/ts/csv_cc_final/'
+sfigroot = '~/ts/img_cc_final_paper_rev1/'
+scsvroot = '~/ts/csv_cc_final_paper_rev1/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
@@ -230,9 +230,9 @@ for iwave, wave in enumerate(waves):
             #data_name = wave + ' (' + fits_level + winname + ', ' + manip + '), ' + region
             #data_name = region_id
             if region in sunday_name:
-                data_name = 'AIA ' + str(wave) + ' : ' + sunday_name[region]
+                data_name = 'AIA ' + str(wave) + '$\AA$ : ' + sunday_name[region]
             else:
-                data_name = 'AIA ' + str(wave) + ' : ' + region
+                data_name = 'AIA ' + str(wave) + '$\AA$ : ' + region
 
             # Create a location to save the figures
             savefig = os.path.join(os.path.expanduser(sfig), window, manip)
