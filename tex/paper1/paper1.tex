@@ -120,23 +120,24 @@
 
 \begin{abstract}
 
-  {\bf The dynamics of example regions of the solar corona are
-  investigated using AIA 171\AA\ and 193\AA\ data. These are examples of
-    quiet Sun, coronal loop footpoint, coronal moss and the
-    coronal emission above a sunspot.  It is shown that the \mFpa\ in
-  these example regions can be described by a power law at lower
-  frequencies that tails to flat spectrum at higher frequencies plus a
-  Gaussian-shaped contribution that varies depending on the region
-  studied. This Fourier spectral shape is in contrast to the commonly
-  held assumption that coronal time-series are well described by the
-  sum of a long time-scale background trend plus Gaussian-distributed
-  noise, with some specific locations also showing an oscillatory
-  signal.}  The implications of this discovery to the field of coronal
-  seismology and automated detections of oscillations is discussed.
-  The observed \PL\ \PS\ can be formed by summing a distribution of
-  exponentially decaying emission events along the line of sight.
-  This is consistent with the idea that the solar atmosphere is heated
-  everywhere by small energy deposition events.
+  {\bf The dynamics of regions of the solar corona are investigated
+    using AIA 171\AA\ and 193\AA\ data.  The coronal emission from the
+    quiet Sun, coronal loop footprints, coronal moss, and from above a
+    sunspot is studied.  It is shown that the \mFpa\ in these regions
+    can be described by a power law at lower frequencies that tails to
+    flat spectrum at higher frequencies, plus a Gaussian-shaped
+    contribution that varies depending on the region studied. This
+    Fourier spectral shape is in contrast to the commonly-held
+    assumption that coronal time-series are well described by the sum
+    of a long time-scale background trend plus Gaussian-distributed
+    noise, with some specific locations also showing an oscillatory
+    signal.  The implications of this discovery to the field of
+    coronal seismology and the automated detections of oscillations
+    are discussed.  The observed \PL\ shape of the Fourier power
+    spectrum is interpreted as being due to the summation of a
+    distribution of exponentially decaying emission events along the
+    line of sight.}  This is consistent with the idea that the solar
+  atmosphere is heated everywhere by small energy deposition events.
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. The uncommented
@@ -263,76 +264,74 @@ account in order to test for the presence of an oscillatiory signal
     2008SoPh..248..395S, 2010SoPh..264..403I, 2013SoPh..286..405C}.}
 {\bf However, two recent papers cast doubt on this assumption.
   \cite{2014AA...563A...8A} integrate emission over small portions of
-  active regions and the quiet Sun as seen in the 19.5 nm passband
+  active regions and the quiet Sun as observed in the 195\AA\ passband
   images from EIT and show that the resulting time-series has an
   approximate \PL\ \Fps\ over the frequency range 0.01 - 1 mHz.
   \citet{gupta2014} showed \PL\ \PA\ in the intensity at six single
-  points in AIA 171 coronal plumes extending over the frequency range
-  $0.3\rightarrow 4.0$ mHz.}  {\bf The aim of this paper is to
-  investigate the nature of the Fourier power spectrum in regions of
-  interest to coronal seismology, to look for evidence that the above
-  assumption is appropriate.  Data from the Atmospheric Imaging
-  Assembly (AIA, \citealp{2012SoPh..275...17L}) on board the Solar
-  Dynamics Observatory (SDO, \citealp{2012SoPh..275....3P}) is used.
-  It is shown that time-series of coronal emission have power-law
-  power spectra, at least approximately.}  The \PL\ \PS\ nature of
-coronal emission has implications for coronal seismology, and may be
-indicative of the nature of the fundamental energy deposition that
-keeps the corona hot.
+  points in AIA 171\AA\ coronal plumes extending over the frequency range
+  $0.3\rightarrow 4.0$ mHz.}
 
-Section \ref{sec:obs} describes the observations used, while Section
-\ref{sec:anal} describes the method of analysis employed and presents
-the results.  Section \ref{sec:discuss} discusses the implication of
-these results for coronal seismology and the heating of the solar
-atmosphere.  Section \ref{sec:conc} summarizes the discussion and
-outlines future work.
+{\bf The aim of this paper is to investigate the nature of the Fourier
+  power spectrum in regions of interest to coronal seismology, to look
+  for evidence that the above assumption is appropriate.}  The nature
+of coronal emission has implications for coronal seismology, and may
+be indicative of the nature of the fundamental energy deposition that
+keeps the corona hot.  Section \ref{sec:obs} describes the
+observations used, while Section \ref{sec:anal} describes the method
+of analysis employed and presents the results.  Section
+\ref{sec:discuss} discusses the implication of these results for
+coronal seismology and the heating of the solar atmosphere.  Section
+\ref{sec:conc} summarizes the discussion and outlines future work.
 
 
 \section{Observations}\label{sec:obs}
-AIA observes images of the Sun in multiple wavebands simultaneously
-and continuously, at high cadence (12 seconds) and at high spatial
-resolution (0.6 arcseconds per pixel at the Sun).  These data enable
-detailed comparisons between phenomena seen in multiple wavebands, and
-are therefore ideal for assessing the frequency content of the solar
+{\bf Data from the Atmospheric Imaging Assembly (AIA,
+  \citealp{2012SoPh..275...17L}) on board the Solar Dynamics
+  Observatory (SDO, \citealp{2012SoPh..275....3P}) are used.}  AIA
+observes images of the Sun in multiple wavebands simultaneously and
+continuously, at high cadence (12 seconds) and at high spatial
+resolution (0.6 arcseconds per pixel).  These data enable detailed
+comparisons between phenomena observed in multiple wavebands, and are
+therefore ideal for assessing the frequency content of the solar
 atmosphere.  The data was acquired using the Lockheed Martin Solar
-Astrophysics cutout service (http://lmsal.com/get\_aia\_data/).  Six
-hours of image data in the time range 2012-09-23 00:00 - 06:00 UT, at
-the full 12 second cadence, in the 171\AA\ and 193\AA\ wavebands is
-used.  These wavebands were selected because previous studies in
-similar wavebands (TRACE 171\AA\ and 193\AA) show the presence of
-coronal oscillations.  {\bf The cutout of the Sun selected covers a single
-$\beta\gamma$ active region, NOAA AR 11575}.  This cutout was selected
-for two reasons.  First, it is quiescent in that there were no X-ray
-flares or other large-scale disturbances (for example, filament
-eruptions or rearrangments of long bright coronal loops) over the
-spatial extent of the cutout within the time range (Figure
-\ref{fig:loc171193}).  Therefore, any variations in the plasma
-properties cannot be ascribed to large-scale disturbances.  Second,
-the selected cutout region contains a sunspot, and sunspots are known
-to be locations over which three minute oscillations have been
-detected by other instruments \citep{2002A&A...387L..13D}.
+Astrophysics cutout service at
+\href{http://lmsal.com/get\_aia\_data/}.  Six hours of image data in
+the time range 2012-09-23 00:00 - 06:00 UT, at the full 12 second
+cadence, in the 171\AA\ and 193\AA\ wavebands is used.  These
+wavebands were selected because previous studies in similar wavebands
+(TRACE 171\AA\ and 193\AA) show the presence of coronal oscillations.
+{\bf The selected area covers a single $\beta\gamma$ active region,
+  NOAA AR 11575}.  This area was selected for two reasons.  First, it
+is quiescent in that there were no X-ray flares or other large-scale
+disturbances (for example, filament eruptions or rearrangments of long
+bright coronal loops) over the spatial extent of the cutout within the
+time range (Figure \ref{fig:loc171193}).  Therefore, any variations in
+the plasma properties cannot be ascribed to large-scale disturbances.
+Second, the selected cutout region contains a sunspot, and sunspots
+are known to be locations over which three minute oscillations have
+been detected by other instruments \citep{2002A&A...387L..13D}.
 
-The downloaded cutout data was prepared for analysis using the
-SolarSoft / IDL routines READ\_SDO and AIA\_PREP.  These procedures
-convert the downloaded level 1.0 FITS cutout files to level 1.5 FITS
-files.  This involves translating, scaling and rotating the images so
-they have the same sun-center, image scale with solar north in the
-same direction.  All further processing from this point was performed
-in the SunPy 0.4 (http://www.sunpy.org) data analysis environment.
-Images were de-rotated to compensate for solar rotation, based on the
-center of the field of view of each image.  After de-rotation, each
-.image layer was coaligned with a reference layer, defined to be half
-way through the dataset, in this case at approximately 03:00 UT
-(Figure \ref{fig:loc171193}).  This process is required since the
-solar de-rotation function used does not fully compensate for all the
-solar rotation. {\bf Coalignment was implemented using a template
-  matching technique \citep{lewis1995fast} implemented by the {\it
+The data was prepared for analysis using the SolarSoft / IDL routines
+READ\_SDO and AIA\_PREP.  These procedures convert the downloaded
+level 1.0 FITS cutout files to level 1.5 FITS files.  This involves
+translating, scaling and rotating the images so they have the same
+sun-center, image scale with solar north in the same direction.  All
+further processing from this point was performed in the SunPy 0.4
+(http://www.sunpy.org) data analysis environment.  Images were
+de-rotated to compensate for solar rotation, based on the center of
+the field of view of each image.  After de-rotation, each image layer
+was coaligned with a reference layer, defined to be half way through
+the dataset, in this case at approximately 03:00 UT (Figure
+\ref{fig:loc171193}).  This process is required since the solar
+de-rotation function used does not fully compensate for all the solar
+rotation. {\bf Coalignment was implemented using a template matching
+  technique \citep{lewis1995fast} implemented by the {\it
     scikit-image} \citep{Vanderwalt2014} routine {\it
     match\_template}.  A rectangular template sub-image with sides one
   half the size (in pixels) of the reference layer is defined.  The
   coalignment algorithm finds the location of the best match of this
   template with each layer.  The image layer is then shifted (using
-  sub-pixel shifts) according the location of the best match of the
+  sub-pixel shifts) according to the location of the best match of the
   template with the image.  This process removes residual bulk motions
   of the images.}
 
@@ -359,8 +358,7 @@ images from the time range considered. {\bf These locations, selected
   span used to form the time-series analyzed.  The spatial extent of
   the data is (-501'', -138'') in the x-direction, and (-80'', 107'')
   in the y-direction, in heliocentric cartesian co-ordinates.  The
-  images show NOAA AR 11575 and some surrounding area.
-  \citep{2006A&A...449..791T}.}
+  images show NOAA AR 11575 and some surrounding area.}
 \label{fig:loc171193}
 \end{figure}
 
@@ -382,7 +380,7 @@ frequencies.
 There is evidence that these power laws extend to much longer
 frequencies than those considered here, down to approximately 0.01
 mHz. \cite{2014AA...563A...8A} integrate emission over small portions
-of active regions and the quiet Sun as seen in the 19.5 nm passband
+of active regions and the quiet Sun as observed in the 195\AA\ passband
 images from EIT and show that the resulting time-series has an
 approximate \PL\ \Fps\ over the frequency range 0.01 - 1 mHz.
 
@@ -564,13 +562,13 @@ range 1.8 to 2.3, although there is no consistency between one
 waveband and another.  For example, the 171\AA\ and 193\AA\ loop
 footpoint results both have the same power law index, but the other
 regions do not.  However, it should be noted that there is no {\it a
-  priori} reason why the power law indices for a region seen in two
+  priori} reason why the power law indices for a region observed in two
 different wavebands should be the same.  This is because each waveband
 is designed to examine different features on the Sun in broadly
 different temperature ranges, and may be imaging {\bf different parts
   of the same temperature-dependent physical process.  Also,
   line-of-sight effects may be different in different wavebands (and
-  locations).}  Hence, the emission seen in one waveband need not have
+  locations).}  Hence, the emission observed in one waveband need not have
 the same statistical properties as any other.
 
 The ratio of the two components $G(\nu)/P_{1}(\nu)$ measures the
@@ -824,7 +822,7 @@ alternating brightening/darkening in those plots as a indicator of a
 propagating wave.  This is essentially a coherence-based approach that
 involves an implicit assessment of the likelihood that an oscillation
 has been detected.  The basis of the assessment is a judgement that a
-signal is seen in multiple contiguous pixels.  However, the results of
+signal is observed in multiple contiguous pixels.  However, the results of
 Section \ref{sec:anal} suggest that each pixel in these plots has a
 background \PL\ \PS: the discussion of Section \ref{ssec:corseis}
 therefore suggests that the significance of any claimed oscillation is
@@ -848,7 +846,7 @@ $G(\nu)$.  This would constrain the distribution of field line angles
 in the lower atmosphere in different regions of the solar surface.
 
 Another possible cause of the excess emission is the appearance of
-low-temperature emission lines in the AIA passband.  Such lines are
+low-temperature emission lines in the AIA passbands.  Such lines are
 more likely to be due to processes lower down in the solar atmosphere
 where the amplitude of three and five minute oscillations is larger.
 This is supported by three dimensional magnetohydrodynamic models of
@@ -871,9 +869,9 @@ presented here.
   observed in other solar phenomena.  As was mentioned above,
   \cite{2014AA...563A...8A} observe power laws in the integrated
   emission of small portions of active regions and the quiet Sun as
-  seen in the 19.5 nm passband images from EIT over the frequency
+  observed in the 195\AA\ passband images from EIT over the frequency
   range 0.01 - 1 mHz. Also, \citet{gupta2014} showed \PL\ \PA\ in the
-  intensity at six single points in AIA 171 coronal plumes extending
+  intensity at six single points in AIA 171\AA\ coronal plumes extending
   over the frequency range $0.3\rightarrow 4.0$ mHz.  Lower in the
   solar atmosphere, \cite{2008ApJ...683L.207R} show the presence of
   \PL\ Fourier \PA, in the range 7-20 mHz, in the Doppler velocity of
