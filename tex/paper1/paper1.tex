@@ -20,7 +20,8 @@
 %% manuscript produces a one-column, double-spaced document:
 
 
-\documentclass[onecolumn]{emulateapj}
+%\documentclass[onecolumn]{emulateapj}
+\documentclass[preprint]{aastex}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{multirow}
@@ -61,6 +62,7 @@
 \newcommand{\mPA}{mean power spectra}
 
 \newcommand{\PL}{power-law}
+\newcommand{\PLs}{power-laws}
 
 \newcommand{\Fps}{Fourier \PS}
 \newcommand{\mFps}{mean Fourier \PS}
@@ -124,7 +126,7 @@
     using AIA 171\AA\ and 193\AA\ data.  The coronal emission from the
     quiet Sun, coronal loop footprints, coronal moss, and from above a
     sunspot is studied.  It is shown that the \mFpa\ in these regions
-    can be described by a power law at lower frequencies that tails to
+    can be described by a \PL\ at lower frequencies that tails to
     flat spectrum at higher frequencies, plus a Gaussian-shaped
     contribution that varies depending on the region studied. This
     Fourier spectral shape is in contrast to the commonly-held
@@ -294,8 +296,8 @@ resolution (0.6 arcseconds per pixel).  These data enable detailed
 comparisons between phenomena observed in multiple wavebands, and are
 therefore ideal for assessing the frequency content of the solar
 atmosphere.  The data was acquired using the Lockheed Martin Solar
-Astrophysics cutout service at
-\href{http://lmsal.com/get\_aia\_data/}.  Six hours of image data in
+Astrophysics cutout service at {\it
+http://lmsal.com/get\_aia\_data/}.  Six hours of image data in
 the time range 2012-09-23 00:00 - 06:00 UT, at the full 12 second
 cadence, in the 171\AA\ and 193\AA\ wavebands is used.  These
 wavebands were selected because previous studies in similar wavebands
@@ -377,7 +379,7 @@ the power spectra indicate that the Fourier power approximately
 follows a \PL\ at lower frequencies, and flattens out at higher
 frequencies.
 
-There is evidence that these power laws extend to much longer
+There is evidence that these \PLs\ extend to much longer
 frequencies than those considered here, down to approximately 0.01
 mHz. \cite{2014AA...563A...8A} integrate emission over small portions
 of active regions and the quiet Sun as observed in the 195\AA\ passband
@@ -507,16 +509,16 @@ describes the data. A Bayesian probability based parameter estimation
 and model fitting is implemented.  This approach was chosen for its
 flexibility and consistent error estimation properties
 \citep{2013ApJ...769...89I}.  The details of the model fitting process
-are described in \ref{sec:app:ind}.  The position of $G(\nu)$ is
+are described in Appendix \ref{sec:app:ind}.  The position of $G(\nu)$ is
 restricted by permitting $\beta$ to vary in the range $0.1-10$ mHz
 only.  This restriction, which is imposed in the fitting process (see
-Section \ref{sec:app:ind}), arises from the observations of
+Appendix \ref{sec:app:ind}), arises from the observations of
 significant wavelet power in the period range 200 - 600 seconds as
 found by \cite{2003ApJ...595L..63D}.
 
 \subsection{Results}\label{ssec:results}
 Figure \ref{fig:fit171193} show the fit results of each model to the
-data.  For details on the fitting procedure, see Section
+data.  For details on the fitting procedure, see Appendix
 \ref{sec:app:ind}.
 
 {\bf The two models are assessed for how well they describe the data in two
@@ -535,7 +537,7 @@ AIC$ indicate that Model 2 loses less information compared to Model 1,
 leading to a preference for Model 2 over Model 1
 \citep{2007MNRAS.377L..74L}.  The AIC indicates that Model 2 is
 overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).}
-{\bf The AIC reveals which out of a set of models is preferred.  It
+{\bf The AIC reveals which (out of a set of models) is preferred.  It
   does not give an assessment of the goodness-of-fit of each model.
   Goodness-of-fit is estimated by calculating reduced-$\chi^{2}$,
   $\chi^{2}_{r}=\sum_{j=1}^{N}\left[(P_{i}(\nu_{j})-D_{j})/\sigma_{j}^{2}\right]/(N-k-1)$,
@@ -557,12 +559,12 @@ overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).}
 Table \ref{tab:parameters} gives the parameter estimates and 68\%
 credible intervals of the parameter values for model $M_{2}$, {\bf the
   maximum value of the ratio $G(\nu)/P_{1}(\nu)$ and its location}.
-The power law indices for all regions and both wavebands lie in the
+The \PL\ indices for all regions and both wavebands lie in the
 range 1.8 to 2.3, although there is no consistency between one
 waveband and another.  For example, the 171\AA\ and 193\AA\ loop
-footpoint results both have the same power law index, but the other
+footpoint results both have the same \PL\ index, but the other
 regions do not.  However, it should be noted that there is no {\it a
-  priori} reason why the power law indices for a region observed in two
+  priori} reason why the \PL\ indices for a region observed in two
 different wavebands should be the same.  This is because each waveband
 is designed to examine different features on the Sun in broadly
 different temperature ranges, and may be imaging {\bf different parts
@@ -647,7 +649,7 @@ Sections \ref{ssec:corseis} and \ref{sec:oscdetect}.  Further, the
 \PL\ Fourier spectrum in coronal emission poses questions about how
 that emission is formed.  Section \ref{ssec:excess} discusses possible
 reasons for the localized contribution component $G(\nu)$.  A
-hypothesis regarding the formation of this power law spectrum is
+hypothesis regarding the formation of this \PL\ spectrum is
 presented in Section \ref{ssec:nplps}.
 
 \subsection{Effect of background \PS\ assumptions on the
@@ -665,7 +667,7 @@ The frequencies at which the lognormal contribution is larger than the
 underlying power-law distribution could be used to define an average
 frequency range within which the majority contribution to the overall
 Fourier power is not associated with the underlying power-law
-distribution.  However, the \Fps\ in this range would still have to
+distribution.  However, the \Fps\ in this range would still have to be
 analyzed using both the power-law and lognormal contributions to the
 overall power, and better estimates to the power-law parameters will
 be obtained if the full frequency range of the observations are used.
@@ -701,7 +703,7 @@ example demonstrates.
   Gaussian-distributed noise (\citealp*{chatfieldtimeseries}.)  This
   time-series model gives rise to a \protect\PL\ \protect\PS\ of the
   form $\mbox{power}\propto\nu^{-n}$, where $\nu$ is the frequency of
-  oscillation, and $n$ is its power law index.  The code used in this
+  oscillation, and $n$ is its \PL\ index.  The code used in this
   analysis is an implementation of that described by
   \citet{1998BAMS...79...61T}.}
 \label{fig:comparison}
@@ -728,7 +730,7 @@ contain a narrow-band oscillatory signal.  The time series in Figure
   the same as Figure \ref{fig:comparison}(b) except with the null
   hypothesis that the time-series gives rise to a \PL\ \PS\ of the
   form $\mbox{power}\propto\nu^{-n}$, where $\nu$ is the frequency of
-  oscillation, and $n$ is its power law index}\footnote{{\bf The model
+  oscillation, and $n$ is its \PL\ index}\footnote{{\bf The model
     used to generate a \PL\ \PS\ is an auto-regressive AR(1) model.
     Such time-series assume that the current value in a time-series
     depends on its previous value plus some Gaussian-distributed noise
@@ -829,21 +831,21 @@ therefore suggests that the significance of any claimed oscillation is
 much reduced.
 
 \subsection{``Excess'' emission}\label{ssec:excess}
-The models fits of Section \ref{sec:anal} indicate that equation
-\ref{eqn:pwrlawbump} is preferred over equation \ref{eqn:pwrlaw} as
-the superior description of the observed Fourier \PS. The moss region
-shows the greatest contribution from the lognormal distribution
-$G(\nu)$ over the background \PL.  \cite{2005ApJ...624L..61D} show
-that it is possible to leak oscillatory power from lower in the
-atmosphere to the upper reaches of the atmosphere through the simple
-expedient of tilting the field line.  This changes the acoustic cutoff
-frequency and so allows wave energy to propagate up in to the upper
-atmosphere.  If spectral model $M_{2}$ represents conditions in the
-solar atmosphere, then it should be possible to infer a distribution
-of field line angles with the solar surface using
-\cite{2005ApJ...624L..61D} and the observed power distribution
-$G(\nu)$.  This would constrain the distribution of field line angles
-in the lower atmosphere in different regions of the solar surface.
+The models fits of Section \ref{sec:anal} indicate that Model 2 is
+preferred over Model 1 as the superior description of the observed
+Fourier \PS. The moss region shows the greatest contribution from the
+lognormal distribution $G(\nu)$ over the background \PL.
+\cite{2005ApJ...624L..61D} show that it is possible to leak
+oscillatory power from lower in the atmosphere to the upper reaches of
+the atmosphere through the simple expedient of tilting the field line.
+This changes the acoustic cutoff frequency and so allows wave energy
+to propagate up in to the upper atmosphere.  If spectral model $M_{2}$
+represents conditions in the solar atmosphere, then it should be
+possible to infer a distribution of field line angles with the solar
+surface using \cite{2005ApJ...624L..61D} and the observed power
+distribution $G(\nu)$.  This would constrain the distribution of field
+line angles in the lower atmosphere in different regions of the solar
+surface.
 
 Another possible cause of the excess emission is the appearance of
 low-temperature emission lines in the AIA passbands.  Such lines are
@@ -867,7 +869,7 @@ presented here.
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
 {\bf Power-law \PS\ have been
   observed in other solar phenomena.  As was mentioned above,
-  \cite{2014AA...563A...8A} observe power laws in the integrated
+  \cite{2014AA...563A...8A} observe \PLs\ in the integrated
   emission of small portions of active regions and the quiet Sun as
   observed in the 195\AA\ passband images from EIT over the frequency
   range 0.01 - 1 mHz. Also, \citet{gupta2014} showed \PL\ \PA\ in the
@@ -1016,7 +1018,7 @@ corona.  {\bf It has been shown that the detection of narrow band
   detections in the presence of \PL\ like \PS.} The power spectra have
 been modelled using three components: a \PL\ \PS, a lognormal
 component, and a constant background.  It is hypothesized that the
-power-law component is due to the sum along the line of sight of a
+\PL\ component is due to the sum along the line of sight of a
 large number of statistically similar energy deposition events.  It is
 also hypothesized that the lognormal component is due a combination of
 the channeling of oscillatory power from lower to higher levels of the
@@ -1030,10 +1032,10 @@ locations on and off the disk. {\bf Automated definitions of coronal
   coronal structure makes to the observed \PL\ \PS.  Other AIA
   wavebands, such as AIA 355\AA, 94\AA, 131\AA and 211\AA\ will be
   used to look for further evidence of \PL\ \PA\ in different broad
-  temperature ranges in the solar corona.}  The power-law index in
+  temperature ranges in the solar corona.}  The \PL\ index in
 individual pixels will also be determined, and correlated with other
 physical quantities such as the emission from those pixels.  Finally,
-a better understanding of the source of the power-law power spectrum
+a better understanding of the source of the \PL\ \PS\
 will come from comparing the \Fps\ of simulated observations to the
 \Fps\ of the data in all the AIA wave-bands that are sensitive to
 higher temperatures.  This will bring new constraints on the
@@ -1060,7 +1062,7 @@ We are grateful to the developers of SSWIDL
 \citep{Hunter:2007} and the Scientific Python stack for providing data
 preparation, manipulation, analysis and display packages.  This work
 was supported by NASA award NNX13AE03G S01 funded through NASA ROSES
-NNH12ZDA001N-SHP.
+NNH12ZDA001N-SHP, and by a NSF Career grant 1255024 (JMA).
 
 
 %% To help institutions obtain information on the effectiveness of their
@@ -1088,9 +1090,7 @@ NNH12ZDA001N-SHP.
 %% The equation counter will reset when it encounters the \appendix
 %% command and will number appendix equations (A1), (A2), etc.
 
-\appendix
-
-\section{Fitting models to the mean Fourier power spectra}\label{sec:app:ind}
+\appendix\section{Fitting models to the mean Fourier power spectra}\label{sec:app:ind}
 In order to perform the fit, the noise in the \mFps\ (black lines,
 Figure \ref{fig:fit171193}) must be estimated.  To do that, the
 distribution of Fourier power in a region at each frequency must be
