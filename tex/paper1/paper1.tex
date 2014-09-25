@@ -20,11 +20,13 @@
 %% manuscript produces a one-column, double-spaced document:
 
 
-\documentclass[onecolumn]{emulateapj}
-%\documentclass[preprint]{aastex}
+%\documentclass[onecolumn]{emulateapj}
+\documentclass[referee]{aastex}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{multirow}
+\usepackage{setspace}
+
 %\usepackage{showkeys}
 \usepackage{epsfig}
 \usepackage{natbib}
@@ -462,19 +464,23 @@ Fourier power.
 \centerline{
 \epsscale{0.75}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.logiobs.1.model_fit_compare.pymc.eps}
 }
-\caption{Geometric mean of the \protect\Fpa\ (black solid line) in
-  each of the four regions studied in AIA 171\AA\ (left column) and
-  AIA 193\AA\ (right column).  Also shown are the posterior mean fits
-  for model $M_{1}$ and $M_{2}$ (blue and red lines respectively; see
-  Section \ref{sec:anal} and Appendix \ref{sec:app:ind} for more
-  detail).  The AIC describing the preference for model over the other
-  is also indicated in each plot.  The reduced $chi^{2}_{r}$ statistic
-  for Model 1 and Model 2 are given. The two components to Model 2,
-  $P_{1}(\nu)$ and $G(\nu)$ are also shown in green; the location of
-  the maximum of the $G(\nu)/P_{1}(\nu)$ ratio is indicated by the
-  green dotted line.  Model fit parameter values and their 68\%
-  credible intervals are quoted in Table \ref{tab:parameters}.}
+\begin{singlespace}
+ \caption{Geometric mean of the \protect\Fpa\ (black
+    solid line) in each of the four regions studied in AIA
+    171\AA\ (left column) and AIA 193\AA\ (right column).  Also shown
+    are the posterior mean fits for model $M_{1}$ and $M_{2}$ (blue
+    and red lines respectively; see Section \ref{sec:anal} and
+    Appendix \ref{sec:app:ind} for more detail).  The AIC describing
+    the preference for model over the other is also indicated in each
+    plot.  The reduced $chi^{2}_{r}$ statistic for Model 1 and Model 2
+    are given. The two components to Model 2, $P_{1}(\nu)$ and
+    $G(\nu)$ are also shown in green; the location of the maximum of
+    the $G(\nu)/P_{1}(\nu)$ ratio is indicated by the green dotted
+    line.  Model fit parameter values and their 68\% credible
+    intervals are quoted in Table \ref{tab:parameters}.}
+\end{singlespace}
 \label{fig:fit171193}
+
 \end{figure}
 
 The (geometric) \mFpa\ are shown in Figure \ref{fig:fit171193} for

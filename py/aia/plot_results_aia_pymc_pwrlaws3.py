@@ -47,10 +47,10 @@ scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['193']
-regions = ['sunspot']
-regions = ['loopfootpoints', 'moss', 'qs']
-#regions = ['loopfootpoints', 'moss', 'qs', "sunspot"]
+waves = ['171', '193']
+#regions = ['sunspot']
+#regions = ['loopfootpoints']
+regions = ['loopfootpoints', 'moss', 'qs', "sunspot"]
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -409,9 +409,9 @@ for iwave, wave in enumerate(waves):
                     labels = {"pwr_ff": 'average Fourier power spectrum',
                               "M0_mean": '$M_{1}$: posterior mean',
                               "M1_mean": '$M_{2}$: posterior mean',
-                              "M1_P1": r'posterior mean $P_{1}(\nu)$ component for $M_{2}$',
-                              "M1_G": r'posterior mean $G(\nu)$ component for $M_{2}$',
-                              'M1: 95% low': r'$M_{1}$: 95\% credible interval',
+                              "M1_P1": r'posterior mean $P_{1}(\nu)$ component of $M_{2}$',
+                              "M1_G": r'posterior mean $G(\nu)$ component of $M_{2}$',
+                              'M1: 95% low': r'$M_{1}$: 95%% credible interval',
                               "5 minutes": '5 minutes',
                               "3 minutes": '3 minutes',
                               "bump_ratio": bump_ratio}
@@ -440,6 +440,12 @@ for iwave, wave in enumerate(waves):
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0], label='M0: 95% low', color = 'b', linestyle='-.')
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
 
+                # Plot each component of M1
+                ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')
+                ax.plot(xvalue, np.exp(normalbump_PM), label=labels["M1_G"], color='g', linestyle='--')
+                #ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of the maximum likelihood fit, $M_{2}$', color='g')
+                #ax.plot(xvalue, np.exp(normalbump_BF), label='Gaussian component of the maximum likelihood fit, $M_{2}$', color='g', linestyle='--')
+
                 # Plot the M1 fit
                 chivalue = chiformat % (fitsummarydata["M1"]["chi2"])
                 chivaluestring = '$' + chired + '=' + chivalue + '$'
@@ -447,14 +453,8 @@ for iwave, wave in enumerate(waves):
                 #label = '$M_{2}$, maximum likelihood fit'
                 #ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
                 ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label=labels["M1_mean"], color = 'r')
-                plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label=labels['M1: 95% low'], color = 'r', linestyle='--')
-                plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), color = 'r', linestyle='--')
-
-                # Plot each component of M1
-                ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')
-                ax.plot(xvalue, np.exp(normalbump_PM), label=labels["M1_G"], color='g', linestyle='--')
-                #ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of the maximum likelihood fit, $M_{2}$', color='g')
-                #ax.plot(xvalue, np.exp(normalbump_BF), label='Gaussian component of the maximum likelihood fit, $M_{2}$', color='g', linestyle='--')
+                #plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label=labels['M1: 95% low'], color = 'r', linestyle='--')
+                #plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), color = 'r', linestyle='--')
 
                 # Plot the 3 and 5 minute frequencies
                 ax.axvline(fivemin, label=labels['5 minutes'], linestyle='--', color='k')
@@ -484,7 +484,7 @@ for iwave, wave in enumerate(waves):
 
                 # Complete the plot and save it
                 if region == indexplot["region"] and wave == indexplot["wave"]:
-                    plt.legend(fontsize=10, labelspacing=0.2, loc=1)
+                    plt.legend(fontsize=12, labelspacing=0.2, loc=1, handletextpad=0.0, framealpha=0.5)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
