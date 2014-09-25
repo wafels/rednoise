@@ -28,7 +28,7 @@ from scipy.stats import beta as beta_distrib
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
-from paper1 import sunday_name, prettyprint, log_10_product, indexplot
+from paper1 import sunday_name, prettyprint, log_10_product, indexplot, figure_label_2by4
 from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details, get_kde_most_probable
 from aia_pymc_pwrlaws_helpers import *
 
@@ -40,15 +40,17 @@ plt.ioff()
 # Set up which data to look at
 #
 dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle_cc_final/'
+#ldirroot = '~/ts/pickle_cc_final/'
+ldirroot = '~/Desktop/pickle_cc_final/'
 sfigroot = '~/ts/img_cc_final_rev1/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
 waves = ['193']
-#regions = ['sunspot']
-regions = ['loopfootpoints', 'qs', 'moss']
+regions = ['sunspot']
+regions = ['loopfootpoints', 'moss', 'qs']
+#regions = ['loopfootpoints', 'moss', 'qs', "sunspot"]
 windows = ['hanning']
 manip = 'relative'
 neighbour = 'nearest'
@@ -381,7 +383,7 @@ for iwave, wave in enumerate(waves):
                 print '++++++++++++++++++++++++'
 
                 # Plot
-                title = 'AIA ' + wave + "$\AA$ : " + sunday_name[region]
+                title = figure_label_2by4[wave][region] + 'AIA ' + wave + "$\AA$ : " + sunday_name[region]
                 xvalue = freqfactor * freqs
                 fivemin = freqfactor * 1.0 / 300.0
                 threemin = freqfactor * 1.0 / 180.0

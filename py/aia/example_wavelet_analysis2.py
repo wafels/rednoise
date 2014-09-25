@@ -234,7 +234,7 @@ fig = pylab.figure(**figprops)
 ax = pylab.axes([0.1, 0.70, fig_width, fig_height])
 #ax.plot(time, iwave, '-', linewidth=1, color=[0.5, 0.5, 0.5])
 ax.plot(time, var, 'k', linewidth=1.5)
-ax.set_title('a) %s' % (ts.name, ))
+ax.set_title('(a) %s' % (ts.name, ))
 if ts.units != '':
     ax.set_ylabel(r'%s [$%s$]' % (ts.label, ts.units,))
 else:
@@ -262,7 +262,8 @@ bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
         'k',
         alpha=0.3,
         hatch='x')
-bx.set_title('b) Wavelet power spectrum compared to white noise [%i percent conf. level]' %(slev) )
+conf_level_string = '95' + r'$\%$'
+bx.set_title('(b) Wavelet power spectrum compared to white noise [' + conf_level_string + ' conf. level]')
 bx.set_ylabel('Period (seconds)')
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                            np.ceil(np.log2(period.max())))
@@ -278,7 +279,7 @@ cx.plot(glbl_signif / max_glbl_power, np.log2(period), 'k--', label='white noise
 #cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
 cx.plot(glbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
-cx.set_title('c) Global wavelet spectrum')
+cx.set_title('(c) Global wavelet spectrum')
 if ts.units != '':
     cx.set_xlabel(r'Power [arb units.]')
 else:
@@ -315,9 +316,10 @@ Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
         'k',
         alpha=0.3,
         hatch='x')
-Bx.set_title('d) Wavelet power spectrum compared to power-law power-spectrum noise [%i percent conf. level]' % (slev) )
+#pc = r'\%'
+Bx.set_title('(d) Wavelet power spectrum compared to power-law power-spectrum noise [' + conf_level_string + ' conf. level]')
 Bx.set_ylabel('Period (seconds)')
-Bx.set_xlabel('Time (seconds) [%i samples]' % (nt) )
+Bx.set_xlabel('Time (seconds) [%i samples]' % (nt))
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                           np.ceil(np.log2(period.max())))
 Bx.set_yticks(np.log2(Yticks))
@@ -332,7 +334,7 @@ Cx.plot(rglbl_signif/max_glbl_power, np.log2(period), 'k--', label='power-law po
 #Cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
 Cx.plot(rglbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
-Cx.set_title('e) Global wavelet spectrum')
+Cx.set_title('(e) Global wavelet spectrum')
 if ts.units != '':
     Cx.set_xlabel(r'Power [arb. units]')
 else:

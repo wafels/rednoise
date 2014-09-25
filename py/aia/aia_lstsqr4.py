@@ -26,7 +26,7 @@ from statsmodels.graphics.gofplots import qqplot
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
+from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, figure_label_2by4
 from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
 from paper1 import descriptive_stats
 import scipy
@@ -711,7 +711,7 @@ for iwave, wave in enumerate(waves):
             plt.figure(3)
             plt.xlabel('$\log_{10}(power)$')
             plt.ylabel('proportion found')
-            plt.title(data_name)
+            plt.title(figure_label_2by4[wave][region] + data_name)
             for jj, f in enumerate(findex):
                 xx = histogram_loc / np.log(10.0)
                 yy = hpwr[f, :]

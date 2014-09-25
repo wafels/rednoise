@@ -18,7 +18,7 @@ from sunpy.cm import cm
 import numpy as np
 import coalign_datacube
 import cubetools
-from paper1 import sunday_name, label_sunday_name
+from paper1 import sunday_name, label_sunday_name, figure_data_plot
 
 
 # input data
@@ -29,7 +29,7 @@ corename = 'shutdownfun3_6hr_3files_only'
 #corename = 'shutdownfun6_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-wave = '171'
+wave = '193'
 cross_correlate = True
 
 
@@ -218,7 +218,7 @@ plt.imshow(np.log(dc[:, :, ind]),
            cmap=cm.get_cmap(name='sdoaia' + wave),
            extent=extent)
 #plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
-plt.title('AIA ' + wave + '$\AA$ (%s)' % (times["date_obs"][ind].strftime('%Y/%m/%d %H:%M:%S')))
+plt.title(figure_data_plot[wave] + 'AIA ' + wave + '$\AA$ (%s)' % (times["date_obs"][ind].strftime('%Y/%m/%d %H:%M:%S')))
 plt.ylabel('y (arcseconds)')
 plt.xlabel('x (arcseconds)')
 xoffset = 2
