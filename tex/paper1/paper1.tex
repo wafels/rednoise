@@ -73,6 +73,8 @@
 \newcommand{\Fpa}{Fourier \PA}
 \newcommand{\mFpa}{mean Fourier \PA}
 
+\newcommand{\BF}{ }
+
 %% You can insert a short comment on the title page using the command below.
 
 %\slugcomment{Not to appear in Nonlearned J., 45.}
@@ -125,11 +127,12 @@
 
 \begin{abstract}
 
-  {\bf The dynamics of regions of the solar corona are investigated
-    using AIA 171\AA\ and 193\AA\ data.  The coronal emission from the
-    quiet Sun, coronal loop footprints, coronal moss, and from above a
-    sunspot is studied.  It is shown that the \mFpa\ in these regions
-    can be described by a \PL\ at lower frequencies that tails to flat
+  {\BF The dynamics of regions of the solar corona are investigated
+    using {\bf Atmospheric Imaging Assembly (AIA)} 171\AA\ and
+    193\AA\ data.  The coronal emission from the quiet Sun, coronal
+    loop footprints, coronal moss, and from above a sunspot is
+    studied.  It is shown that the \mFpa\ in these regions can be
+    described by a \PL\ at lower frequencies that tails to flat
     spectrum at higher frequencies, plus a Gaussian-shaped
     contribution that varies depending on the region studied. This
     Fourier spectral shape is in contrast to the commonly-held
@@ -186,7 +189,7 @@ solar corona, identify the wave modes present, and then use
 theoretical descriptions of those wave modes to infer the physical
 conditions of the solar corona.  The practical application of coronal
 seismological ideas began in earnest with observations of wave modes
-{\bf described in \cite{1998ApJ...501L.217D} and
+{\BF described in \cite{1998ApJ...501L.217D} and
   \cite{1999SoPh..186..207B} from data captured by Extreme Ultraviolet
   Telescope (EIT, \citealp{1995SoPh..162..291D}) on board the Solar and Heliospheric
   Observatory (SOHO, \citealp{1995SoPh..162....1D}), and also by
@@ -229,8 +232,10 @@ flare events at distant solar locations.
 The relative scarcity of observations of coronal oscillations has
 prompted efforts to create automated oscillation detection algorithms.
 The need for an automated oscillation detection algorithm has been
-exacerbated by the large and rapidly growing amount of AIA data.
-There have been several attempts at designing such algorithms.
+exacerbated by the large and rapidly growing amount of {\bf Solar
+  Dynamics Observatory (SDO, \citealp{2012SoPh..275....3P})
+  Atmospheric Imaging Assembly (AIA, \citealp{2012SoPh..275...17L})}
+data.  There have been several attempts at designing such algorithms.
 \cite{2004SoPh..223....1D} describe the design of an automated
 oscillation-detection algorithm based on wavelet analysis. The
 algorithm finds significant wave packets ranging from single to
@@ -260,7 +265,7 @@ the implicit assumption that the time-series has an approximately
 constant mean value).  Detections are based on wavelet filtering of
 these regions in all three dimensions of the data cube simultaneously,
 with the implicit assumption that the noise is Gaussian-distributed.
-{\bf The algorithm of \cite{2008SoPh..252..321M} differs from the
+{\BF The algorithm of \cite{2008SoPh..252..321M} differs from the
   previous algorithms: it begins by Fourier transforming the entire
   data cube, and calculating the coherence of neighboring pixels in
   narrow frequency bands, and filtering the results. The null
@@ -279,9 +284,9 @@ make either the explicit or implicit assumption that the observed
 time-series consists of a background trend of some kind and
 (approximately) Gaussian-distributed noise which must be taken in to
 account in order to test for the presence of an oscillatiory signal
-{\bf \cite{2004SoPh..223....1D, 2007SoPh..241..397N,
+{\bf \citep{2004SoPh..223....1D, 2007SoPh..241..397N,
     2008SoPh..248..395S, 2010SoPh..264..403I, 2013SoPh..286..405C}.}
-{\bf However, two recent papers cast doubt on this assumption.
+{\BF However, two recent papers cast doubt on this assumption.
   \cite{2014AA...563A...8A} integrate emission over small portions of
   active regions and the quiet Sun as observed in the 195\AA\ passband
   images from EIT and show that the resulting time-series has an
@@ -290,7 +295,7 @@ account in order to test for the presence of an oscillatiory signal
   points in AIA 171\AA\ coronal plumes extending over the frequency range
   $0.3\rightarrow 4.0$ mHz.}
 
-{\bf The aim of this paper is to investigate the nature of the Fourier
+{\BF The aim of this paper is to investigate the nature of the Fourier
   power spectrum in regions of interest to coronal seismology, to look
   for evidence that the above assumption is appropriate.}  The nature
 of coronal emission has implications for coronal seismology, and may
@@ -304,24 +309,21 @@ coronal seismology and the heating of the solar atmosphere.  Section
 
 
 \section{Observations}\label{sec:obs}
-{\bf Data from the Atmospheric Imaging Assembly (AIA,
-  \citealp{2012SoPh..275...17L}) on board the Solar Dynamics
-  Observatory (SDO, \citealp{2012SoPh..275....3P}) are used.}  AIA
-observes images of the Sun in multiple wavebands simultaneously and
-continuously, at high cadence (12 seconds) and at high spatial
-resolution (0.6 arcseconds per pixel).  These data enable detailed
-comparisons between phenomena observed in multiple wavebands, and are
-therefore ideal for assessing the frequency content of the solar
-atmosphere.  The data was acquired using the Lockheed Martin Solar
-Astrophysics cutout service at {\it
-http://lmsal.com/get\_aia\_data/}.  Six hours of image data in
-the time range 2012-09-23 00:00 - 06:00 UT, at the full 12 second
-cadence, in the 171\AA\ and 193\AA\ wavebands is used.  These
-wavebands were selected because previous studies in similar wavebands
-(TRACE 171\AA\ and 193\AA) show the presence of coronal oscillations.
-{\bf The selected area covers a single $\beta\gamma$ active region,
-  NOAA AR 11575}.  This area was selected for two reasons.  First, it
-is quiescent in that there were no X-ray flares or other large-scale
+{\bf AIA} observes images of the Sun in multiple wavebands
+simultaneously and continuously, at high cadence (12 seconds) and at
+high spatial resolution (0.6 arcseconds per pixel).  These data enable
+detailed comparisons between phenomena observed in multiple wavebands,
+and are therefore ideal for assessing the frequency content of the
+solar atmosphere.  {\bf AIA} data was acquired using the Lockheed Martin
+Solar Astrophysics cutout service at {\it
+  http://lmsal.com/get\_aia\_data/}.  Six hours of image data in the
+time range 2012-09-23 00:00 - 06:00 UT, at the full 12 second cadence,
+in the 171\AA\ and 193\AA\ wavebands is used.  These wavebands were
+selected because previous studies in similar wavebands (TRACE
+171\AA\ and 193\AA) show the presence of coronal oscillations.  {\BF
+  The selected area covers a single $\beta\gamma$ active region, NOAA
+  AR 11575}.  This area was selected for two reasons.  First, it is
+quiescent in that there were no X-ray flares or other large-scale
 disturbances (for example, filament eruptions or rearrangments of long
 bright coronal loops) over the spatial extent of the cutout within the
 time range (Figure \ref{fig:loc171193}).  Therefore, any variations in
@@ -343,7 +345,7 @@ was coaligned with a reference layer, defined to be half way through
 the dataset, in this case at approximately 03:00 UT (Figure
 \ref{fig:loc171193}).  This process is required since the solar
 de-rotation function used does not fully compensate for all the solar
-rotation. {\bf Coalignment was implemented using a template matching
+rotation. {\BF Coalignment was implemented using a template matching
   technique \citep{lewis1995fast} implemented by the {\it
     scikit-image} \citep{Vanderwalt2014} routine {\it
     match\_template}.  A rectangular template sub-image with sides one
@@ -361,7 +363,7 @@ data representing four different types of physical locations in the
 solar atmosphere.  These were a quiet Sun region, a region that lies
 on top of a sunspot, a footpoint region, and a coronal moss region.
 Figure \ref{fig:loc171193} shows the location of the regions on sample
-images from the time range considered. {\bf These locations, selected
+images from the time range considered. {\BF These locations, selected
   by visual inspection, were chosen because they are representative of
   commonly observed structures in the corona.  Further,
   oscillatory power has been identified previously over sunspots and
@@ -430,7 +432,7 @@ approximate \PL\ \Fps\ over the frequency range 0.01 - 1 mHz.
 \centerline{
 \epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
 }
-\caption{{\bf The proportion of the number of pixels in each image
+\caption{{\BF The proportion of the number of pixels in each image
     that have a given Fourier power at some sample Fourier
     frequencies.  The left hand column gives results for AIA 171\AA,
     and the right hand column, AIA 193\AA.  Regions are indicated in
@@ -501,19 +503,19 @@ detector apparatus are assumed to dominate the observations.
 The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
 other regions, there appears to be excess Fourier power in the range
-1-10 mHz.  \cite{2003ApJ...595L..63D} show that TRACE
-171\AA\ (TRansition Region And Coronal Explorer) time-series of bright
-upper transition region emission above active region plage (also known
-as moss) is a source of wavelet power. Periods of significant wavelet
-power are found in the range 200 to 600 seconds, and typically persist
-for 4–7 cycles.  Later work by \cite{2005ApJ...624L..61D} suggested
-that spicule flux tubes tilted with respect to the solar surface
-provide a mechanism by which oscillatory power from lower in the
-atmosphere may be channeled to upper portions of the atmosphere.  This
-suggests that a second model $M_{2}$ for the \Fps\ in regions should
-be considered.  The second model $M_{2}$ has two contributions to the
-overall \Fps; a background power-law of the form of $P_{1}$, and a
-contribution that is more localized, $G(\nu)$.  The model is given by
+1-10 mHz.  \cite{2003ApJ...595L..63D} show that {\bf TRACE}
+171\AA\ time-series of bright upper transition region emission above
+active region plage (also known as moss) is a source of wavelet
+power. Periods of significant wavelet power are found in the range 200
+to 600 seconds, and typically persist for 4–7 cycles.  Later work by
+\cite{2005ApJ...624L..61D} suggested that spicule flux tubes tilted
+with respect to the solar surface provide a mechanism by which
+oscillatory power from lower in the atmosphere may be channeled to
+upper portions of the atmosphere.  This suggests that a second model
+$M_{2}$ for the \Fps\ in regions should be considered.  The second
+model $M_{2}$ has two contributions to the overall \Fps; a background
+power-law of the form of $P_{1}$, and a contribution that is more
+localized, $G(\nu)$.  The model is given by
 \begin{equation}
 \label{eqn:pwrlawbump}
 \mbox{Model $M_{2}$}: P_{2}(\nu) = P_{1}(\nu) + G(\nu)
@@ -525,24 +527,26 @@ G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\delta^{2}}\right].
 \end{equation}
 Both these models are fit to the geometrically averaged Fourier power
 spectrum in both wavelengths and in all four regions (Figure
-\ref{fig:fit171193}), and compared to decide which model best
-describes the data. A Bayesian probability based parameter estimation
-and model fitting is implemented.  This approach was chosen for its
-flexibility and consistent error estimation properties
-\citep{2013ApJ...769...89I}.  The details of the model fitting process
-are described in Appendix \ref{sec:app:ind}.  The position of $G(\nu)$ is
-restricted by permitting $\beta$ to vary in the range $0.1-10$ mHz
-only.  This restriction, which is imposed in the fitting process (see
-Appendix \ref{sec:app:ind}), arises from the observations of
-significant wavelet power in the period range 200 - 600 seconds as
-found by \cite{2003ApJ...595L..63D}.
+\ref{fig:fit171193}).  {\bf Model fitting and parameter estimation are
+  implemented using a Bayesian probability based approach.}  This
+approach was chosen for its flexibility and consistent error
+estimation properties \citep{2013ApJ...769...89I}.  The details of the
+model fitting process are described in Appendix \ref{sec:app:ind}.
+The position of $G(\nu)$ is restricted by permitting $\beta$ to vary
+in the range $0.1-10$ mHz only.  This restriction, which is imposed in
+the fitting process (see Appendix \ref{sec:app:ind}), arises from the
+observations of significant wavelet power in the period range 200 -
+600 seconds as found by \cite{2003ApJ...595L..63D}.  {\bf After this
+  fitting process is complete, the models are compared to decide which
+  model best describes the data.  The details of the model comparison
+  process are described in the following section.}
 
 \subsection{Results}\label{ssec:results}
 Figure \ref{fig:fit171193} show the fit results of each model to the
 data.  For details on the fitting procedure, see Appendix
 \ref{sec:app:ind}.
 
-{\bf The two models are assessed for how well they describe the data in two
+{\BF The two models are assessed for how well they describe the data in two
 different ways. Model selection is implemented using the Akaike Information Criterion
 (AIC; \citealp*{akaike}).  The AIC measures the amount of information
 lost when fitting a model to data \citep{2000Ap&SS.271..213T}.  The
@@ -558,7 +562,7 @@ AIC$ indicate that Model 2 loses less information compared to Model 1,
 leading to a preference for Model 2 over Model 1
 \citep{2007MNRAS.377L..74L}.  The AIC indicates that Model 2 is
 overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).}
-{\bf The AIC reveals which (out of a set of models) is preferred.  It
+{\BF The AIC reveals which (out of a set of models) is preferred.  It
   does not give an assessment of the goodness-of-fit of each model.
   Goodness-of-fit is estimated by calculating reduced-$\chi^{2}$,
   $\chi^{2}_{r}=\sum_{j=1}^{N}\left[(P_{i}(\nu_{j})-D_{j})/\sigma_{j}^{2}\right]/(N-k-1)$,
@@ -578,7 +582,7 @@ overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).}
   that probably the size of $\sigma_{i}$ are over-estimated.}
 
 Table \ref{tab:parameters} gives the parameter estimates and 68\%
-credible intervals of the parameter values for model $M_{2}$, {\bf the
+credible intervals of the parameter values for model $M_{2}$, {\BF the
   maximum value of the ratio $G(\nu)/P_{1}(\nu)$ and its location}.
 The \PL\ indices for all regions and both wavebands lie in the
 range 1.8 to 2.3, although there is no consistency between one
@@ -588,7 +592,7 @@ regions do not.  However, it should be noted that there is no {\it a
   priori} reason why the \PL\ indices for a region observed in two
 different wavebands should be the same.  This is because each waveband
 is designed to examine different features on the Sun in broadly
-different temperature ranges, and may be imaging {\bf different parts
+different temperature ranges, and may be imaging {\BF different parts
   of the same temperature-dependent physical process.  Also,
   line-of-sight effects may be different in different wavebands (and
   locations).}  Hence, the emission observed in one waveband need not have
@@ -617,33 +621,27 @@ to the study of coronal seismology, and is addressed in Sections
 \ref{ssec:corseis} and \ref{sec:oscdetect}.
 
 \begin{deluxetable}{cccccccccc}
-\tabletypesize{\scriptsize}
-\tablecolumns{5}
-\tablewidth{0pt}
+\tabletypesize{\scriptsize} \tablecolumns{5} \tablewidth{0pt}
 \tablecaption{Parameter values and uncertainty estimates derived for
-    model \protect$M_{2}$.  {\bf Uncertainties with an absolute value less than $0.005$ are quoted as $0.00$.} \label{tab:parameters}}
-\tablehead{
-\colhead{Region} & 
-\colhead{Waveband}    & 
-\multicolumn{3}{c}{\PL\ $P_{1}(\nu)$} & 
-\multicolumn{3}{c}{lognormal $G(\nu)$} & 
-\multicolumn{2}{c}{ratio $P_{1}(\nu)/G(\nu)$}\\
-\colhead{}          & 
-\colhead{}          & 
-\colhead{$\log_{10}A$}          & 
-\colhead{$n$}      & 
-\colhead{$\log_{10}C$}      &
-\colhead{$\log_{10}\alpha$} &
-\colhead{$\beta$ (mHz)}      &
-\colhead{$\delta$\tablenotemark{1}} &
-\colhead{$\max$}          & 
-\colhead{$\arg\max$ (mHz)}
-\\
-}
-\startdata
-loop footpoints & 171\AA  & $0.55^{+0.02}_{-0.02}$  & $2.29^{+0.02}_{-0.02}$  & $-4.26^{+0.00}_{-0.00}$  & $-2.30^{+0.09}_{-0.08}$ & $0.69^{+0.09}_{-0.08}$  & $0.32^{+0.01}_{-0.01}$    & 1.45 & 2.22 \\
-                & 193\AA  & $0.06^{+0.03}_{-0.02}$  & $2.28^{+0.04}_{-0.05}$ & $-4.40^{+0.00}_{-0.00}$  & $-2.18^{+0.16}_{-0.22}$ & $0.28^{+0.11}_{-0.06}$  & $0.43^{+0.03}_{-0.04}$  & 1.58 & 1.90 \\
-                & & & & & & &   & & \\
+  model \protect$M_{2}$.  {\BF Uncertainties with an absolute value
+    less than $0.005$ are quoted as $0.00$.} {\bf Uncertainties with
+    an absolute value between 0.005 and 0.01 are rounded up to have an
+    absolute value of 0.01} \label{tab:parameters}} \tablehead{
+  \colhead{Region} & \colhead{Waveband} &
+  \multicolumn{3}{c}{\PL\ $P_{1}(\nu)$} & \multicolumn{3}{c}{lognormal
+    $G(\nu)$} & \multicolumn{2}{c}{ratio
+    $P_{1}(\nu)/G(\nu)$}\\ \colhead{} & \colhead{} &
+  \colhead{$\log_{10}A$} & \colhead{$n$} & \colhead{$\log_{10}C$} &
+  \colhead{$\log_{10}\alpha$} & \colhead{$\beta$ (mHz)} &
+  \colhead{$\delta$\tablenotemark{1}} & \colhead{$\max$} &
+  \colhead{$\arg\max$ (mHz)} \\ } \startdata loop footpoints & 171\AA
+& $0.55^{+0.02}_{-0.02}$ & $2.29^{+0.02}_{-0.02}$ &
+$-4.26^{+0.00}_{-0.00}$ & $-2.30^{+0.09}_{-0.08}$ &
+$0.69^{+0.09}_{-0.08}$ & $0.32^{+0.01}_{-0.01}$ & 1.45 & 2.22 \\ &
+193\AA & $0.06^{+0.03}_{-0.02}$ & $2.28^{+0.04}_{-0.05}$ &
+$-4.40^{+0.00}_{-0.00}$ & $-2.18^{+0.16}_{-0.22}$ &
+$0.28^{+0.11}_{-0.06}$ & $0.43^{+0.03}_{-0.04}$ & 1.58 & 1.90 \\ & & &
+& & & & & & \\
 
 moss            & 171\AA  & $0.29^{+0.01}_{-0.01}$  & $1.76^{+0.01}_{-0.01}$ & $-4.04^{+0.00}_{-0.00}$  & $-1.34^{+0.02}_{-0.02}$  & $0.88^{+0.02}_{-0.02}$  & $0.34^{+0.00}_{-0.00}$    & 5.19 & 2.45\\
                 & 193\AA  & $0.39^{+0.01}_{-0.01}$  & $2.05^{+0.01}_{-0.01}$ & $-4.49^{+0.00}_{-0.00}$  & $-2.00^{+0.02}_{-0.02}$  & $1.24^{+0.03}_{-0.03}$  & $0.27^{+0.00}_{-0.00}$    & 4.72 & 2.68 \\
@@ -733,25 +731,25 @@ example demonstrates.
 Figure \ref{fig:comparison} illustrates how a time series generated
 from a random sample from a \PL\ \PS\ can be mistakenly thought to
 contain a narrow-band oscillatory signal.  The time series in Figure
-\ref{fig:comparison}(a) {\bf is a realization of a random process with
+\ref{fig:comparison}(a) {\BF is a realization of a random process with
   a \PS\ of the form $P(f)\approx f^{-1.77}$ with no explicit
   oscillatory content, using the construction procedure detailed in
   \cite{2010MNRAS.402..307V}.  A different realization of the same
   process with the same \PS\ would almost certainly generate a
   different looking time-series, but since there is more power in
   lower frequencies, lower frequency components are more likely to be
-  visible to the eye compared to higher frequency components.}  {\bf
+  visible to the eye compared to higher frequency components.}  {\BF
   Figure \ref{fig:comparison}(b) shows that if the null hypothesis is
   that the time-series is purely noise, and that the noise has the
   same average power at all wavelet scales (for example, if the
   time-series were pure Gaussian noise), then the 95\% confidence
   level leads to the positive detection of significant oscillatory
-  power in this time series.}  {\bf The detection claim changes if a
+  power in this time series.}  {\BF The detection claim changes if a
   different null hypothesis is used. Figure \ref{fig:comparison}(d) is
   the same as Figure \ref{fig:comparison}(b) except with the null
   hypothesis that the time-series gives rise to a \PL\ \PS\ of the
   form $\mbox{power}\propto\nu^{-n}$, where $\nu$ is the frequency of
-  oscillation, and $n$ is its \PL\ index}\footnote{{\bf The model
+  oscillation, and $n$ is its \PL\ index}\footnote{{\BF The model
     used to generate a \PL\ \PS\ is an auto-regressive AR(1) model.
     Such time-series assume that the current value in a time-series
     depends on its previous value plus some Gaussian-distributed noise
@@ -769,10 +767,10 @@ suggest that when examining the wavelet transforms of time-series for
 wave packets, a background \PL\ \PS\ should be assumed, along with
 higher confidence levels (99\% or higher), in order to minimize the
 effects of mistakenly identifying random variations in the background
-\PS\ as evidence for an oscillatory signal.  {\bf Since there is a
+\PS\ as evidence for an oscillatory signal.  {\BF Since there is a
   \PL\ \PS\ in time-series of coronal emission, evidence for the
   existence of a process that generates narrow-band oscillatory power
-  has to by measured by its power over and above that expected by the
+  has to {\bf be} measured by its power over and above that expected by the
   \PL\ \PS.}
 
 However, even this approach to identifying oscillatory power is not
@@ -833,7 +831,7 @@ These pixels are then clumped together and the quality of the signal
 is then assessed.  The {\it wave coherence} detection approach of
 \cite{2008SoPh..252..321M} implement wave detection through finding
 spatially contiguous regions of the corona which are coherent in a
-given frequency range.  {\bf \cite{2008SoPh..252..321M} use a
+given frequency range.  {\BF \cite{2008SoPh..252..321M} use a
   symmetric filter to estimate the coherence, in that oscillatory
   power from either side of the central search frequency contributes
   the same weight to the final result.  The effect of this filter in
@@ -888,7 +886,7 @@ explain the differences between their simulations and the observations
 presented here.
 
 \subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
-{\bf Power-law \PS\ have been
+{\BF Power-law \PS\ have been
   observed in other solar phenomena.  As was mentioned above,
   \cite{2014AA...563A...8A} observe \PLs\ in the integrated
   emission of small portions of active regions and the quiet Sun as
@@ -905,14 +903,14 @@ presented here.
   Spectrometer observations of the intensity of Lyman-$\alpha$ in the
   frequency range $2.6\times10^{-6}\rightarrow1.3\times10^{-4}$ Hz.}
 
-{\bf The coronal regions studied here also exhibit \PL-like \PA\ in the
+{\BF The coronal regions studied here also exhibit \PL-like \PA\ in the
 approximate frequency range $0.05\rightarrow 10$ mHz.  Under the
 modeling assumptions of models $M_{1}$ and $M_{2}$, the first
 contribution to the observed power spectrum is a \PL\ (which is
 detectable in all regions up to about 2 mHz)}.  It is present in both
 wavebands studied and in all the regions, and so parsimony suggests
 that the mechanism of its creation is both similar and ubiquitous in
-all {\bf similar} parts of the solar atmosphere {\bf , that is quiet
+all {\BF similar} parts of the solar atmosphere {\BF , that is quiet
   Sun, moss, loop footpoints and above sunspots}.  Further,
 \cite{2014AA...563A...8A} show that a \PL\ \PS\ is present in
 time-series of coronal active region and quiet Sun emission over the
@@ -1002,7 +1000,7 @@ average temperature, pressure, and density.  Such models can be run
 quickly and so can be used to model hundreds of coronal loops.
 
 Finally, the AIA instrument filter response at the time of the
-observation must also be understood and modeled in in order to
+observation must also be understood and modeled {\bf in} order to
 understand which emission lines contribute to the final observed
 image, and ultimately the \Fps\ for each region.
 \cite{2010AA...521A..21O} assume differential emission measure curves
@@ -1031,8 +1029,8 @@ expressed through the parameters $\alpha_{E}$ and $\gamma$ in Equation
 
 \section{Conclusions}\label{sec:conc}
 Time series of AIA 171\AA\ and 193\AA\ images show approximately power
-law like properties {\bf in four representative regions} of the
-corona.  {\bf It has been shown that the detection of narrow band
+law like properties {\BF in four representative regions} of the
+corona.  {\BF It has been shown that the detection of narrow band
   oscillatory power in the practice of coronal seismology must take in
   to account the presence of the \PL\ like \PS.  Detection thresholds
   should also increase in order to reduce the number of false positive
@@ -1047,7 +1045,7 @@ solar atmosphere and lower temperature emission lines in the AIA
 171\AA\ and 193\AA\ bandpasses.
 
 Future studies will include examining power spectra at many more
-locations on and off the disk. {\bf Automated definitions of coronal
+locations on and off the disk. {\BF Automated definitions of coronal
   structures will be used to segment particular coronal features from
   the data, and so provide improved information of the differences the
   coronal structure makes to the observed \PL\ \PS.  Other AIA
@@ -1142,7 +1140,7 @@ the case for the Fourier power spectra studied here.  Hence the value
 of $N$ cannot be set to the number of pixels in a region.
 
 Hence, the number of effectively independent pixels time-series must
-be calculated. {\bf The dependence of pixels on each other is
+be calculated. {\BF The dependence of pixels on each other is
   calculated using the following modeling assumptions.}  First, a pair
 of randomly chosen next-nearest neighbor pixels are selected from the
 region.  Next nearest neighbor pixels are chosen as close physical
@@ -1150,7 +1148,7 @@ proximity is most likely to express the strongest interdependence.
 Next, the cross correlation $c(\tau)$ function between two randomly
 chosen next-nearest neighbor pixels is calculated.  The cross
 correlation coefficient measures the linear dependence of two time
-series $X(t)$ and $Y(t \pm \tau)$ at different lag {\bf times $\tau$.
+series $X(t)$ and $Y(t \pm \tau)$ at different lag {\BF times $\tau$.
   The assumption here is that the linear dependence as measured by the
   cross-correlation coefficient estimates the actual dependence
   between time-series.}  The cross correlation coefficient is used to
@@ -1190,7 +1188,7 @@ L = \prod_{j=1}^{N_{f}}
 \end{equation}
 where $D_{j}$ is the observed \mFps\ at frequency $\nu_{j}$, $N_{f}$
 is the number of Fourier frequencies, and $\sigma_{j}$ is the normal
-distribution width at frequency $\nu_{j}$.  {\bf Each of the priors
+distribution width at frequency $\nu_{j}$.  {\BF Each of the priors
   for the parameters in each model has a uniform distribution, and are
   given in Table \ref{tab:priors}.  For some parameters, the logarithm
   of the model parameter has a uniform distribution, which aids in the
@@ -1261,11 +1259,11 @@ and 2 to the data, and is described below.
   The reduced chi-squared measurement $\chi^{2}_{r}$ for model $M_{2}$
   is calculated using the values of $\sigma_{j}$ above.
 \end{enumerate}
-{\bf The preferred model is selected using the Akaike Information
+{\BF The preferred model is selected using the Akaike Information
   Criteria \citep{2007MNRAS.377L..74L}, as described in the main
   text.}  Conveniently, the AIC is calculated by the PyMC package used
 to perform the MCMC sampling.  The 68\% credible intervals for the
-{\bf parameters of the model preferred using the AIC} are quoted in
+{\BF parameters of the model preferred using the AIC} are quoted in
 Table \ref{tab:parameters}.  The upper and lower limits to the
 credible intervals are found by determining the values beyond which
 16\% of the probability lies in each wing of the marginal
