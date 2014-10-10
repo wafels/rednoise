@@ -7,8 +7,11 @@ import numpy as np
 from timeseries import TimeSeries
 import datetime
 import astropy.units as u
+import os
 
 location = '/home/ireland/ts/sav/NV/Jack_model_TS.sav'
+
+imgdir = '/home/ireland/Desktop/'
 
 nvdata = readsav(location)
 
@@ -67,6 +70,6 @@ for i, k in enumerate(nvdata.keys()):
     plt.axvline(1.0 / (300.0) * u.Hz.to(requested_unit), label='5 minutes', color='k', linestyle= '-')
     plt.axvline(1.0 / (180.0) * u.Hz.to(requested_unit), label='3 minutes', color='k', linestyle= '--')
     plt.legend(framealpha=0.5, fontsize=8)
-    savefig = 'modeled_diffuse_ar_emission.%s.png' % (k)
+    savefig = os.path.join(imgdir, 'modeled_diffuse_ar_emission.%s.png' % (k))
     plt.savefig(savefig)
 plt.close('all')

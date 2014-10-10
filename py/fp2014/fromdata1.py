@@ -6,8 +6,11 @@ from scipy.io import readsav
 import numpy as np
 from timeseries import TimeSeries
 import datetime
+import os
 
 location = '/home/ireland/ts/sav/NV/Jack_data_TS.sav'
+
+imgdir = '/home/ireland/Desktop/'
 
 nvdata = readsav(location)
 
@@ -28,7 +31,7 @@ for i, k in enumerate(nvdata.keys()):
     time = [base + datetime.timedelta(seconds=j) for j in np.float64(indata[1, :])]
     data = indata[1, :]
 
-    waveband[k] = k[1:] + '$\AA$'
+    waveband[k] = k[4:] + '$\AA$'
 
     # length of the time series
     nt = len(data)
@@ -49,9 +52,10 @@ for i, k in enumerate(nvdata.keys()):
     # Plot
     with plt.style.context(('ggplot')):
         plt.figure(i)
-        plt.loglog(pfreq, power)
-        plt.xlabel('frequency (%s), %i frequencies, %i samples' % (pfreq.unit, len(pfreq), nt))
-        plt.ylabel('Fourier power (arb.units)')
-        plt.title(waveband[k] + ': data')
-        #savefig = 'modeled_diffuse_ar_emission.%s.%i.png' % (k, subsample)
-        #plt.savefig(savefig)
+        plt.plot(ts.ObservationTimes.cadence)
+        plt.xlabel('cadence number (%i cadences)' % (len(ts.ObservationTimes.cadence)))
+        plt.ylabel('cadence (%s)' % (ts.ObservationTimes.cadence.unit))
+        plt.title(waveband[k] + ': sample cadence, diffuse emission lightcurve')
+        savefig = os.path.join(imgdir, 'cadence.%s.png' % (k))
+        plt.savefig(savefig)
+plt.close('all')
