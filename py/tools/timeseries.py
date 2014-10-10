@@ -11,13 +11,16 @@ from sunpy.time import parse_time
 
 class ObservationTimes:
     def __init__(self, obstimes):
-        self.time = parse_time(obstimes)
+        self.time = obstimes
 
         # ensure that the initial time is zero and that the units are seconds
-        self.sampletimes = (self.time - self.time[0]).total_seconds() * u.s
+        self.sampletimes = np.array([(t - self.time[0]).total_seconds() for t in self.time]) * u.s
 
         # Calculate the average spacing
-        self.dt = (self.sampletimes[-1] - self.sampletimes[0]) / (1.0 * self.__len__)
+        self.dt = (self.sampletimes[-1] - self.sampletimes[0]) / (1.0 * len(self.time))
+
+        # Calculate the sample cadences
+        self.cadence = self.sampletimes[1: -1] - self.sampletimes[0: -2]
 
     def __len__(self):
         return len(self.time)
