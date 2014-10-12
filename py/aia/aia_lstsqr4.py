@@ -26,7 +26,7 @@ from statsmodels.graphics.gofplots import qqplot
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
+from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, figure_label_2by4
 from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
 from paper1 import descriptive_stats
 import scipy
@@ -148,8 +148,8 @@ def DefineWindow(window, nt):
 # Main analysis loop
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
-scsvroot = '~/ts/csv_cc_final/'
+sfigroot = '~/ts/img_cc_final_paper_rev1/'
+scsvroot = '~/ts/csv_cc_final_paper_rev1/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
@@ -230,9 +230,9 @@ for iwave, wave in enumerate(waves):
             #data_name = wave + ' (' + fits_level + winname + ', ' + manip + '), ' + region
             #data_name = region_id
             if region in sunday_name:
-                data_name = 'AIA ' + str(wave) + ' : ' + sunday_name[region]
+                data_name = 'AIA ' + str(wave) + '$\AA$ : ' + sunday_name[region]
             else:
-                data_name = 'AIA ' + str(wave) + ' : ' + region
+                data_name = 'AIA ' + str(wave) + '$\AA$ : ' + region
 
             # Create a location to save the figures
             savefig = os.path.join(os.path.expanduser(sfig), window, manip)
@@ -711,7 +711,7 @@ for iwave, wave in enumerate(waves):
             plt.figure(3)
             plt.xlabel('$\log_{10}(power)$')
             plt.ylabel('proportion found')
-            plt.title(data_name)
+            plt.title(figure_label_2by4[wave][region] + data_name)
             for jj, f in enumerate(findex):
                 xx = histogram_loc / np.log(10.0)
                 yy = hpwr[f, :]

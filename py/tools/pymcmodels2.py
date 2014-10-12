@@ -24,7 +24,7 @@ limits = {"power_law_index": [1.0, 6.0],
           "power_law_norm": [-10.0, np.log(100.0)],
           "background": [-20.0, np.log(100.0)]}
 
-glimits = {"gaussian_amplitude": [-20.0, limits["power_law_norm"][1] - np.log(1000.0)],
+glimits = {"gaussian_amplitude": [-20.0*1000000, limits["power_law_norm"][1]],
           "gaussian_width": [0.001, 3.00]}
 
 
@@ -318,7 +318,7 @@ def Log_splwc_AddLognormalBump2_noise_prior(analysis_frequencies, analysis_power
     @pymc.potential
     def gaussian_amplitude_bound(gaussian_amplitude=gaussian_amplitude,
                                  power_law_norm=power_law_norm):
-        if gaussian_amplitude < power_law_norm:
+        if gaussian_amplitude <= power_law_norm:
             return 0.0
         else:
             return -np.inf

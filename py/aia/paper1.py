@@ -91,6 +91,7 @@ s3min.label = '3 mins.'
 indexplot = {"region": "loopfootpoints",
              "wave": "171"}
 
+
 #
 # String defining the basics number of time series
 #
@@ -119,6 +120,22 @@ label_sunday_name = {'moss': 'moss',
                'lowlimb': 'low limb',
                'crosslimb': 'cross limb',
                'sunspot': 'sunspot'}
+
+figure_label_2by4 = {'171': {"loopfootpoints": "(a) ",
+                     "moss": "(c) ",
+                     "qs": "(e) ",
+                     "sunspot": "(g) "},
+                '193': {"loopfootpoints": "(b) ",
+                     "moss": "(d) ",
+                     "qs": "(f) ",
+                     "sunspot": "(h) "}}
+
+figure_data_plot = {'171': "(a) ", '193': "(b) "}
+
+figure_example_ps = {"loopfootpoints": "(a) ",
+                     "moss": "(b) ",
+                     "qs": "(c) ",
+                     "sunspot": "(d) "}
 
 
 # Write a CSV time series
