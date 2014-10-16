@@ -8,10 +8,9 @@ from timeseries import TimeSeries
 import datetime
 import astropy.units as u
 import os
+from general import norm_hanning, imgdir
 
 location = '/home/ireland/ts/sav/NV/Jack_model_TS.sav'
-
-imgdir = '/home/ireland/Desktop/'
 
 nvdata = readsav(location)
 
@@ -19,7 +18,7 @@ nvdata = readsav(location)
 requested_unit = 'mHz'
 
 # Subsample the data at this image cadence
-subsampler = [1, 12]
+subsampler = [12]
 
 waveband = {}
 
@@ -32,17 +31,13 @@ for i, k in enumerate(nvdata.keys()):
 
         data = nvdata[k][::subsample]
 
-        # Normalize
-        data_mean = np.mean(data)
-        data = (data - data_mean) / data_mean
+        # Normalize and apply the Hanning window
+        data = norm_hanning(data)
 
         waveband[k] = k[1:] + '$\AA$'
 
         # length of the time series
         nt = len(data)
-
-        # Multiply by the Hanning window
-        data = data * np.hanning(nt)
 
         # time
         base = datetime.datetime(2000, 1, 1)
@@ -61,15 +56,15 @@ for i, k in enumerate(nvdata.keys()):
         # Plot
         with plt.style.context(('ggplot')):
             plt.loglog(pfreq, power, label='%i second cadence, %i samples' % (subsample, nt))
-            plt.xlabel('frequency (%s)' % (pfreq.unit))
+            plt.xlabel('frequency (%s) [%i frequencies]' % (pfreq.unit, len(pfreq)))
             plt.ylabel('Fourier power (arb.units)')
-            plt.title(waveband[k] + ': modeled diffuse AR emission')
+            plt.title('VK2013: ' + waveband[k] + ': modeled diffuse AR emission')
             plt.ylim(10 ** -13.0, 10.0 ** 0)
-    plt.axvline(1.0 / (6 * 60 * 60.0) * u.Hz.to(requested_unit), label='Ireland et al (2014) frequency range', color='k', linestyle= ':')
-    plt.axvline(1.0 / (2 * 12) * u.Hz.to(requested_unit), color='k', linestyle= ':')
-    plt.axvline(1.0 / (300.0) * u.Hz.to(requested_unit), label='5 minutes', color='k', linestyle= '-')
-    plt.axvline(1.0 / (180.0) * u.Hz.to(requested_unit), label='3 minutes', color='k', linestyle= '--')
+    #plt.axvline(1.0 / (6 * 60 * 60.0) * u.Hz.to(requested_unit), label='Ireland et al (2014) frequency range', color='k', linestyle= ':')
+    #plt.axvline(1.0 / (2 * 12) * u.Hz.to(requested_unit), color='k', linestyle= ':')
+    #plt.axvline(1.0 / (300.0) * u.Hz.to(requested_unit), label='5 minutes', color='k', linestyle= '-')
+    #plt.axvline(1.0 / (180.0) * u.Hz.to(requested_unit), label='3 minutes', color='k', linestyle= '--')
     plt.legend(framealpha=0.5, fontsize=8)
-    savefig = os.path.join(imgdir, 'modeled_diffuse_ar_emission.%s.png' % (k))
+    savefig = os.path.join(imgdir, 'VK2013_theory_modeled_diffuse_ar_emission.%s.png' % (k))
     plt.savefig(savefig)
 plt.close('all')

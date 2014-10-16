@@ -7,11 +7,15 @@ from matplotlib import pyplot as plt
 import tsutils
 from astropy import units as u
 from sunpy.time import parse_time
+import datetime
 
 
 class ObservationTimes:
-    def __init__(self, obstimes):
-        self.time = obstimes
+    def __init__(self, obstimes, base=None):
+        if base is None:
+            self.time = obstimes
+        else:
+            self.time = [base + datetime.timedelta(seconds=j) for j in obstimes]
 
         # ensure that the initial time is zero and that the units are seconds
         self.sampletimes = np.array([(t - self.time[0]).total_seconds() for t in self.time]) * u.s
@@ -45,7 +49,7 @@ class PowerSpectrum:
 
 
 class TimeSeries:
-    def __init__(self, time, data):
+    def __init__(self, time, data, base=None):
         """
         A simple object that defines a time-series object.  Handy for storing
         time-series and their (its) Fourier power spectra.  Fourier power
@@ -59,7 +63,7 @@ class TimeSeries:
         maintain this expectation value, this requires the Fourier power to be
         divided by the number of samples in the original time-series.
         """
-        self.ObservationTimes = ObservationTimes(time)
+        self.ObservationTimes = ObservationTimes(time, base=base)
         nt = len(self.ObservationTimes)
         if nt != data.shape[-1]:
             raise ValueError('Length of sample times not the same as the data.')

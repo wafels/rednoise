@@ -7,40 +7,37 @@ import numpy as np
 from timeseries import TimeSeries
 import datetime
 import os
+from general import norm_hanning, imgdir
 
 location = '/home/ireland/ts/sav/NV/Jack_data_TS.sav'
 
-imgdir = '/home/ireland/Desktop/'
-
-nvdata = readsav(location)
+indata = readsav(location)
 
 # plot the frequencies in this unit
 requested_unit = 'mHz'
 
-# Subsample the data at this image cadence
-subsample = 1
-
 waveband = {}
 
 
-for i, k in enumerate(nvdata.keys()):
-    # get the data and subsample it
-    indata = nvdata[k][::subsample]
+for i, k in enumerate(indata.keys()):
+    # get the data and extract the samples and the sample times
+    nvdata = indata[k][0, :]
+    nvt = np.float64(indata[k][1, :])
+    nvt = nvt - nvt[0]
 
-    base = datetime.datetime(2000, 1, 1)
-    time = [base + datetime.timedelta(seconds=j) for j in np.float64(indata[1, :])]
-    data = indata[1, :]
+    # number of data points
+    nt = len(nvdata)
+    average_cadence = nvt[-1] / (1.0 * (nt - 1))
 
-    waveband[k] = k[4:] + '$\AA$'
+    # resample the data to the average cadence
+    t = average_cadence * np.arange(0, nt)
+    data_original = np.interp(t, nvt, nvdata)
 
-    # length of the time series
-    nt = len(data)
-
-    # Multiply by the Hanning window
-    data = data * np.hanning(nt)
+    # Normalize and multiply by the Hanning window
+    data = norm_hanning(data_original)
 
     # timeseries
-    ts = TimeSeries(time, data)
+    ts = TimeSeries(t, data, base=datetime.datetime(2000, 1, 1))
 
     # Get the location of the positive frequencies
     posindex = ts.PowerSpectrum.F.frequencies > 0
@@ -50,6 +47,8 @@ for i, k in enumerate(nvdata.keys()):
     pfreq = ts.PowerSpectrum.F.frequencies[posindex].to(requested_unit)
 
     # Plot
+    waveband[k] = k[4:] + '$\AA$'
+    """
     with plt.style.context(('ggplot')):
         plt.figure(i)
         plt.plot(ts.ObservationTimes.cadence)
@@ -58,4 +57,21 @@ for i, k in enumerate(nvdata.keys()):
         plt.title(waveband[k] + ': sample cadence, diffuse emission lightcurve')
         savefig = os.path.join(imgdir, 'cadence.%s.png' % (k))
         plt.savefig(savefig)
+    """
+    with plt.style.context(('ggplot')):
+        plt.figure(i + 10)
+        plt.subplot(211)
+        plt.plot(t, data_original)
+        plt.xlabel('time (seconds) [%i samples]' % (len(t)))
+        plt.ylabel('normalized counts')
+        plt.title('VK2012: ' + waveband[k] + ': data')
+        plt.subplot(212)
+        plt.loglog(pfreq, power, label='%i samples' % (nt))
+        plt.xlabel('frequency (%s) [%i frequencies]' % (pfreq.unit, len(pfreq)))
+        plt.ylabel('Fourier power (arb.units)')
+        plt.title('VK2012: ' + waveband[k] + ': Fourier power of data')
+        plt.tight_layout()
+        savefig = os.path.join(imgdir, 'VK2012_data_diffuse_emission_power_spectrum.%s.png' % (k))
+        plt.savefig(savefig)
+
 plt.close('all')
