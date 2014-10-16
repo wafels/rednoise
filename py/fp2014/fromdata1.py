@@ -7,7 +7,7 @@ import numpy as np
 from timeseries import TimeSeries
 import datetime
 import os
-from general import norm_hanning, imgdir
+from general import norm_hanning, imgdir, equally_spaced
 
 location = '/home/ireland/ts/sav/NV/Jack_data_TS.sav'
 
@@ -27,10 +27,9 @@ for i, k in enumerate(indata.keys()):
 
     # number of data points
     nt = len(nvdata)
-    average_cadence = nvt[-1] / (1.0 * (nt - 1))
 
     # resample the data to the average cadence
-    t = average_cadence * np.arange(0, nt)
+    t = equally_spaced(nt, nvt[-1])
     data_original = np.interp(t, nvt, nvdata)
 
     # Normalize and multiply by the Hanning window
@@ -64,12 +63,13 @@ for i, k in enumerate(indata.keys()):
         plt.plot(t, data_original)
         plt.xlabel('time (seconds) [%i samples]' % (len(t)))
         plt.ylabel('normalized counts')
+        plt.xlim(t[0], t[-1])
         plt.title('VK2012: ' + waveband[k] + ': data')
         plt.subplot(212)
         plt.loglog(pfreq, power, label='%i samples' % (nt))
         plt.xlabel('frequency (%s) [%i frequencies]' % (pfreq.unit, len(pfreq)))
         plt.ylabel('Fourier power (arb.units)')
-        plt.title('VK2012: ' + waveband[k] + ': Fourier power of data')
+        plt.title('VK2012: ' + waveband[k] + ': Fourier power spectrum')
         plt.tight_layout()
         savefig = os.path.join(imgdir, 'VK2012_data_diffuse_emission_power_spectrum.%s.png' % (k))
         plt.savefig(savefig)
