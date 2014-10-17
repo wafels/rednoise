@@ -415,6 +415,7 @@ for iwave, wave in enumerate(waves):
                               "5 minutes": '5 minutes',
                               "3 minutes": '3 minutes',
                               "bump_ratio": bump_ratio}
+                """
                 else:
                     labels = {"pwr_ff": None,
                               "M0_mean": None,
@@ -425,6 +426,7 @@ for iwave, wave in enumerate(waves):
                               "5 minutes": None,
                               "3 minutes": None,
                               "bump_ratio": None}
+                """
 
                 ax.plot(xvalue, np.exp(pwr_ff), label=labels["pwr_ff"], color='k')
 
