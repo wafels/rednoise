@@ -7,36 +7,26 @@ import numpy as np
 from timeseries import TimeSeries
 import datetime
 import os
-from general import norm_hanning, imgdir, equally_spaced
+from general import data_TS, imgdir
 
-location = '/home/ireland/ts/sav/NV/Jack_data_TS.sav'
 
-indata = readsav(location)
+# Load the data
+output = data_TS()
 
 # plot the frequencies in this unit
 requested_unit = 'mHz'
 
-waveband = {}
-
-
-for i, k in enumerate(indata.keys()):
-    # get the data and extract the samples and the sample times
-    nvdata = indata[k][0, :]
-    nvt = np.float64(indata[k][1, :])
-    nvt = nvt - nvt[0]
-
-    # number of data points
-    nt = len(nvdata)
-
-    # resample the data to the average cadence
-    t = equally_spaced(nt, nvt[-1])
-    data_original = np.interp(t, nvt, nvdata)
-
-    # Normalize and multiply by the Hanning window
-    data = norm_hanning(data_original)
+for i, kk in enumerate(output.keys()):
+    # timeseries
+    t = output[kk]["t"]
+    data = output[kk]["data"]
+    wb = output[kk]["wb"]
+    nt = len(t)
 
     # timeseries
-    ts = TimeSeries(t, data, base=datetime.datetime(2000, 1, 1))
+    ts = TimeSeries(t,
+                    data * np.hanning(nt),
+                    base=datetime.datetime(2000, 1, 1))
 
     # Get the location of the positive frequencies
     posindex = ts.PowerSpectrum.F.frequencies > 0
@@ -46,7 +36,6 @@ for i, k in enumerate(indata.keys()):
     pfreq = ts.PowerSpectrum.F.frequencies[posindex].to(requested_unit)
 
     # Plot
-    waveband[k] = k[4:] + '$\AA$'
     """
     with plt.style.context(('ggplot')):
         plt.figure(i)
@@ -60,18 +49,18 @@ for i, k in enumerate(indata.keys()):
     with plt.style.context(('ggplot')):
         plt.figure(i + 10)
         plt.subplot(211)
-        plt.plot(t, data_original)
+        plt.plot(t, data)
         plt.xlabel('time (seconds) [%i samples]' % (len(t)))
         plt.ylabel('normalized counts')
         plt.xlim(t[0], t[-1])
-        plt.title('VK2012: ' + waveband[k] + ': data')
+        plt.title('VK2012: ' + wb + ': data')
         plt.subplot(212)
         plt.loglog(pfreq, power, label='%i samples' % (nt))
         plt.xlabel('frequency (%s) [%i frequencies]' % (pfreq.unit, len(pfreq)))
         plt.ylabel('Fourier power (arb.units)')
-        plt.title('VK2012: ' + waveband[k] + ': Fourier power spectrum')
+        plt.title('VK2012: ' + wb + ': Fourier power spectrum')
         plt.tight_layout()
-        savefig = os.path.join(imgdir, 'VK2012_data_diffuse_emission_power_spectrum.%s.png' % (k))
+        savefig = os.path.join(imgdir, 'VK2012_data_diffuse_emission_power_spectrum.%s.png' % (kk))
         plt.savefig(savefig)
 
 plt.close('all')
