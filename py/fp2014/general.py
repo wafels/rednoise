@@ -126,3 +126,10 @@ def data_TS2():
         output[kk] = {"data": data, "t": t, 'wb': kk + '$\AA$'}
 
     return output
+
+
+#
+# The theoretical spectrum from an exponential decay
+#
+def spectrum_exp_decay(nu, T):
+    return 1.0 / (1.0 + (2 * np.pi * nu * T) ** 2 )

@@ -373,6 +373,16 @@ for iwave, wave in enumerate(waves):
                                                                                                                M1.trace('background')[i]]))
                 powerlaw_PM = powerlaw_PM / (1.0 * ntrace)
 
+
+                # Calculate the posterior mean power law and background contributions separately
+                powerlawonly_PM = np.zeros(nfreq)
+                for i in range(0, ntrace):
+                    powerlawonly_PM = powerlawonly_PM + np.log(rnspectralmodels.power_law(normed_freqs, [M1.trace('power_law_norm')[i],
+                                                                                                         M1.trace('power_law_index')[i]]))
+                powerlawonly_PM = powerlawonly_PM / (1.0 * ntrace)
+                background_PM = np.mean(M1.trace('background'))
+
+
                 # Print the maximum of the ratio of the bump contribution and
                 # to the power law, and the frequency at which occurs
                 #bump_to_pl_ratio = np.exp(normalbump_BF) / np.exp(powerlaw_BF)
@@ -409,11 +419,12 @@ for iwave, wave in enumerate(waves):
                     labels = {"pwr_ff": 'average Fourier power spectrum',
                               "M0_mean": '$M_{1}$',
                               "M1_mean": '$M_{2}$',
-                              "M1_P1": r'$P_{1}(\nu)$ component of $M_{2}$',
-                              "M1_G": r'$G(\nu)$ component of $M_{2}$',
+                              "M1_P1": r'power law',
+                              "M1_G": r'photospheric leakage',
                               'M1: 95% low': r'$M_{1}$: 95%% credible interval',
                               "5 minutes": '5 minutes',
                               "3 minutes": '3 minutes',
+                              "background": "background",
                               "bump_ratio": bump_ratio}
                 """
                 else:
@@ -445,6 +456,7 @@ for iwave, wave in enumerate(waves):
                 # Plot each component of M1
                 ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')
                 ax.plot(xvalue, np.exp(normalbump_PM), label=labels["M1_G"], color='g', linestyle='--')
+                ax.axhline(np.exp(background_PM), label=labels["background"], color='g', linestyle=':')
                 #ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of the maximum likelihood fit, $M_{2}$', color='g')
                 #ax.plot(xvalue, np.exp(normalbump_BF), label='Gaussian component of the maximum likelihood fit, $M_{2}$', color='g', linestyle='--')
 
