@@ -419,7 +419,7 @@ for iwave, wave in enumerate(waves):
                     labels = {"pwr_ff": 'average Fourier power spectrum',
                               "M0_mean": '$M_{1}$',
                               "M1_mean": '$M_{2}$',
-                              "M1_P1": r'power law',
+                              "M1_P1": 'power law, index=%f' % (np.mean(M1.trace('power_law_index'))),
                               "M1_G": r'photospheric leakage',
                               'M1: 95% low': r'$M_{1}$: 95%% credible interval',
                               "5 minutes": '5 minutes',
