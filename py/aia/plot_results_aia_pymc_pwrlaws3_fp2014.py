@@ -380,7 +380,7 @@ for iwave, wave in enumerate(waves):
                     powerlawonly_PM = powerlawonly_PM + np.log(rnspectralmodels.power_law(normed_freqs, [M1.trace('power_law_norm')[i],
                                                                                                          M1.trace('power_law_index')[i]]))
                 powerlawonly_PM = powerlawonly_PM / (1.0 * ntrace)
-                background_PM = np.mean(M1.trace('background'))
+                background_PM = np.mean(M1.trace('background')[:])
 
 
                 # Print the maximum of the ratio of the bump contribution and
@@ -393,6 +393,7 @@ for iwave, wave in enumerate(waves):
                 print '++++++++++++++++++++++++'
 
                 # Plot
+                #with plt.style.context(('ggplot')):
                 title = 'AIA ' + wave + "$\AA$ : " + sunday_name[region]
                 xvalue = freqfactor * freqs
                 fivemin = freqfactor * 1.0 / 300.0
@@ -415,17 +416,17 @@ for iwave, wave in enumerate(waves):
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
                 bump_ratio = r'$M_{2}$, $\arg \max[G(\nu)/P_{1}(\nu)]$'
-                if region == indexplot["region"] and wave == indexplot["wave"]:
-                    labels = {"pwr_ff": 'average Fourier power spectrum',
-                              "M0_mean": '$M_{1}$',
-                              "M1_mean": '$M_{2}$',
-                              "M1_P1": 'power law, index=%f' % (np.mean(M1.trace('power_law_index'))),
-                              "M1_G": r'photospheric leakage',
-                              'M1: 95% low': r'$M_{1}$: 95%% credible interval',
-                              "5 minutes": '5 minutes',
-                              "3 minutes": '3 minutes',
-                              "background": "background",
-                              "bump_ratio": bump_ratio}
+                #if region == indexplot["region"] and wave == indexplot["wave"]:
+                labels = {"pwr_ff": 'mean observed Fourier power spectrum',
+                          "M0_mean": '$M_{1}$',
+                          "M1_mean": 'model power spectrum (Equation 1)',
+                          "M1_P1": 'power law (index=%0.2f)' % (np.mean(M1.trace('power_law_index')[:])),
+                          "M1_G": r'photospheric leakage',
+                          'M1: 95% low': r'$M_{1}$: 95%% credible interval',
+                          "5 minutes": '5 minutes',
+                          "3 minutes": '3 minutes',
+                          "background": "background",
+                          "bump_ratio": bump_ratio}
                 """
                 else:
                     labels = {"pwr_ff": None,
@@ -454,7 +455,7 @@ for iwave, wave in enumerate(waves):
                 #plt.plot(xvalue, M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1], label='M0: 95% high', color = 'b', linestyle='--')
 
                 # Plot each component of M1
-                ax.plot(xvalue, np.exp(powerlaw_PM), label=labels["M1_P1"], color='g')
+                ax.plot(xvalue, np.exp(powerlawonly_PM), label=labels["M1_P1"], color='g')
                 ax.plot(xvalue, np.exp(normalbump_PM), label=labels["M1_G"], color='g', linestyle='--')
                 ax.axhline(np.exp(background_PM), label=labels["background"], color='g', linestyle=':')
                 #ax.plot(xvalue, np.exp(powerlaw_BF), label='power law component of the maximum likelihood fit, $M_{2}$', color='g')
@@ -471,8 +472,8 @@ for iwave, wave in enumerate(waves):
                 #plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), color = 'r', linestyle='--')
 
                 # Plot the 3 and 5 minute frequencies
-                ax.axvline(fivemin, label=labels['5 minutes'], linestyle='--', color='k')
-                ax.axvline(threemin, label=labels['3 minutes'], linestyle='-.', color='k')
+                #ax.axvline(fivemin, label=labels['5 minutes'], linestyle='--', color='k')
+                #ax.axvline(threemin, label=labels['3 minutes'], linestyle='-.', color='k')
 
                 # Plot the location of the maximum bump ratio
                 #ax.axvline(freqfactor * freqs[max_bump_to_pl_ratio_index],
@@ -498,7 +499,7 @@ for iwave, wave in enumerate(waves):
 
                 # Complete the plot and save it
                 #if region == indexplot["region"] and wave == indexplot["wave"]:
-                plt.legend(fontsize=12, labelspacing=0.2, loc=1, handletextpad=0.0, framealpha=0.5)
+                plt.legend(fontsize=12, labelspacing=0.2, loc=1, handletextpad=0.0)
                 plt.xlabel(r'frequency $\nu$ (mHz)')
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
