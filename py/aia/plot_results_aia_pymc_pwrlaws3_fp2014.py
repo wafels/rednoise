@@ -416,11 +416,13 @@ for iwave, wave in enumerate(waves):
                 xformatter = plt.FuncFormatter(log_10_product)
                 ax.xaxis.set_major_formatter(xformatter)
                 bump_ratio = r'$M_{2}$, $\arg \max[G(\nu)/P_{1}(\nu)]$'
+                power_law_index = M1.trace('power_law_index')[:]
                 #if region == indexplot["region"] and wave == indexplot["wave"]:
                 labels = {"pwr_ff": 'mean observed Fourier power spectrum',
                           "M0_mean": '$M_{1}$',
                           "M1_mean": 'model power spectrum (Equation 1)',
-                          "M1_P1": 'power law (index=%0.2f)' % (np.mean(M1.trace('power_law_index')[:])),
+                          "M1_P1": 'power law (index=%0.2f$\pm$%0.2f)' % (np.mean(power_law_index),
+                                                                          np.std(power_law_index)),
                           "M1_G": r'photospheric leakage',
                           'M1: 95% low': r'$M_{1}$: 95%% credible interval',
                           "5 minutes": '5 minutes',
