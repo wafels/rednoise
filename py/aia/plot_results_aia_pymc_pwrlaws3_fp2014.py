@@ -413,8 +413,8 @@ for iwave, wave in enumerate(waves):
                 ax.set_yscale('log')
 
                 # Set the formatting of the tick labels
-                xformatter = plt.FuncFormatter(log_10_product)
-                ax.xaxis.set_major_formatter(xformatter)
+                #xformatter = plt.FuncFormatter(log_10_product)
+                #ax.xaxis.set_major_formatter(xformatter)
                 bump_ratio = r'$M_{2}$, $\arg \max[G(\nu)/P_{1}(\nu)]$'
                 power_law_index = M1.trace('power_law_index')[:]
                 #if region == indexplot["region"] and wave == indexplot["wave"]:
@@ -509,6 +509,7 @@ for iwave, wave in enumerate(waves):
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
                 plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
+                #plt.ylim(10.0 ** -11, 10.0 ** 1.0)
                 #plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
                 plt.close('all')

@@ -71,7 +71,7 @@ def data_TS():
         t = equally_spaced(nt, nvt[-1])
         data = np.interp(t, nvt, nvdata)
 
-        # Normalize and multiply by the Hanning window
+        # Normalize
         data = norm_data(data)
 
         wave = k[4:]
@@ -132,4 +132,4 @@ def data_TS2():
 # The theoretical spectrum from an exponential decay
 #
 def spectrum_exp_decay(nu, T):
-    return 1.0 / (1.0 + (2 * np.pi * nu * T) ** 2 )
+    return 1.0 / (1.0 + (2 * np.pi * nu * T) ** 2)
