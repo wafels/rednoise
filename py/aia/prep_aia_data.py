@@ -5,9 +5,9 @@ Load in the FITS files and write out a numpy arrays
 #import matplotlib
 #matplotlib.use("Agg")
 import os
-#from matplotlib import rc_file
-#matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1_image_plots.rc'
-#rc_file(os.path.expanduser(matplotlib_file))
+from matplotlib import rc_file
+matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1_image_plots.rc'
+rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
 
 import cPickle as pickle
@@ -29,7 +29,7 @@ corename = 'shutdownfun3_6hr_3files_only'
 #corename = 'shutdownfun6_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-wave = '193'
+wave = '171'
 cross_correlate = True
 
 
@@ -41,7 +41,7 @@ aia_data_location = aia_specific.save_location_calculator({"aiadata": dataroot},
                                              branches)
 
 if cross_correlate:
-    extension = '_cc_final'
+    extension = '_cc_final_rev1_final'
 else:
     extension = ''
 
@@ -145,10 +145,15 @@ if corename == 'shutdownfun6_6hr':
 
 if (corename == 'shutdownfun3_6hr' or corename == 'shutdownfun3_6hr_3files_only') and layer_index == nt / 2:
     print('Using %s and %f' % (corename, layer_index))
+    """
     regions = {'moss': [[175, 210], [140, 200]],
                'sunspot': [[125, 200], [250, 350]],
                'qs': [[60, 110], [500, 550]],
                'loopfootpoints': [[110, 160], [10, 50]]}
+    """
+    regions = {'moss': [[175, 210], [140, 200]],
+               'loopfootpoints': [[110, 160], [10, 50]]}
+
 #    regions_central = define_central_data(regions)
 
 if corename == '20120923_0000__20120923_0100' or corename == 'shutdownfun3_1hr' :
@@ -211,14 +216,14 @@ lower_left = px2arcsec(Q, [0, 0])
 upper_right = px2arcsec(Q, [nx - 1, ny - 1])
 extent = [lower_left[0], upper_right[0], lower_left[1], upper_right[1]]
 
-
+plt.close('all')
 plt.figure(1)
 plt.imshow(np.log(dc[:, :, ind]),
            origin='bottom',
            cmap=cm.get_cmap(name='sdoaia' + wave),
            extent=extent)
 #plt.title(ident + ': nx=%i, ny=%i' % (nx, ny))
-plt.title(figure_data_plot[wave] + 'AIA ' + wave + '$\AA$ (%s)' % (times["date_obs"][ind].strftime('%Y/%m/%d %H:%M:%S')))
+plt.title('AIA ' + wave + '$\AA$ (%s)' % (times["date_obs"][ind].strftime('%Y/%m/%d %H:%M:%S')))
 plt.ylabel('y (arcseconds)')
 plt.xlabel('x (arcseconds)')
 xoffset = 2
@@ -231,13 +236,22 @@ for region in regions:
     loc2 = px2arcsec(Q, [x[1], y[1]])
     aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='w', linewidth=3)
     aia_specific.plot_square([loc1[0], loc2[0]], [loc1[1], loc2[1]], color='k', linewidth=1)
+    """
     if region == 'moss':
         plt.text(loc2[0] + xoffset, loc2[1] + yoffset, label_sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5), size=20)
     else:
         plt.text(loc2[0] + xoffset, loc1[1] - yoffset, label_sunday_name[region], color='k', bbox=dict(facecolor='white', alpha=0.5), size=20)
+    """
+    plt.annotate(label_sunday_name[region], horizontalalignment='left',
+                 bbox=dict(facecolor="white", alpha=0.5),
+                 xy=(loc2[0], 0.5 * (loc1[1] + loc2[1])),  xycoords='data',
+                 xytext=(loc1[0] + 200, loc1[1]),
+                 arrowprops=dict(facecolor='black', shrink=0.05),
+                 verticalalignment='top')
 plt.xlim(lower_left[0], upper_right[0])
 plt.ylim(lower_left[1], upper_right[1])
-plt.savefig(os.path.join(save_locations["image"], ident + '.eps'))
+plt.savefig(os.path.join(save_locations["image"], ident + '.png'))
+print os.path.join(save_locations["image"], ident + '.png')
 """
 
 #

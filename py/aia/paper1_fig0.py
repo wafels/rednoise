@@ -166,4 +166,5 @@ for region in regions:
 plt.xlim(lower_left[0], upper_right[0])
 plt.ylim(lower_left[1], upper_right[1])
 plt.savefig(os.path.join(save_locations["image"], ident + '.pdf'))
+print os.path.join(save_locations["image"], ident + '.pdf')
 plt.close('all')
