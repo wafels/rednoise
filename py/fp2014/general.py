@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.io import readsav
+import os
 
-imgdir = '/home/ireland/Documents/Proposals/2014/05 HSR Corona/Step 2/'
+imgdir = os.path.expanduser('~/Documents/Proposals/2014/05 HSR Corona/Step 2/')
 
 
 def norm_data(data):
@@ -29,7 +30,7 @@ def equally_spaced(nt, duration):
 #
 def theory_TS(subsample):
 
-    location = '/home/ireland/ts/sav/NV/Jack_model_TS.sav'
+    location = os.path.expanduser('~/ts/sav/NV/Jack_model_TS.sav')
 
     nvdata = readsav(location)
 
@@ -57,7 +58,7 @@ def theory_TS(subsample):
 #
 def data_TS():
 
-    location = '/home/ireland/ts/sav/NV/Jack_data_TS.sav'
+    location = os.path.expanduser('~/ts/sav/NV/Jack_data_TS.sav')
     indata = readsav(location)
     output = {}
     for i, k in enumerate(indata.keys()):
@@ -86,7 +87,7 @@ def data_TS():
 # Create a data structure for the TS2 data
 #
 def data_TS2():
-    location = '/home/ireland/ts/sav/NV/Jack_data_TS2.sav'
+    location = os.path.expanduser('~/ts/sav/NV/Jack_data_TS2.sav')
     nvdata = readsav(location)
 
     # Identify the data keys

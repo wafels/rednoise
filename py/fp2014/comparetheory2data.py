@@ -12,7 +12,7 @@ from timeseries import TimeSeries
 import datetime
 import astropy.units as u
 from general import theory_TS, imgdir, data_TS2, spectrum_exp_decay
-from paper1 import log_10_product
+#from paper1 import log_10_product
 
 # plot the frequencies in this unit
 requested_unit = 'mHz'
