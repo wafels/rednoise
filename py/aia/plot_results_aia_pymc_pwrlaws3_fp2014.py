@@ -469,7 +469,7 @@ for iwave, wave in enumerate(waves):
                 #label = '$M_{2}$: maximum likelihood fit, ' + chivaluestring
                 #label = '$M_{2}$, maximum likelihood fit'
                 #ax.plot(xvalue, np.exp(M1_bf), label=label, color='r')
-                ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label=labels["M1_mean"], color = 'r')
+                ax.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['mean']), label=labels["M1_mean"], color = 'm')
                 #plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]), label=labels['M1: 95% low'], color = 'r', linestyle='--')
                 #plt.plot(xvalue, np.exp(M1.stats()['fourier_power_spectrum']['95% HPD interval'][:, 1]), color = 'r', linestyle='--')
 

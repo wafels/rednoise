@@ -22,6 +22,8 @@ subsampler = [12]
 
 waveband = {}
 
+llimit_color = 'b'
+
 for subsample in subsampler:
     theory_TS = theory_TS(12)
     data_TS = data_TS2()
@@ -33,6 +35,8 @@ for subsample in subsampler:
         t = theory_TS[kk]["t"][0: 1800]
         wb = theory_TS[kk]["wb"]
         nt = len(data)
+        label = 'Viall & Klimchuk 2013 Fig. 1, simulated light curves'
+        color = 'm'
 
         # timeseries
         ts = TimeSeries(t,
@@ -50,6 +54,8 @@ for subsample in subsampler:
         t2 = data_TS[kk]["t"]
         wb2 = data_TS[kk]["wb"]
         nt2 = len(data2)
+        label2 = 'Viall & Klimchuk 2012, observed data'
+        color2 = 'k'
 
         # timeseries
         ts2 = TimeSeries(t2,
@@ -76,14 +82,14 @@ for subsample in subsampler:
         # Set the formatting of the tick labels
         #xformatter = plt.FuncFormatter(log_10_product)
         #ax.xaxis.set_major_formatter(xformatter)
-        plt.loglog(pfreq2, power2, label='Viall & Klimchuk 2012 observed data')
-        plt.loglog(pfreq, power / (10.0 ** displacement), label='Viall & Klimchuk 2013 Fig. 1, modeled light curves')
+        plt.loglog(pfreq2, power2, label=label2, color=color2)
+        plt.loglog(pfreq, power / (10.0 ** displacement), label=label, color=color)
         #plt.loglog(pfreq, spectrum_exp_decay(pfreq.to('Hz').value, 2000.0))
-        plt.xlabel('frequency (%s)' % (pfreq.unit))
+        plt.xlabel(r'frequency $\nu$ (%s)' % (pfreq.unit))
         plt.ylabel('Fourier power (arb.units)')
         plt.title(wb + ': Fourier power spectra')
         plt.ylim(10.0 ** (-11 - displacement), 10.0 ** 1)
-        plt.axhline(10.0 ** -5, color='k', linestyle="--")
+        plt.axhline(10.0 ** -5, color=llimit_color, linestyle="--")
         floc = 10.0 ** -1.9
         plt.text(floc, 10.0 ** -5.5, 'lower limit of Fourier power', color='k', fontsize=11, fontstyle='italic')
         plt.text(floc, 10.0 ** -6.0, 'in Figure 1 plots', color='k', fontsize=11, fontstyle='italic')
@@ -93,20 +99,21 @@ for subsample in subsampler:
         plt.savefig(savefig)
         plt.close('all')
 
-
         # Plot
         with plt.style.context(('ggplot')):
             plt.figure()
-            plt.loglog(pfreq2, power2, label='Viall & Klimchuk 2012 observed data')
-            plt.loglog(pfreq, power / (10.0 ** displacement), label='Viall & Klimchuk 2013 Fig. 1, modeled light curves')
+            plt.loglog(pfreq2, power2, label=label2, color=color2)
+            plt.loglog(pfreq, power / (10.0 ** displacement), label=label, color=color)
             #plt.loglog(pfreq, spectrum_exp_decay(pfreq.to('Hz').value, 2000.0))
-            plt.xlabel('frequency (%s)' % (pfreq.unit))
+            plt.xlabel(r'frequency $\nu$ (%s)' % (pfreq.unit))
             plt.ylabel('Fourier power (arb.units)')
             plt.title(wb + ': Fourier power spectra')
             plt.ylim(10.0 ** (-11 - displacement), 10.0 ** 1)
+            plt.text(floc, 10.0 ** -5.5, 'lower limit of Fourier power', color='k', fontsize=11, fontstyle='italic')
+            plt.text(floc, 10.0 ** -6.0, 'in Figure 1 plots', color='k', fontsize=11, fontstyle='italic')
             plt.tight_layout()
             plt.legend(fontsize=12, loc=3, framealpha=1.0)
-            plt.axhline(10.0 ** -5)
+            plt.axhline(10.0 ** -5, color=llimit_color, linestyle="--")
             #plt.text(pfreq[0].to('mHz').value, 10.0 ** -5, 'lower limit of Figure 1 plots')
             savefig = os.path.join(imgdir, 'compare_VK2013_theory_modeled_diffuse_todata.ggplot.%s.png' % (kk))
             plt.savefig(savefig)
