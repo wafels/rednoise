@@ -20,9 +20,9 @@
 %% manuscript produces a one-column, double-spaced document:
 
 
-%\documentclass[onecolumn]{emulateapj}
+\documentclass[onecolumn]{emulateapj}
 %\documentclass[twocolumn]{aastex}
-\documentclass[referee]{aastex}
+%\documentclass[referee]{aastex}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{multirow}
@@ -128,7 +128,7 @@
 \begin{abstract}
 
   {\BF The dynamics of regions of the solar corona are investigated
-    using {\bf Atmospheric Imaging Assembly (AIA)} 171\AA\ and
+    using {\BF Atmospheric Imaging Assembly (AIA)} 171\AA\ and
     193\AA\ data.  The coronal emission from the quiet Sun, coronal
     loop footprints, coronal moss, and from above a sunspot is
     studied.  It is shown that the \mFpa\ in these regions can be
@@ -232,7 +232,7 @@ flare events at distant solar locations.
 The relative scarcity of observations of coronal oscillations has
 prompted efforts to create automated oscillation detection algorithms.
 The need for an automated oscillation detection algorithm has been
-exacerbated by the large and rapidly growing amount of {\bf Solar
+exacerbated by the large and rapidly growing amount of {\BF Solar
   Dynamics Observatory (SDO, \citealp{2012SoPh..275....3P})
   Atmospheric Imaging Assembly (AIA, \citealp{2012SoPh..275...17L})}
 data.  There have been several attempts at designing such algorithms.
@@ -284,7 +284,7 @@ make either the explicit or implicit assumption that the observed
 time-series consists of a background trend of some kind and
 (approximately) Gaussian-distributed noise which must be taken in to
 account in order to test for the presence of an oscillatiory signal
-{\bf \citep{2004SoPh..223....1D, 2007SoPh..241..397N,
+{\BF \citep{2004SoPh..223....1D, 2007SoPh..241..397N,
     2008SoPh..248..395S, 2010SoPh..264..403I, 2013SoPh..286..405C}.}
 {\BF However, two recent papers cast doubt on this assumption.
   \cite{2014AA...563A...8A} integrate emission over small portions of
@@ -309,12 +309,12 @@ coronal seismology and the heating of the solar atmosphere.  Section
 
 
 \section{Observations}\label{sec:obs}
-{\bf AIA} observes images of the Sun in multiple wavebands
+{\BF AIA} observes images of the Sun in multiple wavebands
 simultaneously and continuously, at high cadence (12 seconds) and at
 high spatial resolution (0.6 arcseconds per pixel).  These data enable
 detailed comparisons between phenomena observed in multiple wavebands,
 and are therefore ideal for assessing the frequency content of the
-solar atmosphere.  {\bf AIA} data was acquired using the Lockheed Martin
+solar atmosphere.  {\BF AIA} data was acquired using the Lockheed Martin
 Solar Astrophysics cutout service at {\it
   http://lmsal.com/get\_aia\_data/}.  Six hours of image data in the
 time range 2012-09-23 00:00 - 06:00 UT, at the full 12 second cadence,
@@ -503,7 +503,7 @@ detector apparatus are assumed to dominate the observations.
 The moss results for 171\AA\ and 193\AA\ are notably different from
 the other results.  In comparison to the general trend observed in
 other regions, there appears to be excess Fourier power in the range
-1-10 mHz.  \cite{2003ApJ...595L..63D} show that {\bf TRACE}
+1-10 mHz.  \cite{2003ApJ...595L..63D} show that {\BF TRACE}
 171\AA\ time-series of bright upper transition region emission above
 active region plage (also known as moss) is a source of wavelet
 power. Periods of significant wavelet power are found in the range 200
@@ -527,7 +527,7 @@ G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\delta^{2}}\right].
 \end{equation}
 Both these models are fit to the geometrically averaged Fourier power
 spectrum in both wavelengths and in all four regions (Figure
-\ref{fig:fit171193}).  {\bf Model fitting and parameter estimation are
+\ref{fig:fit171193}).  {\BF Model fitting and parameter estimation are
   implemented using a Bayesian probability based approach.}  This
 approach was chosen for its flexibility and consistent error
 estimation properties \citep{2013ApJ...769...89I}.  The details of the
@@ -536,7 +536,7 @@ The position of $G(\nu)$ is restricted by permitting $\beta$ to vary
 in the range $0.1-10$ mHz only.  This restriction, which is imposed in
 the fitting process (see Appendix \ref{sec:app:ind}), arises from the
 observations of significant wavelet power in the period range 200 -
-600 seconds as found by \cite{2003ApJ...595L..63D}.  {\bf After this
+600 seconds as found by \cite{2003ApJ...595L..63D}.  {\BF After this
   fitting process is complete, the models are compared to decide which
   model best describes the data.  The details of the model comparison
   process are described in the following section.}
@@ -623,7 +623,7 @@ to the study of coronal seismology, and is addressed in Sections
 \tabletypesize{\scriptsize} \tablecolumns{5} \tablewidth{0pt}
 \tablecaption{Parameter values and uncertainty estimates derived for
   model \protect$M_{2}$.  {\BF Uncertainties with an absolute value
-    less than $0.005$ are quoted as $0.00$.} {\bf Uncertainties with
+    less than $0.005$ are quoted as $0.00$.} {\BF Uncertainties with
     an absolute value between 0.005 and 0.01 are rounded up to have an
     absolute value of 0.01} \label{tab:parameters}} \tablehead{
   \colhead{Region} & \colhead{Waveband} &
@@ -769,7 +769,7 @@ effects of mistakenly identifying random variations in the background
 \PS\ as evidence for an oscillatory signal.  {\BF Since there is a
   \PL\ \PS\ in time-series of coronal emission, evidence for the
   existence of a process that generates narrow-band oscillatory power
-  has to {\bf be} measured by its power over and above that expected by the
+  has to {\BF be} measured by its power over and above that expected by the
   \PL\ \PS.}
 
 However, even this approach to identifying oscillatory power is not
@@ -956,7 +956,7 @@ approximated by
 P_{total}(\nu) \propto \nu^{-(2-\alpha_{E})(1+\gamma)}.
 \end{equation}
 This derivation shows it is possible to generate \PL\ power spectra
-using swarms of statistically similar emission events.  {\bf Equation
+using swarms of statistically similar emission events.  {\BF Equation
   \ref{eqn:finalfps} extends a suggestion by
   \citet{1991SoPh..133..357H} that Equation \ref{eqn:ftexpdecay} be
   used to estimate the timescale of a number of smaller heating events
@@ -1007,7 +1007,7 @@ average temperature, pressure, and density.  Such models can be run
 quickly and so can be used to model hundreds of coronal loops.
 
 Finally, the AIA instrument filter response at the time of the
-observation must also be understood and modeled {\bf in} order to
+observation must also be understood and modeled {\BF in} order to
 understand which emission lines contribute to the final observed
 image, and ultimately the \Fps\ for each region.
 \cite{2010AA...521A..21O} assume differential emission measure curves
