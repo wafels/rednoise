@@ -263,18 +263,18 @@ with plt.style.context(("ggplot")):
     plt.close("all")
 
 #
-# Power series of simulated data
+# Power spectrum of simulated data
 #
 with plt.style.context(("ggplot")):
     matplotlib.rcParams.update({'font.size': 22})
-    plt.figure(1, figsize=(10, 6))
-    plt.loglog(1000 * ts.PowerSpectrum.frequencies.positive, iobs, linewidth=1.5, label='noisy')
-    plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label='actual')
-    plt.axvline(1000.0/300.0, label='5 mins.', color='k', linestyle = "-", linewidth=1.5)
-    plt.axvline(1000.0/180.0, label='3 mins.', color='k', linestyle = ':', linewidth=1.5)
-    plt.title('power spectrum of simulated data')
-    plt.xlabel("frequency (mHz)")
-    plt.ylabel("emission (arb. units)")
+    plt.figure(1, figsize=(24, 6))
+    plt.loglog(1000 * ts.PowerSpectrum.frequencies.positive, iobs, linewidth=1.5, label='simulated')
+    plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label=r'$\nu^{-1.77}$')
+    plt.axvline(1000.0/300.0, label='5 mins.', color='k', linestyle = ":", linewidth=1.5)
+    plt.axvline(1000.0/180.0, label='3 mins.', color='k', linestyle = '-', linewidth=1.5)
+    plt.title('power spectrum')
+    plt.xlabel("frequency " + r"$\nu$" + " (mHz)")
+    plt.ylabel("power (arb. units)")
     plt.legend(loc=3)
     plt.savefig(os.path.expanduser("~/Desktop/dirsem/simulated_data_ps.png"))
     plt.close("all")
