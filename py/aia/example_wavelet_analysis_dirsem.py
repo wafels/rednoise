@@ -15,6 +15,7 @@ import wav as wavelet
 import pylab
 import matplotlib.cm as cm
 
+outdir = os.path.expanduser('~/Documents/Talks/2014/DirSem/')
 
 # interactive mode
 plt.ion()
@@ -252,31 +253,30 @@ else:
 # Simulated data
 #
 with plt.style.context(("ggplot")):
-    matplotlib.rcParams.update({'font.size': 22})
+    matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
     plt.figure(1, figsize=(24, 6))
-    plt.plot(time, var, linewidth=1.5)
+    plt.plot(time, var, linewidth=3.0)
     plt.title('')
     plt.xlabel("time (seconds)")
     plt.ylabel("emission (arb. units)")
     plt.xlim(time[0], time[-1])
-    plt.savefig(os.path.expanduser("~/Desktop/dirsem/simulated_data.png"))
+    plt.savefig(os.path.join(outdir, 'simulated_data.png'))
     plt.close("all")
-
 #
 # Power spectrum of simulated data
 #
 with plt.style.context(("ggplot")):
-    matplotlib.rcParams.update({'font.size': 22})
+    matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
     plt.figure(1, figsize=(24, 6))
-    plt.loglog(1000 * ts.PowerSpectrum.frequencies.positive, iobs, linewidth=1.5, label='simulated')
-    plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label=r'$\nu^{-1.77}$')
-    plt.axvline(1000.0/300.0, label='5 mins.', color='k', linestyle = ":", linewidth=1.5)
-    plt.axvline(1000.0/180.0, label='3 mins.', color='k', linestyle = '-', linewidth=1.5)
+    plt.loglog(1000 * ts.PowerSpectrum.frequencies.positive, iobs, linewidth=3.0, label='simulated')
+    plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label=r'$\nu^{-1.77}$', linewidth=3.0)
+    plt.axvline(1000.0/300.0, label='5 mins.', color='k', linestyle = ":", linewidth=3.0)
+    plt.axvline(1000.0/180.0, label='3 mins.', color='k', linestyle = '-', linewidth=3.0)
     plt.title('power spectrum')
     plt.xlabel("frequency " + r"$\nu$" + " (mHz)")
     plt.ylabel("power (arb. units)")
     plt.legend(loc=3)
-    plt.savefig(os.path.expanduser("~/Desktop/dirsem/simulated_data_ps.png"))
+    plt.savefig(os.path.join(outdir, "simulated_data_ps.png"))
     plt.close("all")
  
 #
@@ -285,13 +285,13 @@ with plt.style.context(("ggplot")):
 wv_time = -5 + 0.01 * np.arange(0, 999)
 wv_morlet = np.exp(-0.5 * wv_time ** 2) * np.cos(wv_time * 6.0)
 with plt.style.context(("ggplot")):
-    matplotlib.rcParams.update({'font.size': 22})
+    matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
     plt.figure(1, figsize=(10, 6))
-    plt.plot(wv_time, wv_morlet)
+    plt.plot(wv_time, wv_morlet, linewidth=3.0)
     plt.title('Morlet wavelet')
     plt.xlabel("time")
     plt.ylabel("amplitude")
-    plt.savefig(os.path.expanduser("~/Desktop/dirsem/morlet_wavelet.png"))
+    plt.savefig(os.path.join(outdir, "morlet_wavelet.png"))
     plt.close("all")
 
     
@@ -300,11 +300,12 @@ with plt.style.context(("ggplot")):
 # contour lines and cone of influece hatched area.
 plt.figure(2, figsize=(12, 6))
 matplotlib.rcParams.update({'font.size': 18})
-levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
+levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
+#levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 YYY = np.log2(period)
 CS = plt.contourf(time, YYY, np.log2(power), np.log2(levels),
             extend='both', cmap=cm.coolwarm)
-plt.contour(time, np.log2(period), sig95, [-99, 1], colors='k',
+CS2 = plt.contour(time, YYY, sig95, [-99, 1], colors='k',
            linewidths=3., label='95%')
 plt.axhline(np.log2(300.0), label='5 mins', linewidth=1, color='k', linestyle='--')
 plt.axhline(np.log2(180.0), label='3 mins', linewidth=1, color='k')
@@ -326,19 +327,18 @@ yfill = np.log2(yfill)
 plt.fill(xfill, yfill, 'y', alpha=1.00)
 conf_level_string = '95' + r'$\%$'
 #plt.title('(b) Wavelet power spectrum compared to white noise [' + conf_level_string + ' conf. level]')
-plt.ylabel('Period (seconds)')
+plt.ylabel('period (seconds)')
 plt.xlabel('time (seconds)')
-
 
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                            np.ceil(np.log2(period.max())))
 plt.yticks(np.log2(Yticks), [str(m) for m in Yticks])
 plt.gca().invert_yaxis()
-plt.savefig(os.path.expanduser("~/Desktop/dirsem/white_noise.png"))
+plt.savefig(os.path.join(outdir, "white_noise_" + str(slev) + ".png"))
 plt.tight_layout()
 plt.close("all")
 
-
+"""
 # Third sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
 cx = pylab.axes([0.77, 0.38, 0.2, fig_height], sharey=bx)
@@ -359,40 +359,46 @@ pylab.setp(cx.get_yticklabels(), visible=False)
 cx.invert_yaxis()
 clegend = cx.legend(shadow=True, fontsize=10)
 cframe = clegend.get_frame()
-
+"""
 
 # RED Fourth sub-plot, the normalized wavelet power spectrum and significance level
 # contour lines and cone of influece hatched area.
 
-Bx = pylab.axes([0.1, 0.07, fig_width, fig_height], sharex=ax)
-levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
-Bx.contourf(time, YYY, np.log2(power), np.log2(levels), extend='both', cmap=cm.coolwarm)
-Bx.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
+#Bx = pylab.axes([0.1, 0.07, fig_width, fig_height], sharex=ax)
+plt.figure(3, figsize=(12, 6))
+matplotlib.rcParams.update({'font.size': 18})
+#levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
+levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
+plt.contourf(time, YYY, np.log2(power), np.log2(levels), extend='both', cmap=cm.coolwarm)
+plt.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
            linewidths=2., label='95%')
-Bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
-Bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='k')
-legend = Bx.legend(shadow=True)
+plt.axhline(np.log2(300.0), label='5 mins', linewidth=1, color='k', linestyle='--')
+plt.axhline(np.log2(180.0), label='3 mins', linewidth=1, color='k')
+legend = plt.legend(shadow=True)
 # The frame is matplotlib.patches.Rectangle instance surrounding the legend.
+legend = plt.legend(frameon=1, shadow=True)
 frame = legend.get_frame()
-frame.set_facecolor('0.8')
+frame.set_color('white')
+cbar = plt.colorbar(CS)
+cbar.ax.set_ylabel('log(wavelet power)')
 
 coi[ coi< 2**YYY.min() ] = 2**YYY.min()#0.001
 lim = coi.min()#[-1]#1e-9
-Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt]),
-        np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [lim]])),
-        'k',
-        alpha=0.3,
-        hatch='x')
+xfill = np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt])
+yfill = np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [lim]]))
+plt.fill(xfill, yfill, 'y', alpha=1.00)
 #pc = r'\%'
-Bx.set_title('(d) Wavelet power spectrum compared to power-law power-spectrum noise [' + conf_level_string + ' conf. level]')
-Bx.set_ylabel('Period (seconds)')
-Bx.set_xlabel('Time (seconds) [%i samples]' % (nt))
+#plt.title('(d) Wavelet power spectrum compared to power-law power-spectrum noise [' + conf_level_string + ' conf. level]')
+plt.ylabel('period (seconds)')
+plt.xlabel('time (seconds)')
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                           np.ceil(np.log2(period.max())))
-Bx.set_yticks(np.log2(Yticks))
-Bx.set_yticklabels(Yticks)
-Bx.invert_yaxis()
 
+plt.yticks(np.log2(Yticks), [str(m) for m in Yticks])
+plt.gca().invert_yaxis()
+plt.savefig(os.path.join(outdir, "red_noise_" + str(slev) + ".png"))
+plt.tight_layout()
+plt.close("all")
 
 # Fifth sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
