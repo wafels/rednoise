@@ -303,7 +303,7 @@ matplotlib.rcParams.update({'font.size': 18})
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 YYY = np.log2(period)
-CS = plt.contourf(time, YYY, np.log2(power), np.log2(levels),
+CS = plt.contourf(time, YYY, np.log2(sig95), np.log2(levels),
             extend='both', cmap=cm.coolwarm)
 CS2 = plt.contour(time, YYY, sig95, [-99, 1], colors='k',
            linewidths=3., label='95%')
@@ -313,7 +313,7 @@ legend = plt.legend(frameon=1, shadow=True)
 frame = legend.get_frame()
 frame.set_color('white')
 cbar = plt.colorbar(CS)
-cbar.ax.set_ylabel('log(wavelet power)')
+cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
 # The frame is matplotlib.patches.Rectangle instance surrounding the legend.
 #frame = legend.get_frame()
@@ -369,7 +369,7 @@ plt.figure(3, figsize=(12, 6))
 matplotlib.rcParams.update({'font.size': 18})
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
-plt.contourf(time, YYY, np.log2(power), np.log2(levels), extend='both', cmap=cm.coolwarm)
+CS = plt.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
 plt.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
            linewidths=2., label='95%')
 plt.axhline(np.log2(300.0), label='5 mins', linewidth=1, color='k', linestyle='--')
@@ -380,7 +380,7 @@ legend = plt.legend(frameon=1, shadow=True)
 frame = legend.get_frame()
 frame.set_color('white')
 cbar = plt.colorbar(CS)
-cbar.ax.set_ylabel('log(wavelet power)')
+cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
 coi[ coi< 2**YYY.min() ] = 2**YYY.min()#0.001
 lim = coi.min()#[-1]#1e-9
