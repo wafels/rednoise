@@ -20,12 +20,12 @@ plt.close('all')
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
+sfigroot = '~/ts/img_cc_final_dirsem/'
 scsvroot = '~/ts/csv_cc_final/'
 corename = 'shutdownfun3_6hr'
 sunlocation = 'disk'
 fits_level = '1.5'
-waves = ['171', '193']
+waves = ['171']
 regions = ['moss', 'loopfootpoints', 'sunspot', 'qs']
 windows = ['hanning']
 manip = 'relative'
@@ -37,6 +37,7 @@ savefig_format = 'eps'
 # Storage for the power at the center of each region
 #
 pwr_central = {}
+ts_central = {}
 
 
 for iregion, region in enumerate(regions):
@@ -107,9 +108,23 @@ for iregion, region in enumerate(regions):
                 x = freqs / xnorm
 
                 # Get the data at the center of each region
+                yloc = 0.2 * pwr_ff.shape[0]
+                xloc = 0.2 * pwr_ff.shape[1]
 
-                pwr_central[region + wave] = pwr_ff[0.2 * pwr_ff.shape[0],
-                                                   0.2 * pwr_ff.shape[1]]
+                pwr_central[region + wave] = pwr_ff[yloc, xloc, :]
+
+                #Load the time series data
+                pkl_location = locations['pickle']
+                ifilename = ident + '.datacube'
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
+                print('Loading ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'rb')
+                datacube = pickle.load(pkl_file)
+                pkl_file.close()
+
+                ts_central[region + wave] = datacube[yloc, xloc, :]
+                np.save(region + wave + '.npy', datacube[yloc, xloc, :])
+
 
                 #
                 # Get the number of elements in the time series
@@ -164,7 +179,7 @@ for region in regions:
 
     plt.xlabel('frequency (%s)' % (freqfactor[1]))
     plt.ylabel('power (arb. units)')
-    plt.title(figure_example_ps[region] + sunday_name[region])
+    plt.title(sunday_name[region])
     plt.legend(loc=3, fontsize=20, framealpha=0.5)
     #plt.tight_layout(0.2)
     plt.ylim(0.00000001, 100.0)

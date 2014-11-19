@@ -20,6 +20,7 @@ outdir = os.path.expanduser('~/Documents/Talks/2014/DirSem/')
 wvt_use_cm = cm.seismic
 wvt_linecolor = 'w'
 wvt_linewidth = 4
+fake = False
 
 # interactive mode
 plt.ion()
@@ -29,26 +30,35 @@ plt.ion()
 # Create some fake data
 # -----------------------------------------------------------------------------
 
-dt = 12.0
-nt = 300
-np.random.seed(seed=1)
-model_param = [10.0, 1.77, -100.0]
-pls1 = SimplePowerLawSpectrumWithConstantBackground(model_param,
-                                                    nt=nt,
-                                                    dt=dt)
-data = TimeSeriesFromPowerSpectrum(pls1).sample
-t = dt * np.arange(0, nt)
-amplitude = 0.0
-data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
+if fake:
+    obs = 'fake'
+    dt = 12.0
+    nt = 300
+    np.random.seed(seed=1)
+    model_param = [10.0, 1.77, -100.0]
+    pls1 = SimplePowerLawSpectrumWithConstantBackground(model_param,
+                                                        nt=nt,
+                                                        dt=dt)
+    data = TimeSeriesFromPowerSpectrum(pls1).sample
+    t = dt * np.arange(0, nt)
+    amplitude = 0.0
+    data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
 
-# Linear increase
-lin = 0.0
-data = data + lin * t / np.max(t)
+    # Linear increase
+    lin = 0.0
+    data = data + lin * t / np.max(t)
 
-# constant
-constant = 10.0
-data = data + constant
-
+    # constant
+    constant = 10.0
+    data = data + constant
+else:
+    obs = 'loopfootpoints171.npy'
+    filename = os.path.join(outdir, obs)
+    data = np.load(filename)
+    nt = data.size
+    dt = 12.0
+    t = dt * np.arange(0, nt)
+    model_param = [10.0, 1.77, -100.0]
 """
 # Running average filter
 def movingaverage(interval, window_size):
@@ -114,7 +124,7 @@ var = ts.data
 avg1, avg2 = (150.0, 400.0)
 
 # Significance level
-slev = 99.5
+slev = 95.0
 slevel = slev / 100.0
 
 # Standard deviation
@@ -264,23 +274,26 @@ with plt.style.context(("ggplot")):
     plt.xlabel("time (seconds)")
     plt.ylabel("emission (arb. units)")
     plt.xlim(time[0], time[-1])
-    plt.savefig(os.path.join(outdir, 'simulated_data.png'))
+    plt.savefig(os.path.join(outdir, obs + '_data.png'))
     plt.close("all")
 #
 # Power spectrum of simulated data
 #
 with plt.style.context(("ggplot")):
+    tsh = TimeSeries(t, data * np.hanning(nt))
+    iobsh = tsh.PowerSpectrum.ppower
     matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
     plt.figure(1, figsize=(24, 6))
-    plt.loglog(1000 * ts.PowerSpectrum.frequencies.positive, iobs, linewidth=3.0, label='simulated')
-    plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label=r'$\nu^{-1.77}$', linewidth=3.0)
-    plt.axvline(1000.0/300.0, label='5 mins.', color='k', linestyle = ":", linewidth=3.0)
-    plt.axvline(1000.0/180.0, label='3 mins.', color='k', linestyle = '-', linewidth=3.0)
+    plt.loglog(1000 * tsh.PowerSpectrum.frequencies.positive, iobsh, linewidth=3.0, label=obs)
+    if fake:
+        plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label=r'$\nu^{-1.77}$', linewidth=3.0)
+    plt.axvline(1000.0 / 300.0, label='5 mins.', color='k', linestyle=":", linewidth=3.0)
+    plt.axvline(1000.0 / 180.0, label='3 mins.', color='k', linestyle='-', linewidth=3.0)
     plt.title('power spectrum')
     plt.xlabel("frequency " + r"$\nu$" + " (mHz)")
     plt.ylabel("power (arb. units)")
     plt.legend(loc=3)
-    plt.savefig(os.path.join(outdir, "simulated_data_ps.png"))
+    plt.savefig(os.path.join(outdir, obs + "_data_ps.png"))
     plt.close("all")
  
 #
@@ -337,7 +350,7 @@ Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                            np.ceil(np.log2(period.max())))
 plt.yticks(np.log2(Yticks), [str(m) for m in Yticks])
 #plt.gca().invert_yaxis()
-plt.savefig(os.path.join(outdir, "white_noise_" + str(slev) + ".png"))
+plt.savefig(os.path.join(outdir, obs + ".white_noise_" + str(slev) + ".png"))
 plt.tight_layout()
 plt.close("all")
 
@@ -399,7 +412,7 @@ Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
 
 plt.yticks(np.log2(Yticks), [str(m) for m in Yticks])
 #plt.gca().invert_yaxis()
-plt.savefig(os.path.join(outdir, "red_noise_" + str(slev) + ".png"))
+plt.savefig(os.path.join(outdir, obs + ".red_noise_" + str(slev) + ".png"))
 plt.tight_layout()
 plt.close("all")
 
