@@ -17,6 +17,10 @@ import matplotlib.cm as cm
 
 outdir = os.path.expanduser('~/Documents/Talks/2014/DirSem/')
 
+wvt_use_cm = cm.seismic
+wvt_linecolor = 'w'
+wvt_linewidth = 4
+
 # interactive mode
 plt.ion()
 
@@ -110,7 +114,7 @@ var = ts.data
 avg1, avg2 = (150.0, 400.0)
 
 # Significance level
-slev = 95.0
+slev = 99.5
 slevel = slev / 100.0
 
 # Standard deviation
@@ -294,7 +298,6 @@ with plt.style.context(("ggplot")):
     plt.savefig(os.path.join(outdir, "morlet_wavelet.png"))
     plt.close("all")
 
-    
 # ---------------------------------------------------------------------------
 # Second sub-plot, the normalized wavelet power spectrum and significance level
 # contour lines and cone of influece hatched area.
@@ -304,14 +307,14 @@ levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 YYY = np.log2(period)
 CS = plt.contourf(time, YYY, np.log2(sig95), np.log2(levels),
-            extend='both', cmap=cm.coolwarm)
+            extend='both', cmap=wvt_use_cm)
 CS2 = plt.contour(time, YYY, sig95, [-99, 1], colors='k',
            linewidths=3., label='95%')
-plt.axhline(np.log2(300.0), label='5 mins', linewidth=1, color='k', linestyle='--')
-plt.axhline(np.log2(180.0), label='3 mins', linewidth=1, color='k')
+plt.axhline(np.log2(300.0), label='5 mins', linewidth=wvt_linewidth, color=wvt_linecolor, linestyle='--')
+plt.axhline(np.log2(180.0), label='3 mins', linewidth=wvt_linewidth, color=wvt_linecolor)
 legend = plt.legend(frameon=1, shadow=True)
 frame = legend.get_frame()
-frame.set_color('white')
+frame.set_color('grey')
 cbar = plt.colorbar(CS)
 cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
@@ -333,7 +336,7 @@ plt.xlabel('time (seconds)')
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                            np.ceil(np.log2(period.max())))
 plt.yticks(np.log2(Yticks), [str(m) for m in Yticks])
-plt.gca().invert_yaxis()
+#plt.gca().invert_yaxis()
 plt.savefig(os.path.join(outdir, "white_noise_" + str(slev) + ".png"))
 plt.tight_layout()
 plt.close("all")
@@ -369,20 +372,20 @@ plt.figure(3, figsize=(12, 6))
 matplotlib.rcParams.update({'font.size': 18})
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
-CS = plt.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
+CS = plt.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=wvt_use_cm)
 plt.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
            linewidths=2., label='95%')
-plt.axhline(np.log2(300.0), label='5 mins', linewidth=1, color='k', linestyle='--')
-plt.axhline(np.log2(180.0), label='3 mins', linewidth=1, color='k')
+plt.axhline(np.log2(300.0), label='5 mins', linewidth=wvt_linewidth, color=wvt_linecolor, linestyle='--')
+plt.axhline(np.log2(180.0), label='3 mins', linewidth=wvt_linewidth, color=wvt_linecolor)
 legend = plt.legend(shadow=True)
 # The frame is matplotlib.patches.Rectangle instance surrounding the legend.
 legend = plt.legend(frameon=1, shadow=True)
 frame = legend.get_frame()
-frame.set_color('white')
+frame.set_color('grey')
 cbar = plt.colorbar(CS)
 cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
-coi[ coi< 2**YYY.min() ] = 2**YYY.min()#0.001
+coi[coi < 2 ** YYY.min() ] = 2**YYY.min()#0.001
 lim = coi.min()#[-1]#1e-9
 xfill = np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt])
 yfill = np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [lim]]))
@@ -395,7 +398,7 @@ Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                           np.ceil(np.log2(period.max())))
 
 plt.yticks(np.log2(Yticks), [str(m) for m in Yticks])
-plt.gca().invert_yaxis()
+#plt.gca().invert_yaxis()
 plt.savefig(os.path.join(outdir, "red_noise_" + str(slev) + ".png"))
 plt.tight_layout()
 plt.close("all")

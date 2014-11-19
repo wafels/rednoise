@@ -25,14 +25,14 @@ pkl_file.close()
 
 # set up the filter
 npf = freqs.size
-filtering = np.zeros(2 *npf + 2)
+filtering = np.zeros(2 * npf + 2)
 filtering[0] = 0.0
 
 if filtered:
     filtered_name = 'filtered'
-    cen = 1.0/(1.0 * per)
-    const = 1.0/np.sqrt(2*np.pi*wid**2)
-    g = 1.0 * np.exp( -((freqs - cen) ** 2)/(2.0 * wid ** 2))
+    cen = 1.0 / (1.0 * per)
+    const = 1.0 / np.sqrt(2 * np.pi * wid ** 2)
+    g = 1.0 * np.exp(-((freqs - cen) ** 2) / (2.0 * wid ** 2))
     for i in range(0, npf):
         filtering[i] = g[i]
         filtering[-i] = g[i]
@@ -48,7 +48,7 @@ for i in range(0, ny):
     for j in range(0, nx):
         fft_transform[i, j, :] = fft_transform[i, j, :] * filtering
 
-q = np.sqrt(np.abs(np.fft.ifft( fft_transform )))
+q = np.sqrt(np.abs(np.fft.ifft(fft_transform)))
 nt = q.shape[2]
 
 # Write out a movie
@@ -63,18 +63,18 @@ fname = 'mv.%s.%i' % (filtered_name, per)
 #
 #
 if method == 'grab_frame':
-    with writer.saving(fig, 'output_movie.sunspt.mp4', nt):
+    with writer.saving(fig, fname + '.mp4', nt):
         for i in range(0, nt):
-            print i,nt
-            plt.imshow(np.sqrt(q[:, :, i * reduction]))
+            print i, nt
+            plt.imshow(np.sqrt(q[:, :, i]))
             writer.grab_frame()
 #
 #
 #
 if method == 'from_mpl':
-    ims=[]
-    for i in range(0, nt-1):
-        print i, nt-1
+    ims = []
+    for i in range(0, nt - 1):
+        print i, nt - 1
         ims.append((plt.imshow(q[:, :, i]),))
 
     im_ani = animation.ArtistAnimation(fig, ims, interval=50, blit=False)
@@ -83,9 +83,11 @@ if method == 'from_mpl':
 #
 #
 if method == 'stills':
-    save = '/home/ireland/Desktop/movie%i/' % (per)
+    save = os.path.join('/home/ireland/Desktop/', fname)
+    if not(os.path.isdir(save)):
+        os.makedirs(save)
     for i in range(0, nt - 1):
         plt.imshow(np.sqrt(q[:, :, i]))
-        plt.title('time = %i seconds' % (i * 12) )
-        plt.savefig(save + 'im.%05i.png' % (i))
+        plt.title('time = %i seconds' % (i * 12))
+        plt.savefig(os.path.join(save, 'im.%05i.png' % (i)))
 
