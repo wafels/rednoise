@@ -17,9 +17,9 @@ method = 'stills'
 #method = 'from_mpl'
 
 # Movie type
-filtered = True
+filtered = False
 
-nfiles = 200
+nfiles = None
 
 # Period and frequency width
 per = 180
@@ -127,7 +127,7 @@ if method == 'stills':
         # make the map
         if np.mod(i, 100) == 0:
             print str(i) + ' out of ' + str(nfiles)
-        header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -350, "crval2": 16.2,
+        header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -332.5, "crval2": 17.5,
                   "telescop": 'AIA', "detector": "AIA", "wavelnth": "171",
                   "date-obs": base_date + datetime.timedelta(seconds=12 * i)}
         if filtered:
