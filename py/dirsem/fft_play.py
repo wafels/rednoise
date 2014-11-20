@@ -3,6 +3,13 @@ import pickle
 import os
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+import sunpy.map
+from sunpy.time import parse_time
+import sunpy.cm
+import matplotlib.cm as cm
+import datetime
+import sunpy.net.hek as hek
+from matplotlib.collections import PolyCollection
 
 # Movie method
 method = 'stills'
@@ -10,12 +17,30 @@ method = 'stills'
 #method = 'from_mpl'
 
 # Movie type
-filtered = True
+filtered = False
 
 # Period and frequency width
 per = 300
 wid = 0.01 / 1000.0
 
+#
+# Get the sunpot
+#
+client = hek.HEKClient()
+qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
+p1 = qr[0]["hpc_boundcc"][9: -2]
+p2 = p1.split(',')
+p3 = [v.split(" ") for v in p2]
+p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+polygon = np.zeros([1, len(p2), 2])
+polygon[0, :, :] = p4[:, :]
+"""
+numpoly, numverts = 1, 4
+centers = -290 * (np.random.random((numpoly,2)) - 0.5)
+offsets = 10 * (np.random.random((numverts,numpoly,2)) - 0.5)
+verts = centers + offsets
+polygon = np.swapaxes(verts, 0, 1)
+"""
 # Load the data
 filename = '/home/ireland/ts/pickle_cc_final/shutdownfun3_6hr/disk/1.5/171/sunspot/OUT.shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.fft_transform.pickle'
 pkl_file = open(filename, 'rb')
@@ -30,6 +55,7 @@ filtering[0] = 0.0
 
 if filtered:
     filtered_name = 'filtered'
+    cm = cm.coolwarm
     cen = 1.0 / (1.0 * per)
     const = 1.0 / np.sqrt(2 * np.pi * wid ** 2)
     g = 1.0 * np.exp(-((freqs - cen) ** 2) / (2.0 * wid ** 2))
@@ -38,6 +64,7 @@ if filtered:
         filtering[-i] = g[i]
 else:
     filtered_name = 'actual'
+    cm = sunpy.cm.cm.sdoaia171
     filtering[:] = 1.0
 
 # Do the filtering
@@ -86,8 +113,20 @@ if method == 'stills':
     save = os.path.join('/home/ireland/Desktop/', fname)
     if not(os.path.isdir(save)):
         os.makedirs(save)
-    for i in range(0, nt - 1):
-        plt.imshow(np.sqrt(q[:, :, i]))
-        plt.title('time = %i seconds' % (i * 12))
+    base_date = parse_time("2012-09-23T00:00:00")
+    for i in range(0, 300):
+        # make the map
+        header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -350, "crval2": 16.2,
+                  "telescop": 'AIA', "detector": "AIA", "wavelnth": "171",
+                  "date-obs": base_date + datetime.timedelta(seconds=12 * i)}
+        ddd = q[:, :, i]
+        my_map = sunpy.map.Map(ddd, header)
+        fig, ax = plt.subplots()
+        my_map.plot(cmap=cm)
+        coll = PolyCollection(polygon, alpha=0.3, edgecolor='k', color='r')
+        ax.add_collection(coll)
+        ax.autoscale_view()
+        plt.ylim(-5, 37)
         plt.savefig(os.path.join(save, 'im.%05i.png' % (i)))
+        plt.close('all')
 
