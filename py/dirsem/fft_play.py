@@ -17,10 +17,12 @@ method = 'stills'
 #method = 'from_mpl'
 
 # Movie type
-filtered = False
+filtered = True
+
+nfiles = 200
 
 # Period and frequency width
-per = 300
+per = 180
 wid = 0.01 / 1000.0
 
 #
@@ -55,7 +57,8 @@ filtering[0] = 0.0
 
 if filtered:
     filtered_name = 'filtered'
-    cm = cm.coolwarm
+    cm = cm.Blues
+    sunspot_color = 'k'
     cen = 1.0 / (1.0 * per)
     const = 1.0 / np.sqrt(2 * np.pi * wid ** 2)
     g = 1.0 * np.exp(-((freqs - cen) ** 2) / (2.0 * wid ** 2))
@@ -65,6 +68,7 @@ if filtered:
 else:
     filtered_name = 'actual'
     cm = sunpy.cm.cm.sdoaia171
+    sunspot_color = 'r'
     filtering[:] = 1.0
 
 # Do the filtering
@@ -77,6 +81,9 @@ for i in range(0, ny):
 
 q = np.sqrt(np.abs(np.fft.ifft(fft_transform)))
 nt = q.shape[2]
+
+if nfiles == None:
+    nfiles = nt
 
 # Write out a movie
 FFMpegWriter = animation.writers['ffmpeg']
@@ -108,25 +115,32 @@ if method == 'from_mpl':
     im_ani.save(fname + '.mp4', writer=writer)
 #
 #
+# avconv -f image2 -i im.%05d.png -q 0  /home/ireland/Desktop/a.mp4
 #
 if method == 'stills':
     save = os.path.join('/home/ireland/Desktop/', fname)
+    print('Saving to ' + save)
     if not(os.path.isdir(save)):
         os.makedirs(save)
     base_date = parse_time("2012-09-23T00:00:00")
-    for i in range(0, 300):
+    for i in range(0, nfiles):
         # make the map
+        if np.mod(i, 100) == 0:
+            print str(i) + ' out of ' + str(nfiles)
         header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -350, "crval2": 16.2,
                   "telescop": 'AIA', "detector": "AIA", "wavelnth": "171",
                   "date-obs": base_date + datetime.timedelta(seconds=12 * i)}
-        ddd = q[:, :, i]
+        if filtered:
+            ddd = np.sqrt(q[:, :, i])
+        else:
+            ddd = q[:, :, i]
         my_map = sunpy.map.Map(ddd, header)
         fig, ax = plt.subplots()
         my_map.plot(cmap=cm)
-        coll = PolyCollection(polygon, alpha=0.3, edgecolor='k', color='r')
+        coll = PolyCollection(polygon, alpha=1.0, edgecolors=[sunspot_color], facecolors=['none'], linewidth=[5])
         ax.add_collection(coll)
         ax.autoscale_view()
-        plt.ylim(-5, 37)
+        plt.ylim(-6, 39)
         plt.savefig(os.path.join(save, 'im.%05i.png' % (i)))
         plt.close('all')
 
