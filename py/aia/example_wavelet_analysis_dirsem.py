@@ -27,7 +27,7 @@ wvt_coi_color = 'k'
 wvt_alpha = 0.5
 wvt_hatch = 'x'
 mvscale = 500.0
-slev = 95.0
+slev = 99.5
 
 fake = False
 
@@ -63,7 +63,7 @@ if fake:
     constant = 10.0
     data = data + constant
 else:
-    obs = 'sunspot171.npy'
+    obs = 'qs171.npy'
     filename = os.path.join(outdir, obs)
     data = np.load(filename)
     nt = data.size
@@ -278,50 +278,53 @@ else:
 #
 # Simulated data
 #
-with plt.style.context(("ggplot")):
-    matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
-    plt.figure(1, figsize=(24, 6))
-    plt.plot(time, var, linewidth=3.0)
-    plt.title('')
-    plt.xlabel("time (seconds)")
-    plt.ylabel("emission (arb. units)")
-    plt.xlim(time[0], time[-1])
-    plt.savefig(os.path.join(outdir, obs + '_data.png'))
-    plt.close("all")
+#with plt.style.context(("ggplot")):
+matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
+plt.figure(1, figsize=(24, 6))
+plt.plot(ts.SampleTimes.time, ts.data, linewidth=3.0)
+plt.title('')
+plt.xlabel("time (seconds)")
+plt.ylabel("relative emission $(I - <I>)/<I>$")
+plt.axhline(0.0, color='k', linestyle = ':')
+plt.xlim(time[0], time[-1])
+plt.savefig(os.path.join(outdir, obs + '_data.png'))
+plt.close("all")
 #
 # Power spectrum of simulated data
 #
-with plt.style.context(("ggplot")):
-    tsh = TimeSeries(t, data * np.hanning(nt))
-    iobsh = tsh.PowerSpectrum.ppower
-    matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
-    plt.figure(1, figsize=(24, 6))
-    plt.loglog(1000 * tsh.PowerSpectrum.frequencies.positive, iobsh, linewidth=3.0, label=obs)
-    if fake:
-        plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label=r'$\nu^{-1.77}$', linewidth=3.0)
-    plt.axvline(1000.0 / 300.0, label='5 mins.', color='k', linestyle=":", linewidth=3.0)
-    plt.axvline(1000.0 / 180.0, label='3 mins.', color='k', linestyle='-', linewidth=3.0)
-    plt.title('power spectrum')
-    plt.xlabel("frequency " + r"$\nu$" + " (mHz)")
-    plt.ylabel("power (arb. units)")
-    plt.legend(loc=3)
-    plt.savefig(os.path.join(outdir, obs + "_data_ps.png"))
-    plt.close("all")
+#with plt.style.context(("ggplot")):
+tsh = TimeSeries(t, data * np.hanning(nt))
+iobsh = tsh.PowerSpectrum.ppower
+matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
+plt.figure(1, figsize=(24, 6))
+plt.loglog(1000 * tsh.PowerSpectrum.frequencies.positive, iobsh, linewidth=3.0, label=obs)
+if fake:
+    plt.loglog(1000 * pls1.frequencies, pls1.power() / 10.0 ** 9.4, label=r'$\nu^{-1.77}$', linewidth=3.0)
+plt.axvline(1000.0 / 300.0, label='5 mins.', color='k', linestyle=":", linewidth=3.0)
+plt.axvline(1000.0 / 180.0, label='3 mins.', color='k', linestyle='-', linewidth=3.0)
+plt.title('power spectrum')
+plt.xlabel("frequency " + r"$\nu$" + " (mHz)")
+plt.ylabel("power (arb. units)")
+plt.legend(loc=3)
+plt.savefig(os.path.join(outdir, obs + "_data_ps.png"))
+plt.close("all")
  
 #
 # Wavelet
 #
 wv_time = -5 + 0.01 * np.arange(0, 999)
 wv_morlet = np.exp(-0.5 * wv_time ** 2) * np.cos(wv_time * 6.0)
-with plt.style.context(("ggplot")):
-    matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
-    plt.figure(1, figsize=(10, 6))
-    plt.plot(wv_time, wv_morlet, linewidth=3.0)
-    plt.title('Morlet wavelet')
-    plt.xlabel("time")
-    plt.ylabel("amplitude")
-    plt.savefig(os.path.join(outdir, "morlet_wavelet.png"))
-    plt.close("all")
+#with plt.style.context(("ggplot")):
+matplotlib.rcParams.update({'font.size': 22, 'axes.labelcolor': 'k', 'xtick.color': 'k', 'ytick.color': 'k'})
+plt.figure(1, figsize=(10, 6))
+plt.axhline(0.0, color='k', linestyle = '--')
+plt.axvline(0.0, color='k', linestyle = '--')
+plt.plot(wv_time, wv_morlet, linewidth=3.0)
+plt.title('Morlet wavelet')
+plt.xlabel("time")
+plt.ylabel("amplitude")
+plt.savefig(os.path.join(outdir, "morlet_wavelet.png"))
+plt.close("all")
 
 # ---------------------------------------------------------------------------
 # Second sub-plot, the normalized wavelet power spectrum and significance level
@@ -355,7 +358,7 @@ yfill = np.log2(yfill)
 plt.fill(xfill, yfill, wvt_coi_color, alpha=wvt_alpha, hatch=wvt_hatch)
 conf_level_string = '95' + r'$\%$'
 #plt.title('(b) Wavelet power spectrum compared to white noise [' + conf_level_string + ' conf. level]')
-plt.ylabel('period (seconds)')
+plt.ylabel('wave packet period (seconds)')
 plt.xlabel('time (seconds)')
 
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
@@ -417,7 +420,7 @@ yfill = np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [li
 plt.fill(xfill, yfill, wvt_coi_color, alpha=wvt_alpha, hatch=wvt_hatch)
 #pc = r'\%'
 #plt.title('(d) Wavelet power spectrum compared to power-law power-spectrum noise [' + conf_level_string + ' conf. level]')
-plt.ylabel('period (seconds)')
+plt.ylabel('wave packet period (seconds)')
 plt.xlabel('time (seconds)')
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                           np.ceil(np.log2(period.max())))
