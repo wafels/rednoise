@@ -15,11 +15,20 @@ import wav as wavelet
 import pylab
 import matplotlib.cm as cm
 
+from astropy.convolution import convolve as ap_convolve
+from astropy.convolution import Box1DKernel
+
 outdir = os.path.expanduser('~/Documents/Talks/2014/DirSem/')
 
 wvt_use_cm = cm.seismic
 wvt_linecolor = 'w'
 wvt_linewidth = 4
+wvt_coi_color = 'k'
+wvt_alpha = 0.5
+wvt_hatch = 'x'
+mvscale = 500.0
+slev = 95.0
+
 fake = False
 
 # interactive mode
@@ -39,10 +48,12 @@ if fake:
     pls1 = SimplePowerLawSpectrumWithConstantBackground(model_param,
                                                         nt=nt,
                                                         dt=dt)
-    data = TimeSeriesFromPowerSpectrum(pls1).sample
+    data = np.abs(TimeSeriesFromPowerSpectrum(pls1).sample)
     t = dt * np.arange(0, nt)
     amplitude = 0.0
     data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
+
+    data = data / np.std(data)
 
     # Linear increase
     lin = 0.0
@@ -52,29 +63,18 @@ if fake:
     constant = 10.0
     data = data + constant
 else:
-    obs = 'loopfootpoints171.npy'
+    obs = 'sunspot171.npy'
     filename = os.path.join(outdir, obs)
     data = np.load(filename)
     nt = data.size
     dt = 12.0
     t = dt * np.arange(0, nt)
     model_param = [10.0, 1.77, -100.0]
-"""
+
 # Running average filter
-def movingaverage(interval, window_size):
+def moving_average(interval, window_size):
     window = np.ones(int(window_size))/float(window_size)
     return np.convolve(interval, window, 'same')
-
-def moving_average(a, n=3) :
-    ret = np.cumsum(a, dtype=float)
-    ret[n:] = ret[n:] - ret[:-n]
-    return ret[n - 1:] / n
-
-
-mvav = moving_average(data, n=84)
-data = data - mvav
-"""
-
 
 def smooth(x, window_len=11, window='hanning'):
     if x.ndim != 1:
@@ -87,29 +87,41 @@ def smooth(x, window_len=11, window='hanning'):
             raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
     s = np.r_[2 * x[0] - x[window_len - 1::-1], x, 2 * x[-1] - x[-1:-window_len:-1]]
     if window == 'flat': #moving average
-            w = np.ones(window_len, 'd')
+        w = np.ones(window_len, 'd')
     else:
-            w = eval('np.' + window + '(window_len)')
+        w = eval('np.' + window + '(window_len)')
     y = np.convolve(w / w.sum(), s, mode='same')
     return y[window_len:-window_len + 1]
 
-tsoriginal = TimeSeries(t, data)
-plt.figure(10)
-tsoriginal.peek()
+def moving_average(a, n=3) :
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1:] / n
 
+
+#
+# Background subtracted
+#
+mvav = ap_convolve(data, Box1DKernel(np.rint(mvscale/dt)))
+subdata = data - mvav
+subdata = subdata - np.mean(subdata)
+tssubdata = TimeSeries(t, subdata)
+
+
+#tsoriginal = TimeSeries(t, data)
+
+#
+# Relative data
+#
+# mean of the data
 meandata = np.mean(data)
-
 # relative
 data = (data - meandata) / meandata
-
-
-#data = data - smooth(data, window_len=84)
-
 # Create a time series object
 ts = TimeSeries(t, data)
 ts.label = 'emission'
 ts.units = 'arb. units'
-ts.name = 'simulated data [n=%4.2f]' % (model_param[1])
+ts.name = obs
 
 # Get the normalized power and the positive frequencies
 iobs = ts.PowerSpectrum.ppower
@@ -119,12 +131,15 @@ this = ([ts.PowerSpectrum.frequencies.positive, iobs],)
 # -----------------------------------------------------------------------------
 # Wavelet transform using a white noise background
 # -----------------------------------------------------------------------------
-var = ts.data
+# data
+var = tssubdata.data
+# Time array in seconds
+time = ts.SampleTimes.time + 0.001
+
 # Range of periods to average
 avg1, avg2 = (150.0, 400.0)
 
 # Significance level
-slev = 95.0
 slevel = slev / 100.0
 
 # Standard deviation
@@ -137,9 +152,6 @@ std2 = std ** 2
 var = (var - var.mean()) / std
 # Number of measurements
 N = var.size
-
-# Time array in seconds
-time = ts.SampleTimes.time + 0.001
 
 # Four sub-octaves per octaves
 dj = 0.25
@@ -340,7 +352,7 @@ coi[coi < period[0]] = period[0]
 xfill = np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt])
 yfill = np.concatenate([[period[0]], coi, [period[0]], period[-1:], period[-1:], [period[0]]])
 yfill = np.log2(yfill)
-plt.fill(xfill, yfill, 'y', alpha=1.00)
+plt.fill(xfill, yfill, wvt_coi_color, alpha=wvt_alpha, hatch=wvt_hatch)
 conf_level_string = '95' + r'$\%$'
 #plt.title('(b) Wavelet power spectrum compared to white noise [' + conf_level_string + ' conf. level]')
 plt.ylabel('period (seconds)')
@@ -402,7 +414,7 @@ coi[coi < 2 ** YYY.min() ] = 2**YYY.min()#0.001
 lim = coi.min()#[-1]#1e-9
 xfill = np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt])
 yfill = np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [lim]]))
-plt.fill(xfill, yfill, 'y', alpha=1.00)
+plt.fill(xfill, yfill, wvt_coi_color, alpha=wvt_alpha, hatch=wvt_hatch)
 #pc = r'\%'
 #plt.title('(d) Wavelet power spectrum compared to power-law power-spectrum noise [' + conf_level_string + ' conf. level]')
 plt.ylabel('period (seconds)')
