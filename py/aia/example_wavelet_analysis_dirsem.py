@@ -63,7 +63,7 @@ if fake:
     constant = 10.0
     data = data + constant
 else:
-    obs = 'qs171.npy'
+    obs = 'loopfootpoints171.npy'
     filename = os.path.join(outdir, obs)
     data = np.load(filename)
     nt = data.size
@@ -102,12 +102,13 @@ def moving_average(a, n=3) :
 #
 # Background subtracted
 #
-mvav = ap_convolve(data, Box1DKernel(np.rint(mvscale/dt)))
+nwindow = np.rint(mvscale/dt)
+mvav = ap_convolve(data, Box1DKernel(nwindow))
 subdata = data - mvav
 subdata = subdata - np.mean(subdata)
-tssubdata = TimeSeries(t, subdata)
+tssubdata = TimeSeries(t[nwindow:-nwindow], subdata[nwindow:-nwindow])
 
-
+#hhh = ggg
 #tsoriginal = TimeSeries(t, data)
 
 #
@@ -134,7 +135,7 @@ this = ([ts.PowerSpectrum.frequencies.positive, iobs],)
 # data
 var = tssubdata.data
 # Time array in seconds
-time = ts.SampleTimes.time + 0.001
+time = tssubdata.SampleTimes.time + 0.001
 
 # Range of periods to average
 avg1, avg2 = (150.0, 400.0)
@@ -185,6 +186,58 @@ power = (abs(wave)) ** 2
 fft_power = std2 * abs(fft) ** 2
 period = 1. / freqs
 
+###################
+# -----------------------------------------------------------------------------
+# Wavelet transform using red noise analysis
+# -----------------------------------------------------------------------------
+# data
+rvar = ts.data
+# Time array in seconds
+rtime = ts.SampleTimes.time + 0.001
+
+# Range of periods to average
+ravg1, ravg2 = (150.0, 400.0)
+
+# Significance level
+rslevel = slev / 100.0
+
+# Standard deviation
+rstd = rvar.std()
+
+# Variance
+rstd2 = rstd ** 2
+
+# Calculating anomaly and normalizing
+rvar = (rvar - rvar.mean()) / rstd
+# Number of measurements
+rN = rvar.size
+
+# Four sub-octaves per octaves
+rdj = 0.25
+
+#2 * dt # Starting scale, here 6 months
+rs0 = -1
+
+#7 / dj # Seven powers of two with dj sub-octaves
+rJ = -1
+
+#alpha = 0.0 # Lag-1 autocorrelation for white noise
+
+ralpha, r_, r_ = wavelet.ar1(rvar)
+
+# Morlet mother wavelet with wavenumber=6
+rmother = wavelet.Morlet(6.)
+rwave, rscales, rfreqs, rcoi, rfft, rfftfreqs = wavelet.cwt(rvar, dt, rdj, rs0, rJ,
+                                                      rmother)
+riwave = wavelet.icwt(wave, scales, dt, dj, mother)
+
+# Normalized wavelet power spectrum
+rpower = (abs(rwave)) ** 2
+
+# FFT power spectrum
+rfft_power = rstd2 * abs(rfft) ** 2
+rperiod = 1. / rfreqs
+###################
 
 # -------------------------------------------------------------------------
 # White noise
@@ -208,20 +261,20 @@ glbl_power = glbl_power / max_glbl_power
 
 # -------------------------------------------------------------------------
 # Red noise
-rsignif, rfft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
-                        significance_level=slevel, wavelet=mother)
-rsig95 = np.ones([1, N]) * rsignif[:, None]
+rsignif, rfft_theor = wavelet.significance(1.0, dt, rscales, 0, alpha,
+                        significance_level=rslevel, wavelet=rmother)
+rsig95 = np.ones([1, rN]) * rsignif[:, None]
 
 # Where ratio > 1, power is significant
-rsig95 = power / rsig95
+rsig95 = rpower / rsig95
 
 # Calculates the global wavelet spectrum and determines its significance level.
-rglbl_power = std2 * power.mean(axis=1)
+rglbl_power = rstd2 * rpower.mean(axis=1)
 
 # Correction for padding at edges
-dof = N - scales
-rglbl_signif, rtmp = wavelet.significance(std2, dt, scales, 1, alpha,
-                       significance_level=slevel, dof=dof, wavelet=mother)
+rdof = rN - rscales
+rglbl_signif, rtmp = wavelet.significance(rstd2, dt, rscales, 1, alpha,
+                       significance_level=slevel, dof=rdof, wavelet=mother)
 
 
 rglbl_power = rglbl_power / max_glbl_power
@@ -400,8 +453,9 @@ plt.figure(3, figsize=(12, 6))
 matplotlib.rcParams.update({'font.size': 18})
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
-CS = plt.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=wvt_use_cm)
-plt.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
+rYYY = np.log2(rperiod)
+CS = plt.contourf(rtime, rYYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=wvt_use_cm)
+plt.contour(rtime, np.log2(rperiod), rsig95, [-99, 1], colors='k',
            linewidths=2., label='95%')
 plt.axhline(np.log2(300.0), label='5 mins', linewidth=wvt_linewidth, color=wvt_linecolor, linestyle='--')
 plt.axhline(np.log2(180.0), label='3 mins', linewidth=wvt_linewidth, color=wvt_linecolor)
