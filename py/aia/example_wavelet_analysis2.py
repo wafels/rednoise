@@ -9,6 +9,8 @@ from timeseries import TimeSeries
 import wav as wavelet
 import pylab
 import matplotlib.cm as cm
+import fakedata, fitspecfig5
+from scipy.stats import chi2
 
 # interactive mode
 plt.ion()
@@ -18,25 +20,12 @@ plt.ion()
 # Create some fake data
 # -----------------------------------------------------------------------------
 
-dt = 12.0
-nt = 300
-np.random.seed(seed=1)
-model_param = [10.0, 1.77, -100.0]
-pls1 = SimplePowerLawSpectrumWithConstantBackground(model_param,
-                                                    nt=nt,
-                                                    dt=dt)
-data = TimeSeriesFromPowerSpectrum(pls1).sample
-t = dt * np.arange(0, nt)
-amplitude = 0.0
-data = data + amplitude * (data.max() - data.min()) * np.sin(2 * np.pi * t / 300.0)
 
-# Linear increase
-lin = 0.0
-data = data + lin * t / np.max(t)
-
-# constant
-constant = 10.0
-data = data + constant
+t, data, model_param = fakedata.fakedata()
+nt = t.size
+dt = t[1] - t[0]
+M0 = fitspecfig5.do(t, data, window=False)
+meanfit = M0.stats()['fourier_power_spectrum']['mean']
 
 """
 # Running average filter
@@ -52,8 +41,6 @@ def moving_average(a, n=3) :
 
 mvav = moving_average(data, n=84)
 data = data - mvav
-"""
-
 
 def smooth(x, window_len=11, window='hanning'):
     if x.ndim != 1:
@@ -75,6 +62,7 @@ def smooth(x, window_len=11, window='hanning'):
 tsoriginal = TimeSeries(t, data)
 plt.figure(10)
 tsoriginal.peek()
+"""
 
 meandata = np.mean(data)
 
@@ -178,6 +166,7 @@ glbl_power = glbl_power / max_glbl_power
 rsignif, rfft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
                         significance_level=slevel, wavelet=mother)
 rsig95 = np.ones([1, N]) * rsignif[:, None]
+rsig95 = np.ones([1, N]) * meanfit[:, None] * chi2.ppf(slevel, 2) / 2.0
 
 # Where ratio > 1, power is significant
 rsig95 = power / rsig95

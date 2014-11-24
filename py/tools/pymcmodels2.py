@@ -81,6 +81,57 @@ def KernelSmoothing(name, dataset, bw_method=None, lower=-np.inf, upper=np.inf, 
                              verbose=0)
     return result
 
+# -----------------------------------------------------------------------------
+# Model : power law plus constant
+#
+def spl(analysis_frequencies, analysis_power, init=None):
+    """Power law with a constant.  This model assumes that the power
+    spectrum is made up of a power law and a constant background.  At high
+    frequencies the power spectrum is dominated by the constant background.
+    """
+    if init == None:
+        power_law_index = pymc.Uniform('power_law_index',
+                                       lower=limits['power_law_index'][0],
+                                       upper=limits['power_law_index'][1],
+                                       doc='power law index')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      lower=limits['power_law_norm'][0],
+                                      upper=limits['power_law_norm'][1],
+                                      doc='power law normalization')
+
+    else:
+        power_law_index = pymc.Uniform('power_law_index',
+                                       value=init[1],
+                                       lower=limits['power_law_index'][0],
+                                       upper=limits['power_law_index'][1],
+                                       doc='power law index')
+
+        power_law_norm = pymc.Uniform('power_law_norm',
+                                      value=init[0],
+                                      lower=limits['power_law_norm'][0],
+                                      upper=limits['power_law_norm'][1],
+                                      doc='power law normalization')
+
+    # Model for the power law spectrum
+    @pymc.deterministic(plot=False)
+    def fourier_power_spectrum(p=power_law_index,
+                               a=power_law_norm,
+                               f=analysis_frequencies):
+        #A pure and simple power law model#
+        out = rnspectralmodels.power_law(f, [a, p])
+        return out
+
+    spectrum = pymc.Exponential('spectrum',
+                           beta=1.0 / fourier_power_spectrum,
+                           value=analysis_power,
+                           observed=True)
+
+    predictive = pymc.Exponential('predictive',
+                             beta=1.0 / fourier_power_spectrum)
+    # MCMC model
+    return locals()
+
 
 # -----------------------------------------------------------------------------
 # Model : np.log( power law plus constant )
