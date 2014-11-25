@@ -242,7 +242,8 @@ else:
 # Second sub-plot, the normalized wavelet power spectrum and significance level
 # contour lines and cone of influece hatched area.
 bx = pylab.axes([0.1, 0.38, fig_width, fig_height], sharex=ax)
-levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
+#levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
+levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
 YYY = np.log2(period)
 bx.contourf(time, YYY, np.log2(power), np.log2(levels),
             extend='both', cmap=cm.coolwarm)
@@ -297,8 +298,9 @@ cframe = clegend.get_frame()
 # contour lines and cone of influece hatched area.
 
 Bx = pylab.axes([0.1, 0.07, fig_width, fig_height], sharex=ax)
-levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
-Bx.contourf(time, YYY, np.log2(power), np.log2(levels), extend='both', cmap=cm.coolwarm)
+#levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
+levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
+Bx.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
 Bx.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
            linewidths=2., label='95%')
 Bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
