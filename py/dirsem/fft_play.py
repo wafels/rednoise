@@ -15,27 +15,39 @@ from matplotlib.collections import PolyCollection
 method = 'stills'
 #method = 'grab_frame'
 #method = 'from_mpl'
+obs = 'sunspot'
+
+
+if obs == 'sunspot':
+    filename = '/home/ireland/ts/pickle_cc_final/shutdownfun3_6hr/disk/1.5/171/sunspot/OUT.shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.fft_transform.pickle'
+    per = 300.0
+    wid = 0.01 / 1000.0
+
+if obs == 'loopfootpoints':
+    filename = '/home/ireland/ts/pickle_cc_final/shutdownfun3_6hr/disk/1.5/171/loopfootpoints/OUT.shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.fft_transform.pickle'
+    per = 300.0
+    wid = 0.10 / 1000.0
+
 
 # Movie type
-filtered = False
+filtered = True
 
-nfiles = None
+nfiles = 200
 
 # Period and frequency width
-per = 180
-wid = 0.01 / 1000.0
 
-#
-# Get the sunpot
-#
-client = hek.HEKClient()
-qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
-p1 = qr[0]["hpc_boundcc"][9: -2]
-p2 = p1.split(',')
-p3 = [v.split(" ") for v in p2]
-p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
-polygon = np.zeros([1, len(p2), 2])
-polygon[0, :, :] = p4[:, :]
+if obs == "sunspot":
+    #
+    # Get the sunpot
+    #
+    client = hek.HEKClient()
+    qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
+    p1 = qr[0]["hpc_boundcc"][9: -2]
+    p2 = p1.split(',')
+    p3 = [v.split(" ") for v in p2]
+    p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+    polygon = np.zeros([1, len(p2), 2])
+    polygon[0, :, :] = p4[:, :]
 """
 numpoly, numverts = 1, 4
 centers = -290 * (np.random.random((numpoly,2)) - 0.5)
@@ -44,7 +56,6 @@ verts = centers + offsets
 polygon = np.swapaxes(verts, 0, 1)
 """
 # Load the data
-filename = '/home/ireland/ts/pickle_cc_final/shutdownfun3_6hr/disk/1.5/171/sunspot/OUT.shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.fft_transform.pickle'
 pkl_file = open(filename, 'rb')
 freqs = pickle.load(pkl_file)
 fft_transform = pickle.load(pkl_file)
@@ -91,7 +102,7 @@ fig = plt.figure()
 metadata = dict(title='sunspot', artist='Matplotlib', comment="movie for director's seminar")
 writer = FFMpegWriter(fps=15, metadata=metadata, bitrate=5000.0)
 
-fname = 'mv.%s.%i' % (filtered_name, per)
+fname = 'mv.%s.%s.%i' % (obs, filtered_name, per)
 
 #
 #
@@ -137,10 +148,14 @@ if method == 'stills':
         my_map = sunpy.map.Map(ddd, header)
         fig, ax = plt.subplots()
         my_map.plot(cmap=cm)
-        coll = PolyCollection(polygon, alpha=1.0, edgecolors=[sunspot_color], facecolors=['none'], linewidth=[5])
-        ax.add_collection(coll)
-        ax.autoscale_view()
-        plt.ylim(-6, 39)
+        if obs == 'sunspot':
+            coll = PolyCollection(polygon, alpha=1.0, edgecolors=[sunspot_color], facecolors=['none'], linewidth=[5])
+            ax.add_collection(coll)
+            ax.autoscale_view()
+            #for i in range(0,len(polygon)-1):
+            #    ax.plot([polygon[0][i][0], polygon[0][i+1][0]], [polygon[0][i][1], polygon[0][i+1][1]])
+            #ax.set_ylim(-4, 39)
+            #ax.set_xlim(-370, -305)
         plt.savefig(os.path.join(save, 'im.%05i.png' % (i)))
         plt.close('all')
 

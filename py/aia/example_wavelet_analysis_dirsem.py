@@ -18,8 +18,13 @@ import matplotlib.cm as cm
 from astropy.convolution import convolve as ap_convolve
 from astropy.convolution import Box1DKernel
 
-outdir = os.path.expanduser('~/Documents/Talks/2014/DirSem/')
+thisobs = 'sunspot171'
+#thisobs = 'loopfootpoints171'
 
+outdir = os.path.expanduser('~/Documents/Talks/2014/DirSem/')
+thisbackground = os.path.join(outdir, thisobs + '.npy.0.95.npy')
+thisbackground_freqs = os.path.join(outdir, thisobs + '.npy.0.95.freqs.npy')
+thisbackground_std2 = os.path.join(outdir, thisobs + '.npy.0.95.std2.npy')
 wvt_use_cm = cm.seismic
 wvt_linecolor = 'w'
 wvt_linewidth = 4
@@ -27,7 +32,7 @@ wvt_coi_color = 'k'
 wvt_alpha = 0.5
 wvt_hatch = 'x'
 mvscale = 500.0
-slev = 99.5
+slev = 95.0
 
 fake = False
 
@@ -63,7 +68,7 @@ if fake:
     constant = 10.0
     data = data + constant
 else:
-    obs = 'loopfootpoints171.npy'
+    obs = thisobs + '.npy'
     filename = os.path.join(outdir, obs)
     data = np.load(filename)
     nt = data.size
@@ -191,7 +196,7 @@ period = 1. / freqs
 # Wavelet transform using red noise analysis
 # -----------------------------------------------------------------------------
 # data
-rvar = ts.data
+rvar = ts.data * np.hanning(ts.data.size)
 # Time array in seconds
 rtime = ts.SampleTimes.time + 0.001
 
@@ -261,9 +266,21 @@ glbl_power = glbl_power / max_glbl_power
 
 # -------------------------------------------------------------------------
 # Red noise
+print 'this one'
 rsignif, rfft_theor = wavelet.significance(1.0, dt, rscales, 0, alpha,
                         significance_level=rslevel, wavelet=rmother)
-rsig95 = np.ones([1, rN]) * rsignif[:, None]
+
+rsignif_load = np.load(thisbackground)
+rsignif_load_freqs = np.load(thisbackground_freqs)
+rsignif_load_std2 = np.load(thisbackground_std2)
+rsignifp = []
+for sc in rscales:
+    ind = np.argmin(np.abs(sc - 1.0 / rsignif_load_freqs))
+    rsignifp.append(rsignif_load[ind])
+rsignifp = (nt / 2 ) * np.asarray(rsignifp[::-1]) #/ rsignif_load_std2
+#rsignifp = np.asarray(rsignifp[::-1]) / rsignif_load_std2
+
+rsig95 = np.ones([1, rN]) * rsignifp[:, None]
 
 # Where ratio > 1, power is significant
 rsig95 = rpower / rsig95
@@ -467,11 +484,11 @@ frame.set_color('grey')
 cbar = plt.colorbar(CS)
 cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
-coi[coi < 2 ** YYY.min() ] = 2**YYY.min()#0.001
-lim = coi.min()#[-1]#1e-9
-xfill = np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt])
-yfill = np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [lim]]))
-plt.fill(xfill, yfill, wvt_coi_color, alpha=wvt_alpha, hatch=wvt_hatch)
+rcoi[rcoi < 2 ** rYYY.min() ] = 2**rYYY.min()#0.001
+rlim = rcoi.min()#[-1]#1e-9
+rxfill = np.concatenate([rtime[:1] - dt, rtime, rtime[-1:] + dt, rtime[-1:] + dt, rtime[:1] - dt, rtime[:1] - dt])
+ryfill = np.log2(np.concatenate([[rlim], rcoi, [rlim], rperiod[-1:], rperiod[-1:], [rlim]]))
+plt.fill(rxfill, ryfill, wvt_coi_color, alpha=wvt_alpha, hatch=wvt_hatch)
 #pc = r'\%'
 #plt.title('(d) Wavelet power spectrum compared to power-law power-spectrum noise [' + conf_level_string + ' conf. level]')
 plt.ylabel('wave packet period (seconds)')
