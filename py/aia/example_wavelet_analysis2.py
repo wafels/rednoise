@@ -245,16 +245,16 @@ bx = pylab.axes([0.1, 0.38, fig_width, fig_height], sharex=ax)
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
 YYY = np.log2(period)
-bx.contourf(time, YYY, np.log2(power), np.log2(levels),
-            extend='both', cmap=cm.coolwarm)
-bx.contour(time, np.log2(period), sig95, [-99, 1], colors='k',
-           linewidths=2., label='95%')
+CS = bx.contourf(time, YYY, np.log2(sig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
+bx.contour(time, YYY, np.log2(sig95), [-99, 0.0], colors='k', linewidths=2., label='95%')
 bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
 bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='k')
 legend = bx.legend(shadow=True)
 # The frame is matplotlib.patches.Rectangle instance surrounding the legend.
 frame = legend.get_frame()
 frame.set_facecolor('0.8')
+#cbar = fig.colorbar(CS, ax=bx, orientation='horizontal')
+#cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
 coi[-1] = 0.001
 bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt]),
@@ -300,15 +300,16 @@ cframe = clegend.get_frame()
 Bx = pylab.axes([0.1, 0.07, fig_width, fig_height], sharex=ax)
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
-Bx.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
-Bx.contour(time, np.log2(period), rsig95, [-99, 1], colors='k',
-           linewidths=2., label='95%')
+CS2 = Bx.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
+Bx.contour(time, YYY, np.log2(rsig95), [-99, 0.0], colors='k', linewidths=2., label='95%')
 Bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
 Bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='k')
 legend = Bx.legend(shadow=True)
 # The frame is matplotlib.patches.Rectangle instance surrounding the legend.
 frame = legend.get_frame()
 frame.set_facecolor('0.8')
+#cbar2 = fig.colorbar(CS2, ax=Bx, orientation='horizontal')
+#cbar2.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
 coi[coi < 2 ** YYY.min()] = 2 ** YYY.min() #0.001
 lim = coi.min() #[-1]#1e-9
