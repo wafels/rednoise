@@ -27,7 +27,6 @@ dt = t[1] - t[0]
 M0, ma = fitspecfig5.do(t, data, window=False)
 meanfit = M0.stats()['fourier_power_spectrum']['mean']
 
-ddd = eee
 """
 # Running average filter
 def movingaverage(interval, window_size):
@@ -81,7 +80,8 @@ ts.name = 'simulated data [n=%4.2f]' % (model_param[1])
 
 # Get the normalized power and the positive frequencies
 iobs = ts.PowerSpectrum.ppower
-this = ([ts.PowerSpectrum.frequencies.positive, iobs],)
+pfreqs = ts.PowerSpectrum.frequencies.positive
+this = ([pfreqs, iobs],)
 
 # _____________________________________________________________________________
 # -----------------------------------------------------------------------------
@@ -166,8 +166,17 @@ glbl_power = glbl_power / max_glbl_power
 # Red noise
 rsignif, rfft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
                         significance_level=slevel, wavelet=mother)
+rsignifp = []
+for sc in scales:
+    ind = np.argmin(np.abs(sc - 1.0 / pfreqs))
+    rsignifp.append(meanfit[ind])
+#rsignifp = nrsignifp[::-1]) #/ rsignif_load_std2
+#rsignifp = np.asarray(rsignifp[::-1]) / rsignif_load_std2
+rmean = np.mean(rsignif / rsignifp)
+#rsignifp = np.asarray(rsignifp) * rmean
+rsignifp = (np.asarray(rsignifp) / (data.std() ** 2)) * chi2.ppf(slevel, 2) / 2.0
 rsig95 = np.ones([1, N]) * rsignif[:, None]
-rsig95 = np.ones([1, N]) * meanfit[:, None] * chi2.ppf(slevel, 2) / 2.0
+rsig95 = np.ones([1, N]) * rsignifp[:, None] #* chi2.ppf(slevel, 2) / 2.0
 
 # Where ratio > 1, power is significant
 rsig95 = power / rsig95
@@ -299,8 +308,8 @@ legend = Bx.legend(shadow=True)
 frame = legend.get_frame()
 frame.set_facecolor('0.8')
 
-coi[ coi< 2**YYY.min() ] = 2**YYY.min()#0.001
-lim = coi.min()#[-1]#1e-9
+coi[coi < 2 ** YYY.min()] = 2 ** YYY.min() #0.001
+lim = coi.min() #[-1]#1e-9
 Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt]),
         np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [lim]])),
         'k',
