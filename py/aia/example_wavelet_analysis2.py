@@ -24,7 +24,7 @@ plt.ion()
 t, data, model_param = fakedata.fakedata()
 nt = t.size
 dt = t[1] - t[0]
-M0 = fitspecfig5.do(t, data, window=False)
+M0, ma = fitspecfig5.do(t, data, window=False)
 meanfit = M0.stats()['fourier_power_spectrum']['mean']
 
 ddd = eee

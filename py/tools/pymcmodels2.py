@@ -21,7 +21,7 @@ from scipy.stats.kde import gaussian_kde
 
 # Limits on the fit
 limits = {"power_law_index": [1.0, 6.0],
-          "power_law_norm": [-10.0, np.log(100.0)],
+          "power_law_norm": [-100.00, np.log(100.0)],
           "background": [-20.0, np.log(100.0)]}
 
 glimits = {"gaussian_amplitude": [-20.0*1000000, limits["power_law_norm"][1]],
@@ -80,6 +80,7 @@ def KernelSmoothing(name, dataset, bw_method=None, lower=-np.inf, upper=np.inf, 
                              plot=True,
                              verbose=0)
     return result
+
 
 # -----------------------------------------------------------------------------
 # Model : power law plus constant

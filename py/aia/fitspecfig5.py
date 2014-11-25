@@ -17,6 +17,7 @@ __author__ = 'ireland'
 plt.ion()
 # Reproducible
 
+
 def do(t, data, testing=1, window=False):
     nt = t.size
     print 'Fitting using pymc'
@@ -32,8 +33,8 @@ def do(t, data, testing=1, window=False):
         print('No windows applied.')
 
     meandata = np.mean(data)
-    data = (data - meandata)/meandata
-    itera = 50000 /testing
+    data = (data - meandata) / meandata
+    itera = 50000 / testing
     burn = 10000 / testing
 
     ts = TimeSeries(t, data * win)
@@ -46,6 +47,8 @@ def do(t, data, testing=1, window=False):
     # Run the sampler
     M0.sample(iter=itera, burn=burn, thin=5, progress_bar=True)
 
+    ma = pymc.MAP(pymcmodel0)
+
     # Get the mean results and the 95% confidence level
     mean = M0.stats()['fourier_power_spectrum']['mean']
     low = M0.stats()['fourier_power_spectrum']['95% HPD interval'][:, 0]
@@ -57,9 +60,9 @@ def do(t, data, testing=1, window=False):
 
     plt.close('all')
     plt.loglog(pfreqs, pwr, label='test data, power')
-    plt.loglog(pfreqs, mean, label = 'best fit index = %f' %(index))
-    plt.loglog(pfreqs, low, label = '95 %')
-    plt.loglog(pfreqs, high, label = '95 %')
+    plt.loglog(pfreqs, mean, label='best fit index = %f' % (index))
+    plt.loglog(pfreqs, low, label='95 %')
+    plt.loglog(pfreqs, high, label='95 %')
     plt.legend()
     plt.savefig(os.path.join(dir, 'fitspecfig5_output.%s.png' % (winname)))
-    return M0
+    return M0, ma

@@ -5,6 +5,7 @@ from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSerie
 from matplotlib import pyplot as plt
 from timeseries import TimeSeries
 
+
 def fakedata():
     print 'Generating fake data'
     dt = 12.0
