@@ -27,6 +27,7 @@ dt = t[1] - t[0]
 M0 = fitspecfig5.do(t, data, window=False)
 meanfit = M0.stats()['fourier_power_spectrum']['mean']
 
+ddd = eee
 """
 # Running average filter
 def movingaverage(interval, window_size):
