@@ -76,7 +76,7 @@ data = (data - meandata) / meandata
 ts = TimeSeries(t, data)
 ts.label = 'emission'
 ts.units = 'arb. units'
-ts.name = 'simulated data [n=%4.2f]' % (model_param[1])
+ts.name = 'simulated data (n=%4.2f)' % (model_param[1])
 
 # Get the normalized power and the positive frequencies
 iobs = ts.PowerSpectrum.ppower
@@ -210,8 +210,21 @@ scale_avg_signif, tmp = wavelet.significance(std2, dt, scales, 2, alpha,
 # sub-plots the significance levels are either included as dotted lines or as
 # filled contour lines.
 
-fig_width = 0.65
-fig_height = 0.23
+lh_width = 0.55
+lh_height = 0.23
+lh_xstart = 0.1
+lh_ystart = 0.70
+lh_spacing = 0.32
+
+
+mi_width = 0.22
+mi_xstart = lh_xstart + lh_width + 0.02
+#0.72 = lh_xstart + lh_width + 0.02
+
+rh_width = 0.01
+rh_height = lh_spacing + lh_height
+rh_xstart = 0.92
+rh_ystart = lh_ystart - 2 * lh_spacing
 
 pylab.close('all')
 pylab.ion()
@@ -229,32 +242,35 @@ figprops = dict(figsize=(11, 8), dpi=72)
 fig = pylab.figure(**figprops)
 
 # ---------------------------------------------------------------------------
-# First sub-plot, the original time series anomaly.
-ax = pylab.axes([0.1, 0.70, fig_width, fig_height])
-#ax.plot(time, iwave, '-', linewidth=1, color=[0.5, 0.5, 0.5])
+# First sub-plot, the original time series.
+ax = pylab.axes([lh_xstart, lh_ystart, lh_width, lh_height])
 ax.plot(time, var, 'k', linewidth=1.5)
 ax.set_title('(a) %s' % (ts.name, ))
-if ts.units != '':
-    ax.set_ylabel(r'%s [$%s$]' % (ts.label, ts.units,))
-else:
-    ax.set_ylabel(r'%s' % (ts.label, ))
+ax.set_ylabel('%s (%s)' % (ts.label, ts.units))
 # ---------------------------------------------------------------------------
 # Second sub-plot, the normalized wavelet power spectrum and significance level
 # contour lines and cone of influece hatched area.
-bx = pylab.axes([0.1, 0.38, fig_width, fig_height], sharex=ax)
-#levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
+# Define the area in the figure we will use
+bx = pylab.axes([lh_xstart, lh_ystart - 1 * lh_spacing, lh_width, lh_height], sharex=ax)
+# Define the levels that will be filled in
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
+# Y axis - logarithm of the period
 YYY = np.log2(period)
+# Fill in contours of np.log2(sig95) at the levels np.log2(levels)
 CS = bx.contourf(time, YYY, np.log2(sig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
-bx.contour(time, YYY, np.log2(sig95), [-99, 0.0], colors='k', linewidths=2., label='95%')
+# Draw a contour lines at level [0.0] - this the 95% confidence level
+LS = bx.contour(time, YYY, np.log2(sig95), [0.0], colors='k', linewidths=1.)
+# Define the label for the contour
+bx.clabel(LS, fmt={0.0: "95\%"}, inline=1, fontsize=12)
+# Add in lines indicating the periods of interest for coronal seismology
 bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
 bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='k')
+# Add the legend
 legend = bx.legend(shadow=True)
-# The frame is matplotlib.patches.Rectangle instance surrounding the legend.
+# Change the frame color.
 frame = legend.get_frame()
 frame.set_facecolor('0.8')
-#cbar = fig.colorbar(CS, ax=bx, orientation='horizontal')
-#cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
+
 
 coi[-1] = 0.001
 bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt]),
@@ -263,7 +279,7 @@ bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
         alpha=0.3,
         hatch='x')
 conf_level_string = '95' + r'$\%$'
-bx.set_title('(b) Wavelet power spectrum compared to white noise [' + conf_level_string + ' conf. level]')
+bx.set_title('(b) Wavelet power spectrum compared to white noise (' + conf_level_string + ' conf. level)')
 bx.set_ylabel('Period (seconds)')
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                            np.ceil(np.log2(period.max())))
@@ -274,14 +290,13 @@ bx.invert_yaxis()
 
 # Third sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
-cx = pylab.axes([0.77, 0.38, 0.2, fig_height], sharey=bx)
+cx = pylab.axes([mi_xstart, lh_ystart - 1 * lh_spacing, mi_width, lh_height], sharey=bx)
 cx.plot(glbl_signif / max_glbl_power, np.log2(period), 'k--', label='white noise')
-#cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
-#        linewidth=1.)
+cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7], linewidth=1.)
 cx.plot(glbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
 cx.set_title('(c) Global wavelet spectrum')
 if ts.units != '':
-    cx.set_xlabel(r'Power [arb units.]')
+    cx.set_xlabel(r'Power (arb units.)')
 else:
     cx.set_xlabel(r'Power')
 #cx.set_xlim([0, glbl_power.max() + std2])
@@ -297,11 +312,13 @@ cframe = clegend.get_frame()
 # RED Fourth sub-plot, the normalized wavelet power spectrum and significance level
 # contour lines and cone of influece hatched area.
 
-Bx = pylab.axes([0.1, 0.07, fig_width, fig_height], sharex=ax)
+Bx = pylab.axes([lh_xstart, lh_ystart - 2 * lh_spacing, lh_width, lh_height], sharex=ax)
 #levels = [0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16]
 levels = 2.0 ** (-4 + np.arange(0, 8, 0.1))
 CS2 = Bx.contourf(time, YYY, np.log2(rsig95), np.log2(levels), extend='both', cmap=cm.coolwarm)
-Bx.contour(time, YYY, np.log2(rsig95), [-99, 0.0], colors='k', linewidths=2., label='95%')
+LS2 = Bx.contour(time, YYY, np.log2(rsig95), [-99, 0.0], colors='k', linewidths=1.)
+fmt = {-99: "", 0.0: "95\%"}
+bx.clabel(LS2, fmt=fmt, inline=1, fontsize=12)
 Bx.axhline(np.log2(300.0), label='5 mins', linewidth=2, color='k', linestyle='--')
 Bx.axhline(np.log2(180.0), label='3 mins', linewidth=2, color='k')
 legend = Bx.legend(shadow=True)
@@ -311,17 +328,17 @@ frame.set_facecolor('0.8')
 #cbar2 = fig.colorbar(CS2, ax=Bx, orientation='horizontal')
 #cbar2.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
-coi[coi < 2 ** YYY.min()] = 2 ** YYY.min() #0.001
-lim = coi.min() #[-1]#1e-9
+coi[coi < 2 ** YYY.min()] = 2 ** YYY.min()
+lim = coi.min()
 Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, time[:1] - dt, time[:1] - dt]),
         np.log2(np.concatenate([[lim], coi, [lim], period[-1:], period[-1:], [lim]])),
         'k',
         alpha=0.3,
         hatch='x')
 #pc = r'\%'
-Bx.set_title('(d) Wavelet power spectrum compared to power-law power-spectrum noise [' + conf_level_string + ' conf. level]')
+Bx.set_title('(d) Wavelet power spectrum compared to power-law power-spectrum noise \n(' + conf_level_string + ' conf. level)')
 Bx.set_ylabel('Period (seconds)')
-Bx.set_xlabel('Time (seconds) [%i samples]' % (nt))
+Bx.set_xlabel('Time (seconds) [%i samples, %i second cadence]' % (nt, dt))
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                           np.ceil(np.log2(period.max())))
 Bx.set_yticks(np.log2(Yticks))
@@ -331,14 +348,14 @@ Bx.invert_yaxis()
 
 # Fifth sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
-Cx = pylab.axes([0.77, 0.07, 0.2, fig_height], sharey=bx)
-Cx.plot(rglbl_signif/max_glbl_power, np.log2(period), 'k--', label='power-law power-spectrum')
+Cx = pylab.axes([mi_xstart, lh_ystart - 2 * lh_spacing, mi_width, lh_height], sharey=bx)
+Cx.plot(rglbl_signif / max_glbl_power, np.log2(period), 'k--', label='power-law power-spectrum')
 #Cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
 Cx.plot(rglbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
 Cx.set_title('(e) Global wavelet spectrum')
 if ts.units != '':
-    Cx.set_xlabel(r'Power [arb. units]')
+    Cx.set_xlabel(r'Power (arb. units)')
 else:
     Cx.set_xlabel(r'Power')
 #Cx.set_xlim([0, glbl_power.max() + std2])
@@ -350,11 +367,12 @@ Cx.invert_yaxis()
 Clegend = Cx.legend(shadow=True, fontsize=10)
 Cframe = Clegend.get_frame()
 
-
-
-
-
 ax.set_xlim([time.min(), time.max()])
+
+# Now draw the colorbar
+Dx = pylab.axes([rh_xstart, rh_ystart, rh_width, rh_height])
+cbar = fig.colorbar(CS, cax=Dx)
+cbar.ax.set_ylabel(r'$\log_{2}($normalized wavelet power$)$')
 
 #
 pylab.draw()
