@@ -20,7 +20,7 @@
 %% manuscript produces a one-column, double-spaced document:
 
 
-\documentclass[onecolumn]{emulateapj}
+\documentclass[twocolumn]{emulateapj}
 %\documentclass[twocolumn]{aastex}
 %\documentclass[referee]{aastex}
 \usepackage{graphicx}
@@ -704,26 +704,30 @@ example demonstrates.
 \begin{figure}
 \epsscale{1.00}
 \plotone{white_red_compare.eps}
-\caption{Comparison of the effect of assuming a white or
-  \PL\ \PS\ background on the detection of an oscillatory signal for
-  simulated time-series.  Plot (a) shows the simulated time-series,
-  generated from a \protect\PS\ \protect$P(f)\propto f^{-1.77}$ and no
-  explicit oscillation included.  Plot (b) shows the wavelet power
-  spectrum with the cone-of-influence (shaded area) and regions above
-  the 95\% confidence level, assuming the null hypothesis that the
-  time-series is purely noise, and that the noise has the same average
-  power at all wavelet scales.  Plot (c) shows the global wavelet
-  \protect\PS\ for this wavelet transform.  Plots (d) and (e) are the
-  same as plots (b) and (c) with the null hypothesis that the
-  time-series is purely noise, modeled using an auto-regressive AR(1)
-  model.  Such time series assume that the current value in a
-  time-series depends on its previous value plus some
-  Gaussian-distributed noise (\citealp*{chatfieldtimeseries}.)  This
-  time-series model gives rise to a \protect\PL\ \protect\PS\ of the
-  form $\mbox{power}\propto\nu^{-n}$, where $\nu$ is the frequency of
-  oscillation, and $n$ is its \PL\ index.  The code used in this
-  analysis is an implementation of that described by
-  \citet{1998BAMS...79...61T}.}
+\caption{Comparison of the effect of assuming a white or power-law power
+spectrum null hypothesis on the detection of an oscillatory signal for
+simulated time series.  Panel (a) shows the simulated time series,
+generated from a power spectrum $P(\nu)\propto \nu^{-1.77}$ and with
+no explicit oscillation included. Panel (b) shows the normalized
+wavelet power spectrum with the cone of influence (shaded/hatched
+area) and regions above the 95\% confidence level (thin solid line).
+The wavelet power is normalized by the wavelet power expected by
+assuming the null hypothesis that the time series is purely white
+noise (and therefore the noise has the same power at all wavelet
+scales and times). Panel (c) shows the global wavelet power spectrum
+for the results of Panel (b): the solid line indicates the global
+wavelet power of the simulated data, and the dashed line indicates the
+95\% confidence level expected from the null hypothesis. Panels (d)
+and (e) are the same as panels (b) and (c) except now the null
+hypothesis is that the time series is purely noise and has a power-law
+power spectrum of the form $\nu^{-n}, n>0$.  The value of the
+power-law index $n$ is estimated by fitting the model $P(\nu)\propto
+\nu^{-n}$ to the power-spectrum that creates the time series shown in
+Panel (a).  The fit is done using the approach described by
+\cite{2010MNRAS.402..307V} and \cite{inglis}.  The code used to
+generate the wavelet power spectra (b)-(e) is an implementation of the
+wavelet analysis code described by
+\protect\citet{1998BAMS...79...61T}.}
 \label{fig:comparison}
 \end{figure}
 
@@ -743,34 +747,32 @@ contain a narrow-band oscillatory signal.  The time series in Figure
   same average power at all wavelet scales (for example, if the
   time-series were pure Gaussian noise), then the 95\% confidence
   level leads to the positive detection of significant oscillatory
-  power in this time series.}  {\BF The detection claim changes if a
-  different null hypothesis is used. Figure \ref{fig:comparison}(d) is
-  the same as Figure \ref{fig:comparison}(b) except with the null
-  hypothesis that the time-series gives rise to a \PL\ \PS\ of the
-  form $\mbox{power}\propto\nu^{-n}$, where $\nu$ is the frequency of
-  oscillation, and $n$ is its \PL\ index}\footnote{{\BF The model
-    used to generate a \PL\ \PS\ is an auto-regressive AR(1) model.
-    Such time-series assume that the current value in a time-series
-    depends on its previous value plus some Gaussian-distributed noise
-    \citep{chatfieldtimeseries}.  The null hypothesis that generates
-    the \PL\ \PS\ is not important in order to illustrate its effect
-    on the detection claim.}}.  This null hypothesis assumption, with
-the same confidence level, significantly reduces the area in the
-wavelet transform for which a detection may be claimed.  Even with
-this significantly different background assumption, there is still a
-significant amount of wavelet power above the 95\% confidence level.
-However, since the data is simulated without an explicit oscillatory
-component, the high wavelet power must have arisen by chance.  The
-simulated data, along with the results of Section \ref{sec:anal},
-suggest that when examining the wavelet transforms of time-series for
-wave packets, a background \PL\ \PS\ should be assumed, along with
-higher confidence levels (99\% or higher), in order to minimize the
-effects of mistakenly identifying random variations in the background
-\PS\ as evidence for an oscillatory signal.  {\BF Since there is a
-  \PL\ \PS\ in time-series of coronal emission, evidence for the
-  existence of a process that generates narrow-band oscillatory power
-  has to {\BF be} measured by its power over and above that expected by the
-  \PL\ \PS.}
+  power in this time series.}  
+
+The detection claim changes if a different null hypothesis is
+used. Figure \ref{fig:comparison}(d) is the same as Figure
+\ref{fig:comparison}(b) except that the null hypothesis is that the
+time-series has a \PL\ \PS\ of the form $\mbox{power}\propto\nu^{-n}$,
+where $\nu$ is the frequency of oscillation, and $n$ is its
+\PL\ index.  This null hypothesis assumption, with the same confidence
+level, significantly reduces the area in the wavelet transform for
+which a detection is claimed. The large confident area between 300 and
+700 seconds apparent under the white noise null hypothesis (panel b)
+is now signifcantly weaker under the power-law power spectrum null
+hypothesis, panel (d), but is still present.  However, since the data
+is simulated without an explicit oscillatory component, any high
+wavelet power must have arisen by chance.  The simulated data, along
+with the results of Section \ref{sec:anal}, suggest that when
+examining the wavelet transforms of time-series for wave packets, a
+background power-law-like \PS\ should be assumed, along with higher
+confidence levels (99\% or higher), in order to minimize the effects
+of mistakenly identifying random variations in the background \PS\ as
+evidence for an oscillatory signal. Since there is a power-law-like
+\PS\ in time-series of coronal emission, evidence for the existence of
+a process that generates narrow-band oscillatory power has to be
+measured by its power over and above that expected by an appropriate
+power-law-like model power spectra, such as those given by Equations
+\ref{eqn:pwrlaw} and \ref{eqn:pwrlawbump}.
 
 However, even this approach to identifying oscillatory power is not
 quite complete, as it simply rejects the null hypothesis that the

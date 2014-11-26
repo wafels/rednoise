@@ -336,7 +336,7 @@ Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
         alpha=0.3,
         hatch='x')
 #pc = r'\%'
-Bx.set_title('(d) Wavelet power spectrum compared to power-law power-spectrum noise \n(' + conf_level_string + ' conf. level)')
+Bx.set_title('(d) Wavelet power spectrum compared to power-law power spectrum noise \n(' + conf_level_string + ' conf. level)')
 Bx.set_ylabel('Period (seconds)')
 Bx.set_xlabel('Time (seconds) [%i samples, %i second cadence]' % (nt, dt))
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
@@ -349,7 +349,7 @@ Bx.invert_yaxis()
 # Fifth sub-plot, the global wavelet and Fourier power spectra and theoretical
 # noise spectra.
 Cx = pylab.axes([mi_xstart, lh_ystart - 2 * lh_spacing, mi_width, lh_height], sharey=bx)
-Cx.plot(rglbl_signif / max_glbl_power, np.log2(period), 'k--', label='power-law power-spectrum')
+Cx.plot(rglbl_signif / max_glbl_power, np.log2(period), 'k--', label='power-law power spectrum')
 #Cx.plot(fft_power, np.log2(1. / fftfreqs), '-', color=[0.7, 0.7, 0.7],
 #        linewidth=1.)
 Cx.plot(rglbl_power, np.log2(period), 'k-', linewidth=1.5, label='power')
