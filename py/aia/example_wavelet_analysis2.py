@@ -338,7 +338,7 @@ Bx.fill(np.concatenate([time[:1] - dt, time, time[-1:] + dt, time[-1:] + dt, tim
 #pc = r'\%'
 Bx.set_title('(d) Wavelet power spectrum compared to power-law power spectrum noise \n(' + conf_level_string + ' conf. level)')
 Bx.set_ylabel('Period (seconds)')
-Bx.set_xlabel('Time (seconds) [%i samples, %i second cadence]' % (nt, dt))
+Bx.set_xlabel('time (seconds) [%i samples, %i second cadence]' % (nt, dt))
 Yticks = 2 ** np.arange(np.ceil(np.log2(period.min())),
                           np.ceil(np.log2(period.max())))
 Bx.set_yticks(np.log2(Yticks))
