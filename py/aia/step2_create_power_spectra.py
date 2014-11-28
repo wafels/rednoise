@@ -164,6 +164,7 @@ windows = ['hanning']
 manip = 'relative'
 savefig_format = 'png'
 freqfactor = [1000.0, 'mHz']
+normalization_type = 'total_power'
 sunday_name = {}
 for region in regions:
     sunday_name[region] = region
@@ -368,11 +369,20 @@ for iwave, wave in enumerate(waves):
 
             # Normalize relative to the first region looked at.
             if region == regions[0]:
-                normalization_region_power = logiobs[0]
+                # normalize relative to the power in the lowest frequency
+                if normalization_type == 'lowest_frequency':
+                    normalization_region_power = logiobs[0]
+                # normalize relative to the total power
+                if normalization_type == 'total_power':
+                    normalization_region_power = np.log(np.sum(np.exp(logiobs)))
+                # normalize relative to the mean power
+                if normalization_type == 'mean_power':
+                    normalization_region_power = np.log(np.mean(np.exp(logiobs)))
             logiobs = logiobs - normalization_region_power
+            logpwr = logpwr - normalization_region_power
 
             # Logarithmic power: standard deviation over all pixels
-            logsigma = np.std(logpwr - normalization_region_power, axis=(0, 1))
+            logsigma = np.std(logpwr, axis=(0, 1))
 
             ###############################################################
             # Power spectrum analysis: arithmetic mean approach
