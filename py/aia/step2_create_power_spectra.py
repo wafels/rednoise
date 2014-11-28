@@ -30,6 +30,7 @@ from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68,
 from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
 from paper1 import descriptive_stats
 import scipy
+from scipy.interpolate import interp1d
 plt.ioff()
 
 
@@ -145,6 +146,10 @@ def DefineWindow(window, nt):
     return win, winname
 
 
+def evenly_sampled(times, expected=12.0, absolute=0.1):
+    return np.all(np.abs(times[1:] - times[0:-1] - expected) <= absolute)
+
+
 # Main analysis loop
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_False_dr_False/'
@@ -154,7 +159,7 @@ corename = 'study2'
 sunlocation = 'equatorial'
 fits_level = '1.5'
 waves = ['193']
-regions = ['R0']
+regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 savefig_format = 'png'
@@ -217,15 +222,26 @@ for iwave, wave in enumerate(waves):
             time_information = pickle.load(pkl_file)
             pkl_file.close()
 
-            # Should be 1800 images.  If not, we need to interpolate
-            #
-
-
             # Get some properties of the datacube
             ny = dc.shape[0]
             nx = dc.shape[1]
             nt = dc.shape[2]
             tsdetails = tsDetails(nx, ny, nt)
+
+            # Should be evenly sampled data.  It not, then resample to get
+            # evenly sampled data
+            t = time_information["time_in_seconds"]
+            dt = 12.0
+            is_evenly_sampled = evenly_sampled(t, expected=dt, absolute=dt / 100.0)
+            if not(is_evenly_sampled):
+                print('Resampling to an even time cadence.')
+                dt = (t[-1] - t[0]) / (1.0 * (nt - 1))
+                evenly_sampled_t = np.arange(0, nt) * dt
+                for iii in range(0, nx):
+                    for jjj in range(0, ny):
+                        f = interp1d(t, dc[iii, jjj, :])
+                        dc[iii, jjj, :] = f(evenly_sampled_t)
+                t = evenly_sampled_t
 
             # Define an array to store the analyzed data
             dc_analysed = np.zeros_like(dc)
@@ -248,7 +264,6 @@ for iwave, wave in enumerate(waves):
             savefig = os.path.join(savefig, region_id)
 
             # Create a time series object
-            dt = 12.0
             t = dt * np.arange(0, nt)
             tsdummy = TimeSeries(t, t)
             freqs_original = tsdummy.PowerSpectrum.frequencies.positive
@@ -351,8 +366,13 @@ for iwave, wave in enumerate(waves):
             # Logarithmic power: average over all the pixels
             logiobs = logiobs / (1.0 * nx * ny)
 
+            # Normalize relative to the first region looked at.
+            if region == regions[0]:
+                normalization_region_power = logiobs[0]
+            logiobs = logiobs - normalization_region_power
+
             # Logarithmic power: standard deviation over all pixels
-            logsigma = np.std(logpwr, axis=(0, 1))
+            logsigma = np.std(logpwr - normalization_region_power, axis=(0, 1))
 
             ###############################################################
             # Power spectrum analysis: arithmetic mean approach
