@@ -266,6 +266,8 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 plt.title(region_id + ' ' + obstype + ' %s' % (model))
                 plt.plot([mean], [mean2], 'go')
                 plt.text(mean, mean2, '%f, %f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
+                print(mean, mean2)
+                print(v, v2)
                 plt.savefig(filename)
                 plt.close('all')
 

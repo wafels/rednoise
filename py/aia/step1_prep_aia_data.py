@@ -24,7 +24,7 @@ from paper1 import sunday_name, label_sunday_name, figure_data_plot
 # input data
 dataroot = '~/Data/AIA/'
 corename = 'study2'
-sunlocation = 'equatorial'
+sunlocation = 'spoca665'
 fits_level = '1.5'
 wave = '171'
 cross_correlate = False
@@ -88,29 +88,44 @@ times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 #
 # Define the number of regions and their extents
 #
-nregions = 8
+nregions = 2
 regions = {}
 # X position
 Xrange = data[0].xrange
-start_xposition = 978.0
+start_xposition = 750.0
 Xspacing = (Xrange[1] - start_xposition) / nregions
 Xwidth = Xspacing - 5.0
 # Y position
 Yrange = data[1].yrange
-Ymiddle = 0.0 #0.5 * (Yrange[0] + Yrange[1])
+Ymiddle = 650.0 #0.5 * (Yrange[0] + Yrange[1])
 Ywidth = 50.0
 Yregion = [Ymiddle - Ywidth, Ymiddle + Ywidth]
 # Define the regions
 # Keep the rectangular patches
-patches = []
-for i in range(0, nregions):
-    # Next key
-    key = "R" + str(i)
-    # For Xwidth < Xspacing, no overlapping pixels
-    Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Xwidth]
-    regions[key] = {"x": Xregion, "y": Yregion}
-    # Define a matplotlib rectangular patch to show the region on a map
-    patches.append(Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2))
+if sunlocation == 'equatorial':
+    patches = []
+    for i in range(0, nregions):
+        # Next key
+        key = "R" + str(i)
+        # For Xwidth < Xspacing, no overlapping pixels
+        Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Xwidth]
+        regions[key] = {"x": Xregion, "y": Yregion}
+        # Define a matplotlib rectangular patch to show the region on a map
+        patches.append(Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2))
+
+
+if sunlocation == 'spoca665':
+    patches = []
+    for i in range(0, nregions):
+        # Next key
+        key = "R" + str(i)
+        # For Xwidth < Xspacing, no overlapping pixels
+        Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Xwidth]
+        regions[key] = {"x": Xregion, "y": Yregion}
+        # Define a matplotlib rectangular patch to show the region on a map
+        patches.append(Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, angle=67.0, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2))
+
+
 
 #
 # Make a plot with the locations of the regions

@@ -21,10 +21,10 @@ from scipy.stats.kde import gaussian_kde
 
 # Limits on the fit
 limits = {"power_law_index": [1.0, 6.0],
-          "power_law_norm": [-10.0, np.log(100.0)],
-          "background": [-20.0, np.log(100.0)]}
+          "power_law_norm": [np.log(1.0), np.log(10.0 ** 8)],
+          "background": [np.log(1.0), np.log(10.0 ** 8)]}
 
-glimits = {"gaussian_amplitude": [-20.0*1000000, limits["power_law_norm"][1]],
+glimits = {"gaussian_amplitude": [np.log(0.00001), limits["power_law_norm"][1]],
           "gaussian_width": [0.001, 3.00]}
 
 

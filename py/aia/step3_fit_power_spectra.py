@@ -28,7 +28,7 @@ from scipy.stats import beta as beta_distrib
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
-from paper1 import sunday_name, prettyprint, log_10_product, indexplot
+from paper1 import prettyprint, log_10_product, indexplot
 from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details, get_kde_most_probable
 from aia_pymc_pwrlaws_helpers import *
 
@@ -47,7 +47,7 @@ corename = 'study2'
 sunlocation = 'equatorial'
 fits_level = '1.5'
 waves = ['193']
-regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5']#, 'R6', 'R7']
+regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 
@@ -75,7 +75,7 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 1
+testing = 5
 
 nsample = 5000 / testing
 
@@ -390,6 +390,7 @@ for iwave, wave in enumerate(waves):
                 print "Physical bump frequency position limits : ", physical_bump_frequency_limits
                 print "Normalized log bump frequency limits : ", log_bump_frequency_limits
 
+
                 #
                 # Second model - power law with Gaussian bumps
                 #
@@ -505,7 +506,7 @@ for iwave, wave in enumerate(waves):
                 print '++++++++++++++++++++++++'
 
                 # Plot
-                title = 'AIA ' + wave + " : " + sunday_name[region]
+                title = 'AIA ' + wave + " : " + region
                 xvalue = freqfactor * freqs
                 fivemin = freqfactor * 1.0 / 300.0
                 threemin = freqfactor * 1.0 / 180.0
@@ -620,9 +621,9 @@ for iwave, wave in enumerate(waves):
                 ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,
                                            np.max(normalbump_BF) - 2.0]))
                 #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
-                plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
+                #plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
                 #plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
-                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.eps')
+                plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
                 plt.close('all')
 
                 f = open(savefig + obstype + '.' + passnumber + '.bump_ratio.pymc.txt', 'w')
@@ -770,226 +771,3 @@ for iwave, wave in enumerate(waves):
                                      '.'.join((ident, 'sigma_for_mean.csv')),
                                      (freqs, sigma_for_mean))
 
-                """
-                ###############################################################
-                # Second part - model selection through posterior predictive
-                # checking.
-                prettyprint('Model selection through posterior predictive checking - T_LRT')
-                # Results Storage
-                good_results = []
-                bad_results = []
-
-                # Number of successful comparisons
-                nfound = 0
-
-                # Number of posterior samples available
-                ntrace = np.size(M0.trace('power_law_index')[:])
-
-                # main loop
-                rthis = 0
-                rtried = []
-                while nfound < nsample:
-                    # random number
-                    rthis = np.random.randint(0, high=ntrace)
-                    while rthis in rtried:
-                        rthis = np.random.randint(0, high=ntrace)
-                    rtried.append(rthis)
-                    #print ' '
-                    #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
-
-                    # Generate test data under hypothesis 0
-                    pred = M0.trace('predictive')[rthis]
-
-                    # Fit the test data using hypothesis 0 and calculate a likelihood
-                    #M0_pp = pymcmodels2.Log_splwc(normed_freqs, pred, sigma)
-                    #map_M0_pp = pymc.MAP(M0_pp)
-                    try:
-                        #print('M0: fitting to find the maximum likelihood')
-                        #
-                        # Use the MAP functionality of PyMC
-                        #
-                        #map_M0_pp.fit(method='fmin_powell')
-                        #map_M0_pp.fit(method='fmin_powell')
-                        #l0 = get_likelihood_M0(map_M0_pp, normed_freqs, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        fit0, _ = curve_fit(rnspectralmodels.Log_splwc_CF, normed_freqs, pred, sigma=sigma, p0=A0)
-                        fit0_bf = get_spectrum_M0(normed_freqs, fit0)
-                        l0 = get_log_likelihood(pred, fit0_bf, sigma)
-                    except:
-                        #print('Error fitting M0 to sample.')
-                        l0 = None
-
-                    # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pred, sigma)
-                    #map_M1_pp = pymc.MAP(M1_pp)
-                    try:
-                        #print('M1: fitting to find the maximum likelihood')
-                        #
-                        # Use the MAP functionality of PyMC
-                        #
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, normed_freqs, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        if bump_shape == 'lognormal':
-                            fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
-                        if bump_shape == 'normal':
-                            fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddNormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
-                        fit1_bf = get_spectrum_M1(normed_freqs, fit1)
-                        l1 = get_log_likelihood(pred, fit1_bf, sigma)
-                    except:
-                        #print('Error fitting M1 to sample.')
-                        l1 = None
-
-                    # Sort the results into good and bad.
-                    if (l0 != None) and (l1 != None):
-                        t_lrt_pred = T_LRT(l0, l1)
-                        if t_lrt_pred >= 0.0:
-                            fit_results = (rthis, l0, chi0, l1, chi1, t_lrt_pred)
-                            good_results.append(fit_results)
-                            nfound = nfound + 1
-                            #print('    T_lrt = %f' % (T_LRT(l0, l1)))
-                            if np.mod(nfound, 1000) == 0:
-                                plt.figure(1)
-                                plt.plot(xvalue, pred, label='predicted', color='k')
-                                plt.plot(xvalue, fit0_bf, label='M0 fit', color='b')
-                                plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
-                                plt.xlabel("log10(frequency)")
-                                plt.ylabel("log(power)")
-                                plt.legend(fontsize=8, framealpha=0.5)
-                                plt.title(title + " : pp check sample #%i" % (nfound))
-                                plt.savefig(savefig + obstype + '.posterior_predictive.sample.' + str(nfound) + '.png')
-                                plt.close('all')
-                        else:
-                            #print('! T_lrt = %f <0 ! - must be a bad fit' % (t_lrt_pred))
-                            bad_results.append((rthis, l0, chi0, l1, chi1, t_lrt_pred))
-                    else:
-                        #print('! Fitting algorithm fell down !')
-                        bad_results.append((rthis, l0, chi0, l1, chi1, None))
-
-                # Save the good and bad results and use a different program to plot the results
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_LRT.' + region_id + '.good.pickle',
-                          good_results)
-
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_LRT.' + region_id + '.bad.pickle',
-                          bad_results)
-
-                # Quick summary plots
-                t_lrt_data = fitsummarydata["t_lrt"]
-                t_lrt_distribution = np.asarray([z[5] for z in good_results])
-
-                pvalue = np.sum(t_lrt_distribution >= t_lrt_data) / (1.0 * nsample)
-                print('Posterior predictive p-value = %f' % (pvalue))
-
-                plt.figure(2)
-                plt.hist(t_lrt_distribution, bins=30)
-                plt.xlabel('LRT statistic')
-                plt.ylabel('Number found [%i samples]' % (nsample))
-                plt.title(title)
-                plt.axvline(t_lrt_data, color='k', label='p=%4.3f [$T_{LRT}=$%f]' % (pvalue, t_lrt_data))
-                plt.legend(fontsize=8)
-                plt.savefig(savefig + obstype + '.posterior_predictive.T_LRT.png')
-                plt.close('all')
-
-                ###############################################################
-                # Third part - model fitness through posterior predictive
-                # checking.
-                prettyprint('Model checking through posterior predictive checking - T_SSE')
-                good_results2 = []
-                bad_results2 = []
-
-                # Number of successful comparisons
-                nfound2 = 0
-
-                # Number of posterior samples available
-                ntrace = np.size(M1.trace('power_law_index')[:])
-
-                # T_SSE for the data
-                t_sse_data = T_SSE(pwr_ff, M1_bf, sigma)
-                print 'T_SSE for the data = %f' % (t_sse_data)
-                # main loop
-                rthis = 0
-                rtried = []
-                while nfound2 < nsample:
-                    # random number
-                    rthis = np.random.randint(0, high=ntrace)
-                    while rthis in rtried:
-                        rthis = np.random.randint(0, high=ntrace)
-                    rtried.append(rthis)
-                    #print ' '
-                    #print nfound, nsample, rthis, ' (Positive T_lrt numbers favor hypothesis 1 over 0)'
-
-                    # Generate test data under hypothesis 1
-                    pred = M1.trace('predictive')[rthis]
-
-                    # Fit the test data using hypothesis 1 and calculate a likelihood
-                    #M1_pp = pymcmodels2.Log_splwc_AddLognormalBump2(normed_freqs, pred, sigma)
-                    #map_M1_pp = pymc.MAP(M1_pp)
-                    try:
-                        #print('M1: fitting to find the maximum likelihood')
-                        #
-                        # Use the MAP functionality of PyMC
-                        #
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #map_M1_pp.fit(method='fmin_powell')
-                        #l1 = get_likelihood_M1(map_M1_pp, normed_freqs, pred, sigma, tau, obstype)
-                        #
-                        # Curve fits
-                        #
-                        fit1, _ = curve_fit(rnspectralmodels.Log_splwc_AddLognormalBump2_CF, normed_freqs, pred, sigma=sigma, p0=A1)
-                        fit1_bf = get_spectrum_M1(normed_freqs, fit1)
-                        t_sse_pred = T_SSE(pred, fit1_bf, sigma)
-                    except:
-                        print('Error fitting M1 to sample.')
-                        t_sse_pred = None
-
-                    # Sort the results into good and bad.
-                    if (t_sse_pred != None):
-                        print t_sse_pred, t_sse_data
-                        fit_results = (rthis, t_sse_pred)
-                        good_results2.append(fit_results)
-                        nfound2 = nfound2 + 1
-                        if np.mod(nfound2, 1000) == 0:
-                            plt.figure(1)
-                            plt.plot(xvalue, pred, label='predicted', color='k')
-                            plt.plot(xvalue, fit1_bf, label='M1 fit', color='r')
-                            plt.xlabel("log10(frequency)")
-                            plt.ylabel("log(power)")
-                            plt.legend(fontsize=8, framealpha=0.5)
-                            plt.title(title + " : pp check sample #%i" % (nfound2))
-                            plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.sample.' + str(nfound2) + '.png')
-                            plt.close('all')
-                    else:
-                        bad_results2.append((rthis, t_sse_pred))
-
-                # Save the good and bad results and use a different program to plot the results
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_SSE.' + region_id + '.good.pickle',
-                          good_results2)
-
-                pkl_write(pkl_location,
-                          'posterior_predictive.T_SSE.' + region_id + '.bad.pickle',
-                          bad_results2)
-
-                # Quick summary plots
-                t_sse_distribution = np.asarray([z[1] for z in good_results2])
-
-                pvalue = np.sum(t_sse_distribution >= t_sse_data) / (1.0 * nsample)
-                print('Posterior predictive p-value = %f' % (pvalue))
-
-                plt.figure(2)
-                plt.hist(t_sse_distribution, bins=30)
-                plt.xlabel('SSE statistic')
-                plt.ylabel('Number found [%i samples]' % (nsample))
-                plt.title(title)
-                plt.axvline(t_sse_data, color='k', label='p=%4.3f [$T_{SSE}=$%f]' % (pvalue, t_sse_data))
-                plt.legend(fontsize=8)
-                plt.savefig(savefig + obstype + '.posterior_predictive.T_SSE.png')
-                plt.close('all')
-                """
