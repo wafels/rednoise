@@ -19,19 +19,28 @@ plt.close('all')
 # Set up which data to look at
 #
 dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final/'
-scsvroot = '~/ts/csv_cc_final/'
-corename = 'shutdownfun3_6hr'
-sunlocation = 'disk'
+ldirroot = '~/ts/pickle_cc_False_dr_False/'
+sfigroot = '~/ts/img_cc_False_dr_False/'
+scsvroot = '~/ts/csv_cc_False_dr_False/'
+corename = 'study2'
+sunlocation = 'equatorial'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['moss', 'loopfootpoints', 'sunspot', 'qs']
+waves = ['171']
+regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 
 freqfactor = [1000, 'mHz']
-savefig_format = 'eps'
+savefig_format = 'png'
+
+
+
+five_min = freqfactor[0] * 1.0 / 300.0
+three_min = freqfactor[0] * 1.0 / 180.0
+
+coherence_wsize = 3
+
+
 
 #
 # Storage for the power at the center of each region
@@ -94,27 +103,24 @@ for iregion, region in enumerate(regions):
 
                 # Load the data
                 pkl_location = locations['pickle']
-                ifilename = 'OUT.' + region_id + '.fourier_power'
+                ifilename = 'OUT.' + region_id + '.logiobs'
                 pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
                 freqs = pickle.load(pkl_file)
-                pwr_ff = pickle.load(pkl_file)
+                npixels = pickle.load(pkl_file)
+                logiobs = pickle.load(pkl_file)
+                logiobs_peak_fitted = pickle.load(pkl_file)
+                logiobs_peak = pickle.load(pkl_file)
                 pkl_file.close()
 
                 # Normalize the frequency
                 xnorm = freqs[0]
                 x = freqs / xnorm
 
-                # Get the data at the center of each region
+                # Get the data we are analyzing
+                pwr_central[region + wave] = np.exp(logiobs)
 
-                pwr_central[region + wave] = pwr_ff[0.2 * pwr_ff.shape[0],
-                                                   0.2 * pwr_ff.shape[1]]
-
-                #
-                # Get the number of elements in the time series
-                #
-                loc = os.path.join(os.path.expanduser(scsv), window, manip)
 
 SS = {}
 SS['171'] = s171
@@ -128,7 +134,7 @@ three_min = 1.0 / 180.0
 #
 # Got all the data.  Now make the plots
 #
-for region in regions:
+for wave in waves:
 
     ax = plt.subplot(111)
 
@@ -141,14 +147,14 @@ for region in regions:
     xformatter = plt.FuncFormatter(log_10_product)
     ax.xaxis.set_major_formatter(xformatter)
 
-    #yformatter = plt.FuncFormatter(log_10_product)
-    #ax.yaxis.set_major_formatter(yformatter)
-
     # Geometric mean
-    for wave in waves:
-        ax.plot(1000 * freqs, pwr_central[region + wave], label=wave + '$\AA$',
-                color=SS[wave].color,
-                linestyle=SS[wave].linestyle,
+    for i, region in enumerate(regions):
+        if i >= 7:
+            linestyle = ":"
+        else:
+            linestyle = "-"
+        ax.plot(1000 * freqs, pwr_central[region + wave], label=region,
+                linestyle=linestyle,
                 linewidth=SS[wave].linewidth)
 
     # Extra information for the plot
@@ -164,10 +170,9 @@ for region in regions:
 
     plt.xlabel('frequency (%s)' % (freqfactor[1]))
     plt.ylabel('power (arb. units)')
-    plt.title(figure_example_ps[region] + sunday_name[region])
-    plt.legend(loc=3, fontsize=20, framealpha=0.5)
-    #plt.tight_layout(0.2)
-    plt.ylim(0.00000001, 100.0)
+    plt.title(wave + r'$\AA$')
+    plt.legend(fontsize=14, framealpha=0.5)
+
     # Create the branches in order
     branches = [corename, sunlocation, fits_level, wave, region]
 
@@ -177,5 +182,5 @@ for region in regions:
     # set the saving locations
     sfig = locations["image"]
 
-    plt.savefig(sfig + '.centralpower.%s' % (savefig_format))
+    plt.savefig(sfig + '.data.%s' % (savefig_format))
     plt.close('all')

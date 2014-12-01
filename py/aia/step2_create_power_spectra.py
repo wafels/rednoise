@@ -126,7 +126,7 @@ def ts_manip(d, manip):
     if manip == 'relative':
         dmean = np.mean(dcopy)
         dcopy = dcopy / dmean - 1
-    return dcopy
+    return dcopy, dmean
 
 
 # Apply the window
@@ -158,7 +158,7 @@ scsvroot = '~/ts/csv_cc_False_dr_False/'
 corename = 'study2'
 sunlocation = 'equatorial'
 fits_level = '1.5'
-waves = ['193']
+waves = ['171']
 regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
@@ -282,6 +282,8 @@ for iwave, wave in enumerate(waves):
             doriginal = np.zeros_like(t)
             dmanip = np.zeros_like(t)
             fft_transform = np.zeros((ny, nx, nfreq), dtype=np.complex64)
+            summed_intensity = 0.0
+            logpwr_normalization = 0.0
 
             for i in range(0, nx):
                 for j in range(0, ny):
@@ -301,7 +303,10 @@ for iwave, wave in enumerate(waves):
                     #    d = d - np.mean(d)
 
                     # Basic rescaling of the time-series
-                    d = ts_manip(d, manip)
+                    d, dmean = ts_manip(d, manip)
+
+                    # Sum up the intensity
+                    summed_intensity = summed_intensity + dmean
 
                     # Sum up all the manipulated data
                     dmanip = dmanip + d
@@ -330,6 +335,9 @@ for iwave, wave in enumerate(waves):
                     # Store the individual log Fourier power
                     logpwr[j, i, :] = np.log(this_power)
 
+                    # Store the normalization factor
+                    logpwr_normalization = logpwr_normalization + 2 * np.log(dmean)
+
                     # Get the FFT transform values and store them
                     fft_transform[j, i, :] = ts.fft_transform
 
@@ -343,6 +351,9 @@ for iwave, wave in enumerate(waves):
 
             # Manipulated data: average
             dmanip = dmanip / (1.0 * nx * ny)
+
+            # Account for potentially different numbers of pixels
+            logpwr_normalization = logpwr_normalization / (1.0 * nx * ny)
 
             # Average of the analyzed time-series and create a time series
             # object
@@ -369,6 +380,8 @@ for iwave, wave in enumerate(waves):
 
             # Normalize relative to the first region looked at.
             if region == regions[0]:
+                # Divide also by the summed intensity
+                logpwr_normalization_keep = logpwr_normalization
                 # normalize relative to the power in the lowest frequency
                 if normalization_type == 'lowest_frequency':
                     normalization_region_power = logiobs[0]
@@ -378,8 +391,8 @@ for iwave, wave in enumerate(waves):
                 # normalize relative to the mean power
                 if normalization_type == 'mean_power':
                     normalization_region_power = np.log(np.mean(np.exp(logiobs)))
-            logiobs = logiobs - normalization_region_power
-            logpwr = logpwr - normalization_region_power
+            logiobs = logiobs + logpwr_normalization
+            logpwr = logpwr + logpwr_normalization
 
             # Logarithmic power: standard deviation over all pixels
             logsigma = np.std(logpwr, axis=(0, 1))

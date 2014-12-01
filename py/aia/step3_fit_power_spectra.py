@@ -40,18 +40,18 @@ plt.ioff()
 # Set up which data to look at
 #
 dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle_cc_final/'
-sfigroot = '~/ts/img_cc_final_ccmax_mean/'
-scsvroot = '~/ts/csv_cc_final/'
-corename = 'shutdownfun3_6hr'
-sunlocation = 'disk'
+ldirroot = '~/ts/pickle_cc_False_dr_False/'
+sfigroot = '~/ts/img_cc_False_dr_False/'
+scsvroot = '~/ts/csv_cc_False_dr_False/'
+corename = 'study2'
+sunlocation = 'equatorial'
 fits_level = '1.5'
-waves = ['171']
-#waves = ['193']
-#regions = ['loopfootpoints']
-regions = ['qs']
+waves = ['193']
+regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5']#, 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
+
+
 neighbour = 'nearest'
 
 """
