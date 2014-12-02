@@ -36,7 +36,7 @@ def power_distribution_details():
 
 
 def fit_details():
-    return {"ylim": [0.00001, 10.0]}
+    return {"ylim": [10.0 ** 0.0, 10.0 ** 7]}
 
 
 #

@@ -46,8 +46,9 @@ scsvroot = '~/ts/csv_cc_False_dr_False/'
 corename = 'study2'
 sunlocation = 'equatorial'
 fits_level = '1.5'
-waves = ['193']
-regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
+waves = ['193', '171']
+regions = ['R6', 'R7']
+#regions = ['R3', 'R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 
@@ -376,7 +377,12 @@ for iwave, wave in enumerate(waves):
                     x_bump_estimate = normed_freqs[bump_loc]
                     y_bump_estimate = (pwr - M0_bf)[bump_loc]
                     if bump_shape == 'lognormal':
-                        g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_CF, np.log(x_bump_estimate), y_bump_estimate)
+                        try:
+                            g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_CF, np.log(x_bump_estimate), y_bump_estimate)
+                        except:
+                            g_estimate = [np.mean(y_bump_estimate),
+                                          np.sum(np.log(x_bump_estimate) * y_bump_estimate)/np.sum(y_bump_estimate),
+                                          np.std(np.log(x_bump_estimate) * y_bump_estimate)]
                     if bump_shape == 'normal':
                         p0_bump_estimate = [np.log(np.max(y_bump_estimate)), np.log(x_bump_estimate[np.argmax(y_bump_estimate)]), 0.0]
                         g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_allexp_CF, x_bump_estimate, y_bump_estimate, p0=p0_bump_estimate)
@@ -389,7 +395,6 @@ for iwave, wave in enumerate(waves):
                 print "Second model estimate : ", A1_estimate
                 print "Physical bump frequency position limits : ", physical_bump_frequency_limits
                 print "Normalized log bump frequency limits : ", log_bump_frequency_limits
-
 
                 #
                 # Second model - power law with Gaussian bumps
@@ -620,8 +625,7 @@ for iwave, wave in enumerate(waves):
                 plt.title(title)
                 ymin_plotted = np.exp(np.asarray([np.min(pwr_ff) - 1.0,
                                            np.max(normalbump_BF) - 2.0]))
-                #plt.ylim(np.min(ymin_plotted), np.exp(np.max(pwr_ff) + 1.0))
-                #plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
+                plt.ylim(fit_details()['ylim'][0], fit_details()['ylim'][1])
                 #plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.%s' % (imgfiletype))
                 plt.savefig(savefig + obstype + '.' + passnumber + '.model_fit_compare.pymc.png')
                 plt.close('all')

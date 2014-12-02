@@ -116,6 +116,7 @@ if sunlocation == 'equatorial':
 
 if sunlocation == 'spoca665':
     patches = []
+    paths = []
     for i in range(0, nregions):
         # Next key
         key = "R" + str(i)
@@ -123,21 +124,42 @@ if sunlocation == 'spoca665':
         Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Xwidth]
         regions[key] = {"x": Xregion, "y": Yregion}
         # Define a matplotlib rectangular patch to show the region on a map
-        patches.append(Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, angle=67.0, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2))
-
-
+        new_rectangle = Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, angle=67.0, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2)
+        patches.append(new_rectangle)
+        paths.append(new_rectangle.get_path().transformed(transform=patches[0].get_transform()))
 
 #
 # Make a plot with the locations of the regions
 #
 fig, ax = plt.subplots()
-data[0].plot()
+z = data[0].plot()
 for patch in patches:
     ax.add_patch(patch)
     llxy = patch.get_xy()
     plt.text(llxy[0] + 0.15 * Xwidth, llxy[1] - 15.0, patch.get_label(), bbox=dict(facecolor='w', alpha=0.5))
 #plt.show()
 plt.savefig(os.path.join(save_locations["image"], 'location.png'))
+
+# Get the positions of all the x and y pixels
+xxrange = data[0].xrange
+nx = data[0].data.shape[1]
+xpoints = xxrange[0] + np.arange(0, nx) * (xxrange[1] - xxrange[0]) / np.float64(nx - 1)
+yrange = data[0].yrange
+ny = data[0].data.shape[0]
+ypoints = yrange[0] + np.arange(0, ny) * (yrange[1] - yrange[0]) / np.float64(ny - 1)
+
+points = []
+for x in xpoints:
+    for y in ypoints:
+        points.append((x, y))
+
+#
+# Find out which points are in the area we want and create a rectangular mask
+#
+if sunlocation == 'spoca665':
+    for path in paths:
+        logical = path.contains_points(points)
+
 
 #
 # Dump out the regions
@@ -146,7 +168,11 @@ for region in sorted(regions.keys()):
     # Get the region we are interested in
     xlocation = regions[region]['x']
     ylocation = regions[region]['y']
-    submc = Map([m.submap(xlocation, ylocation) for m in data], cube=True)
+    if sunlocation == 'equatorial':
+        submc = Map([m.submap(xlocation, ylocation) for m in data], cube=True)
+    if sunlocation == 'spoca665':
+        # extract the data we want and create a 
+        pass
     # Region identifier name
     region_id = ident + '_' + region
     # branch location
