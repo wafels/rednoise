@@ -64,7 +64,7 @@ ident = aia_specific.ident_creator(branches)
 print('Loading' + aia_data_location["aiadata"])
 
 # Get the list of data and sort it
-list_of_data = sorted(os.path.join(aia_data_location["aiadata"], f) for f in os.listdir(aia_data_location["aiadata"]))[0: 3]
+list_of_data = sorted(os.path.join(aia_data_location["aiadata"], f) for f in os.listdir(aia_data_location["aiadata"]))
 #
 # Start manipulating the data
 #
@@ -122,9 +122,12 @@ if sunlocation == 'equatorial':
         key = "R" + str(i)
         # For Xwidth < Xspacing, no overlapping pixels
         Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Xwidth]
-        regions[key] = {"x": Xregion, "y": Yregion}
         # Define a matplotlib rectangular patch to show the region on a map
-        patches.append(Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2))
+        new_rectangle = Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2)
+        regions[key] = {"x": Xregion, "y": Yregion,
+                        "patch": new_rectangle,
+                        "path": new_rectangle.get_path().transformed(transform=new_rectangle.get_transform()),
+                        "radial_distance": start_xposition + i * Xspacing + 0.5 * Xwidth}
 
     for region in sorted(regions.keys()):
         # Get the region we are interested in
@@ -143,6 +146,7 @@ if sunlocation == 'equatorial':
         outputfile = open(ofilename, 'wb')
         pickle.dump(submc, outputfile)
         pickle.dump(times, outputfile)
+        pickle.dump(regions[region]["radial_distance"], outputfile)
         outputfile.close()
         print('Saved to ' + ofilename)
 
@@ -172,7 +176,6 @@ if sunlocation == 'spoca665':
         # For Xwidth < Xspacing, no overlapping pixels
         llxy = [(Radius - Rwidth) * np.cos(theta) + Length * np.sin(theta),
                 (Radius - Rwidth) * np.sin(theta) - Length * np.cos(theta)]
-        print llxy
         # Define a matplotlib rectangular patch to show the region on a map
         new_rectangle = Rectangle((llxy[0], llxy[1]), Rwidth, 2 * Length, angle=np.rad2deg(theta), label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2)
         # Store the information about the region
@@ -195,7 +198,7 @@ if sunlocation == 'spoca665':
     # For each path, define a mask and then dump out a mapcube with that masked
     # region in it
     #
-    for region in regions.keys():
+    for region in sorted(regions.keys()):
         # Get the path of this region
         path = regions[region]["path"]
         # Zero out the mask
@@ -205,8 +208,9 @@ if sunlocation == 'spoca665':
             for y in range(0, ny):
                 mask[y, x] = path.contains_point((xpoints[x], ypoints[y]))
 
-        # Define the subcube using the mask
-        submc = Map([Map(m.data * mask, m.meta) for m in data], cube=True)
+        # Define the subcube using the mask, and then submap to the extent
+        # of the bounding box of the path.
+        submc = Map([Map(m.data * mask, m.meta).submap(path.get_extents().intervalx, path.get_extents().intervaly) for m in data], cube=True)
         # Region identifier name
         region_id = ident + '_' + region
         # branch location
