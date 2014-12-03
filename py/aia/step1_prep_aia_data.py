@@ -25,12 +25,12 @@ from paper1 import sunday_name, label_sunday_name, figure_data_plot
 dataroot = '~/Data/AIA/'
 corename = 'study2'
 sunlocation = 'spoca665'
+sunlocation = 'equatorial'
 fits_level = '1.5'
 wave = '171'
 cross_correlate = False
 derotate = False
 
-rotate_these = ['spoca665', 'spoca667']
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]
@@ -106,12 +106,12 @@ if sunlocation == 'equatorial':
     regions = {}
     # X position
     Xrange = data[0].xrange
-    start_xposition = 750.0
+    start_xposition = 978.0
     Xspacing = (Xrange[1] - start_xposition) / nregions
-    Xwidth = Xspacing - 5.0
+    Rwidth = Xspacing - 5.0
     # Y position
     Yrange = data[1].yrange
-    Ymiddle = 650.0 #0.5 * (Yrange[0] + Yrange[1])
+    Ymiddle = 0.0 #0.5 * (Yrange[0] + Yrange[1])
     Ywidth = 50.0
     Yregion = [Ymiddle - Ywidth, Ymiddle + Ywidth]
 
@@ -121,13 +121,14 @@ if sunlocation == 'equatorial':
         # Next key
         key = "R" + str(i)
         # For Xwidth < Xspacing, no overlapping pixels
-        Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Xwidth]
+        Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Rwidth]
         # Define a matplotlib rectangular patch to show the region on a map
-        new_rectangle = Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2)
+        new_rectangle = Rectangle((Xregion[0], Yregion[0]), Rwidth, 2 * Ywidth, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2)
+        # Store the information about the region
         regions[key] = {"x": Xregion, "y": Yregion,
                         "patch": new_rectangle,
                         "path": new_rectangle.get_path().transformed(transform=new_rectangle.get_transform()),
-                        "radial_distance": start_xposition + i * Xspacing + 0.5 * Xwidth}
+                        "radial_distance": start_xposition + i * Xspacing + 0.5 * Rwidth}
 
     for region in sorted(regions.keys()):
         # Get the region we are interested in
@@ -153,18 +154,26 @@ if sunlocation == 'equatorial':
 #
 # Do SPoCA 665
 #
-if sunlocation == 'spoca665':
+if sunlocation == 'spoca665' or sunlocation == 'spoca667':
     #
     # Define the patches and the paths of regions
     #
     nregions = 8
     regions = {}
 
-    Radius_start = 998.0
-    Rspacing = 30.0
-    theta = np.deg2rad(np.rad2deg(np.arctan(data[0].center['y'] / data[0].center['x'])) - 1.5)
-    Rwidth = 20.0
-    Length = 30.0
+    if sunlocation == 'spoca665':
+        Radius_start = 998.0
+        Rspacing = 30.0
+        theta = np.deg2rad(np.rad2deg(np.arctan(data[0].center['y'] / data[0].center['x'])) - 1.5)
+        Rwidth = 20.0
+        Length = 30.0
+
+    if sunlocation == 'spoca667':
+        Radius_start = 998.0
+        Rspacing = 30.0
+        theta = np.deg2rad(np.rad2deg(np.arctan(data[0].center['y'] / data[0].center['x'])))
+        Rwidth = 20.0
+        Length = 30.0
 
     patches = []
     for i in range(0, nregions):
@@ -233,7 +242,9 @@ if sunlocation == 'spoca665':
 #
 fig, ax = plt.subplots()
 z = data[0].plot()
-for patch in patches:
+#for patch in patches:
+for region in sorted(regions.keys()):
+    patch = regions[region]["patch"]
     ax.add_patch(patch)
     llxy = patch.get_xy()
     plt.text(llxy[0] + 0.15 * Rwidth, llxy[1] - 15.0, patch.get_label(), bbox=dict(facecolor='w', alpha=0.5))

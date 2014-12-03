@@ -211,6 +211,9 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
         print '95% ', v95_lo, v95_hi
         print '-'
 
+        # Dump out the raw results
+        np.save(savefilename + v + '.npy', np.asarray([mean, v68_lo, v68_hi, v95_lo, v95_hi]))
+
         plt.text(mean, 0.90 * ypos, ' %f' % (mean), fontsize=fontsize, bbox=bbox)
         plt.text(v95_lo, 0.25 * ypos, ' %f' % (v95_lo), fontsize=fontsize, bbox=bbox)
         plt.text(v95_hi, 0.75 * ypos, ' %f' % (v95_hi), fontsize=fontsize, bbox=bbox)

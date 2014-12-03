@@ -285,6 +285,7 @@ for iwave, wave in enumerate(waves):
             summed_intensity = 0.0
             logpwr_normalization = 0.0
 
+            npixel = 0
             for i in range(0, nx):
                 for j in range(0, ny):
 
@@ -295,51 +296,55 @@ for iwave, wave in enumerate(waves):
                     d = tsutils.fix_nonfinite(d)
                     dkeep = d.copy()
 
-                    # Sum up all the original data
-                    doriginal = doriginal + d
+                    # Only consider non-zero data
+                    if np.sum(d) > 0.0:
+                        npixel = npixel + 1
 
-                    # Remove the mean
-                    #if manip == 'submean':
-                    #    d = d - np.mean(d)
+                        # Sum up all the original data
+                        doriginal = doriginal + d
 
-                    # Basic rescaling of the time-series
-                    d, dmean = ts_manip(d, manip)
+                        # Remove the mean
+                        #if manip == 'submean':
+                        #    d = d - np.mean(d)
 
-                    # Sum up the intensity
-                    summed_intensity = summed_intensity + dmean
+                        # Basic rescaling of the time-series
+                        d, dmean = ts_manip(d, manip)
 
-                    # Sum up all the manipulated data
-                    dmanip = dmanip + d
+                        # Sum up the intensity
+                        summed_intensity = summed_intensity + dmean
 
-                    # Multiply the data by the apodization window
-                    d = ts_apply_window(d, win)
+                        # Sum up all the manipulated data
+                        dmanip = dmanip + d
 
-                    # Keep the analyzed data cube
-                    dc_analysed[j, i, :] = d
+                        # Multiply the data by the apodization window
+                        d = ts_apply_window(d, win)
 
-                    # Form a time series object.  Handy for calculating the Fourier power at all non-zero frequencies
-                    ts = TimeSeries(t, d)
+                        # Keep the analyzed data cube
+                        dc_analysed[j, i, :] = d
 
-                    # Define the Fourier power we are analyzing
-                    this_power = (np.abs(np.fft.fft(d)) ** 2)[posindex] / (1.0 * nt)#ts.PowerSpectrum.ppower
+                        # Form a time series object.  Handy for calculating the Fourier power at all non-zero frequencies
+                        ts = TimeSeries(t, d)
 
-                    # Get the total Fourier power
-                    iobs = iobs + this_power
+                        # Define the Fourier power we are analyzing
+                        this_power = (np.abs(np.fft.fft(d)) ** 2)[posindex] / (1.0 * nt)#ts.PowerSpectrum.ppower
 
-                    # Store the individual Fourier power
-                    pwr[j, i, :] = this_power
+                        # Get the total Fourier power
+                        iobs = iobs + this_power
 
-                    # Sum up the log of the Fourier power - equivalent to doing the geometric mean
-                    logiobs = logiobs + np.log(this_power)
+                        # Store the individual Fourier power
+                        pwr[j, i, :] = this_power
 
-                    # Store the individual log Fourier power
-                    logpwr[j, i, :] = np.log(this_power)
+                        # Sum up the log of the Fourier power - equivalent to doing the geometric mean
+                        logiobs = logiobs + np.log(this_power)
 
-                    # Store the normalization factor
-                    logpwr_normalization = logpwr_normalization + 2 * np.log(dmean)
+                        # Store the individual log Fourier power
+                        logpwr[j, i, :] = np.log(this_power)
 
-                    # Get the FFT transform values and store them
-                    fft_transform[j, i, :] = ts.fft_transform
+                        # Store the normalization factor
+                        logpwr_normalization = logpwr_normalization + 2 * np.log(dmean)
+
+                        # Get the FFT transform values and store them
+                        fft_transform[j, i, :] = ts.fft_transform
 
             ###############################################################
             # Post-processing of the data products
@@ -347,13 +352,17 @@ for iwave, wave in enumerate(waves):
             dc_analysed_minmax = (np.min(dc_analysed), np.max(dc_analysed))
 
             # Original data: average
-            doriginal = doriginal / (1.0 * nx * ny)
+            doriginal = doriginal / (1.0 * npixel)
 
             # Manipulated data: average
-            dmanip = dmanip / (1.0 * nx * ny)
+            dmanip = dmanip / (1.0 * npixel)
 
             # Account for potentially different numbers of pixels
-            logpwr_normalization = logpwr_normalization / (1.0 * nx * ny)
+            logpwr_normalization = logpwr_normalization / (1.0 * npixel)
+
+            # Show some information
+            print('Number of non-zero pixels = %i' % (npixel))
+            print('Size of containing region in pixels' % (nx * ny))
 
             # Average of the analyzed time-series and create a time series
             # object
@@ -370,13 +379,13 @@ for iwave, wave in enumerate(waves):
             doriginal_ts.label = 'average summed emission ' + tsdetails
 
             # Fourier power: average over all the pixels
-            iobs = iobs / (1.0 * nx * ny)
+            iobs = iobs / (1.0 * npixel)
 
             # Fourier power: standard deviation over all the pixels
             sigma = np.std(pwr, axis=(0, 1))
 
             # Logarithmic power: average over all the pixels
-            logiobs = logiobs / (1.0 * nx * ny)
+            logiobs = logiobs / (1.0 * npixel)
 
             # Normalize relative to the first region looked at.
             if region == regions[0]:
@@ -447,7 +456,7 @@ for iwave, wave in enumerate(waves):
             def linear(x, c, m):
                 return -m * x + c
 
-            nsample = np.min(np.asarray([8 * nx * ny, 10000]))
+            nsample = np.min(np.asarray([8 * npixel, 10000]))
             npicked = 0
             lag = 1
             distance = []
@@ -501,39 +510,41 @@ for iwave, wave in enumerate(waves):
                     while (loc2[0] == loc1[0]) and (loc2[1] == loc1[1]):
                         loc2 = (np.random.randint(0, ny), np.random.randint(0, nx))
 
-                distance.append(np.sqrt(1.0 * (loc1[0] - loc2[0]) ** 2 + 1.0 * (loc1[1] - loc2[1]) ** 2))
-
                 # Get the time series
                 ts1 = dc_analysed[loc1[0], loc1[1], :]
                 ts2 = dc_analysed[loc2[0], loc2[1], :]
 
-                # Calculate the independence measures
-                ccvalue, covariance, spearmanr = independence_measures(ts1, ts2)
-                cc0.append(ccvalue[nt - 1])
-                cclag.append(ccvalue[nt - 1 + lag])
-                ccmax.append(np.max(ccvalue))
-                covar.append(covariance[1, 0])
-                spearman.append(spearmanr[0])
+                if (np.sum(ts1) > 0) and (np.sum(ts2) > 0):
 
-                # Calculate the coherence for each selected pair
-                coherence = get_coherence(ts1, ts2, wsize=coherence_wsize)
-                #if npicked == 0:
-                #    coher = coherence[posindex]
-                #else:
-                #    coher = coher + coherence[posindex]
-                coher_array[npicked, :] = coherence[posindex]
+                    distance.append(np.sqrt(1.0 * (loc1[0] - loc2[0]) ** 2 + 1.0 * (loc1[1] - loc2[1]) ** 2))
 
-                # Do the same thing for the log of the power spectra.
-                a = logpwr[loc1[0], loc1[1], :]
-                b = logpwr[loc2[0], loc2[1], :]
-                logpwr_ccvalue, logpwr_covariance, logpwr_spearmanr = independence_measures(a, b)
-                logpwr_cc0.append(logpwr_ccvalue[nposfreq - 1])
-                logpwr_cclag.append(logpwr_ccvalue[nposfreq - 1 + lag])
-                logpwr_ccmax.append(np.max(logpwr_ccvalue))
-                logpwr_spearman.append(logpwr_spearmanr[0])
+                    # Calculate the independence measures
+                    ccvalue, covariance, spearmanr = independence_measures(ts1, ts2)
+                    cc0.append(ccvalue[nt - 1])
+                    cclag.append(ccvalue[nt - 1 + lag])
+                    ccmax.append(np.max(ccvalue))
+                    covar.append(covariance[1, 0])
+                    spearman.append(spearmanr[0])
 
-                # Advance the counter
-                npicked = npicked + 1
+                    # Calculate the coherence for each selected pair
+                    coherence = get_coherence(ts1, ts2, wsize=coherence_wsize)
+                    #if npicked == 0:
+                    #    coher = coherence[posindex]
+                    #else:
+                    #    coher = coher + coherence[posindex]
+                    coher_array[npicked, :] = coherence[posindex]
+
+                    # Do the same thing for the log of the power spectra.
+                    a = logpwr[loc1[0], loc1[1], :]
+                    b = logpwr[loc2[0], loc2[1], :]
+                    logpwr_ccvalue, logpwr_covariance, logpwr_spearmanr = independence_measures(a, b)
+                    logpwr_cc0.append(logpwr_ccvalue[nposfreq - 1])
+                    logpwr_cclag.append(logpwr_ccvalue[nposfreq - 1 + lag])
+                    logpwr_ccmax.append(np.max(logpwr_ccvalue))
+                    logpwr_spearman.append(logpwr_spearmanr[0])
+
+                    # Advance the counter
+                    npicked = npicked + 1
 
             # Average coherence
             coher = np.mean(coher_array, axis=0)
@@ -713,7 +724,7 @@ for iwave, wave in enumerate(waves):
             ax.axvline(three_min, color=s3min.color, linestyle=s3min.linestyle, label=s3min.label)
             #plt.axhline(1.0, color='k', label='average power')
             plt.xlabel('frequency (%s)' % (freqfactor[1]))
-            plt.ylabel('normalized power [%i time series, %i samples each]' % (nx * ny, nt))
+            plt.ylabel('normalized power [%i time series, %i samples each]' % (npixel, nt))
             plt.title(data_name + ' - arithmetic mean')
             #plt.grid()
             plt.legend(loc=3, fontsize=10, framealpha=0.5)
@@ -861,7 +872,7 @@ for iwave, wave in enumerate(waves):
             ax.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
             ax.axvline(three_min, color=s3min.color, linestyle=s3min.linestyle, label=s3min.label)
             plt.xlabel('frequency (%s)' % (freqfactor[1]))
-            plt.ylabel('power [%i time series, %i samples each]' % (nx * ny, nt))
+            plt.ylabel('power [%i time series, %i samples each]' % (npixel, nt))
             plt.title(data_name + ' : geometric mean')
             plt.legend(loc=3, fontsize=10, framealpha=0.5)
             plt.savefig(savefig + '.geometric_mean_power_spectra_for_talk.%s' % (savefig_format))
@@ -920,7 +931,7 @@ for iwave, wave in enumerate(waves):
             hist_dc_analysed = np.zeros((bins, nt))
             for this_time in range(0, nt):
                 hist_dc_analysed[:, this_time], bin_edges = np.histogram(dc_analysed[:, :, this_time], bins=bins, range=dc_analysed_minmax)
-            hist_dc_analysed = hist_dc_analysed / (1.0 * nx * ny)
+            hist_dc_analysed = hist_dc_analysed / (1.0 * npixel)
             plt.figure(12)
             plt.xlabel('time (seconds)')
             plt.ylabel('analyzed emission ' + tsdetails)
@@ -952,7 +963,7 @@ for iwave, wave in enumerate(waves):
             hist_dc_analysed_logpwr = np.zeros((bins, nposfreq))
             for this_freq in range(0, nposfreq):
                 hist_dc_analysed_logpwr[:, this_freq], bin_edges = np.histogram(logpwr[:, :, this_freq], bins=bins, range=minmax)
-            hist_dc_analysed_logpwr = hist_dc_analysed_logpwr / (1.0 * nx * ny)
+            hist_dc_analysed_logpwr = hist_dc_analysed_logpwr / (1.0 * npixel)
             plt.figure(13)
             plt.xlabel('frequency (%s)' % (freqfactor[1]))
             plt.ylabel('FFT power ' + tsdetails)
@@ -1067,7 +1078,7 @@ for iwave, wave in enumerate(waves):
             # logiobs, peak logiobs)
             pkl_write(pkl_location,
                       'OUT.' + ofilename + '.logiobs.pickle',
-                      (freqs_original, nx * ny,
+                      (freqs_original, npixel,
                        logiobs,
                        logiobs_peak_fitted,
                        logiobs_peak))
