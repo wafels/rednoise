@@ -30,6 +30,8 @@ wave = '171'
 cross_correlate = False
 derotate = False
 
+rotate_these = ['spoca665', 'spoca667']
+
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]
 
@@ -62,20 +64,28 @@ ident = aia_specific.ident_creator(branches)
 print('Loading' + aia_data_location["aiadata"])
 
 # Get the list of data and sort it
-list_of_data = sorted(os.path.join(aia_data_location["aiadata"], f) for f in os.listdir(aia_data_location["aiadata"]))
+list_of_data = sorted(os.path.join(aia_data_location["aiadata"], f) for f in os.listdir(aia_data_location["aiadata"]))[0: 3]
 #
 # Start manipulating the data
 #
+# solar derotation
 if derotate:
     data, derotation_displacements = mapcube_solar_derotate(Map(list_of_data, cube=True), with_displacements=True)
 else:
     data = Map(list_of_data, cube=True)
     derotation_displacements = None
 
+# Cross correlate
 if cross_correlate:
     data, cross_correlation_displacements = mapcube_coalign_by_match_template(data, with_displacements=True)
 else:
     cross_correlation_displacements = None
+
+# rotate so that the limb appears to be at the equator
+#if sunlocation in rotate_these:
+#    rotate_angle = np.rad2deg(np.arctan(data[0].center['x'] / data[0].center['y']))
+#    data = Map([m.rotate(-rotate_angle) for m in data], cube=True)
+
 
 # Get the date and times from the original mapcube
 date_obs = []
@@ -86,23 +96,26 @@ for m in data:
 times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 
 #
-# Define the number of regions and their extents
+# Do the equatorial region
 #
-nregions = 2
-regions = {}
-# X position
-Xrange = data[0].xrange
-start_xposition = 750.0
-Xspacing = (Xrange[1] - start_xposition) / nregions
-Xwidth = Xspacing - 5.0
-# Y position
-Yrange = data[1].yrange
-Ymiddle = 650.0 #0.5 * (Yrange[0] + Yrange[1])
-Ywidth = 50.0
-Yregion = [Ymiddle - Ywidth, Ymiddle + Ywidth]
-# Define the regions
-# Keep the rectangular patches
 if sunlocation == 'equatorial':
+    #
+    # Define the number of regions and their extents
+    #
+    nregions = 8
+    regions = {}
+    # X position
+    Xrange = data[0].xrange
+    start_xposition = 750.0
+    Xspacing = (Xrange[1] - start_xposition) / nregions
+    Xwidth = Xspacing - 5.0
+    # Y position
+    Yrange = data[1].yrange
+    Ymiddle = 650.0 #0.5 * (Yrange[0] + Yrange[1])
+    Ywidth = 50.0
+    Yregion = [Ymiddle - Ywidth, Ymiddle + Ywidth]
+
+    # Keep the rectangular patches
     patches = []
     for i in range(0, nregions):
         # Next key
@@ -113,20 +126,103 @@ if sunlocation == 'equatorial':
         # Define a matplotlib rectangular patch to show the region on a map
         patches.append(Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2))
 
+    for region in sorted(regions.keys()):
+        # Get the region we are interested in
+        xlocation = regions[region]['x']
+        ylocation = regions[region]['y']
+        submc = Map([m.submap(xlocation, ylocation) for m in data], cube=True)
+        # Region identifier name
+        region_id = ident + '_' + region
+        # branch location
+        b = [corename, sunlocation, fits_level, wave, region]
+        # Output location
+        output = aia_specific.save_location_calculator(roots, b)["pickle"]
+        # Output filename
+        ofilename = os.path.join(output, region_id + '.mapcube.pickle')
+        # Open the file and write it out
+        outputfile = open(ofilename, 'wb')
+        pickle.dump(submc, outputfile)
+        pickle.dump(times, outputfile)
+        outputfile.close()
+        print('Saved to ' + ofilename)
 
+#
+# Do SPoCA 665
+#
 if sunlocation == 'spoca665':
+    #
+    # Define the patches and the paths of regions
+    #
+    nregions = 8
+    regions = {}
+
+    Radius_start = 998.0
+    Rspacing = 30.0
+    theta = np.deg2rad(np.rad2deg(np.arctan(data[0].center['y'] / data[0].center['x'])) - 1.5)
+    Rwidth = 20.0
+    Length = 30.0
+
     patches = []
-    paths = []
     for i in range(0, nregions):
         # Next key
         key = "R" + str(i)
+
+        Radius = Radius_start + i * Rspacing
+
         # For Xwidth < Xspacing, no overlapping pixels
-        Xregion = [start_xposition + i * Xspacing, start_xposition + i * Xspacing + Xwidth]
-        regions[key] = {"x": Xregion, "y": Yregion}
+        llxy = [(Radius - Rwidth) * np.cos(theta) + Length * np.sin(theta),
+                (Radius - Rwidth) * np.sin(theta) - Length * np.cos(theta)]
+        print llxy
         # Define a matplotlib rectangular patch to show the region on a map
-        new_rectangle = Rectangle((Xregion[0], Yregion[0]), Xwidth, 2 * Ywidth, angle=67.0, label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2)
+        new_rectangle = Rectangle((llxy[0], llxy[1]), Rwidth, 2 * Length, angle=np.rad2deg(theta), label=key, fill=False, facecolor='b', edgecolor='r', linewidth=2)
+        # Store the information about the region
         patches.append(new_rectangle)
-        paths.append(new_rectangle.get_path().transformed(transform=patches[0].get_transform()))
+        regions[key] = {"patch": new_rectangle,
+                        "path": new_rectangle.get_path().transformed(transform=new_rectangle.get_transform()),
+                        "radial_distance": Radius}
+    #print regions[key]["path"]
+    #
+    # Get the positions of all the x and y pixels
+    #
+    xxrange = data[0].xrange
+    nx = data[0].data.shape[1]
+    xpoints = xxrange[0] + np.arange(0, nx) * (xxrange[1] - xxrange[0]) / np.float64(nx - 1)
+    yrange = data[0].yrange
+    ny = data[0].data.shape[0]
+    ypoints = yrange[0] + np.arange(0, ny) * (yrange[1] - yrange[0]) / np.float64(ny - 1)
+
+    #
+    # For each path, define a mask and then dump out a mapcube with that masked
+    # region in it
+    #
+    for region in regions.keys():
+        # Get the path of this region
+        path = regions[region]["path"]
+        # Zero out the mask
+        mask = np.zeros((ny, nx))
+        # Define the mask
+        for x in range(0, nx):
+            for y in range(0, ny):
+                mask[y, x] = path.contains_point((xpoints[x], ypoints[y]))
+
+        # Define the subcube using the mask
+        submc = Map([Map(m.data * mask, m.meta) for m in data], cube=True)
+        # Region identifier name
+        region_id = ident + '_' + region
+        # branch location
+        b = [corename, sunlocation, fits_level, wave, region]
+        # Output location
+        output = aia_specific.save_location_calculator(roots, b)["pickle"]
+        # Output filename
+        ofilename = os.path.join(output, region_id + '.mapcube.pickle')
+        # Open the file and write it out
+        outputfile = open(ofilename, 'wb')
+        pickle.dump(submc, outputfile)
+        pickle.dump(times, outputfile)
+        pickle.dump(regions[region]["radial_distance"], outputfile)
+        outputfile.close()
+        print('Saved to ' + ofilename)
+
 
 #
 # Make a plot with the locations of the regions
@@ -136,55 +232,7 @@ z = data[0].plot()
 for patch in patches:
     ax.add_patch(patch)
     llxy = patch.get_xy()
-    plt.text(llxy[0] + 0.15 * Xwidth, llxy[1] - 15.0, patch.get_label(), bbox=dict(facecolor='w', alpha=0.5))
+    plt.text(llxy[0] + 0.15 * Rwidth, llxy[1] - 15.0, patch.get_label(), bbox=dict(facecolor='w', alpha=0.5))
 #plt.show()
 plt.savefig(os.path.join(save_locations["image"], 'location.png'))
-
-# Get the positions of all the x and y pixels
-xxrange = data[0].xrange
-nx = data[0].data.shape[1]
-xpoints = xxrange[0] + np.arange(0, nx) * (xxrange[1] - xxrange[0]) / np.float64(nx - 1)
-yrange = data[0].yrange
-ny = data[0].data.shape[0]
-ypoints = yrange[0] + np.arange(0, ny) * (yrange[1] - yrange[0]) / np.float64(ny - 1)
-
-points = []
-for x in xpoints:
-    for y in ypoints:
-        points.append((x, y))
-
-#
-# Find out which points are in the area we want and create a rectangular mask
-#
-if sunlocation == 'spoca665':
-    for path in paths:
-        logical = path.contains_points(points)
-
-
-#
-# Dump out the regions
-#
-for region in sorted(regions.keys()):
-    # Get the region we are interested in
-    xlocation = regions[region]['x']
-    ylocation = regions[region]['y']
-    if sunlocation == 'equatorial':
-        submc = Map([m.submap(xlocation, ylocation) for m in data], cube=True)
-    if sunlocation == 'spoca665':
-        # extract the data we want and create a 
-        pass
-    # Region identifier name
-    region_id = ident + '_' + region
-    # branch location
-    b = [corename, sunlocation, fits_level, wave, region]
-    # Output location
-    output = aia_specific.save_location_calculator(roots, b)["pickle"]
-    # Output filename
-    ofilename = os.path.join(output, region_id + '.mapcube.pickle')
-    # Open the file and write it out
-    outputfile = open(ofilename, 'wb')
-    pickle.dump(submc, outputfile)
-    pickle.dump(times, outputfile)
-    outputfile.close()
-    print('Saved to ' + ofilename)
 

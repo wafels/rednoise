@@ -46,9 +46,9 @@ scsvroot = '~/ts/csv_cc_False_dr_False/'
 corename = 'study2'
 sunlocation = 'equatorial'
 fits_level = '1.5'
-waves = ['193', '171']
-regions = ['R6', 'R7']
-#regions = ['R3', 'R4', 'R5', 'R6', 'R7']
+waves = ['171']
+#regions = ['R6', 'R7']
+regions = ['R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 
@@ -388,6 +388,19 @@ for iwave, wave in enumerate(waves):
                         g_estimate, _ = curve_fit(rnspectralmodels.NormalBump2_allexp_CF, x_bump_estimate, y_bump_estimate, p0=p0_bump_estimate)
                     if g_estimate[0] > pymcmodels2.glimits['gaussian_amplitude'][1]:
                         g_estimate[0] = pymcmodels2.glimits['gaussian_amplitude'][1] - 0.000001
+                    if g_estimate[0] < pymcmodels2.glimits["gaussian_amplitude"][0]:
+                        g_estimate[0] = pymcmodels2.glimits['gaussian_amplitude'][0] + 0.000001
+
+                    if g_estimate[1] > log_bump_frequency_limits[1]:
+                        g_estimate[1] = log_bump_frequency_limits[1] - 0.000001
+                    if g_estimate[1] < log_bump_frequency_limits[0]:
+                        g_estimate[1] = log_bump_frequency_limits[0] + 0.000001
+
+                    if g_estimate[2] > pymcmodels2.glimits['gaussian_width'][1]:
+                        g_estimate[2] = pymcmodels2.glimits['gaussian_width'][1] - 0.000001
+                    if g_estimate[2] < pymcmodels2.glimits["gaussian_width"][0]:
+                        g_estimate[2] = pymcmodels2.glimits['gaussian_width'][0] + 0.000001
+
                     A1_estimate = [A0[0], A0[1], A0[2], g_estimate[0], g_estimate[1], g_estimate[2]]
                 else:
                     A1_estimate = None
