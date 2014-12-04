@@ -151,7 +151,6 @@ for wave in waves:
     plt.errorbar(r, indices, linestyle='-', yerr=[yerr1, yerr2], label=wave, fmt=fmt[wave], ecolor=ecolor[wave], capthick=2)
     plt.xlabel('distance (solar radii)')
     plt.ylabel('power law index')
-    plt.title(sunday_name[sunlocation])
     ax.set_xticklabels(regions)
     #plt.plot(indices68[:, 0], label=wave + ': 68%')
     #plt.plot(indices68[:, 1], label=wave + ': 68%')
