@@ -34,7 +34,6 @@ freqfactor = [1000, 'mHz']
 savefig_format = 'png'
 
 
-
 five_min = freqfactor[0] * 1.0 / 300.0
 three_min = freqfactor[0] * 1.0 / 180.0
 

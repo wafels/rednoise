@@ -96,12 +96,21 @@ def get_coherence(a, b, wsize=10):
     return (ab_pwr ** 2) / (a_pwr * b_pwr)
 
 
-def calculate_histograms(nposfreq, pwr, bins):
+def calculate_histograms(nposfreq, pwr, bins, mask=None):
     # number of histogram bins
     hpwr = np.zeros((nposfreq, bins))
     for f in range(0, nposfreq):
-        h = np.histogram(pwr[:, :, f], bins=bins, range=[np.min(pwr), np.max(pwr)])
-        hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
+        if mask == None:
+            h = np.histogram(pwr[:, :, f], bins=bins, range=[np.min(pwr), np.max(pwr)])
+            hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
+        else:
+            results = []
+            for i in range(0, mask.shape[1]):
+                for j in range(0, mask.shape[0]):
+                    results.append(pwr[j, i, f])
+            results = np.asarray(results)
+            h = np.histogram(results, bins=bins, range=[np.min(results), np.max(results)])
+            hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
 
     # Calculate the probability density in each frequency bin.
     p = [0.68, 0.95]
@@ -157,9 +166,12 @@ sfigroot = '~/ts/img_cc_False_dr_False/'
 scsvroot = '~/ts/csv_cc_False_dr_False/'
 corename = 'study2'
 sunlocation = 'equatorial'
+sunlocation = 'spoca665'
 fits_level = '1.5'
-waves = ['171']
+waves = ['171', '193']
 regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
+waves = ['171']
+regions = ['R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 savefig_format = 'png'
@@ -284,6 +296,7 @@ for iwave, wave in enumerate(waves):
             fft_transform = np.zeros((ny, nx, nfreq), dtype=np.complex64)
             summed_intensity = 0.0
             logpwr_normalization = 0.0
+            mask = np.zeros((ny, nx))
 
             npixel = 0
             for i in range(0, nx):
@@ -298,7 +311,9 @@ for iwave, wave in enumerate(waves):
 
                     # Only consider non-zero data
                     if np.sum(d) > 0.0:
+                        # Count the number of pixels that have non-zero data
                         npixel = npixel + 1
+                        mask[j, i] = True
 
                         # Sum up all the original data
                         doriginal = doriginal + d
@@ -362,7 +377,7 @@ for iwave, wave in enumerate(waves):
 
             # Show some information
             print('Number of non-zero pixels = %i' % (npixel))
-            print('Size of containing region in pixels' % (nx * ny))
+            print('Size of containing region in pixels = %i' % (nx * ny))
 
             # Average of the analyzed time-series and create a time series
             # object
@@ -372,8 +387,8 @@ for iwave, wave in enumerate(waves):
             full_ts.label = 'average analyzed emission ' + tsdetails
 
             # Time series of the average original data
-            doriginal = ts_manip(doriginal, manip)
-            doriginal = ts_apply_window(d, win)
+            doriginal, _ = ts_manip(doriginal, manip)
+            #doriginal = ts_apply_window(d, win)
             doriginal_ts = TimeSeries(t, doriginal)
             doriginal_ts.name = data_name
             doriginal_ts.label = 'average summed emission ' + tsdetails
@@ -756,7 +771,7 @@ for iwave, wave in enumerate(waves):
             # number of histogram bins
             # Calculate the probability density in each frequency bin.
             bins = 100
-            bin_edges, hpwr, lim = calculate_histograms(nposfreq, logpwr, bins)
+            bin_edges, hpwr, lim = calculate_histograms(nposfreq, logpwr, bins, mask=mask)
             histogram_loc = np.zeros(shape=(bins))
             for kk in range(0, bins):
                 histogram_loc[kk] = 0.5 * (bin_edges[kk] + bin_edges[kk + 1])
@@ -764,6 +779,7 @@ for iwave, wave in enumerate(waves):
             # -------------------------------------------------------------
             # plot some histograms of the log power at a small number of
             # frequencies.
+
             findex = []
             f_of_interest = [0.5 * five_min, five_min, three_min, 2 * three_min, 3 * three_min]
             hcolor = ['r', 'b', 'g', 'k', 'm']
@@ -789,6 +805,7 @@ for iwave, wave in enumerate(waves):
 
             ###############################################################
             # Plot QQ-plots for the frequencies of interest
+
             plt.figure(3)
             for jj, f in enumerate(findex):
                 qqplot(logpwr[:, :, findex[jj]].flatten(), line='s')
@@ -800,6 +817,7 @@ for iwave, wave in enumerate(waves):
             # passed along to other programs.  Also, apply the Shapiro-Wilks
             # and Anderson-Darling tests for normality to test the assertion
             # that these distributions are approximately normal
+
             logiobs_width_fitted = np.zeros((nposfreq))
             error_logiobs_width_fitted = np.zeros_like(logiobs_width_fitted)
             logiobs_peak = np.zeros_like(logiobs_width_fitted)
@@ -810,7 +828,12 @@ for iwave, wave in enumerate(waves):
             shapiro_wilks = []
             anderson_darling = []
             for jj, f in enumerate(freqs):
-                all_logiobs_at_f = logpwr[:, :, jj].flatten()
+                all_logiobs_at_f = []
+                for iy in range(0, ny):
+                    for ix in range(0, nx):
+                        if mask[iy, ix]:
+                            all_logiobs_at_f.append(logpwr[iy, ix, jj])
+                all_logiobs_at_f = np.asarray(all_logiobs_at_f)
                 logiobs_std[jj] = np.std(all_logiobs_at_f)
                 logiobs_skew[jj] = scipy.stats.skew(all_logiobs_at_f)
                 logiobs_kurtosis[jj] = scipy.stats.kurtosis(all_logiobs_at_f)
@@ -888,7 +911,7 @@ for iwave, wave in enumerate(waves):
             # -------------------------------------------------------------
             # plot some histograms of the power at a small number of
             # frequencies.
-            """
+
             histogram_loc2, hpwr2, lim2 = calculate_histograms(nposfreq, pwr, 100)
 
             findex = []
@@ -911,7 +934,7 @@ for iwave, wave in enumerate(waves):
             full_ts.peek()
             plt.savefig(savefig + '.full_ts_timeseries.%s' % (savefig_format))
             plt.close('all')
-            """
+
             ###############################################################
             # Time series plots
             # Plot all the analyzed time series
@@ -947,8 +970,9 @@ for iwave, wave in enumerate(waves):
             plt.figure(11)
             for i in range(0, nx):
                 for j in range(0, ny):
-                    ts = TimeSeries(t, dc_analysed[j, i, :])
-                    plt.loglog(freqs, ts.PowerSpectrum.ppower)
+                    if np.sum(dc_analysed[j, i, :]) > 0:
+                        ts = TimeSeries(t, dc_analysed[j, i, :])
+                        plt.loglog(freqs, ts.PowerSpectrum.ppower)
             plt.loglog()
             plt.axvline(five_min, color=s5min.color, linestyle=s5min.linestyle, label=s5min.label)
             plt.axvline(three_min, color=s3min.color, linestyle=s3min.linestyle, label=s3min.label)
@@ -1020,7 +1044,7 @@ for iwave, wave in enumerate(waves):
             # Plot the results of the Shapiro-Wilks test for the Fourier
             # power distributions.  Low p-values reject the null hypothesis
             # of normality.
-
+            """
             pvalue = np.asarray([result[1] for result in shapiro_wilks])
             plt.figure(15)
             plt.xlabel('frequency (%s)' % (freqfactor[1]))
@@ -1029,13 +1053,14 @@ for iwave, wave in enumerate(waves):
             plt.title(data_name + ': Fourier power distributions, Shapiro-Wilks normality test')
             plt.legend(loc=3, framealpha=0.3, fontsize=10)
             plt.savefig(savefig + '.distribution_width.shapiro_wilks.%s' % (savefig_format))
-
+            """
             ###############################################################
             # Plot the results of the Anderson-Darling test for the Fourier
             # power distributions.  If the AD statistic value is above a
             # particular critical value corresponding to a given
             # significance level, then the null hypothesis (in this case
             # normality) can be rejected at that significance level.
+            """
             statvalue = np.asarray([result[0] for result in anderson_darling])
             crit = anderson_darling[0][1]
             significance = anderson_darling[0][2]
@@ -1049,7 +1074,7 @@ for iwave, wave in enumerate(waves):
             plt.title(data_name + ': Fourier power distributions, Anderson-Darling test')
             plt.legend(loc=3, framealpha=0.3, fontsize=10)
             plt.savefig(savefig + '.distribution_width.anderson_darling.%s.%s' % (anderson_darling_dist, savefig_format))
-
+            """
             ###############################################################
             # Save various data products
             # Fourier Power of the analyzed data

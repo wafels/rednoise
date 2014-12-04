@@ -154,8 +154,19 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
 
     # Dump out results to file
     savefilename = '%s_%s_%s_%s__%s__%s' % (savefig, model, str(passnumber), obstype, '1d', savetype)
-    f = open(savefilename + '.txt', 'w')
 
+    # Go through all the variables
+    for v in variables:
+        # Fix the data, and get better labels
+        data, mean, v95_lo, v95_hi, v68_lo, v68_hi, vlabel = fix_variables(v,
+                                                           M.trace(v)[:],
+                                                           s[v],
+                                                           extra_factors=extra_factors)
+
+        # Dump out the raw results
+        np.save(savefilename + '.' + v + '.npy', np.asarray([mean, v68_lo, v68_hi, v95_lo, v95_hi]))
+
+    f = open(savefilename + '.txt', 'w')
     # Go through all the variables
     for v in variables:
         # Fix the data, and get better labels
@@ -211,19 +222,17 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
         print '95% ', v95_lo, v95_hi
         print '-'
 
-        # Dump out the raw results
-        np.save(savefilename + v + '.npy', np.asarray([mean, v68_lo, v68_hi, v95_lo, v95_hi]))
-
         plt.text(mean, 0.90 * ypos, ' %f' % (mean), fontsize=fontsize, bbox=bbox)
         plt.text(v95_lo, 0.25 * ypos, ' %f' % (v95_lo), fontsize=fontsize, bbox=bbox)
         plt.text(v95_hi, 0.75 * ypos, ' %f' % (v95_hi), fontsize=fontsize, bbox=bbox)
         plt.text(v68_lo, 0.42 * ypos, ' %f' % (v68_lo), fontsize=fontsize, bbox=bbox)
         plt.text(v68_hi, 0.59 * ypos, ' %f' % (v68_hi), fontsize=fontsize, bbox=bbox)
-
+        print 'Got this far'
         # Define the legend
         plt.legend(framealpha=alpha, fontsize=fontsize, loc=3)
         plt.savefig(filename)
         plt.close('all')
+        print 'Got this far'
 
         f.write('------------------------' + '\n')
         if v == 'gaussian_position':
@@ -269,8 +278,6 @@ def write_plots(M, region_id, obstype, savefig, model, passnumber,
                 plt.title(region_id + ' ' + obstype + ' %s' % (model))
                 plt.plot([mean], [mean2], 'go')
                 plt.text(mean, mean2, '%f, %f' % (mean, mean2), bbox=dict(facecolor='white', alpha=0.5))
-                print(mean, mean2)
-                print(v, v2)
                 plt.savefig(filename)
                 plt.close('all')
 

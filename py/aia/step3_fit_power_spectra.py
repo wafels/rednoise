@@ -19,7 +19,7 @@ from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
 # Normality tests
-from scipy.stats import shapiro, anderson
+from scipy.stats import shapiro#, anderson
 from statsmodels.graphics.gofplots import qqplot
 
 # Distributions that can be fit to the independence coefficient
@@ -46,9 +46,8 @@ scsvroot = '~/ts/csv_cc_False_dr_False/'
 corename = 'study2'
 sunlocation = 'equatorial'
 fits_level = '1.5'
-waves = ['171']
-#regions = ['R6', 'R7']
-regions = ['R4', 'R5', 'R6', 'R7']
+waves = ['171', '193']
+regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 
@@ -76,7 +75,7 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 5
+testing = 1
 
 nsample = 5000 / testing
 
@@ -707,8 +706,10 @@ for iwave, wave in enumerate(waves):
                 # Anderson-Darling test for normality of the M1_bf residuals.
                 # These will let us know if the reduced chi-squared values
                 # are OK to use.
+
                 M1_residuals = pwr_ff - M1_bf
                 nmzd = M1_residuals / sigma_for_mean
+                """
                 anderson_result = anderson(nmzd, dist='norm')
                 ad_crit = anderson_result[1]
                 ad_sig = anderson_result[2]
@@ -741,7 +742,7 @@ for iwave, wave in enumerate(waves):
                 plt.title(title)
                 plt.savefig(savefig + obstype + '.' + passnumber + '.scaled_residual.png')
                 plt.close('all')
-
+                """
                 #--------------------------------------------------------------
                 # Size of the residual compared to estimate noise levels
                 plt.figure(2)

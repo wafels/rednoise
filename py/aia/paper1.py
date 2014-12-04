@@ -109,7 +109,8 @@ sunday_name = {'moss': 'moss',
                'highlimb': 'high limb',
                'lowlimb': 'low limb',
                'crosslimb': 'cross limb',
-               'sunspot': 'sunspot'}
+               'sunspot': 'sunspot',
+               'equatorial': 'equatorial quiet Sun'}
 
 label_sunday_name = {'moss': 'moss',
                'qs': 'quiet \n Sun',
