@@ -3,8 +3,8 @@
 #
 import os
 from matplotlib import rc_file
-matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
-rc_file(os.path.expanduser(matplotlib_file))
+#matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
+#rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
@@ -13,7 +13,7 @@ import aia_specific
 from paper1 import log_10_product, s171, s193, s5min, s3min, sunday_name, figure_example_ps
 
 
-plt.ioff()
+plt.ion()
 plt.close('all')
 #
 # Set up which data to look at
@@ -49,6 +49,7 @@ indices = np.zeros((nregions))
 indices68 = np.zeros((nregions, 2))
 indices95 = np.zeros((nregions, 2))
 radial_distance = {'171': [], '193': []}
+fsd = {}
 
 index_results = {}
 for iwave, wave in enumerate(waves):
@@ -115,24 +116,36 @@ for iwave, wave in enumerate(waves):
 
                 # load the radial distances
                 pkl_location = locations['pickle']
-                ifilename = ident + '.mapcube'
+                ifilename = ident + '.mapcube.radial_distance'
                 pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
                 print('Loading ' + pkl_file_location)
                 pkl_file = open(pkl_file_location, 'rb')
-                dummy = pickle.load(pkl_file)
-                dummy = pickle.load(pkl_file)
                 this_radial_distance = pickle.load(pkl_file)
                 pkl_file.close()
                 # Store the radial distance
                 radial_distance[wave].append(this_radial_distance)
 
+                #M1_maximum_likelihood.' + region_id + '.pickle'
+                pkl_location = locations['pickle']
+                ifilename = 'M1_maximum_likelihood.' + region_id
+                pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
+                print('Loading ' + pkl_file_location)
+                pkl_file = open(pkl_file_location, 'rb')
+                dummy = pickle.load(pkl_file)
+                fitsummarydata = pickle.load(pkl_file)
+                pkl_file.close()
+                fsd[wave + region] = fitsummarydata
+
+
 #
 # Got all the data.  Now make the plots
 #
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(10, 6))
 ecolor = {'171': 'r', '193': 'b'}
 fmt = {'171': 'ro', '193': 'bo'}
+xytext = {'171': (0, 50), '193': (0, -50)}
 for wave in waves:
+    rchi2 = []
 
     for iregion, region in enumerate(regions):
         # Get the index value
@@ -144,19 +157,28 @@ for wave in waves:
         # Get the 95% credible interval
         indices95[iregion, 0] = results[3]
         indices95[iregion, 1] = results[4]
+        # Get the reduced chi-squared
+        rchi2.append(fsd[wave + region]['M1']['chi2'])
 
     yerr1 = indices[:] - indices68[:, 0]
     yerr2 = indices68[:, 1] - indices[:]
     r = np.asarray(radial_distance[wave]) / solar_radius_in_arcseconds
     plt.errorbar(r, indices, linestyle='-', yerr=[yerr1, yerr2], label=wave, fmt=fmt[wave], ecolor=ecolor[wave], capthick=2)
+    plt.plot(r, rchi2, color=ecolor[wave], linestyle=':', label=wave + ' reduced chi2')
     plt.xlabel('distance (solar radii)')
     plt.ylabel('power law index')
-    ax.set_xticklabels(regions)
+    """
+    for label, x, y in zip(regions, r, indices):
+        plt.annotate(label, xy=(x, y), xytext=xytext[wave],
+            textcoords='offset points', ha='center', va='center', 
+            bbox=dict(boxstyle='round,pad=0.5', fc=ecolor[wave], alpha=0.99),
+            arrowprops=dict(arrowstyle='->'))#, connectionstyle='arc3,rad=0'))
+    """
     #plt.plot(indices68[:, 0], label=wave + ': 68%')
     #plt.plot(indices68[:, 1], label=wave + ': 68%')
     #plt.plot(indices95[:, 0], label=wave + ': 95%')
     #plt.plot(indices95[:, 1], label=wave + ': 95%')
 
-plt.legend()
+plt.legend(loc=4)
 plt.tight_layout()
 plt.show()

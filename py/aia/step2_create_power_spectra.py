@@ -107,7 +107,8 @@ def calculate_histograms(nposfreq, pwr, bins, mask=None):
             results = []
             for i in range(0, mask.shape[1]):
                 for j in range(0, mask.shape[0]):
-                    results.append(pwr[j, i, f])
+                    if mask[j, i]:
+                        results.append(pwr[j, i, f])
             results = np.asarray(results)
             h = np.histogram(results, bins=bins, range=[np.min(results), np.max(results)])
             hpwr[f, :] = h[0] / (1.0 * np.sum(h[0]))
@@ -165,13 +166,13 @@ ldirroot = '~/ts/pickle_cc_False_dr_False/'
 sfigroot = '~/ts/img_cc_False_dr_False/'
 scsvroot = '~/ts/csv_cc_False_dr_False/'
 corename = 'study2'
-sunlocation = 'equatorial'
+#sunlocation = 'equatorial'
 sunlocation = 'spoca665'
 fits_level = '1.5'
 waves = ['171', '193']
 regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
-waves = ['171']
-regions = ['R4', 'R5', 'R6', 'R7']
+#waves = ['171']
+#regions = ['R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
 savefig_format = 'png'
@@ -775,7 +776,6 @@ for iwave, wave in enumerate(waves):
             histogram_loc = np.zeros(shape=(bins))
             for kk in range(0, bins):
                 histogram_loc[kk] = 0.5 * (bin_edges[kk] + bin_edges[kk + 1])
-
             # -------------------------------------------------------------
             # plot some histograms of the log power at a small number of
             # frequencies.
@@ -798,9 +798,9 @@ for iwave, wave in enumerate(waves):
                 plt.plot(xx, yy, color=hcolor[jj], label='%7.2f%s, $\sigma=$%3.2f' % (freqs[f], freqfactor[1], np.abs(gfit[0][2])))
                 #plt.plot(xx, aia_plaw.GaussianShape2(xx, gfit[0][0], gfit[0][1],gfit[0][2]), color=hcolor[jj], linestyle='--')
             plt.legend(fontsize=12, framealpha=0.5, handletextpad=0.0, loc=2)
-            plt.ylim(power_distribution_details()['ylim'][0], power_distribution_details()['ylim'][1])
-            plt.xlim(power_distribution_details()['xlim'][0], power_distribution_details()['xlim'][1])
-            plt.savefig(savefig + '.power_spectra_distributions.eps')
+            #plt.ylim(power_distribution_details()['ylim'][0], power_distribution_details()['ylim'][1])
+            #plt.xlim(power_distribution_details()['xlim'][0], power_distribution_details()['xlim'][1])
+            plt.savefig(savefig + '.power_spectra_distributions.png')
             plt.close('all')
 
             ###############################################################
@@ -945,7 +945,7 @@ for iwave, wave in enumerate(waves):
             plt.xlabel('time (seconds)')
             plt.ylabel('analyzed emission ' + tsdetails)
             plt.title(data_name)
-            plt.ylim(dc_analysed_minmax)
+            #plt.ylim(dc_analysed_minmax)
             plt.xlim((t[0], t[-1]))
             plt.savefig(savefig + '.all_analyzed_ts.%s' % (savefig_format))
 

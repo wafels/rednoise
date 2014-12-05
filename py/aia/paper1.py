@@ -32,7 +32,7 @@ def log_10_product(x, pos):
 
 
 def power_distribution_details():
-    return {"xlim": [-8.0, 0.5], "ylim": [0.0, 0.12]}
+    return {"xlim": [0.0, 8.0], "ylim": [0.0, 0.25]}
 
 
 def fit_details():
