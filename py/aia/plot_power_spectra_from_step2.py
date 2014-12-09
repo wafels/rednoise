@@ -24,9 +24,9 @@ sfigroot = '~/ts/img_cc_False_dr_False/'
 scsvroot = '~/ts/csv_cc_False_dr_False/'
 corename = 'study2'
 sunlocation = 'equatorial'
-sunlocation = 'spoca665'
+#sunlocation = 'spoca665'
 fits_level = '1.5'
-waves = ['193']
+waves = ['193', '171']
 regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 windows = ['hanning']
 manip = 'relative'
@@ -171,6 +171,7 @@ for wave in waves:
     plt.xlabel('frequency (%s)' % (freqfactor[1]))
     plt.ylabel('power (arb. units)')
     plt.title(wave + r'$\AA$')
+    plt.ylim(10.0 ** 0.0, 10.0 ** 7.0)
     plt.legend(fontsize=14, framealpha=0.5)
 
     # Create the branches in order
@@ -182,5 +183,5 @@ for wave in waves:
     # set the saving locations
     sfig = locations["image"]
 
-    plt.savefig(sfig + '.data.%s' % (savefig_format))
+    plt.savefig(sfig + '.data.%s.%s' % (wave, savefig_format))
     plt.close('all')

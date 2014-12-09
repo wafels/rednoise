@@ -24,7 +24,9 @@ limits = {"power_law_index": [1.0, 6.0],
           "power_law_norm": [np.log(1.0), np.log(10.0 ** 8)],
           "background": [np.log(1.0), np.log(10.0 ** 8)]}
 
-glimits = {"gaussian_amplitude": [np.log(0.00001), limits["power_law_norm"][1]],
+#glimits = {"gaussian_amplitude": [np.log(0.00001), limits["power_law_norm"][1]],
+#          "gaussian_width": [0.001, 3.00]}
+glimits = {"gaussian_amplitude": [np.log(0.00001), np.log(0.0001)],
           "gaussian_width": [0.001, 3.00]}
 
 

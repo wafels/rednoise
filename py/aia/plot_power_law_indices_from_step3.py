@@ -10,7 +10,7 @@ import pickle
 import numpy as np
 import aia_specific
 
-from paper1 import log_10_product, s171, s193, s5min, s3min, sunday_name, figure_example_ps
+from paper1 import ireland2014
 
 
 plt.ion()
@@ -20,10 +20,11 @@ plt.close('all')
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_False_dr_False/'
-sfigroot = '~/ts/img_cc_False_dr_False/'
-scsvroot = '~/ts/csv_cc_False_dr_False/'
+sfigroot = '~/ts/img_cc_False_dr_False_2/'
+scsvroot = '~/ts/csv_cc_False_dr_False_2/'
 corename = 'study2'
-sunlocation = 'equatorial'
+sunlocation = 'spoca665'
+#sunlocation = 'equatorial'
 fits_level = '1.5'
 waves = ['171', '193']
 regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
@@ -40,6 +41,11 @@ three_min = freqfactor[0] * 1.0 / 180.0
 coherence_wsize = 3
 
 solar_radius_in_arcseconds = 978.0
+
+linewidth = 4
+
+sunday_name = {"equatorial": "quiet Sun",
+               "spoca665": "SPoCA 665"}
 
 #
 # Storage for the power at the center of each region
@@ -163,22 +169,31 @@ for wave in waves:
     yerr1 = indices[:] - indices68[:, 0]
     yerr2 = indices68[:, 1] - indices[:]
     r = np.asarray(radial_distance[wave]) / solar_radius_in_arcseconds
-    plt.errorbar(r, indices, linestyle='-', yerr=[yerr1, yerr2], label=wave, fmt=fmt[wave], ecolor=ecolor[wave], capthick=2)
-    plt.plot(r, rchi2, color=ecolor[wave], linestyle=':', label=wave + ' reduced chi2')
-    plt.xlabel('distance (solar radii)')
-    plt.ylabel('power law index')
-    """
-    for label, x, y in zip(regions, r, indices):
-        plt.annotate(label, xy=(x, y), xytext=xytext[wave],
-            textcoords='offset points', ha='center', va='center', 
-            bbox=dict(boxstyle='round,pad=0.5', fc=ecolor[wave], alpha=0.99),
-            arrowprops=dict(arrowstyle='->'))#, connectionstyle='arc3,rad=0'))
-    """
+    #plt.plot(r, rchi2, color=ecolor[wave], linestyle=':', label=wave + ' reduced chi2')
     #plt.plot(indices68[:, 0], label=wave + ': 68%')
     #plt.plot(indices68[:, 1], label=wave + ': 68%')
     #plt.plot(indices95[:, 0], label=wave + ': 95%')
     #plt.plot(indices95[:, 1], label=wave + ': 95%')
+    if sunlocation == 'equatorial':
+        plt.axhline(ireland2014[wave]['qs'][0], label=wave + '$\AA$ quiet Sun (I2014)', color=ecolor[wave], linestyle='-.', linewidth=linewidth)
+    if sunlocation == 'spoca665':
+        plt.axhline(ireland2014[wave]['sunspot'][0], label=wave + '$\AA$ sunspot (I2014)', color=ecolor[wave], linestyle='-.', linewidth=linewidth)
+        plt.axhline(ireland2014[wave]['loopfootpoints'][0], label=wave + '$\AA$ loop footpoints (I2014)', color=ecolor[wave], linestyle='--', linewidth=linewidth)
+        plt.axhline(ireland2014[wave]['moss'][0], label=wave + '$\AA$ moss (I2014)', color=ecolor[wave], linestyle=':', linewidth=linewidth)
+    plt.errorbar(r, indices, linestyle='-', yerr=[yerr1, yerr2], label=wave + '$\AA$ ' + sunday_name[sunlocation], fmt=fmt[wave], ecolor=ecolor[wave], capthick=2, linewidth=linewidth)
 
-plt.legend(loc=4)
+    plt.xlabel('distance (solar radii)')
+    plt.ylabel('power law index')
+    plt.title(sunday_name[sunlocation] + ': comparison of 171$\AA$ and 193$\AA$')
+
+
+for iregion, region in enumerate(regions):
+    plt.axvline(r[iregion], linestyle=":", color='y', linewidth=linewidth)
+    plt.text(r[iregion], 1.55, region, fontsize=9,
+        bbox=dict(boxstyle='round,pad=0.5', fc='y', alpha=1.0))#, connectionstyle='arc3,rad=0'))
+
+
+plt.legend(loc=0, framealpha=0.5)
+plt.ylim(1.5, 4.0)
 plt.tight_layout()
 plt.show()

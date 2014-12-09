@@ -25,7 +25,7 @@ from paper1 import sunday_name, label_sunday_name, figure_data_plot
 dataroot = '~/Data/AIA/'
 corename = 'study2'
 sunlocation = 'spoca665'
-sunlocation = 'equatorial'
+#sunlocation = 'equatorial'
 fits_level = '1.5'
 wave = '193'
 cross_correlate = False
@@ -142,7 +142,7 @@ if sunlocation == 'equatorial':
         # Output location
         output = aia_specific.save_location_calculator(roots, b)["pickle"]
         # Output filename
-        """
+
         ofilename = os.path.join(output, region_id + '.mapcube.pickle')
         # Open the file and write it out
         outputfile = open(ofilename, 'wb')
@@ -150,7 +150,7 @@ if sunlocation == 'equatorial':
         pickle.dump(times, outputfile)
         outputfile.close()
         print('Saved to ' + ofilename)
-        """
+
         ofilename = os.path.join(output, region_id + '.mapcube.radial_distance.pickle')
         # Open the file and write it out
         outputfile = open(ofilename, 'wb')
@@ -237,9 +237,16 @@ if sunlocation == 'spoca665' or sunlocation == 'spoca667':
         # Output filename
         ofilename = os.path.join(output, region_id + '.mapcube.pickle')
         # Open the file and write it out
+        """
         outputfile = open(ofilename, 'wb')
         pickle.dump(submc, outputfile)
         pickle.dump(times, outputfile)
+        outputfile.close()
+        print('Saved to ' + ofilename)
+        """
+        ofilename = os.path.join(output, region_id + '.mapcube.radial_distance.pickle')
+        # Open the file and write it out
+        outputfile = open(ofilename, 'wb')
         pickle.dump(regions[region]["radial_distance"], outputfile)
         outputfile.close()
         print('Saved to ' + ofilename)

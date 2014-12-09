@@ -8,6 +8,16 @@ import cPickle as pickle
 import numpy as np
 import pymcmodels2
 
+ireland2014 = {'171': {
+                       'qs': [1.72, 0.01, 0.01],
+                       'sunspot': [2.26, 0.01, 0.02],
+                       'loopfootpoints': [2.29, 0.02, 0.02],
+                       'moss': [1.76, 0.01, 0.01]},
+               '193': {'qs': [2.20, 0.01, 0.01],
+                       'sunspot': [2.14, 0.02, 0.02],
+                       'loopfootpoints': [2.28, 0.05, 0.04],
+                       'moss': [2.05, 0.01, 0.01]}}
+
 
 # Prints a title, with space before it and an underline
 def prettyprint(s, underline='-'):

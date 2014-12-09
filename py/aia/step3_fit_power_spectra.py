@@ -28,7 +28,7 @@ from scipy.stats import beta as beta_distrib
 import aia_specific
 import pymcmodels2
 import rnspectralmodels
-from paper1 import prettyprint, log_10_product, indexplot
+from paper1 import prettyprint, log_10_product, indexplot, ireland2014
 from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details, get_kde_most_probable
 from aia_pymc_pwrlaws_helpers import *
 
@@ -41,14 +41,16 @@ plt.ioff()
 #
 dataroot = '~/Data/AIA/'
 ldirroot = '~/ts/pickle_cc_False_dr_False/'
-sfigroot = '~/ts/img_cc_False_dr_False/'
-scsvroot = '~/ts/csv_cc_False_dr_False/'
+sfigroot = '~/ts/img_cc_False_dr_False_2/'
+scsvroot = '~/ts/csv_cc_False_dr_False_2/'
 corename = 'study2'
 #sunlocation = 'equatorial'
 sunlocation = 'spoca665'
 fits_level = '1.5'
-waves = ['171', '193']
-regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
+#waves = ['171', '193']
+#regions = ['R2', 'R3', 'R4', 'R5', 'R6', 'R7']
+waves = ['193']
+regions = ['R0', 'R1']
 windows = ['hanning']
 manip = 'relative'
 
@@ -76,7 +78,7 @@ manip = 'relative'
 #
 # Set to 1 to do a full analytical run.  Set to a high number to do a test
 # run
-testing = 1
+testing = 5
 
 nsample = 5000 / testing
 
@@ -682,7 +684,7 @@ for iwave, wave in enumerate(waves):
                 plt.semilogy(xvalue, np.exp(pwr_ff) / np.exp(M1_bf), label='data / M1 best fit')
                 plt.semilogy(xvalue, np.exp(pwr_ff) / np.exp(normalbump_BF), label='data / M1[normal bump]')
                 plt.semilogy(xvalue, np.exp(pwr_ff) / np.exp(powerlaw_BF), label='data / M1[power law]')
-                plt.axhline(1.0, color='k')
+                #plt.axhline(1.0, color='k')
                 plt.ylim(0.01, 100.0)
 
                 # Plot the 3 and 5 minute frequencies
@@ -748,7 +750,7 @@ for iwave, wave in enumerate(waves):
                 # Size of the residual compared to estimate noise levels
                 plt.figure(2)
                 plt.semilogx(xvalue, np.abs(nmzd), label='|data - M1| / sigma for mean')
-                plt.axhline(1.0, label='expected by normality', color='r')
+                #plt.axhline(1.0, label='expected by normality', color='r')
 
                 # Plot the bump limits
                 plt.axvline(physical_bump_frequency_limits[0], label='bump center position limit', linestyle=':' ,color='k')
