@@ -21,9 +21,11 @@ def lnlike(variables, x, y, model_function):
     model = model_function(variables, x)
     return -np.sum(np.log(model)) - np.sum(y / model)
 
+
 # Define some models
 def power_law(v, f):
     return v[0] * f ** -v[1]
+
 
 def power_law_constant(v, f):
     return np.exp(v[0]) * f ** -v[1] + np.exp(v[2])
