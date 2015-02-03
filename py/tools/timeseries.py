@@ -25,6 +25,10 @@ class SampleTimes:
     def __len__(self):
         return len(self.t)
 
+    # Normalized dimensionless times
+    def normalized(self):
+        return self.t.value / self.t[0].value * u.dimensionless_unscaled
+
 
 class Frequencies:
     @quantity_input(time=u.Hz)
@@ -36,6 +40,10 @@ class Frequencies:
     # Number of frequencies
     def __len__(self):
         return len(self.f)
+
+    # Normalized dimensionless frequencies
+    def normalized(self):
+        return self.f.value / self.f[0].value * u.dimensionless_unscaled
 
 
 # TODO - define a proper FFT class.

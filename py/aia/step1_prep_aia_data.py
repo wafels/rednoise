@@ -22,7 +22,7 @@ from paper1 import sunday_name, label_sunday_name, figure_data_plot
 
 
 # input data
-dataroot = '~/Data/AIA/'
+dataroot = '~/Data/ts/'
 corename = 'perpixel'
 sunlocation = 'disk'
 fits_level = '1.5'
