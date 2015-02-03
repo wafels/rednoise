@@ -3,71 +3,44 @@ Red noise simulation functions
 """
 
 import numpy as np
-import rnspectralmodels
 import copy
 from scipy.stats import chi2, uniform
-from matplotlib import pyplot as plt
 
 
-class PowerLawPowerSpectrum:
-    def __init__(self, parameters, frequencies=None, nt=300, dt=12.0):
+class SimulatedPowerSpectrum:
+    def __init__(self, a, model):
         """
         Parent class of power law spectra
 
         Parameters
         ----------
-        parameters : ndarray
-            The parameters of the power law spectrum
-        frequencies : ndarray
+        a : ndarray
+            The parameters of the power law spectrum.
+        model : func
+            A Python function of the form power = func(a, f)
+
         """
-        # Positive frequencies at which the power spectrum is calculated
-        if frequencies is None:
-            self.nt = nt
-            self.dt = dt
-            self.frequencies = equally_spaced_nonzero_frequencies(self.nt, self.dt)
-        else:
-            self.frequencies = frequencies
-            self.nt = len(self.frequencies)
-            self.dt = 1.0 / (self.frequencies[0]) - 1.0 / (self.frequencies[1])
+        self.a = a
+        self.model = model
 
-        self.parameters = parameters
-
-    def power(self):
+    def power(self, f):
         """
         Return the power spectrum.  placeholder for the methods defined below
+        f : ndarray
+            The frequencies at which to calculate the power
         """
-        return None
+        return self.model(self.a, f)
 
-    def sample(self):
+    def sample(self, f):
         """
         Return a noisy power spectrum sampled from the probability distribution
         of the noisy spectra
         """
-        return noisy_power_spectrum(self.power())
+        return noisy_power_spectrum(self.power(f))
 
 
-class ConstantSpectrum(PowerLawPowerSpectrum):
-    def power(self):
-        return rnspectralmodels.constant(self.frequencies, self.parameters)
-
-
-class SimplePowerLawSpectrum(PowerLawPowerSpectrum):
-    def power(self):
-        return rnspectralmodels.power_law(self.frequencies, self.parameters)
-
-
-class SimplePowerLawSpectrumWithConstantBackground(PowerLawPowerSpectrum):
-    def power(self):
-        return rnspectralmodels.power_law_with_constant(self.frequencies, self.parameters)
-
-
-class BrokenPowerLaw(PowerLawPowerSpectrum):
-    def power(self):
-        return rnspectralmodels.broken_power_law_log_break_frequency(self.frequencies, self.parameters)
-
-
-class TimeSeriesFromPowerSpectrum():
-    def __init__(self, powerspectrum, V=10, W=10, fft_zero=0.0, **kwargs):
+class TimeSeriesFromSimulatedPowerSpectrum():
+    def __init__(self, powerspectrum, f, fft_zero=0.0, **kwargs):
         """
         Create a time series with a given type of power spectrum.  This object
         can be used to generate time series that have a given power spectrum.
@@ -83,20 +56,20 @@ class TimeSeriesFromPowerSpectrum():
 
         Parameters
         ----------
-        powerspectrum : PowerLawPowerSpectrum object
+        powerspectrum : SimulatedPowerSpectrum object
             defines the properties of the power spectrum
         V : scalar >= 1
-            oversampling parameter mimicing increasing the time series duration
+            oversampling parameter mimicking increasing the time series duration
             from N*dt to V*N*dt
         W : scalar >= 1
-            oversampling parameter mimicing increasing the cadence from dt to
+            oversampling parameter mimicking increasing the cadence from dt to
             dt/W
 
         fft_zero : scalar number
             The value at the zero Fourier frequency.
 
         """
-        self.powerspectrum = copy.deepcopy(powerspectrum)
+        self.powerspectrum = powerspectrum
         self.nt = self.powerspectrum.nt
         self.fft_zero = fft_zero
 
@@ -119,10 +92,15 @@ class TimeSeriesFromPowerSpectrum():
 
         # Subsample the time-series back down to the requested cadence of dt
         self.longtimeseries = self.oversampled[0:len(self.oversampled):self.W]
-        nlts = len(self.longtimeseries)
+        self.nlts = len(self.longtimeseries)
 
         # get a sample of the desired length nt from the middle of the long time series
         self.sample = self.longtimeseries[nlts / 2 - self.nt / 2: nlts / 2 - self.nt / 2 + self.nt]
+
+
+def oversamplefrequencies(nt, dt, V, W):
+    K = V * W * nt / 2
+    frequencies = np.arange(1, K + 1) / (1.0 * (V * nt * dt))
 
 
 def equally_spaced_nonzero_frequencies(n, dt):

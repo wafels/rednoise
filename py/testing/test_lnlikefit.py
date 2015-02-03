@@ -28,7 +28,9 @@ result = lnlike_model_fit.go(freqs, data, this_model, initial_guess, "Nelder-Mea
 # Calculate Nita et al reduced chi-squared value
 bestfit = this_model(result['x'], freqs)
 
+# Sample to model ratio
 rhoj = lnlike_model_fit.rhoj(data, bestfit)
 
+# Nita et al (2014) value of the reduced chi-squared
 rchi2 = lnlike_model_fit.rchi2(1, len(freqs) - len(initial_guess) - 1, rhoj)
 
