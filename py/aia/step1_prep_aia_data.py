@@ -3,22 +3,17 @@ Load in the FITS files and write out a numpy arrays
 """
 
 import os
-import matplotlib.pyplot as plt
 
 import cPickle as pickle
 import aia_specific
 
 from sunpy.time import parse_time
-from sunpy.cm import cm
 from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template
-from sunpy.image.solar_differential_rotation import mapcube_solar_derotate
+from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate
 import numpy as np
 from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
-from matplotlib import cm
-from paper1 import sunday_name, label_sunday_name, figure_data_plot
 
 
 # input data

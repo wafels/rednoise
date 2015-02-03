@@ -18,6 +18,9 @@ class SampleTimes:
         # Average cadence
         self.dt = self.t[-1] / (len(self.t) - 1)
 
+        # Cadences
+        self.cadences = self.t[1:] - self.t[0:-1]
+
         # Include base time for input series
         self.basetime = t[0]
 
@@ -26,8 +29,41 @@ class SampleTimes:
         return len(self.t)
 
     # Normalized dimensionless times
-    def normalized(self):
-        return self.t.value / self.t[0].value * u.dimensionless_unscaled
+    def normalized(self, norm=None):
+        if norm is None:
+            normalization = self.dt.value
+        else:
+            normalization = norm.value
+        return self.t.value / normalization * u.dimensionless_unscaled
+
+    def segment_indices(self, absolutetolerance=0.5):
+        """
+        Find segments in the data where segments of the sample times have
+        cadences below the specified absolute tolerance.
+
+        Returns
+        -------
+        indices : list
+            A list of lists.  Each list is the start and end index of
+            the sample times that indicates the start and end of a
+            segment of the sample times where the cadences are below
+            the specified absolute tolerance.
+        """
+        # raw cadences
+        n = len(self.cadences)
+        segments = []
+        istart = 0
+        iend = 1
+        while iend <= n - 2:
+            c0 = self.cadences[istart]
+            c1 = self.cadences[iend]
+            while (np.abs(c1 - c0) < absolutetolerance) and (iend <= n - 2):
+                iend = iend + 1
+                c0 = self.cadences[istart]
+                c1 = self.cadences[iend]
+            segments.append([istart, iend])
+            istart = iend
+        return segments
 
 
 class Frequencies:
@@ -42,8 +78,12 @@ class Frequencies:
         return len(self.f)
 
     # Normalized dimensionless frequencies
-    def normalized(self):
-        return self.f.value / self.f[0].value * u.dimensionless_unscaled
+    def normalized(self, norm=None):
+        if norm is None:
+            normalization = np.min(self.f[self.pindex].value)
+        else:
+            normalization = norm.value
+        return self.f.value / normalization * u.dimensionless_unscaled
 
 
 # TODO - define a proper FFT class.

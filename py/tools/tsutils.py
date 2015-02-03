@@ -44,24 +44,6 @@ def unique_spatial_subsamples(shape, n):
     return locations
 
 
-def cadence(t, absoluteTolerance=0.5):
-    """Get some information on the observed cadences"""
-    # raw cadences
-    cadences = t[1:] - t[0:-1]
-    n = len(cadences)
-    segments = []
-    iStart = 0
-    iEnd = 1
-    while iEnd <= n - 2:
-        c0 = cadences[iStart]
-        c1 = cadences[iEnd]
-        while (np.abs(c1 - c0) < absoluteTolerance) and (iEnd <= n - 2):
-            iEnd = iEnd + 1
-            c0 = cadences[iStart]
-            c1 = cadences[iEnd]
-        segments.append([iStart, iEnd])
-        iStart = iEnd
-    return segments
 
 
 def longest_evenly_sampled(t, absoluteTolerance=0.5):
