@@ -19,14 +19,11 @@ class SampleTimes:
     def __init__(self, t):
         """A class holding time series sample times."""
 
-        # ensure that the initial time is zero
-        self.t = t - t[0]
+        # Set the time
+        self.t = t
 
         # Average cadence
-        self.dt = self.t[-1] / (len(self.t) - 1)
-
-        # Include base time for input series
-        self.basetime = t[0]
+        self.dt = (self.t[-1] - self.t[0]) / np.float64(len(self.t) - 1)
 
     # Number of sample times
     def __len__(self):
@@ -37,8 +34,13 @@ class Frequencies:
     @is_astropy_quantity
     def __init__(self, f):
         """A class holding power spectrum frequencies"""
+        # Frequencies
         self.f = f
+
+        # Where the frequencies are positive
         self.pindex = self.f > 0
+
+        # Set the positive frequencies.
         self.pf = self.f[self.pindex]
 
     # Number of frequencies
@@ -48,14 +50,21 @@ class Frequencies:
 
 # TODO - define a proper FFT class.
 class PowerSpectrum:
-    def __init__(self, frequencies, power):
+    def __init__(self, f, power):
         """A class that defines a power spectrum"""
-        self.f = Frequencies(frequencies)
+        if isinstance(f, Frequencies):
+            self.f = f
+        else:
+            self.f = Frequencies(f)
+
+        # Set the power spectrum power
         self.power = power
-        self.ppower = self.power[self.f.pindex]
         if len(self.f) != len(self.power):
             raise ValueError("The number of frequencies is not equal to"
                              " the number of spectral powers.")
+
+        # Find the power spectrum power where the frequencies are positive.
+        self.ppower = self.power[self.f.pindex]
 
 
 class TimeSeries:
@@ -73,20 +82,32 @@ class TimeSeries:
         maintain this expectation value, this requires the Fourier power to be
         divided by the number of samples in the original time-series.
         """
+        # Set the sample times
         if isinstance(time, SampleTimes):
             self.SampleTimes = time
         else:
             self.SampleTimes = SampleTimes(time)
+
+        # Set the data
         self.data = data
+
+        # Test to make sure the sample times and the data have the same length
         if len(self.SampleTimes) != len(self.data):
             raise ValueError('Length of sample times not the same as the data')
 
         # Note that the power spectrum is defined
         self.fft_transform = np.fft.fft(self.data)
         nt = len(self.SampleTimes)
-        self.PowerSpectrum = PowerSpectrum(np.fft.fftfreq(nt, self.SampleTimes.dt) * (1.0 / self.SampleTimes.t.unit),
-                                           (np.abs(self.fft_transform) ** 2) / (1.0 * nt))
 
-   # length of the time-series
+        # Fourier frequencies
+        f = np.fft.fftfreq(nt, self.SampleTimes.dt) / self.SampleTimes.t.unit
+
+        # Fourier power spectral power
+        p = (np.abs(self.fft_transform) ** 2) / (1.0 * nt)
+
+        # Set the FFT power spectrum object.
+        self.FFTPowerSpectrum = PowerSpectrum(f, p)
+
+    # length of the time-series
     def __len__(self):
         return len(self.data)
