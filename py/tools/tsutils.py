@@ -44,16 +44,6 @@ def unique_spatial_subsamples(shape, n):
     return locations
 
 
-
-
-def longest_evenly_sampled(t, absoluteTolerance=0.5):
-    """Find which segments are the longest"""
-    segments = cadence(t, absoluteTolerance=absoluteTolerance)
-    segment_lengths = [seg[1] - seg[0] for seg in segments]
-    which_segments = (np.max(segment_lengths) == segment_lengths).nonzero()[0]
-    return [segments[k] for k in which_segments]
-
-
 def frequency_response_function(index, weight, angularfreq):
     w = np.zeros_like(angularfreq, dtype=np.complex64)
     for i, f in enumerate(angularfreq):

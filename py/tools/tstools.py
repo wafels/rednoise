@@ -28,6 +28,11 @@ def segment_indices(times, absolutetolerance=0.5):
     Find segments in the data where segments of the sample times have
     cadences below the specified absolute tolerance.
 
+    Parameters
+    ----------
+
+
+
     Returns
     -------
     indices : list
@@ -51,6 +56,25 @@ def segment_indices(times, absolutetolerance=0.5):
         segments.append([istart, iend])
         istart = iend
     return segments
+
+
+def longest_evenly_sampled(t, absoluteTolerance=0.5):
+    """Find which cadence segments are the longest
+
+    Parameters
+    ----------
+
+
+
+    Returns
+    -------
+
+    """
+    segments = segment_indices(t, absoluteTolerance=absoluteTolerance)
+    segment_lengths = [seg[1] - seg[0] for seg in segments]
+    which_segments = (np.max(segment_lengths) == segment_lengths).nonzero()[0]
+    return [segments[k] for k in which_segments]
+
 
 
 #
