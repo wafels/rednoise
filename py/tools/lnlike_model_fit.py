@@ -35,6 +35,31 @@ def go(freqs, data, model_function, initial_guess, method):
 
 
 #
+# Assume a power law in the model - Use a Bayesian based analysis to estimate
+#
+#
+def bayeslogprob(f, I, n, m):
+    """
+    Return the log of the marginalized Bayesian posterior of an observed Fourier power spectra
+    fit with a model spectrum Af^{-n}, where A is a normalization constant, f
+    is a normalized frequency, and n is the power law index at which the probability is calculated.
+    The marginal probability is calculated using a prior p(A) ~ A^{m}.
+
+    The function returns log[p(n)] give.  The most likely value of 'n' is the maximum value of
+    p(n).
+
+    f : normalized frequencies
+    I : Fourier power spectrum
+    n : power law index of the power spectrum
+    m : power law index of the prior p(A) ~ A^{m}
+    """
+    N = len(f)
+    term1 = n * np.sum(np.log(f))
+    term2 = (N - m - 1) * np.log(np.sum(I * f ** n))
+    return term1 - term2
+
+
+#
 # The code below refers to equations in Nita et al (2014), ApJ, 789, 152
 #
 #
@@ -86,4 +111,4 @@ def rchi2distrib(m, nu):
     k = 1.0 + 3.0 / (1.0 * m)
     theta = nu / 2.0
     #
-    return gamma(k, scale=theta)
+    return gamma(k, scale=theta, loc=0.0)
