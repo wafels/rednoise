@@ -4,7 +4,7 @@
 #
 import numpy as np
 import scipy.optimize as op
-from scipy.stats import gengamma
+from scipy.stats import gamma
 
 #
 # Log likelihood function.  In this case we want the product of exponential
@@ -35,12 +35,14 @@ def go(freqs, data, model_function, initial_guess, method):
 
 
 #
+# The code below refers to equations in Nita et al (2014), ApJ, 789, 152
+#
+#
 # Sample to Model Ratio (SMR) estimator
 #
 def rhoj(Sj, shatj):
     """
-    Sample to Model Ratio (SMR) estimator
-    Nita et al (2014), ApJ, 789, 152, eq. 5
+    Sample to Model Ratio (SMR) estimator (Eq. 5)
 
     :param Sj: random variables (data)
     :param shatj: best estimate of the model
@@ -54,8 +56,7 @@ def rhoj(Sj, shatj):
 #
 def rchi2(m, nu, rhoj):
     """
-    Goodness-of-fit estimator
-    Nita et al (2014), ApJ, 789, 152, eq. 16
+    Goodness-of-fit estimator (Eq. 16)
 
     :param m: number of spectra considered
     :param nu: degrees of freedom
@@ -65,19 +66,24 @@ def rchi2(m, nu, rhoj):
     return (m / (1.0 * nu)) * np.sum((1.0 - rhoj) ** 2)
 
 #
-# PDF of the goodness-of-fit estimator
-#
+# PDF of the goodness-of-fit estimator (Eq. 17)
 #
 def rchi2distrib(m, nu):
     """
-    The PDF of rchi2 may be approximated by the analytical expression
-    below.
+    The distribution of rchi2 may be approximated by the analytical expression
+    below.  Comparing Eq. (2) with the implementation in scipy stats we find
+    the following equivalencies:
+    k (Nita parameter) = a (scipy stats parameter)
+    theta (Nita parameter) = 1 / lambda (scipy stats value)
+
 
     :param m: number of spectra considered
     :param nu: degrees of freedom
     :return: a frozen scipy stats function that represents the distribution
     of the data
     """
-    a = 1.0 + 3.0 / (1.0 * m)
-    b = nu / 2.0
-    return gengamma(b / a, a / b)
+    # Calculate the gamma function parameter values as expressed in Eq. 17
+    k = 1.0 + 3.0 / (1.0 * m)
+    theta = nu / 2.0
+    #
+    return gamma(k, scale=theta)

@@ -1,5 +1,5 @@
 """
-Red noise simulation functions
+Red noise simulation objects and functions
 """
 
 import numpy as np

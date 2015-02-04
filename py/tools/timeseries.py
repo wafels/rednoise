@@ -1,14 +1,21 @@
 """
-Simple time series object
+Simple time series and power spectra objects
 """
 
 import numpy as np
 from astropy import units as u
-from sunpy.util.unit_decorators import quantity_input
+
+# Decorator testing the input for these functions
+def is_astropy_quantity(func):
+    def check(*args, **kwargs):
+        if not(isinstance(args[1], u.Quantity)):
+            raise ValueError('Input argument must be an astropy Quantity.')
+        return func(*args, **kwargs)
+    return check
 
 
 class SampleTimes:
-    @quantity_input(t=u.s)
+    @is_astropy_quantity
     def __init__(self, t):
         """A class holding time series sample times."""
 
@@ -18,9 +25,6 @@ class SampleTimes:
         # Average cadence
         self.dt = self.t[-1] / (len(self.t) - 1)
 
-        # Cadences
-        self.cadences = self.t[1:] - self.t[0:-1]
-
         # Include base time for input series
         self.basetime = t[0]
 
@@ -28,47 +32,11 @@ class SampleTimes:
     def __len__(self):
         return len(self.t)
 
-    # Normalized dimensionless times
-    def normalized(self, norm=None):
-        if norm is None:
-            normalization = self.dt.value
-        else:
-            normalization = norm.value
-        return self.t.value / normalization * u.dimensionless_unscaled
-
-    def segment_indices(self, absolutetolerance=0.5):
-        """
-        Find segments in the data where segments of the sample times have
-        cadences below the specified absolute tolerance.
-
-        Returns
-        -------
-        indices : list
-            A list of lists.  Each list is the start and end index of
-            the sample times that indicates the start and end of a
-            segment of the sample times where the cadences are below
-            the specified absolute tolerance.
-        """
-        # raw cadences
-        n = len(self.cadences)
-        segments = []
-        istart = 0
-        iend = 1
-        while iend <= n - 2:
-            c0 = self.cadences[istart]
-            c1 = self.cadences[iend]
-            while (np.abs(c1 - c0) < absolutetolerance) and (iend <= n - 2):
-                iend = iend + 1
-                c0 = self.cadences[istart]
-                c1 = self.cadences[iend]
-            segments.append([istart, iend])
-            istart = iend
-        return segments
-
 
 class Frequencies:
-    @quantity_input(time=u.Hz)
+    @is_astropy_quantity
     def __init__(self, f):
+        """A class holding power spectrum frequencies"""
         self.f = f
         self.pindex = self.f > 0
         self.pf = self.f[self.pindex]
@@ -77,22 +45,17 @@ class Frequencies:
     def __len__(self):
         return len(self.f)
 
-    # Normalized dimensionless frequencies
-    def normalized(self, norm=None):
-        if norm is None:
-            normalization = np.min(self.f[self.pindex].value)
-        else:
-            normalization = norm.value
-        return self.f.value / normalization * u.dimensionless_unscaled
-
 
 # TODO - define a proper FFT class.
 class PowerSpectrum:
-    @quantity_input(frequencies=u.Hz)
     def __init__(self, frequencies, power):
+        """A class that defines a power spectrum"""
         self.f = Frequencies(frequencies)
         self.power = power
         self.ppower = self.power[self.f.pindex]
+        if len(self.f) != len(self.power):
+            raise ValueError("The number of frequencies is not equal to"
+                             " the number of spectral powers.")
 
 
 class TimeSeries:
