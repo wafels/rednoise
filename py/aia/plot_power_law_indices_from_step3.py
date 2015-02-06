@@ -8,7 +8,7 @@ from matplotlib import rc_file
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
-import aia_specific
+import datatools
 
 from paper1 import ireland2014
 
@@ -77,7 +77,7 @@ for iwave, wave in enumerate(waves):
                  "csv": scsvroot}
 
         # Data and save locations are based here
-        locations = aia_specific.save_location_calculator(roots,
+        locations = datatools.save_location_calculator(roots,
                                      branches)
 
         # set the saving locations
@@ -85,7 +85,7 @@ for iwave, wave in enumerate(waves):
         scsv = locations["csv"]
 
         # Identifier
-        ident = aia_specific.ident_creator(branches)
+        ident = datatools.ident_creator(branches)
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):

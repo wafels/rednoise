@@ -5,7 +5,7 @@ Load in the FITS files and write out a numpy arrays
 import os
 
 import cPickle as pickle
-import aia_specific
+from aia import aia_specific
 
 from sunpy.time import parse_time
 from sunpy.map import Map
@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 
 # input data
 dataroot = '~/Data/ts/'
-corename = 'perpixel'
+corename = 'request1'
 sunlocation = 'disk'
-fits_level = '1.5'
+fits_level = '1.0'
 wave = '193'
 cross_correlate = True
 derotate = True

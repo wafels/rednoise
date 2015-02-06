@@ -1,7 +1,7 @@
 #
 # Program to examine the Fourier power basically pixel by pixel
 #
-import aia_specific
+import datatools
 import pickle
 import os
 from matplotlib import pyplot as plt
@@ -24,10 +24,10 @@ branches = [corename, sunlocation, fits_level, wave, region]
 roots = {"pickle": '~/ts/pickle/',
          "image": '~/ts/img/',
          "movie": '~/ts/movies'}
-locations = aia_specific.save_location_calculator(roots, branches)
+locations = datatools.save_location_calculator(roots, branches)
 
 # Identity tag
-ident = aia_specific.ident_creator(branches)
+ident = datatools.ident_creator(branches)
 
 # Full identity tag
 ofilename = '.'.join((ident, window, manip))

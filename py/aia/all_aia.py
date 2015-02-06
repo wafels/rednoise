@@ -17,7 +17,7 @@ from scipy.optimize import curve_fit
 from scipy.io import readsav
 from cubetools import get_datacube, sum_over_space
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
-import aia_specific
+import datatools
 import scipy.stats as stats
 plt.ion()
 
@@ -34,7 +34,7 @@ if False:
 else:
     wave = '171'
     choice = ''
-    dc, location, xyrange = aia_specific.rn4(wave,
+    dc, location, xyrange = datatools.rn4(wave,
                                              location='/Users/ireland/Data/AIA_Data/shutdownfun/' + choice,
                                              derotate=False)
 

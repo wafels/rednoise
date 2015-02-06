@@ -19,7 +19,7 @@ from scipy.optimize import curve_fit
 from scipy.stats import shapiro, anderson
 from statsmodels.graphics.gofplots import qqplot
 
-import aia_specific
+import datatools
 import pymcmodels3
 import rnspectralmodels
 from paper1 import sunday_name, prettyprint, log_10_product

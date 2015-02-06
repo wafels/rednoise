@@ -25,7 +25,7 @@ from statsmodels.graphics.gofplots import qqplot
 # Distributions that can be fit to the independence coefficient
 from scipy.stats import beta as beta_distrib
 
-import aia_specific
+import datatools
 import pymcmodels2
 import rnspectralmodels
 from paper1 import prettyprint, log_10_product, indexplot, ireland2014
@@ -127,7 +127,7 @@ for iwave, wave in enumerate(waves):
                  "csv": scsvroot}
 
         # Data and save locations are based here
-        locations = aia_specific.save_location_calculator(roots,
+        locations = datatools.save_location_calculator(roots,
                                      branches)
 
         # set the saving locations
@@ -135,7 +135,7 @@ for iwave, wave in enumerate(waves):
         scsv = locations["csv"]
 
         # Identifier
-        ident = aia_specific.ident_creator(branches)
+        ident = datatools.ident_creator(branches)
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):

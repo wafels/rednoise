@@ -8,7 +8,7 @@ rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
-import aia_specific
+import datatools
 
 from paper1 import log_10_product, s171, s193, s5min, s3min, sunday_name, figure_example_ps
 
@@ -68,7 +68,7 @@ for iregion, region in enumerate(regions):
                  "csv": scsvroot}
 
         # Data and save locations are based here
-        locations = aia_specific.save_location_calculator(roots,
+        locations = datatools.save_location_calculator(roots,
                                      branches)
 
         # set the saving locations
@@ -76,7 +76,7 @@ for iregion, region in enumerate(regions):
         scsv = locations["csv"]
 
         # Identifier
-        ident = aia_specific.ident_creator(branches)
+        ident = datatools.ident_creator(branches)
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):
@@ -178,7 +178,7 @@ for wave in waves:
     branches = [corename, sunlocation, fits_level, wave, region]
 
     # Data and save locations are based here
-    locations = aia_specific.save_location_calculator(roots, branches)
+    locations = datatools.save_location_calculator(roots, branches)
 
     # set the saving locations
     sfig = locations["image"]

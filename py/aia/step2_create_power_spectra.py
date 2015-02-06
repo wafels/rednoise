@@ -24,7 +24,7 @@ from statsmodels.graphics.gofplots import qqplot
 #from rnfit2 import Do_MCMC, rnsave
 #from pymcmodels import single_power_law_with_constant_not_normalized
 import cPickle as pickle
-import aia_specific
+import datatools
 import aia_plaw
 from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, figure_label_2by4
 from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
@@ -202,7 +202,7 @@ for iwave, wave in enumerate(waves):
                  "csv": scsvroot}
 
         # Data and save locations are based here
-        locations = aia_specific.save_location_calculator(roots,
+        locations = datatools.save_location_calculator(roots,
                                      branches)
 
         # set the saving locations
@@ -210,7 +210,7 @@ for iwave, wave in enumerate(waves):
         scsv = locations["csv"]
 
         # Identifier
-        ident = aia_specific.ident_creator(branches)
+        ident = datatools.ident_creator(branches)
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):
