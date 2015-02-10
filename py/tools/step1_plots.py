@@ -16,7 +16,7 @@ zero_prop = {"label": None,
 shift_prop = {"x": {"label": "x",
                     "color": "b",
                     "linestyle": '-'},
-              "y": {"label": "x",
+              "y": {"label": "y",
                     "color": "g",
                     "linestyle": '-'}}
 

@@ -1,5 +1,6 @@
 """
-Load in the FITS files and write out a numpy arrays
+Load in the de-rotated and co-aligned data cube, and make some
+cutouts.
 """
 
 import os
@@ -57,53 +58,10 @@ ident = datalocationtools.ident_creator(branches)
 # Load in the derotated data into a datacube
 print('Acquiring data from ' + aia_data_location["aiadata"])
 
-# Get the list of data and sort it
-list_of_data = sorted(os.path.join(aia_data_location["aiadata"], f) for f in os.listdir(aia_data_location["aiadata"]))
-print("Number of files = %i" % len(list_of_data))
-#
-# Start manipulating the data
-#
-print("Loading data")
-mc = Map(list_of_data, cube=True)
 
-# Solar de-rotation and cross-correlation operations will be performed relative
-# to the map at this index.
-layer_index = len(mc) / 2
 
 #
-# Apply solar derotation
-#
-if derotate:
-    print("Performing de-rotation")
-
-    # Calculate the solar rotation of the mapcube
-    print("Calculating the solar rotation shifts")
-    sr_shifts = calculate_solar_rotate_shift(mc, layer_index=layer_index)
-
-    # Plot out the solar rotation shifts
-    filepath = os.path.join(save_locations['image'], ident + '.solar_derotation.png')
-    step1_plots.plot_shifts(sr_shifts, 'solar de-rotation', layer_index,
-                            filepath=filepath)
-
-    # Apply the solar rotation shifts
-    data = mapcube_solar_derotate(mc, layer_index=layer_index, shifts=sr_shifts)
-else:
-    data = Map(list_of_data, cube=True)
-
-#
-# Coalign images by cross correlation
-#
-if cross_correlate:
-    print("Performing cross_correlation")
-    data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
-
-    # Plot out the cross correlation shifts
-    filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
-    step1_plots.plot_shifts(cc_shifts, 'cross correlation', layer_index,
-                            filepath=filepath)
-
-#
-# Save the full dataset
+# Load the full dataset
 #
 directory = save_locations['pickle']
 filename = ident + '.full_mapcube.pkl'
