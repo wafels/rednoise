@@ -1,6 +1,7 @@
 #
 # Utilities to plot out details of step 1 of the analysis
 #
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -19,7 +20,11 @@ shift_prop = {"x": {"label": "x",
                     "color": "g",
                     "linestyle": '-'}}
 
-def plot_shifts(shifts, title, layer_index, unit='arcsec', filepath=None):
+def plot_shifts(shifts, title, layer_index,
+                unit='arcsec',
+                filepath=None,
+                x=None,
+                xlabel='mapcube layer index'):
     """
     Plot out the shifts used to move layers in a mapcube
     :param shifts:
@@ -28,13 +33,23 @@ def plot_shifts(shifts, title, layer_index, unit='arcsec', filepath=None):
     :param unit:
     :return:
     """
+    if x is None:
+        xx = np.arange(0, len(shifts['x']))
+    else:
+        xx = x
+
     plt.close('all')
     for c in ['x', 'y']:
         plt.plot(shifts[c].to(unit),
                  label=shift_prop[c]['label'],
                  color=shift_prop[c]['color'],
                  linestyle=shift_prop[c]['linestyle'])
-    plt.axvline(layer_index,
+    plt.plot(xx, shifts[c].to(unit),
+             label=shift_prop[c]['label'],
+             color=shift_prop[c]['color'],
+             linestyle=shift_prop[c]['linestyle'])
+
+    plt.axvline(xx[layer_index],
                 label=layer_index_prop['layer index'],
                 color=layer_index_prop['color'],
                 linestyle=layer_index_prop['linestyle'])
@@ -43,7 +58,7 @@ def plot_shifts(shifts, title, layer_index, unit='arcsec', filepath=None):
                 color=zero_prop['color'],
                 linestyle=zero_prop['linestyle'])
     plt.legend(framealpha=0.5)
-    plt.xlabel('mapcube layer index')
+    plt.xlabel(xlabel)
     plt.ylabel(unit)
     plt.title(title)
     if filepath is not None:
