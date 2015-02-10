@@ -5,23 +5,23 @@ Load in the FITS files and write out a numpy arrays
 import os
 
 import cPickle as pickle
-from aia import aia_specific
+from tools import datalocationtools
+from tools import step1_plots
 
 from sunpy.time import parse_time
 from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template
-from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate
+from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 import numpy as np
 from matplotlib.patches import Rectangle
-import matplotlib.pyplot as plt
 
 
 # input data
 dataroot = '~/Data/ts/'
-corename = 'request1'
+corename = 'request4'
 sunlocation = 'disk'
-fits_level = '1.0'
-wave = '193'
+fits_level = '1.5'
+wave = '171'
 cross_correlate = True
 derotate = True
 
@@ -30,7 +30,7 @@ derotate = True
 branches = [corename, sunlocation, fits_level, wave]
 
 # Create the AIA source data location
-aia_data_location = aia_specific.save_location_calculator({"aiadata": dataroot}, branches)
+aia_data_location = datalocationtools.save_location_calculator({"aiadata": dataroot}, branches)
 
 # Extend the name if cross correlation is requested
 extension = "_"
@@ -49,37 +49,69 @@ else:
 roots = {"pickle": '~/ts/pickle' + extension,
          "image": '~/ts/img' + extension,
          "movie": '~/ts/movies' + extension}
-save_locations = aia_specific.save_location_calculator(roots, branches)
+save_locations = datalocationtools.save_location_calculator(roots, branches)
 
 # Identity of the data
-ident = aia_specific.ident_creator(branches)
+ident = datalocationtools.ident_creator(branches)
 
 # Load in the derotated data into a datacube
-print('Loading' + aia_data_location["aiadata"])
+print('Acquiring data from ' + aia_data_location["aiadata"])
 
 # Get the list of data and sort it
 list_of_data = sorted(os.path.join(aia_data_location["aiadata"], f) for f in os.listdir(aia_data_location["aiadata"]))
+print("Number of files = %i" % len(list_of_data))
 #
 # Start manipulating the data
 #
-# solar derotation
+print("Loading data")
+mc = Map(list_of_data, cube=True)
+
+# Solar de-rotation and cross-correlation operations will be performed relative
+# to the map at this index.
+layer_index = len(mc) / 2
+
+#
+# Apply solar derotation
+#
 if derotate:
-    data, derotation_displacements = mapcube_solar_derotate(Map(list_of_data, cube=True), with_displacements=True)
+    print("Performing de-rotation")
+
+    # Calculate the solar rotation of the mapcube
+    print("Calculating the solar rotation shifts")
+    sr_shifts = calculate_solar_rotate_shift(mc, layer_index=layer_index)
+
+    # Plot out the solar rotation shifts
+    filepath = os.path.join(save_locations['image'], ident + '.solar_derotation.png')
+    step1_plots.plot_shifts(sr_shifts, 'solar de-rotation', layer_index,
+                            filepath=filepath)
+
+    # Apply the solar rotation shifts
+    data = mapcube_solar_derotate(mc, layer_index=layer_index, shifts=sr_shifts)
 else:
     data = Map(list_of_data, cube=True)
-    derotation_displacements = None
 
-# Cross correlate
+#
+# Coalign images by cross correlation
+#
 if cross_correlate:
-    data, cross_correlation_displacements = mapcube_coalign_by_match_template(data, with_displacements=True)
-else:
-    cross_correlation_displacements = None
+    print("Performing cross_correlation")
+    data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
 
-# rotate so that the limb appears to be at the equator
-#if sunlocation in rotate_these:
-#    rotate_angle = np.rad2deg(np.arctan(data[0].center['x'] / data[0].center['y']))
-#    data = Map([m.rotate(-rotate_angle) for m in data], cube=True)
+    # Plot out the cross correlation shifts
+    filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
+    step1_plots.plot_shifts(cc_shifts, 'cross correlation', layer_index,
+                            filepath=filepath)
 
+#
+# Save the full dataset
+#
+directory = save_locations['pickle']
+filename = ident + '.full_mapcube.pkl'
+outputfile = open(os.path.join(directory, filename), 'wb')
+pickle.dump(data, outputfile)
+outputfile.close()
+
+aaa = bbb
 
 # Get the date and times from the original mapcube
 date_obs = []
@@ -90,7 +122,7 @@ for m in data:
 times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 
 #
-# Do the equatorial region
+# Create some time-series for further analysis
 #
 if sunlocation == 'disk':
     #
@@ -137,7 +169,7 @@ if sunlocation == 'disk':
         # branch location
         b = [corename, sunlocation, fits_level, wave, region]
         # Output location
-        output = aia_specific.save_location_calculator(roots, b)["pickle"]
+        output = datalocationtools.save_location_calculator(roots, b)["pickle"]
         # Output filename
 
         ofilename = os.path.join(output, region_id + '.mapcube.pickle')
@@ -155,19 +187,7 @@ if sunlocation == 'disk':
         outputfile.close()
         print('Saved to ' + ofilename)
 
-
-
 #
-# Make a plot with the locations of the regions
+# Plot where the regions are
 #
-fig, ax = plt.subplots()
-z = data[0].plot()
-#for patch in patches:
-for region in sorted(regions.keys()):
-    patch = regions[region]["patch"]
-    ax.add_patch(patch)
-    llxy = patch.get_xy()
-    plt.text(llxy[0] + 0.15 * Rwidth, llxy[1] - 15.0, patch.get_label(), bbox=dict(facecolor='w', alpha=0.5))
-#plt.show()
-plt.savefig(os.path.join(save_locations["image"], 'location.png'))
-
+step1_plots.plot_regions(data[layer_index], regions)

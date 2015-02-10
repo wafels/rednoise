@@ -6,21 +6,14 @@
 #
 # Also do posterior predictive checking to find which model fits best.
 #
-import pickle
-import numpy as np
 import os
+
 from matplotlib import rc_file
+
 matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
 rc_file(os.path.expanduser(matplotlib_file))
-import matplotlib.pyplot as plt
-
-import pymc
-from matplotlib.colors import LogNorm
-from scipy.optimize import curve_fit
 
 # Normality tests
-from scipy.stats import shapiro, anderson
-from statsmodels.graphics.gofplots import qqplot
 
 # Distributions that can be fit to the independence coefficient
 from scipy.stats import beta as beta_distrib
@@ -28,9 +21,8 @@ from scipy.stats import beta as beta_distrib
 import datatools
 import pymcmodels2
 import rnspectralmodels
-from paper1 import sunday_name, prettyprint, log_10_product, indexplot, figure_label_2by4
-from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details, get_kde_most_probable
-from aia_pymc_pwrlaws_helpers import *
+from py.aia.OLD.paper1 import indexplot, figure_label_2by4
+from py.aia.OLD.aia_pymc_pwrlaws_helpers import *
 
 # Reproducible
 np.random.seed(1)

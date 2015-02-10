@@ -3,9 +3,7 @@
 #
 # Also do posterior predictive checking to find which model fits best.
 #
-import pickle
 import numpy as np
-import os
 #from matplotlib import rc_file
 #matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
 #rc_file(os.path.expanduser(matplotlib_file))
@@ -16,14 +14,8 @@ from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
 # Normality tests
-from scipy.stats import shapiro, anderson
-from statsmodels.graphics.gofplots import qqplot
 
-import datatools
-import pymcmodels3
 import rnspectralmodels
-from paper1 import sunday_name, prettyprint, log_10_product
-from paper1 import csv_timeseries_write, pkl_write, fix_nonfinite, fit_details
 
 # Reproducible
 np.random.seed(1)

@@ -5,7 +5,9 @@ Specifies a directory of AIA files and uses a least-squares fit to generate
 some fit estimates.
 """
 import os
+
 from matplotlib import rc_file
+
 matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
 rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
@@ -25,10 +27,10 @@ from statsmodels.graphics.gofplots import qqplot
 #from pymcmodels import single_power_law_with_constant_not_normalized
 import cPickle as pickle
 import datatools
-import aia_plaw
-from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95, figure_label_2by4
-from paper1 import prettyprint, csv_timeseries_write, pkl_write, power_distribution_details
-from paper1 import descriptive_stats
+from py.OLD import aia_plaw
+from py.aia.OLD.paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
+from py.aia.OLD.paper1 import prettyprint, csv_timeseries_write, pkl_write
+from py.aia.OLD.paper1 import descriptive_stats
 import scipy
 from scipy.interpolate import interp1d
 plt.ioff()

@@ -1,8 +1,6 @@
 import os
 
-###############################################################################
-# Save location calculators
-#
+
 def location_branch(location_root, branches):
     """Recursively adds a branch to a directory listing"""
     loc = os.path.expanduser(location_root)
@@ -16,7 +14,8 @@ def save_location_calculator(roots, branches):
     locations = {}
     for k in roots.keys():
         loc = location_branch(roots[k], branches)
-        os.makedirs(loc)
+        if not(os.path.exists(loc)):
+            os.makedirs(loc)
         locations[k] = loc
     return locations
 

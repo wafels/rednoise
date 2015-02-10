@@ -3,13 +3,16 @@ Specifies a directory of AIA files and uses a least-squares fit to generate
 some fit estimates.
 """
 # Test 6: Posterior predictive checking
+import os
+
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib
-import tsutils
-import os
-from timeseries import TimeSeries
 from scipy.optimize import curve_fit
+
+import tsutils
+from timeseries import TimeSeries
+
 #from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 #from rnfit2 import Do_MCMC, rnsave
 #from pymcmodels import single_power_law_with_constant_not_normalized
@@ -17,7 +20,7 @@ import csv
 import cPickle as pickle
 import aia_specific
 import aia_plaw
-from paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
+from py.aia.OLD.paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
 
 font = {'family': 'normal',
         'weight': 'bold',

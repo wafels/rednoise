@@ -2,7 +2,6 @@
 #
 #
 import os
-from matplotlib import rc_file
 #matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
 #rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
@@ -10,7 +9,7 @@ import pickle
 import numpy as np
 import datatools
 
-from paper1 import ireland2014
+from py.aia.OLD.paper1 import ireland2014
 
 
 plt.ion()
