@@ -106,6 +106,8 @@ if cross_correlate:
 #
 directory = save_locations['pickle']
 filename = ident + '.full_mapcube.pkl'
-outputfile = open(os.path.join(directory, filename), 'wb')
+pfilepath = os.path.join(directory, filename)
+print('Saving data to ' + pfilepath)
+outputfile = open(pfilepath, 'wb')
 pickle.dump(data, outputfile)
 outputfile.close()
