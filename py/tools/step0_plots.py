@@ -46,7 +46,7 @@ def plot_shifts(shifts, title, layer_index,
                  linestyle=shift_prop[c]['linestyle'])
 
     plt.axvline(xx[layer_index],
-                label=layer_index_prop['label'],
+                label=layer_index_prop['label'] + ' (%i)' % layer_index,
                 color=layer_index_prop['color'],
                 linestyle=layer_index_prop['linestyle'])
     plt.axhline(0.0,
@@ -54,7 +54,8 @@ def plot_shifts(shifts, title, layer_index,
                 color=zero_prop['color'],
                 linestyle=zero_prop['linestyle'])
     plt.legend(framealpha=0.5)
-    plt.xlabel(xlabel)
+    nlayers = ' (%i maps)' % len(shifts['x'])
+    plt.xlabel(xlabel + nlayers)
     plt.ylabel(unit)
     plt.title(title)
     if filepath is not None:
