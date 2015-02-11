@@ -6,8 +6,9 @@ and co-alignment applied as necessary
 import os
 import cPickle as pickle
 
-from sunpy.time import parse_time
+import numpy as np
 
+from sunpy.time import parse_time
 from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
@@ -79,7 +80,6 @@ times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 # Solar de-rotation and cross-correlation operations will be performed relative
 # to the map at this index.
 layer_index = len(mc) / 2
-nlayers = ' (%i maps)' % mc
 t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_index]
 
 #
