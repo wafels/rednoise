@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-layer_index_prop = {"label": "layer index",
+layer_index_prop = {"label": "ref. layer index",
                     "color": "k",
                     "linestyle": "--"}
 
