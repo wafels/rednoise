@@ -7,7 +7,7 @@ import os
 
 import cPickle as pickle
 from tools import datalocationtools
-from tools import step1_plots
+from tools import step0_plots
 
 from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template
@@ -81,7 +81,7 @@ if derotate:
 
     # Plot out the solar rotation shifts
     filepath = os.path.join(save_locations['image'], ident + '.solar_derotation.png')
-    step1_plots.plot_shifts(sr_shifts,'shifts due to solar de-rotation',
+    step0_plots.plot_shifts(sr_shifts,'shifts due to solar de-rotation',
                             layer_index, filepath=filepath)
 
     # Apply the solar rotation shifts
@@ -98,7 +98,7 @@ if cross_correlate:
 
     # Plot out the cross correlation shifts
     filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
-    step1_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation',
+    step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation',
                             layer_index, filepath=filepath)
 
 #

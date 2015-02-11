@@ -56,20 +56,14 @@ save_locations = datalocationtools.save_location_calculator(roots, branches)
 ident = datalocationtools.ident_creator(branches)
 
 # Load in the derotated data into a datacube
-print('Acquiring data from ' + aia_data_location["aiadata"])
-
-
-
-#
-# Load the full dataset
-#
 directory = save_locations['pickle']
 filename = ident + '.full_mapcube.pkl'
-outputfile = open(os.path.join(directory, filename), 'wb')
-pickle.dump(data, outputfile)
+print('Acquiring data from ' + save_locations['pickle'])
+print('Filename = ' + filename)
+outputfile = open(os.path.join(directory, filename), 'rb')
+data = pickle.load(outputfile)
 outputfile.close()
 
-aaa = bbb
 
 # Get the date and times from the original mapcube
 date_obs = []
