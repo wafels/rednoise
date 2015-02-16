@@ -13,54 +13,26 @@ from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 
-from tools import datalocationtools
 from tools import step0_plots
-
-
-
-# input data
-dataroot = '~/Data/ts/'
-corename = 'request4'
-sunlocation = 'disk'
-fits_level = '1.5'
-wave = '171'
-cross_correlate = True
-derotate = True
-
-
-# Create the branches in order
-branches = [corename, sunlocation, fits_level, wave]
+import study_details as sd
 
 # Create the AIA source data location
-aia_data_location = datalocationtools.save_location_calculator({"aiadata": dataroot}, branches)
+aia_data_location = sd.aia_data_location["aiadata"]
 
 # Extend the name if cross correlation is requested
-extension = "_"
-if cross_correlate:
-    extension = extension + 'cc_True_'
-else:
-    extension = extension + 'cc_False_'
-
-# Extend the name if derotation is requested
-if derotate:
-    extension = extension + 'dr_True_'
-else:
-    extension = extension + 'dr_False'
+extension = sd.aia_data_location
 
 # Locations of the output datatypes
-roots = {"pickle": '~/ts/pickle' + extension,
-         "image": '~/ts/img' + extension,
-         "movie": '~/ts/movies' + extension}
-save_locations = datalocationtools.save_location_calculator(roots, branches)
+save_locations = sd.datalocationtools
 
 # Identity of the data
-ident = datalocationtools.ident_creator(branches)
+ident = sd.ident
 
 # Load in the derotated data into a datacube
-print('Acquiring data from ' + aia_data_location["aiadata"])
+print('Acquiring data from ' + aia_data_location)
 
 # Get the list of data and sort it
-list_of_data = sorted(os.path.join(aia_data_location["aiadata"], f) for f in os.listdir(aia_data_location["aiadata"]))
+list_of_data = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
 print("Number of files = %i" % len(list_of_data))
 #
 # Start manipulating the data
@@ -85,7 +57,7 @@ t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_
 #
 # Apply solar derotation
 #
-if derotate:
+if sd.derotate:
     print("Performing de-rotation")
 
     # Calculate the solar rotation of the mapcube
@@ -109,7 +81,7 @@ else:
 #
 # Coalign images by cross correlation
 #
-if cross_correlate:
+if sd.cross_correlate:
     print("Performing cross_correlation")
     data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
 
@@ -130,4 +102,5 @@ pfilepath = os.path.join(directory, filename)
 print('Saving data to ' + pfilepath)
 outputfile = open(pfilepath, 'wb')
 pickle.dump(data, outputfile)
+pickle.dump(layer_index, outputfile)
 outputfile.close()
