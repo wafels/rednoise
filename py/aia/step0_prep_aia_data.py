@@ -13,7 +13,7 @@ from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 
-from tools import step0_plots
+import step0_plots
 import study_details as sd
 
 # Create the AIA source data location
@@ -23,7 +23,7 @@ aia_data_location = sd.aia_data_location["aiadata"]
 extension = sd.aia_data_location
 
 # Locations of the output datatypes
-save_locations = sd.datalocationtools
+save_locations = sd.save_locations
 
 # Identity of the data
 ident = sd.ident
