@@ -55,9 +55,9 @@ if sd.sunlocation == 'disk':
 
         # Define a matplotlib rectangular patch to show the region on a map
         new_rectangle = Rectangle((R['llx'], R['lly']),
-                                   R['width'], R['width'],
-                                   label=key, fill=False,
-                                   facecolor='b', edgecolor='r', linewidth=2)
+                                  R['width'], R['width'],
+                                  label=region, fill=False,
+                                  facecolor='b', edgecolor='r', linewidth=2)
 
         # Store the information about the rectangle
         R["patch"] = new_rectangle

@@ -5,12 +5,12 @@
 import datalocationtools
 
 # input data
-#dataroot = '~/Data/ts/'
-dataroot = '~/Data/AIA/'
-#corename = 'request4'
-corename = 'derotatetest'
+dataroot = '~/Data/ts/'
+#dataroot = '~/Data/AIA/'
+corename = 'request4'
+#corename = 'derotatetest'
 sunlocation = 'disk'
-fits_level = '1.0'
+fits_level = '1.5'
 wave = '171'
 cross_correlate = True
 derotate = True
