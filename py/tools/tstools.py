@@ -76,6 +76,17 @@ def longest_evenly_sampled(t, absoluteTolerance=0.5):
     return [segments[k] for k in which_segments]
 
 
+def is_evenly_sampled(t, absoluteTolerance):
+    """
+
+    :param t:
+    :param absoluteTolerance:
+    :return:
+    """
+    if len(segment_indices(t, absoluteTolerance=absoluteTolerance)) == 1:
+        return True
+    else:
+        return False
 
 #
 # Frequency tools

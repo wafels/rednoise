@@ -12,6 +12,8 @@ from timeseries import TimeSeries
 import cPickle as pickle
 from scipy.interpolate import interp1d
 
+import astropy.units as u
+
 from tstools import is_evenly_sampled
 from timeseries import TimeSeries
 
@@ -19,7 +21,7 @@ import study_details as sd
 
 
 # Apply the window
-def ts_apply_window(d, win):
+def apply_window(d, win):
     return d * win
 
 
@@ -46,6 +48,9 @@ windows = ['hanning']
 
 # Output images in what file format?
 savefig_format = 'png'
+
+# Absolute tolerance in seconds when deciding if data is evenly sampled
+absolute_tolerance = 0.5 * u.s
 
 #
 # Main FFT power and time-series characteristic preparation loop
@@ -104,8 +109,9 @@ for iwave, wave in enumerate(waves):
             # evenly sampled data
             t = time_information["time_in_seconds"]
             dt = 12.0
-            ts_evenly_sampled = is_evenly_sampled(t, expected=dt, absolute=dt / 100.0)
-            if not(is_evenly_sampled):
+            ts_evenly_sampled = is_evenly_sampled(t,
+                                                  absolute_tolerance.to('s').value)
+            if not is_evenly_sampled:
                 print('Resampling to an even time cadence.')
                 dt = (t[-1] - t[0]) / (1.0 * (nt - 1))
                 evenly_sampled_t = np.arange(0, nt) * dt
@@ -121,15 +127,10 @@ for iwave, wave in enumerate(waves):
             # calculate a window function
             win, dummy_winname = DefineWindow(window, nt)
 
-            # Create a location to save the figures
-            savefig = os.path.join(os.path.expanduser(sfig), window, manip)
-            if not(os.path.isdir(savefig)):
-                os.makedirs(savefig)
-            savefig = os.path.join(savefig, region_id)
-
-            # Create a dummy time series object
+            # Create a dummy time series object to get some frequency
+            # information
             t = dt * np.arange(0, nt)
-            tsdummy = TimeSeries(t, t)
+            tsdummy = TimeSeries(t * u.s, t)
 
             # Positive frequencies
             pfrequencies = tsdummy.FFTPowerSpectrum.frequencies.pfrequencies
@@ -175,13 +176,10 @@ for iwave, wave in enumerate(waves):
                     dlnsd[j, i] = np.std(np.log(d))
 
                     # Multiply the data by the apodization window
-                    d = ts_apply_window(d, win)
+                    d = apply_window(d, win)
 
-                    # Define the time series
-                    ts = TimeSeries(t, d)
-
-                    # Get the Fourier power we are analyzing
-                    this_power = ts.FFTPowerSpectrum.ppower
+                    # Get the Fourier power we will analyze later
+                    this_power = ((np.abs(np.fft.fft(d)) ** 2) / (1.0 * nt))[pindex]
 
                     # Store the individual Fourier power
                     pwr[j, i, :] = this_power
