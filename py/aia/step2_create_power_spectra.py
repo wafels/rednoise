@@ -75,9 +75,9 @@ windows = ['hanning']
 # Output images in what file format?
 savefig_format = 'png'
 
-
-
-# main loop
+#
+# Main FFT power and time-series characteristic preparation loop
+#
 for iwave, wave in enumerate(waves):
 
     for iregion, region in enumerate(regions):
@@ -168,8 +168,10 @@ for iwave, wave in enumerate(waves):
             nposfreq = len(iobs)
             nfreq = tsdummy.PowerSpectrum.frequencies.nfreq
 
-            # storage
+            # Storage - Fourier power
             pwr = np.zeros((ny, nx, nposfreq))
+
+            # Storage - summary stats
             dtotal = np.zeros((ny, nx))
             dmax = np.zeros_like(dtotal)
             dmin = np.zeros_like(dtotal)
@@ -209,13 +211,15 @@ for iwave, wave in enumerate(waves):
                     # Store the individual Fourier power
                     pwr[j, i, :] = this_power
 
-
-
             # Save the Fourier Power of the analyzed time-series
-            ofilename = region_id
+            ofilename = 'OUT.' + region_id
             pkl_write(pkl_location,
-                      'OUT.' + ofilename + '.fourier_power.pickle',
+                      ofilename + '.fourier_power.pickle',
                       (freqs_original, pwr))
+
+            # Save the total emission
+            np.savez(ofilename + '.summary_stats.npy',
+                     dtotal, dmax, dmin, dsd, dlnsd)
 
 
 

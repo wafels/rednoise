@@ -4,16 +4,34 @@
 
 import datalocationtools
 
-# input data
-dataroot = '~/Data/ts/'
-#dataroot = '~/Data/AIA/'
-corename = 'request4'
-#corename = 'derotatetest'
-sunlocation = 'disk'
-fits_level = '1.5'
-wave = '171'
-cross_correlate = True
-derotate = True
+#
+# Study type
+#
+#study_type = 'debugpaper2'
+study_type = 'paper2'
+
+
+#
+# Setup the details given the study type
+#
+if study_type == 'debugpaper2':
+    dataroot = '~/Data/ts/'
+    corename = 'request4'
+    sunlocation = 'debug'
+    fits_level = '1.5'
+    wave = '171'
+    cross_correlate = True
+    derotate = True
+
+if study_type == 'paper2':
+    dataroot = '~/Data/ts/'
+    corename = 'request4'
+    sunlocation = 'disk'
+    fits_level = '1.5'
+    wave = '193'
+    cross_correlate = True
+    derotate = True
+
 
 
 # Create the branches in order

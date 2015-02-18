@@ -41,12 +41,13 @@ mc_layer = mc[layer_index]
 if sd.sunlocation == 'disk':
     #
     # Define the number of regions and their extents.  Use Helio-projective
-    # co-ordinates
+    # co-ordinates.  These co-ordinates should be chosen in reference to the
+    # time of the reference layer (layer_index).
     #
-    regions = {"sunspot": {"llx": -150.0, "lly": -350, "width": 20, "height": 15},
-               "loop footpoints": {"llx": -100, "lly": -355, "width": 22, "height": 24},
-               "quiet Sun": {"llx": -50, "lly": -360, "width": 15, "height": 26},
-               "active region": {"llx": 0, "lly": -370, "width": 9, "height": 27}}
+    regions = {"sunspot": {"llx": -335.0, "lly": 0, "width": 40, "height": 32},
+               "loop footpoints": {"llx": -492, "lly": 0, "width": 23, "height": 22},
+               "quiet Sun": {"llx": -200, "lly": -45, "width": 15, "height": 26},
+               "moss": {"llx": -400, "lly": 25, "width": 45, "height": 25}}
 
     # Rectangular patches
     for region in regions:
@@ -55,7 +56,7 @@ if sd.sunlocation == 'disk':
 
         # Define a matplotlib rectangular patch to show the region on a map
         new_rectangle = Rectangle((R['llx'], R['lly']),
-                                  R['width'], R['width'],
+                                  R['width'], R['height'],
                                   label=region, fill=False,
                                   facecolor='b', edgecolor='r', linewidth=2)
 

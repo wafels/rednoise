@@ -25,8 +25,10 @@ def plot_regions(image, regions, filepath):
         label_offset = regions[region]["label_offset"]
         ax.add_patch(patch)
         llxy = patch.get_xy()
-        plt.text(llxy[0] + label_offset['x'],
-                 llxy[1] - label_offset['y'],
+        height = patch.get_height()
+        width = patch.get_width()
+        plt.text(llxy[0] + width + label_offset['x'],
+                 llxy[1] + height + label_offset['y'],
                  patch.get_label(),
                  bbox=dict(facecolor='w', alpha=0.5))
     #plt.show()
