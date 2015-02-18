@@ -1,6 +1,8 @@
 """
+Step 0
+
 Load in the FITS files and write out a mapcube that has had the derotation
-and co-alignment applied as necessary
+and co-alignment applied as necessary.
 """
 
 import os

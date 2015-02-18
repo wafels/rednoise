@@ -28,11 +28,9 @@ if study_type == 'paper2':
     corename = 'request4'
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '193'
+    wave = '171'
     cross_correlate = True
     derotate = True
-
-
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]

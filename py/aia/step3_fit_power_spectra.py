@@ -1,13 +1,8 @@
 #
-# USE THIS ONE!
-#
-#
-# Code to fit power laws to some data from the region analysis
-#
-# Also do posterior predictive checking to find which model fits best.
+# Step 3.  Load in the FFT power spectra and fit models.  Decide which one
+# fits best.  Save the results.
 #
 import os
-
 from matplotlib import rc_file
 
 matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'

@@ -1,39 +1,21 @@
 """
-USE THIS ONE!
-CURRENT version
-Specifies a directory of AIA files and uses a least-squares fit to generate
-some fit estimates.
+Step 2
+Create power spectra and other summary statistics of the time-series at each
+pixel in each region.
 """
 import os
-
-from matplotlib import rc_file
-
-matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
-rc_file(os.path.expanduser(matplotlib_file))
-import matplotlib.pyplot as plt
 
 import numpy as np
 import tsutils
 from timeseries import TimeSeries
-# Curve fitting routine
-from scipy.optimize import curve_fit
 
-# Tests for normality
-from scipy.stats import shapiro, anderson
-from scipy.stats import spearmanr as Spearmanr
-from statsmodels.graphics.gofplots import qqplot
-#from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
-#from rnfit2 import Do_MCMC, rnsave
-#from pymcmodels import single_power_law_with_constant_not_normalized
 import cPickle as pickle
-import datatools
-from py.OLD import aia_plaw
-from py.aia.OLD.paper1 import log_10_product, tsDetails, s3min, s5min, s_U68, s_U95, s_L68, s_L95
-from py.aia.OLD.paper1 import prettyprint, csv_timeseries_write, pkl_write
-from py.aia.OLD.paper1 import descriptive_stats
-import scipy
 from scipy.interpolate import interp1d
-plt.ioff()
+
+from tstools import is_evenly_sampled
+from timeseries import TimeSeries
+
+import study_details as sd
 
 
 # Apply the window
@@ -52,16 +34,6 @@ def DefineWindow(window, nt):
     winname = ', ' + window
     return win, winname
 
-
-# Main analysis loop
-dataroot = '~/Data/AIA/'
-ldirroot = '~/ts/pickle_cc_False_dr_False/'
-sfigroot = '~/ts/img_cc_False_dr_False/'
-scsvroot = '~/ts/csv_cc_False_dr_False/'
-corename = 'study2'
-#sunlocation = 'equatorial'
-sunlocation = 'spoca665'
-fits_level = '1.5'
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -82,28 +54,27 @@ for iwave, wave in enumerate(waves):
 
     for iregion, region in enumerate(regions):
         # Create the branches in order
-        branches = [corename, sunlocation, fits_level, wave, region]
+        branches = [sd.corename, sd.sunlocation, sd.fits_level, sd.wave, region]
 
         # Set up the roots we are interested in
-        roots = {"pickle": ldirroot,
-                 "image": sfigroot,
-                 "csv": scsvroot}
+        roots = {"pickle": sd.ldirroot,
+                 "image": sd.sfigroot,
+                 "csv": sd.scsvroot}
 
         # Data and save locations are based here
-        locations = datatools.save_location_calculator(roots,
-                                     branches)
+        locations = sd.save_location_calculator(roots, branches)
 
         # set the saving locations
         sfig = locations["image"]
         scsv = locations["csv"]
 
         # Identifier
-        ident = datatools.ident_creator(branches)
+        ident = sd.ident_creator(branches)
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):
             # General notification that we have a new data-set
-            prettyprint('Loading New Data')
+            print('Loading New Data')
             # Which wavelength?
             print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
             # Which region
@@ -128,13 +99,12 @@ for iwave, wave in enumerate(waves):
             ny = dc.shape[0]
             nx = dc.shape[1]
             nt = dc.shape[2]
-            tsdetails = tsDetails(nx, ny, nt)
 
             # Should be evenly sampled data.  It not, then resample to get
             # evenly sampled data
             t = time_information["time_in_seconds"]
             dt = 12.0
-            is_evenly_sampled = evenly_sampled(t, expected=dt, absolute=dt / 100.0)
+            ts_evenly_sampled = is_evenly_sampled(t, expected=dt, absolute=dt / 100.0)
             if not(is_evenly_sampled):
                 print('Resampling to an even time cadence.')
                 dt = (t[-1] - t[0]) / (1.0 * (nt - 1))
@@ -157,16 +127,18 @@ for iwave, wave in enumerate(waves):
                 os.makedirs(savefig)
             savefig = os.path.join(savefig, region_id)
 
-            # Create a time series object
+            # Create a dummy time series object
             t = dt * np.arange(0, nt)
             tsdummy = TimeSeries(t, t)
-            freqs_original = tsdummy.PowerSpectrum.frequencies.positive
-            posindex = np.fft.fftfreq(nt, dt) > 0.0 #tsdummy.PowerSpectrum.frequencies.posindex
-            iobs = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
-            logiobs = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
-            logiobsDC = np.zeros(tsdummy.PowerSpectrum.ppower.shape)
-            nposfreq = len(iobs)
-            nfreq = tsdummy.PowerSpectrum.frequencies.nfreq
+
+            # Positive frequencies
+            pfrequencies = tsdummy.FFTPowerSpectrum.frequencies.pfrequencies
+
+            # The index of the positive frequencies
+            pindex = tsdummy.FFTPowerSpectrum.frequencies.pindex
+
+            # Number of positive frequencies
+            nposfreq = len(pfrequencies)
 
             # Storage - Fourier power
             pwr = np.zeros((ny, nx, nposfreq))
@@ -205,8 +177,11 @@ for iwave, wave in enumerate(waves):
                     # Multiply the data by the apodization window
                     d = ts_apply_window(d, win)
 
-                    # Define the Fourier power we are analyzing
-                    this_power = (np.abs(np.fft.fft(d)) ** 2)[posindex] / (1.0 * nt)#ts.PowerSpectrum.ppower
+                    # Define the time series
+                    ts = TimeSeries(t, d)
+
+                    # Get the Fourier power we are analyzing
+                    this_power = ts.FFTPowerSpectrum.ppower
 
                     # Store the individual Fourier power
                     pwr[j, i, :] = this_power
@@ -215,12 +190,8 @@ for iwave, wave in enumerate(waves):
             ofilename = 'OUT.' + region_id
             pkl_write(pkl_location,
                       ofilename + '.fourier_power.pickle',
-                      (freqs_original, pwr))
+                      (pfrequencies, pwr))
 
-            # Save the total emission
+            # Save the summary statistics
             np.savez(ofilename + '.summary_stats.npy',
                      dtotal, dmax, dmin, dsd, dlnsd)
-
-
-
-

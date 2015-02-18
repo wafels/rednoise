@@ -1,6 +1,8 @@
 """
-Load in the de-rotated and co-aligned data cube, and make some
-cutouts.
+Step 1
+
+Load in the de-rotated and co-aligned map cube, and make some cutouts that
+focus on specific regions of interest.
 """
 
 import os
@@ -97,10 +99,22 @@ if sd.sunlocation == 'disk':
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube.pickle')
 
-        # Open the file and write it out
+        # Open the file and write out the data we need for step 2
         outputfile = open(ofilename, 'wb')
+
+        # Write out the cube of data we want
         pickle.dump(subdata, outputfile)
+
+        # Write out the times when each layer was taken
         pickle.dump(times, outputfile)
+
+        # Write out the layer at which the rotation etc refer too
+        pickle.dump(mc_layer, outputfile)
+
+        # Write out the region information
+        pickle.dump(R, outputfile)
+
+        # Close the data
         outputfile.close()
         print('Saved to ' + ofilename)
 

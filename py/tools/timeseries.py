@@ -32,16 +32,16 @@ class SampleTimes:
 
 class Frequencies:
     @is_astropy_quantity
-    def __init__(self, f):
+    def __init__(self, frequencies):
         """A class holding power spectrum frequencies"""
         # Frequencies
-        self.f = f
+        self.frequencies = frequencies
 
         # Where the frequencies are positive
-        self.pindex = self.f > 0
+        self.pindex = self.frequencies > 0
 
         # Set the positive frequencies.
-        self.pf = self.f[self.pindex]
+        self.pfrequencies = self.frequencies[self.pindex]
 
     # Number of frequencies
     def __len__(self):
@@ -50,21 +50,21 @@ class Frequencies:
 
 # TODO - define a proper FFT class.
 class PowerSpectrum:
-    def __init__(self, f, power):
+    def __init__(self, frequencies, power):
         """A class that defines a power spectrum"""
-        if isinstance(f, Frequencies):
-            self.f = f
+        if isinstance(frequencies, Frequencies):
+            self.frequencies = frequencies
         else:
-            self.f = Frequencies(f)
+            self.frequencies = Frequencies(frequencies)
 
         # Set the power spectrum power
         self.power = power
-        if len(self.f) != len(self.power):
+        if len(self.frequencies) != len(self.power):
             raise ValueError("The number of frequencies is not equal to"
                              " the number of spectral powers.")
 
         # Find the power spectrum power where the frequencies are positive.
-        self.ppower = self.power[self.f.pindex]
+        self.ppower = self.power[self.frequencies.pindex]
 
 
 class TimeSeries:
@@ -100,13 +100,13 @@ class TimeSeries:
         nt = len(self.SampleTimes)
 
         # Fourier frequencies
-        f = np.fft.fftfreq(nt, self.SampleTimes.dt) / self.SampleTimes.t.unit
+        frequencies = np.fft.fftfreq(nt, self.SampleTimes.dt) / self.SampleTimes.t.unit
 
         # Fourier power spectral power
         p = (np.abs(self.fft_transform) ** 2) / (1.0 * nt)
 
         # Set the FFT power spectrum object.
-        self.FFTPowerSpectrum = PowerSpectrum(f, p)
+        self.FFTPowerSpectrum = PowerSpectrum(frequencies, p)
 
     # length of the time-series
     def __len__(self):
