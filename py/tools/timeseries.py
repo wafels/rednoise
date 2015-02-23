@@ -45,7 +45,7 @@ class Frequencies:
 
     # Number of frequencies
     def __len__(self):
-        return len(self.f)
+        return len(self.frequencies)
 
 
 # TODO - define a proper FFT class.

@@ -3,6 +3,7 @@
 #
 
 import datalocationtools
+import astropy.units as u
 
 #
 # Study type
@@ -10,6 +11,11 @@ import datalocationtools
 #study_type = 'debugpaper2'
 study_type = 'paper2'
 
+# Target cadence
+target_cadence = 12
+
+# Target cadence
+absolute_tolerance = 0.5 * u.s
 
 #
 # Setup the details given the study type

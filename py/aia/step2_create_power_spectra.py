@@ -41,16 +41,13 @@ def DefineWindow(window, nt):
 waves = ['171', '193']
 
 # Regions we are interested in
-regions = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
+regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 
 # Apodization windows
 windows = ['hanning']
 
-# Output images in what file format?
-savefig_format = 'png'
-
 # Absolute tolerance in seconds when deciding if data is evenly sampled
-absolute_tolerance = 0.5 * u.s
+absolute_tolerance = sd.absolute_tolerance
 
 #
 # Main FFT power and time-series characteristic preparation loop
@@ -58,23 +55,17 @@ absolute_tolerance = 0.5 * u.s
 for iwave, wave in enumerate(waves):
 
     for iregion, region in enumerate(regions):
-        # Create the branches in order
-        branches = [sd.corename, sd.sunlocation, sd.fits_level, sd.wave, region]
+        # Region identifier name
+        region_id = sd.ident + '_' + region
 
-        # Set up the roots we are interested in
-        roots = {"pickle": sd.ldirroot,
-                 "image": sd.sfigroot,
-                 "csv": sd.scsvroot}
+        # branch location
+        b = [sd.corename, sd.sunlocation, sd.fits_level, sd.wave, region]
 
-        # Data and save locations are based here
-        locations = sd.save_location_calculator(roots, branches)
+        # Output location
+        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
 
-        # set the saving locations
-        sfig = locations["image"]
-        scsv = locations["csv"]
-
-        # Identifier
-        ident = sd.ident_creator(branches)
+        # Output filename
+        ofilename = os.path.join(output, region_id + '.datacube')
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):
@@ -87,16 +78,11 @@ for iwave, wave in enumerate(waves):
             # Which window
             print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
-            # Update the region identifier
-            region_id = '.'.join((ident, window))
-
             # Load the data
-            pkl_location = locations['pickle']
-            ifilename = ident + '.mapcube'
-            pkl_file_location = os.path.join(pkl_location, ifilename + '.pickle')
+            pkl_file_location = os.path.join(output, ofilename + '.pickle')
             print('Loading ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
-            dc = pickle.load(pkl_file).as_array()
+            dc = pickle.load(pkl_file)
             time_information = pickle.load(pkl_file)
             pkl_file.close()
 
@@ -108,7 +94,7 @@ for iwave, wave in enumerate(waves):
             # Should be evenly sampled data.  It not, then resample to get
             # evenly sampled data
             t = time_information["time_in_seconds"]
-            dt = 12.0
+            dt = sd.target_cadence
             ts_evenly_sampled = is_evenly_sampled(t,
                                                   absolute_tolerance.to('s').value)
             if not is_evenly_sampled:
@@ -120,6 +106,8 @@ for iwave, wave in enumerate(waves):
                         f = interp1d(t, dc[iii, jjj, :])
                         dc[iii, jjj, :] = f(evenly_sampled_t)
                 t = evenly_sampled_t
+            else:
+                print('Evenly sampled to within tolerance.')
 
             # Define an array to store the analyzed data
             dc_analysed = np.zeros_like(dc)
@@ -185,11 +173,15 @@ for iwave, wave in enumerate(waves):
                     pwr[j, i, :] = this_power
 
             # Save the Fourier Power of the analyzed time-series
-            ofilename = 'OUT.' + region_id
-            pkl_write(pkl_location,
-                      ofilename + '.fourier_power.pickle',
-                      (pfrequencies, pwr))
+            ofilename = ofilename + '.' + window
+            filepath = os.path.join(output, ofilename + '.fourier_power.pkl')
+            print('Saving power spectra to ' + filepath)
+            f = open(filepath, 'wb')
+            pickle.dump(pfrequencies, f)
+            pickle.dump(pwr, f)
+            f.close()
 
             # Save the summary statistics
-            np.savez(ofilename + '.summary_stats.npy',
-                     dtotal, dmax, dmin, dsd, dlnsd)
+            filepath = os.path.join(output, ofilename + '.summary_stats.npy')
+            print('Saving summary statistics to ' + filepath)
+            np.savez(filepath, dtotal, dmax, dmin, dsd, dlnsd)

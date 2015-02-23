@@ -5,7 +5,7 @@
 import numpy as np
 from astropy import units as u
 
-from tools.timeseries import SampleTimes, Frequencies
+from timeseries import SampleTimes, Frequencies
 
 
 # Normalized dimensionless times
@@ -18,12 +18,12 @@ def normalized_times(times, norm=None):
 
 
 # Get cadences
-def cadences(times):
-    return times.t[1:] - times.t[0:-1]
+def cadences(t):
+    return t[1:] - t[0:-1]
 
 
 # Find segments of the data that have approximately equal cadences
-def segment_indices(times, absolutetolerance=0.5):
+def segment_indices(times, absolute_tolerance=0.5):
     """
     Find segments in the data where segments of the sample times have
     cadences below the specified absolute tolerance.
@@ -42,23 +42,24 @@ def segment_indices(times, absolutetolerance=0.5):
         the specified absolute tolerance.
     """
     # raw cadences
-    n = len(cadences(times))
+    c = cadences(times)
+    n = len(c)
     segments = []
     istart = 0
     iend = 1
     while iend <= n - 2:
-        c0 = cadences[istart]
-        c1 = cadences[iend]
-        while (np.abs(c1 - c0) < absolutetolerance) and (iend <= n - 2):
+        c0 = c[istart]
+        c1 = c[iend]
+        while (np.abs(c1 - c0) < absolute_tolerance) and (iend <= n - 2):
             iend = iend + 1
-            c0 = cadences[istart]
-            c1 = cadences[iend]
+            c0 = c[istart]
+            c1 = c[iend]
         segments.append([istart, iend])
         istart = iend
     return segments
 
 
-def longest_evenly_sampled(t, absoluteTolerance=0.5):
+def longest_evenly_sampled(t, absolute_tolerance=0.5):
     """Find which cadence segments are the longest
 
     Parameters
@@ -70,20 +71,20 @@ def longest_evenly_sampled(t, absoluteTolerance=0.5):
     -------
 
     """
-    segments = segment_indices(t, absoluteTolerance=absoluteTolerance)
+    segments = segment_indices(t, absolute_tolerance=absolute_tolerance)
     segment_lengths = [seg[1] - seg[0] for seg in segments]
     which_segments = (np.max(segment_lengths) == segment_lengths).nonzero()[0]
     return [segments[k] for k in which_segments]
 
 
-def is_evenly_sampled(t, absoluteTolerance):
+def is_evenly_sampled(t, absolute_tolerance):
     """
 
     :param t:
     :param absoluteTolerance:
     :return:
     """
-    if len(segment_indices(t, absoluteTolerance=absoluteTolerance)) == 1:
+    if len(segment_indices(t, absolute_tolerance=absolute_tolerance)) == 1:
         return True
     else:
         return False
