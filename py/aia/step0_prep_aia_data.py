@@ -73,7 +73,7 @@ filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png
 # Apply solar derotation
 #
 if sd.derotate:
-    print("Performing de-rotation")
+    print("\nPerforming de-rotation")
 
     # Calculate the solar rotation of the mapcube
     print("Calculating the solar rotation shifts")
@@ -102,17 +102,18 @@ if sd.cross_correlate:
     ccident = sd.datalocationtools.ident_creator(ccbranches)
     ccfilepath = os.path.join(ccsave_locations['pickle'], ccident + '.cross_correlation.pkl')
     if sd.wave == base_cross_correlation_channel:
-        print("Performing cross_correlation")
+        print("\nPerforming cross_correlation and image shifting")
         data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
         print("Saving cross correlation shifts to %s" % filepath)
         f = open(ccfilepath, "wb")
         pickle.dump(cc_shifts, f)
         f.close()
     else:
-        print("Loading in shifts to due cross-correlation from %s" % ccfilepath)
+        print("\nLoading in shifts to due cross-correlation from %s" % ccfilepath)
         f = open(ccfilepath, "rb")
         cc_shifts = pickle.load(f)
         f.close()
+        print("Shifting images")
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, apply_displacements=cc_shifts)
 
     # Plot out the cross correlation shifts

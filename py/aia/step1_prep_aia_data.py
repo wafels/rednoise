@@ -71,10 +71,10 @@ if sd.sunlocation == 'disk':
         R['xrange'] = [R['llx'], R['llx'] + R['width']]
         R['yrange'] = [R['lly'], R['lly'] + R['height']]
 
-        R['xrange_pixel'] = np.floor([mc_layer.data_to_pixel(R['xrange'][0], 'x'),
-                                      mc_layer.data_to_pixel(R['xrange'][1], 'x')])
-        R['yrange_pixel'] = np.floor([mc_layer.data_to_pixel(R['yrange'][0], 'y'),
-                                      mc_layer.data_to_pixel(R['yrange'][1], 'y')])
+        R['llxy_pixel'] = np.floor([mc_layer.data_to_pixel(R['llx'], 'x'),
+                                    mc_layer.data_to_pixel(R['lly'], 'y')])
+        R['width_pixel'] = np.floor(R['width'] / mc_layer.scale['x'])
+        R['height_pixel'] = np.floor(R['height'] / mc_layer.scale['y'])
 
     for region in regions:
         # Next region
@@ -84,10 +84,10 @@ if sd.sunlocation == 'disk':
         # the subcube using HPC co-ords will not work in this case.  Therefore
         # we need to convert the HPC co-ords into array indices and return
         # numpy arrays.  Create the subcube
-        subdata = (mc.as_array())[R['yrange_pixel'][0]: R['yrange_pixel'][1],
-                                  R['xrange_pixel'][0]: R['xrange_pixel'][1], :]
+        subdata = (mc.as_array())[R['llxy_pixel']: R['llxy_pixel'] + R['height_pixel'],
+                                  R['llxy_pixel']: R['llxy_pixel'] + R['height_pixel'], :]
 
-        print sd.wave, subdata.shape
+        print('Sub datacube (size %i, %i, %i)' % subdata.shape)
 
         # Region identifier name
         region_id = sd.ident + '_' + region
