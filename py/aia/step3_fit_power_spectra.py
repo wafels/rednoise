@@ -14,7 +14,7 @@ import pstools
 waves = ['171', '193']
 
 # Regions we are interested in
-regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
+regions = ['quiet Sun', 'moss']
 
 # Apodization windows
 windows = ['hanning']
@@ -71,6 +71,8 @@ for iwave, wave in enumerate(waves):
 
             # Storage for the results
             results = {}
+            aaa=bbb
+
 
             # Go through the models
             for itm, this_model in enumerate(models):

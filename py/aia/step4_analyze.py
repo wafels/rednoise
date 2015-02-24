@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 waves = ['171', '193']
 
 # Regions we are interested in
-regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
+regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 
 # Apodization windows
 windows = ['hanning']
