@@ -107,7 +107,7 @@ for iwave, wave in enumerate(waves):
         mask = result_filter(result, rchilimit)
         index = result[2]
         m = ma.array(index, mask=np.logical_not(mask)).flatten()
-        plt.hist(m, bins=50, alpha=0.5, label=region, normed=True)
+        plt.hist(m, bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(index.size))), normed=True)
     plt.xlim(0.5, 4.0)
     plt.legend()
     plt.xlabel('power law index')
