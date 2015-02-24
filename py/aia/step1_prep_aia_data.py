@@ -85,9 +85,9 @@ if sd.sunlocation == 'disk':
         # we need to convert the HPC co-ords into array indices and return
         # numpy arrays.  Create the subcube
         subdata = (mc.as_array())[R['llxy_pixel'][1]: R['llxy_pixel'][1] + R['height_pixel'],
-                                  R['llxy_pixel'][0]: R['llxy_pixel'][0] + R['height_pixel'], :]
+                                  R['llxy_pixel'][0]: R['llxy_pixel'][0] + R['width_pixel'], :]
 
-        print('Sub datacube (size %i, %i, %i)' % subdata.shape)
+        print('\nSub datacube (size %i, %i, %i)' % subdata.shape)
 
         # Region identifier name
         region_id = sd.ident + '_' + region
