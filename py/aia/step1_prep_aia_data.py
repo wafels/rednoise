@@ -87,6 +87,8 @@ if sd.sunlocation == 'disk':
         subdata = (mc.as_array())[R['yrange_pixel'][0]: R['yrange_pixel'][1],
                                   R['xrange_pixel'][0]: R['xrange_pixel'][1], :]
 
+        print sd.wave, subdata.shape
+
         # Region identifier name
         region_id = sd.ident + '_' + region
 
