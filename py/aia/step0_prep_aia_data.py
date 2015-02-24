@@ -97,17 +97,20 @@ else:
 # Coalign images by cross correlation
 #
 if sd.cross_correlate:
-    filepath = os.path.join(save_locations['pickle'], ident + '.cross_correlation.pkl')
+    ccbranches = [sd.corename, sd.sunlocation, sd.fits_level, base_cross_correlation_channel]
+    ccsave_locations = sd.datalocationtools.save_location_calculator(sd.roots, ccbranches)
+    ccident = sd.datalocationtools.ident_creator(ccbranches)
+    ccfilepath = os.path.join(ccsave_locations['pickle'], ccident + '.cross_correlation.pkl')
     if sd.wave == base_cross_correlation_channel:
         print("Performing cross_correlation")
         data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
-        print("Saving cross correlation shifts")
-        f = open(filepath, "wb")
+        print("Saving cross correlation shifts to %s" % filepath)
+        f = open(ccfilepath, "wb")
         pickle.dump(cc_shifts, f)
         f.close()
     else:
-        print("Loading in shifts to due cross-correlation")
-        f = open(filepath, "rb")
+        print("Loading in shifts to due cross-correlation from %s" % ccfilepath)
+        f = open(ccfilepath, "rb")
         cc_shifts = pickle.load(f)
         f.close()
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, apply_displacements=cc_shifts)
