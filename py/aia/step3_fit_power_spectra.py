@@ -29,11 +29,12 @@ model_names = ('power law', 'power law with constant')
 for iwave, wave in enumerate(waves):
 
     for iregion, region in enumerate(regions):
-        # Region identifier name
-        region_id = sd.ident + '_' + region
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, sd.wave, region]
+        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+
+        # Region identifier name
+        region_id = sd.datalocationtools.ident_creator(b)
 
         # Output location
         output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
@@ -45,7 +46,7 @@ for iwave, wave in enumerate(waves):
             ofilename = os.path.join(output, region_id + '.datacube.' + window)
 
             # General notification that we have a new data-set
-            print('Loading New Data')
+            print('\nLoading New Data')
             # Which wavelength?
             print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
             # Which region

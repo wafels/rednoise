@@ -100,7 +100,7 @@ class TimeSeries:
         nt = len(self.SampleTimes)
 
         # Fourier frequencies
-        frequencies = np.fft.fftfreq(nt, self.SampleTimes.dt) / self.SampleTimes.t.unit
+        frequencies = np.fft.fftfreq(nt, self.SampleTimes.dt.value) / self.SampleTimes.t.unit
 
         # Fourier power spectral power
         p = (np.abs(self.fft_transform) ** 2) / (1.0 * nt)
