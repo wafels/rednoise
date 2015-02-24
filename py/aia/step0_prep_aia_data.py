@@ -11,7 +11,8 @@ Image cross-correlation is applied using the shifts calculated by applying
 sunpy's image co-alignment routine to the channel indicated by the variable
 base_cross_correlation_channel.  This ensures that all channels get moved the
 same way, and the shifts per channel do not depend on the structure or motions
-in each channel.
+in each channel.  This assumes that the original images in each AIA channel
+
 
 """
 
