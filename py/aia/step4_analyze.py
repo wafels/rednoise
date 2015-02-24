@@ -115,7 +115,7 @@ for iwave, wave in enumerate(waves):
     plt.title(wave)
     plt.show()
 
-
+"""
 #
 # Scatter plots
 #
@@ -137,4 +137,4 @@ for iregion, region in enumerate(regions):
             plt.ylabel(wave2)
             plt.title(region)
             plt.show()
-
+"""
