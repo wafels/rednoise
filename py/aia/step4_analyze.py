@@ -102,7 +102,7 @@ for iwave, wave in enumerate(waves):
 
 
     #
-    # Histograms of indices
+    # Histograms of power law indices
     #
     f , axarr = plt.subplots(len(regions), 1, sharex=True)
     for iregion, region in enumerate(regions):
@@ -119,7 +119,7 @@ for iwave, wave in enumerate(waves):
     plt.show()
 
 #
-# Scatter plots
+# Scatter plots of the power law indices in different channels
 #
 for iregion, region in enumerate(regions):
     for i in range(0, len(waves)):
@@ -143,3 +143,16 @@ for iregion, region in enumerate(regions):
             plt.plot(xlim, xlim)
             plt.title(region)
             plt.show()
+
+#
+# Distributions of reduced chi-squared as a function of region, channel and
+# model
+#
+for iregion, region in enumerate(regions):
+    for iwave, wave in enumerate(waves):
+        for imodel, model_name in enumerate(model_names):
+
+
+#
+# Spatial distribution of the power law index.
+#
