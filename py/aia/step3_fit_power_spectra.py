@@ -14,7 +14,7 @@ import pstools
 waves = ['171', '193']
 
 # Regions we are interested in
-regions = ['quiet Sun', 'moss']
+regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 
 # Apodization windows
 windows = ['hanning']

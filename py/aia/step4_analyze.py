@@ -20,7 +20,7 @@ windows = ['hanning']
 model_names = ('power law with constant',)
 
 # Reduced chi-squared limit
-rchilimit = [0.5, 2.0]
+rchilimit = [0.9, 1.1]
 
 xlim = [0.5, 7.0]
 
