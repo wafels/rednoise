@@ -101,22 +101,23 @@ for iwave, wave in enumerate(waves):
         storage[model_name][wave][region] = [success, rchi2, index]
 
 
-    #
-    # Histograms of power law indices
-    #
-    f , axarr = plt.subplots(len(regions), 1, sharex=True)
-    for iregion, region in enumerate(regions):
-        result = storage[model_name][wave][region]
-        mask = result_filter(result, rchilimit)
-        index = result[2]
-        m = ma.array(index, mask=np.logical_not(mask)).flatten()
-        axarr[iregion].hist(m, bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(index.size))), normed=True)
-        axarr[iregion].legend()
-        axarr[iregion].set_ylabel('pdf')
-    axarr[0].set_title('%s, %s' % (wave, model_name))
-    axarr[len(regions) - 1].set_xlabel('power law index')
-    plt.xlim(xlim[0], xlim[1])
-    plt.show()
+#
+# Histograms of model parameters
+#
+for iwave, wave in enumerate(waves):
+    for iparameter, parameter in enumerate(parameters):
+        f , axarr = plt.subplots(len(regions), 1, sharex=True)
+        for iregion, region in enumerate(regions):
+            result = storage[model_name][wave][region]
+            mask = result_filter(result, rchilimit)
+            index = result[iparameter]
+            m = ma.array(index, mask=np.logical_not(mask)).flatten()
+            axarr[iregion].hist(m, bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(index.size))), normed=True)
+            axarr[iregion].legend()
+            axarr[iregion].set_ylabel('pdf')
+        axarr[0].set_title('%s, %s' % (wave, model_name))
+        axarr[len(regions) - 1].set_xlabel(parameter)
+        plt.show()
 
 #
 # Scatter plots of the power law indices in different channels
