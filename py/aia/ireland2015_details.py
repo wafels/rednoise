@@ -5,12 +5,5 @@
 #
 # power law contributions
 #
-p1 = {"171": {"moss": {""},
-              "quiet Sun": {},
-              "loop footpoints": {},
-              "sunspot": {}},
-      "193": {"moss": {},
-              "quiet Sun": {},
-              "loop footpoints": {},
-              "sunspot": {}}}
+
 

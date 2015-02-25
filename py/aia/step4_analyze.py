@@ -23,10 +23,10 @@ model_names = ('power law with constant',)
 rchilimit = [0.9, 1.1]
 rchistring = '$\chi^{2}_{r}$'
 
-xlim = [0.5, 2.0]
+xlim = [0.5, 7.0]
 
 # Parameters
-parameters = ("log(amplitude)", "power law index", "log(background)")
+parameters = ("$\log_{10}$(amplitude)", "power law index", "$\log_{10}$(background)")
 
 
 # Create the storage across all models, AIA channels and regions
@@ -38,10 +38,9 @@ for model_name in model_names:
         for region in regions:
             storage[model_name][wave][region] = []
 
-def result_filter(result, rchilimit):
-    success = result[0]
-    rchi2_gt_low_limit = result[1] > rchilimit[0]
-    rchi2_lt_high_limit = result[1] < rchilimit[1]
+def result_filter(success, rchi2, rchilimit):
+    rchi2_gt_low_limit = rchi2[1] > rchilimit[0]
+    rchi2_lt_high_limit = rchi2[1] < rchilimit[1]
     return success * rchi2_gt_low_limit * rchi2_lt_high_limit
 
 #
@@ -92,7 +91,7 @@ for iwave, wave in enumerate(waves):
                 nx = len(data[0])
 
                 rchi2 = np.zeros((ny, nx))
-                index = np.zeros_like(rchi2)
+                parameter_values = np.zeros((ny, nx, 3))
                 success = np.zeros_like(rchi2)
 
                 for i in range(0, nx):
@@ -101,9 +100,9 @@ for iwave, wave in enumerate(waves):
                         rchi2[j, i] = data[j][i][2]
                         # Get the results
                         result = data[j][i][1]
-                        index[j, i] = result['x'][1]
+                        parameter_values[j, i, :] = result['x']
                         success[j, i] = result['success']
-        storage[model_name][wave][region] = [success, rchi2, index]
+        storage[model_name][wave][region] = [success, rchi2, parameter_values]
 
 
 #
@@ -111,13 +110,27 @@ for iwave, wave in enumerate(waves):
 #
 for iwave, wave in enumerate(waves):
     for iparameter, parameter in enumerate(parameters):
-        f , axarr = plt.subplots(len(regions), 1, sharex=True)
+        plt.close('all')
+        f, axarr = plt.subplots(len(regions), 1, sharex=True)
         for iregion, region in enumerate(regions):
             result = storage[model_name][wave][region]
-            mask = result_filter(result, rchilimit)
-            index = result[iparameter]
-            m = ma.array(index, mask=np.logical_not(mask)).flatten()
-            axarr[iregion].hist(m, bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(index.size))), normed=True)
+
+            # Generate a mask to filter the results
+            mask = result_filter(result[0], result[1], rchilimit)
+
+            # Parameter to look at
+            par = result[2][:, :, iparameter]
+
+            # Masked array
+            m = ma.array(par, mask=np.logical_not(mask)).flatten()
+
+            # Plot all the results
+            axarr[iregion].hist(par.flatten(), bins=50, alpha=0.5, label='all', normed=True)
+
+            # Plot the best results
+            axarr[iregion].hist(m.compressed(), bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(par.size))), normed=True)
+
+            # Annotate the plot
             axarr[iregion].legend()
             axarr[iregion].set_ylabel('pdf')
         axarr[0].set_title('%s, %s' % (wave, model_name))
@@ -138,27 +151,31 @@ for iregion, region in enumerate(regions):
     for i in range(0, len(waves)):
         wave1 = waves[i]
         result1 = storage[model_name][wave1][region]
-        mask1 = result_filter(result1, rchilimit)
+        mask1 = result_filter(result1[0], result1[1], rchilimit)
         index1 = result1[2]
         for j in range(i+1, len(waves)):
             wave2 = waves[j]
             result2 = storage[model_name][wave2][region]
-            mask2 = result_filter(result2, rchilimit)
+            mask2 = result_filter(result2[0], result2[1], rchilimit)
             index2 = result2[2]
 
             m1 = ma.array(index1, mask=np.logical_not(mask1 * mask2)).flatten()
             m2 = ma.array(index2, mask=np.logical_not(mask1 * mask2)).flatten()
 
             # Plot all the results
-            plt.scatter(result1, result2, 'bo', label='all')
+            plt.scatter(index1.flatten(), index2.flatten(), marker='o', color='b', label='all')
 
             # Plot the results with "good" reduced chi-squared
-            plt.scatter(m1, m2, 'yo', label='%f<%s<f' % (rchilimit[0], rchistring, rchilimit[1]))
+            plt.scatter(m1.compressed(), m2.compressed(), marker='o', color='y', label='%f<%s<%f' % (rchilimit[0], rchistring, rchilimit[1]))
             plt.xlabel(wave1)
             plt.ylabel(wave2)
+            xlim = [np.min(index1), np.max(index1)]
+            ylim = [np.min(index2), np.max(index2)]
             plt.xlim(xlim[0], xlim[1])
-            plt.plot(xlim, xlim)
+            plt.ylim(ylim[0], ylim[1])
+            plt.plot([0, 8], [0, 8], color='k', label='%s parameter = %s parameter' % (wave1, wave2))
             plt.title(region)
+            plt.legend()
             plt.show()
 
 #
