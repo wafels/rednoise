@@ -71,8 +71,6 @@ for iwave, wave in enumerate(waves):
 
             # Storage for the results
             results = {}
-            aaa=bbb
-
 
             # Go through the models
             for itm, this_model in enumerate(models):

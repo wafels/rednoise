@@ -73,8 +73,13 @@ if sd.sunlocation == 'disk':
 
         R['llxy_pixel'] = np.floor([mc_layer.data_to_pixel(R['llx'], 'x'),
                                     mc_layer.data_to_pixel(R['lly'], 'y')])
-        R['width_pixel'] = np.floor(R['width'] / mc_layer.scale['x'])
-        R['height_pixel'] = np.floor(R['height'] / mc_layer.scale['y'])
+
+        # Small changes in the plate scale in each AIA channel can mean that
+        # the height and widths of each region depend on the data. To mitigate
+        # against this we fix the size of the plate scale.
+        fixed_aia_scale = {'x': 0.6, 'y': 0.6}
+        R['width_pixel'] = np.floor(R['width'] / fixed_aia_scale['x'])
+        R['height_pixel'] = np.floor(R['height'] / fixed_aia_scale['y'])
 
     for region in regions:
         # Next region

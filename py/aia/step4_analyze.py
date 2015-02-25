@@ -19,8 +19,10 @@ windows = ['hanning']
 # Models to fit
 model_names = ('power law with constant',)
 
-#
+# Reduced chi-squared limit
 rchilimit = [0.5, 2.0]
+
+xlim = [0.5, 7.0]
 
 # Storage across all models, AIA channels and regions
 storage = {}
@@ -102,29 +104,31 @@ for iwave, wave in enumerate(waves):
     #
     # Histograms of indices
     #
+    f , axarr = plt.subplots(len(regions), 1, sharex=True)
     for iregion, region in enumerate(regions):
         result = storage[model_name][wave][region]
         mask = result_filter(result, rchilimit)
         index = result[2]
         m = ma.array(index, mask=np.logical_not(mask)).flatten()
-        plt.hist(m, bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(index.size))), normed=True)
-    plt.xlim(0.5, 4.0)
-    plt.legend()
-    plt.xlabel('power law index')
-    plt.ylabel('probability density function')
-    plt.title(wave)
+        axarr[iregion].hist(m, bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(index.size))), normed=True)
+        axarr[iregion].legend()
+        axarr[iregion].set_ylabel('pdf')
+    axarr[0].set_title('%s, %s' % (wave, model_name))
+    axarr[len(regions) - 1].set_xlabel('power law index')
+    plt.xlim(xlim[0], xlim[1])
     plt.show()
 
-"""
 #
 # Scatter plots
 #
 for iregion, region in enumerate(regions):
-    for wave1 in waves:
+    for i in range(0, len(waves)):
+        wave1 = waves[i]
         result1 = storage[model_name][wave1][region]
         mask1 = result_filter(result1, rchilimit)
         index1 = result1[2]
-        for wave2 in waves:
+        for j in range(i+1, len(waves)):
+            wave2 = waves[j]
             result2 = storage[model_name][wave2][region]
             mask2 = result_filter(result2, rchilimit)
             index2 = result2[2]
@@ -135,6 +139,7 @@ for iregion, region in enumerate(regions):
             plt.scatter(m1, m2)
             plt.xlabel(wave1)
             plt.ylabel(wave2)
+            plt.xlim(xlim[0], xlim[1])
+            plt.plot(xlim, xlim)
             plt.title(region)
             plt.show()
-"""
