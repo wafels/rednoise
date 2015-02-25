@@ -20,11 +20,16 @@ windows = ['hanning']
 model_names = ('power law with constant',)
 
 # Reduced chi-squared limit
-rchilimit = [0.5, 2.0]
+rchilimit = [0.9, 1.1]
+rchistring = '$\chi^{2}_{r}$'
 
-xlim = [0.5, 7.0]
+xlim = [0.5, 2.0]
 
-# Storage across all models, AIA channels and regions
+# Parameters
+parameters = ("log(amplitude)", "power law index", "log(background)")
+
+
+# Create the storage across all models, AIA channels and regions
 storage = {}
 for model_name in model_names:
     storage[model_name] = {}
@@ -122,6 +127,13 @@ for iwave, wave in enumerate(waves):
 #
 # Scatter plots of the power law indices in different channels
 #
+# Get the limits of the parameters so that they are all plotted on the same
+# scale.
+for iregion, region in enumerate(regions):
+    for i in range(0, len(waves)):
+        pass
+
+
 for iregion, region in enumerate(regions):
     for i in range(0, len(waves)):
         wave1 = waves[i]
@@ -137,7 +149,11 @@ for iregion, region in enumerate(regions):
             m1 = ma.array(index1, mask=np.logical_not(mask1 * mask2)).flatten()
             m2 = ma.array(index2, mask=np.logical_not(mask1 * mask2)).flatten()
 
-            plt.scatter(m1, m2)
+            # Plot all the results
+            plt.scatter(result1, result2, 'bo', label='all')
+
+            # Plot the results with "good" reduced chi-squared
+            plt.scatter(m1, m2, 'yo', label='%f<%s<f' % (rchilimit[0], rchistring, rchilimit[1]))
             plt.xlabel(wave1)
             plt.ylabel(wave2)
             plt.xlim(xlim[0], xlim[1])
@@ -152,7 +168,7 @@ for iregion, region in enumerate(regions):
 for iregion, region in enumerate(regions):
     for iwave, wave in enumerate(waves):
         for imodel, model_name in enumerate(model_names):
-
+            pass
 
 #
 # Spatial distribution of the power law index.
