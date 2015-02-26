@@ -29,6 +29,8 @@ xlim = [0.5, 7.0]
 # Parameters
 parameters = ("amplitude", "power law index", "background")
 comparable = (False, True, False)
+conversion = (1.0 / np.log(10.0), 1.0, 1.0 / np.log(10.0))
+plotname = ('$\log_{10}$(amplitude)', "power law index", "$\log_{10}$background")
 
 
 # Label
@@ -124,28 +126,28 @@ for iwave, wave in enumerate(waves):
             mask = result_filter(result[0], result[1], rchilimit)
 
             # Parameter to look at
-            par = result[2][:, :, iparameter]
+            par = result[2][:, :, iparameter] * conversion[iparameter]
 
             # Masked array
             m = ma.array(par, mask=np.logical_not(mask)).flatten()
 
             # Plot all the results
-            axarr[iregion].hist(par.flatten(), bins=50, alpha=0.5, label='all', normed=True)
+            axarr[iregion].hist(par.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
 
             # Plot the best results
-            axarr[iregion].hist(m.compressed(), bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(par.size))), normed=True)
+            axarr[iregion].hist(m.compressed(), bins=50, alpha=0.5, label='best %s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(par.size))), normed=True)
 
-            # Plot the Ireland et 2015 results
+            # Plot the Ireland et al 2015 results
             if comparable[iparameter]:
                 z = i2015.df.loc[region]
-                i2015value = z[ z['waveband'] == int(wave)][parameter]
+                i2015value = z[z['waveband'] == int(wave)][parameter]
                 axarr[iregion].axvline(i2015value[0], color='r', linewidth=2, label=i2015label)
 
             # Annotate the plot
-            axarr[iregion].legend()
+            axarr[iregion].legend(framealpha=0.5)
             axarr[iregion].set_ylabel('pdf')
-        axarr[0].set_title('%s, %s' % (wave, model_name))
-        axarr[len(regions) - 1].set_xlabel(parameter)
+        axarr[0].set_title('%s, model is "%s"' % (wave, model_name))
+        axarr[len(regions) - 1].set_xlabel(plotname[iparameter])
         plt.show()
 
 #

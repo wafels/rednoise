@@ -39,7 +39,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['171', '193']
+waves = ['193', '171']
 
 # Regions we are interested in
 regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -142,6 +142,7 @@ for iwave, wave in enumerate(waves):
             dlnsd = np.zeros_like(dtotal)
 
             logiobs = np.zeros(nposfreq)
+            iobs = np.zeros_like(logiobs)
             for i in range(0, nx):
                 for j in range(0, ny):
 
@@ -167,16 +168,20 @@ for iwave, wave in enumerate(waves):
                     # Summed logarithm of the power
                     logiobs = logiobs + np.log(this_power)
 
+                    # Total power
+                    iobs = iobs + this_power
+
             # Save the Fourier Power of the analyzed time-series
             logiobs = logiobs / np.float(nx * ny)
+            iobs = iobs / np.float(nx * ny)
             ofilename = ofilename + '.' + window
             filepath = os.path.join(output, ofilename + '.fourier_power_for_gelu.csv')
             print('Saving power spectra to ' + filepath)
             with open(filepath, 'wb') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=',')
-                spamwriter.writerow(['frequencies (Hz)', 'sum_over_region(log(fourier power))'])
+                spamwriter.writerow(['frequencies (Hz)', 'sum_over_region(fourier power)'])
                 for i in range(0, nposfreq):
-                    spamwriter.writerow([str(pfrequencies[i].value), str(logiobs[i])])
+                    spamwriter.writerow([str(pfrequencies[i].value), str(iobs[i])])
 
             filepath = os.path.join(output, ofilename + '.fourier_power_for_gelu_number_of_spectra.csv')
             print('Saving power spectra to ' + filepath)
