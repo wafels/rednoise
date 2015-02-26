@@ -29,8 +29,8 @@ from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calc
 import step0_plots
 import study_details as sd
 
-# Base cross-correlation channel
-base_cross_correlation_channel = '171'
+# Use base cross-correlation channel?
+use_base_cross_correlation_channel = sd.use_base_cross_correlation_channel
 
 # Create the AIA source data location
 aia_data_location = sd.aia_data_location["aiadata"]
@@ -98,24 +98,30 @@ else:
 # Coalign images by cross correlation
 #
 if sd.cross_correlate:
-    ccbranches = [sd.corename, sd.sunlocation, sd.fits_level, base_cross_correlation_channel]
-    ccsave_locations = sd.datalocationtools.save_location_calculator(sd.roots, ccbranches)
-    ccident = sd.datalocationtools.ident_creator(ccbranches)
-    ccfilepath = os.path.join(ccsave_locations['pickle'], ccident + '.cross_correlation.pkl')
-    if sd.wave == base_cross_correlation_channel:
-        print("\nPerforming cross_correlation and image shifting")
-        data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
-        print("Saving cross correlation shifts to %s" % filepath)
-        f = open(ccfilepath, "wb")
-        pickle.dump(cc_shifts, f)
-        f.close()
+    if use_base_cross_correlation_channel:
+        ccbranches = [sd.corename, sd.sunlocation, sd.fits_level, sd.base_cross_correlation_channel]
+        ccsave_locations = sd.datalocationtools.save_location_calculator(sd.roots, ccbranches)
+        ccident = sd.datalocationtools.ident_creator(ccbranches)
+        ccfilepath = os.path.join(ccsave_locations['pickle'], ccident + '.cross_correlation.pkl')
+
+        if sd.wave == sd.base_cross_correlation_channel:
+            print("\nPerforming cross_correlation and image shifting")
+            data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
+            print("Saving cross correlation shifts to %s" % filepath)
+            f = open(ccfilepath, "wb")
+            pickle.dump(cc_shifts, f)
+            f.close()
+        else:
+            print("\nUsing base cross-correlation channel information.")
+            print("Loading in shifts to due cross-correlation from %s" % ccfilepath)
+            f = open(ccfilepath, "rb")
+            cc_shifts = pickle.load(f)
+            f.close()
+            print("Shifting images")
+            data = mapcube_coalign_by_match_template(data, layer_index=layer_index, apply_displacements=cc_shifts)
     else:
-        print("\nLoading in shifts to due cross-correlation from %s" % ccfilepath)
-        f = open(ccfilepath, "rb")
-        cc_shifts = pickle.load(f)
-        f.close()
-        print("Shifting images")
-        data = mapcube_coalign_by_match_template(data, layer_index=layer_index, apply_displacements=cc_shifts)
+        print("\nPerforming cross_correlation and image shifting.")
+        data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
 
     # Plot out the cross correlation shifts
     filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')

@@ -17,6 +17,12 @@ target_cadence = 12
 # Target cadence
 absolute_tolerance = 0.5 * u.s
 
+# base cross-correlation channel
+base_cross_correlation_channel = '171'
+
+# Use base cross-correlation channel?
+use_base_cross_correlation_channel = False
+
 #
 # Setup the details given the study type
 #
@@ -47,9 +53,9 @@ aia_data_location = datalocationtools.save_location_calculator({"aiadata": datar
 # Extend the name if cross correlation is requested
 extension = "_"
 if cross_correlate:
-    extension = extension + 'cc_True_'
+    extension = 'cc_True_'
 else:
-    extension = extension + 'cc_False_'
+    extension = 'cc_False_'
 
 # Extend the name if derotation is requested
 if derotate:
@@ -57,10 +63,18 @@ if derotate:
 else:
     extension = extension + 'dr_False'
 
+# Extend the name if derotation is requested
+if use_base_cross_correlation_channel:
+    extension = extension + 'bcc_True_'
+else:
+    extension = extension + 'bcc_False'
+
+
+
 # Locations of the output datatypes
-roots = {"pickle": '~/ts/pickle' + extension,
-         "image": '~/ts/img' + extension,
-         "movie": '~/ts/movies' + extension}
+roots = {"pickle": '~/ts/pickle/' + extension,
+         "image": '~/ts/img/' + extension,
+         "movie": '~/ts/movies/' + extension}
 save_locations = datalocationtools.save_location_calculator(roots, branches)
 
 # Identity of the data
