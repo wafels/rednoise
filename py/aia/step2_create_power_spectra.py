@@ -80,7 +80,7 @@ for iwave, wave in enumerate(waves):
             print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
             # Load the data
-            pkl_file_location = os.path.join(output, ofilename + '.pickle')
+            pkl_file_location = os.path.join(output, ofilename + '.pkl')
             print('Loading ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
             dc = pickle.load(pkl_file)

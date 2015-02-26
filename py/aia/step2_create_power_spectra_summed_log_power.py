@@ -39,7 +39,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['193', '171']
+waves = ['171', '193']
 
 # Regions we are interested in
 regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -81,7 +81,7 @@ for iwave, wave in enumerate(waves):
             print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
             # Load the data
-            pkl_file_location = os.path.join(output, ofilename + '.pickle')
+            pkl_file_location = os.path.join(output, ofilename + '.pkl')
             print('Loading ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
             dc = pickle.load(pkl_file)
@@ -177,4 +177,10 @@ for iwave, wave in enumerate(waves):
                 spamwriter.writerow(['frequencies (Hz)', 'sum_over_region(log(fourier power))'])
                 for i in range(0, nposfreq):
                     spamwriter.writerow([str(pfrequencies[i].value), str(logiobs[i])])
+
+            filepath = os.path.join(output, ofilename + '.fourier_power_for_gelu_number_of_spectra.csv')
+            print('Saving power spectra to ' + filepath)
+            with open(filepath, 'wb') as csvfile:
+                spamwriter = csv.writer(csvfile, delimiter=',')
+                spamwriter.writerow(['number of spectra = ', str(nx * ny)])
 

@@ -104,7 +104,7 @@ if sd.sunlocation == 'disk':
         output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
 
         # Output filename
-        ofilename = os.path.join(output, region_id + '.datacube.pickle')
+        ofilename = os.path.join(output, region_id + '.datacube.pkl')
 
         # Open the file and write out the data we need for step 2
         outputfile = open(ofilename, 'wb')
