@@ -7,6 +7,7 @@ import study_details as sd
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
+import ireland2015_details as i2015
 # Wavelengths we want to analyze
 waves = ['171', '193']
 
@@ -26,8 +27,12 @@ rchistring = '$\chi^{2}_{r}$'
 xlim = [0.5, 7.0]
 
 # Parameters
-parameters = ("$\log_{10}$(amplitude)", "power law index", "$\log_{10}$(background)")
+parameters = ("amplitude", "power law index", "background")
+comparable = (False, True, False)
 
+
+# Label
+i2015label = i2015.label
 
 # Create the storage across all models, AIA channels and regions
 storage = {}
@@ -129,6 +134,12 @@ for iwave, wave in enumerate(waves):
 
             # Plot the best results
             axarr[iregion].hist(m.compressed(), bins=50, alpha=0.5, label='%s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(par.size))), normed=True)
+
+            # Plot the Ireland et 2015 results
+            if comparable[iparameter]:
+                z = i2015.df.loc[region]
+                i2015value = z[ z['waveband'] == int(wave)][parameter]
+                axarr[iregion].axvline(i2015value[0], color='r', linewidth=2, label=i2015label)
 
             # Annotate the plot
             axarr[iregion].legend()

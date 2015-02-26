@@ -1,26 +1,29 @@
 #
 # Some results from Ireland et al 2015, ApJ, 798, 1
 #
+import os
+import pandas as pd
+
+# Name of the data file
+filename = 'ireland2015_table1.csv'
+
+# Directory
+directory = os.path.expanduser('~/ts/rednoise/dat/')
+
+# Full file path
+filepath = os.path.join(directory, filename)
+
+# Load the data in to a dataframe
+df = pd.DataFrame.from_csv(filepath)
 
 #
-# power law contributions
+label = 'Ireland et al 2015'
+
+"""
 #
-# Wavelengths we want to analyze
-waves = ['171', '193']
+# Example to get a value out
+#
+z=df.loc['moss']
 
-# Regions we are interested in
-regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-
-
-# Models to fit
-model_names = ('power law with constant',)
-
-
-# Create the storage across all models, AIA channels and regions
-storage = {}
-for model_name in model_names:
-    storage[model_name] = {}
-    for wave in waves:
-        storage[model_name][wave] = {}
-        for region in regions:
-            storage[model_name][wave][region] = {}
+power_law_index = z[ z['waveband'] == 171]['n']
+"""
