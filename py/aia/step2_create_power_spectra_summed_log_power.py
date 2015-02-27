@@ -143,6 +143,7 @@ for iwave, wave in enumerate(waves):
 
             logiobs = np.zeros(nposfreq)
             iobs = np.zeros_like(logiobs)
+            iobs_squared = np.zeros_like(logiobs)
             for i in range(0, nx):
                 for j in range(0, ny):
 
@@ -171,21 +172,34 @@ for iwave, wave in enumerate(waves):
                     # Total power
                     iobs = iobs + this_power
 
+                    # Sum over power squared
+                    iobs_squared = iobs_squared + this_power ** 2
+
             # Save the Fourier Power of the analyzed time-series
-            logiobs = logiobs / np.float(nx * ny)
-            iobs = iobs / np.float(nx * ny)
+            # Normalize by the number of pixels
+            npixel = np.float(nx * ny)
+            logiobs = logiobs / npixel
+            iobs = iobs / npixel
+            iobs_squared = iobs_squared / npixel
+
             ofilename = ofilename + '.' + window
             filepath = os.path.join(output, ofilename + '.fourier_power_for_gelu.csv')
             print('Saving power spectra to ' + filepath)
             with open(filepath, 'wb') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=',')
-                spamwriter.writerow(['frequencies (Hz)', 'sum_over_region(fourier power)'])
+                spamwriter.writerow(['frequencies (Hz)',
+                                     'mean_over_region(log(fourier power))',
+                                     'mean_over_region(fourier power)',
+                                     'mean_over_region((fourier power)^2)'])
                 for i in range(0, nposfreq):
-                    spamwriter.writerow([str(pfrequencies[i].value), str(iobs[i])])
+                    spamwriter.writerow([str(pfrequencies[i].value),
+                                         str(logiobs[i]),
+                                         str(iobs[i]),
+                                         str(iobs_squared[i])])
 
             filepath = os.path.join(output, ofilename + '.fourier_power_for_gelu_number_of_spectra.csv')
             print('Saving power spectra to ' + filepath)
             with open(filepath, 'wb') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=',')
-                spamwriter.writerow(['number of spectra = ', str(nx * ny)])
+                spamwriter.writerow(['number of spectra = ', str(npixel)])
 
