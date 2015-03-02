@@ -7,6 +7,7 @@ import study_details as sd
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
+import lnlike_model_fit
 import ireland2015_details as i2015
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -20,11 +21,16 @@ windows = ['hanning']
 # Models to fit
 model_names = ('power law with constant',)
 
-# Reduced chi-squared limit
-rchilimit = [0.9, 1.1]
+# Look at those results that have chi-squared values that give rise to
+# probabilities within these values
+pvalue = [0.32, 0.68]
+
+
+# Calculate reduced chi-squared properties
+rchilimit = [lnlike_model_fit.rhi2_given_prob(pvalue[1], 1,0, nposfreq - nparameters - 1),
+                lnlike_model_fit.rhi2_given_prob(pvalue[0], 1,0, nposfreq - nparameters - 1)]
 rchistring = '$\chi^{2}_{r}$'
 
-xlim = [0.5, 7.0]
 
 # Parameters
 parameters = ("amplitude", "power law index", "background")

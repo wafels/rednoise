@@ -5,6 +5,7 @@
 import numpy as np
 import scipy.optimize as op
 from scipy.stats import gamma
+from scipy.special import gammaincc, gammainccinv
 
 #
 # Log likelihood function.  In this case we want the product of exponential
@@ -83,7 +84,30 @@ def rchi2distrib(m, nu):
     of the data
     """
     # Calculate the gamma function parameter values as expressed in Eq. 17
-    k = 1.0 + 3.0 / (1.0 * m)
-    theta = nu / 2.0
+    k = (nu / 2.0) / ( 1.0 + 3.0 / m)
+    scale = 1.0 / k
     #
-    return gamma(k, scale=theta, loc=0.0)
+    return gamma(k, scale=scale, loc=0.0)
+
+
+#
+# Probability of getting this value of reduced chi-squared or larger (Eq. 18)
+#
+def prob_this_rchi2_or_larger(rchi2, m, nu):
+    """
+
+    :param rchi2: reduced chi-squared value
+    :param m: number of spectra considered
+    :param nu:  degrees of freedom
+    :return:
+    """
+    a = (nu / 2.0) * np.float64(m) / (3.0 + np.float64(m))
+    return gammaincc(a, a * rchi2)
+
+
+#
+# What value of rchi2 gives rise to a given probability level?
+#
+def rchi2_given_prob(p, m, nu):
+    a = (nu / 2.0) * np.float64(m) / (3.0 + np.float64(m))
+    return gammainccinv(a, p) / a
