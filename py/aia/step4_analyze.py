@@ -23,13 +23,7 @@ model_names = ('power law with constant',)
 
 # Look at those results that have chi-squared values that give rise to
 # probabilities within these values
-pvalue = [0.32, 0.68]
-
-
-# Calculate reduced chi-squared properties
-rchilimit = [lnlike_model_fit.rhi2_given_prob(pvalue[1], 1,0, nposfreq - nparameters - 1),
-                lnlike_model_fit.rhi2_given_prob(pvalue[0], 1,0, nposfreq - nparameters - 1)]
-rchistring = '$\chi^{2}_{r}$'
+pvalue = np.array([0.025, 0.975])
 
 
 # Parameters
@@ -37,10 +31,20 @@ parameters = ("amplitude", "power law index", "background")
 comparable = (False, True, False)
 conversion = (1.0 / np.log(10.0), 1.0, 1.0 / np.log(10.0))
 plotname = ('$\log_{10}$(amplitude)', "power law index", "$\log_{10}$background")
+nparameters = len(parameters)
+
+nposfreq= 899
+# Calculate reduced chi-squared properties
+rchi2limit = [lnlike_model_fit.rchi2_given_prob(pvalue[1], 1.0, nposfreq - nparameters - 1),
+              lnlike_model_fit.rchi2_given_prob(pvalue[0], 1.0, nposfreq - nparameters - 1)]
+rchi2string = '$<\chi^{2}_{r}<$'
+rchi2label = '%1.2f%s%1.2f' % (rchi2limit[0], rchi2string, rchi2limit[1])
+pstring = '%2.1f%%<p<%2.1f%%' % (100 * pvalue[0], 100 * pvalue[1])
 
 
 # Label
 i2015label = i2015.label
+
 
 # Create the storage across all models, AIA channels and regions
 storage = {}
@@ -55,6 +59,7 @@ def result_filter(success, rchi2, rchilimit):
     rchi2_gt_low_limit = rchi2[1] > rchilimit[0]
     rchi2_lt_high_limit = rchi2[1] < rchilimit[1]
     return success * rchi2_gt_low_limit * rchi2_lt_high_limit
+
 
 #
 # Main analysis loops
@@ -117,7 +122,46 @@ for iwave, wave in enumerate(waves):
                         success[j, i] = result['success']
         storage[model_name][wave][region] = [success, rchi2, parameter_values]
 
+#
+# Histograms of reduced chi-squared
+#
+for iwave, wave in enumerate(waves):
+    plt.close('all')
+    f, axarr = plt.subplots(len(regions), 1, sharex=True)
 
+    for iregion, region in enumerate(regions):
+        rchi2 = storage[model_name][wave][region][1]
+        axarr[iregion].hist(rchi2.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
+        axarr[iregion].legend(framealpha=0.5)
+        axarr[iregion].set_ylabel('pdf')
+        # add in percentage of reduced chi-squared values above and below the upper and lower limits
+        axarr[iregion].axvline(rchi2limit[0], color='r', linewidth=2, label='%2.1f%%' % (100 * pvalue[0]))
+        axarr[iregion].axvline(rchi2limit[1], color='y', linewidth=2, label='%2.1f%%' % (100 * pvalue[1]))
+        if iregion == 0:
+            axarr[0].legend(framealpha=0.5)
+
+    axarr[0].set_title('%s, model is "%s"' % (wave, model_name))
+    axarr[len(regions) - 1].set_xlabel('reduced chi-squared')
+    plt.show()
+"""
+#
+# Maps of reduced chi-squared
+#
+for iwave, wave in enumerate(waves):
+    f, axarr = plt.subplots(len(regions), 1)
+
+    for iregion, region in enumerate(regions):
+        rchi2 = storage[model_name][wave][region][1]
+        rchi2[rchi2 > rchi2limit[1]] = rchi2limit[1]
+        rchi2[rchi2 < rchi2limit[0]] = rchi2limit[0]
+        cax = axarr[iregion].imshow(rchi2)
+        axarr[iregion].set_title('%s, model is "%s" in %s' % (wave, model_name, region))
+        f.colorbar(cax, ax=axarr[iregion])
+    plt.show()
+"""
+
+
+"""
 #
 # Histograms of model parameters
 #
@@ -129,7 +173,7 @@ for iwave, wave in enumerate(waves):
             result = storage[model_name][wave][region]
 
             # Generate a mask to filter the results
-            mask = result_filter(result[0], result[1], rchilimit)
+            mask = result_filter(result[0], result[1], rchi2limit)
 
             # Parameter to look at
             par = result[2][:, :, iparameter] * conversion[iparameter]
@@ -155,7 +199,6 @@ for iwave, wave in enumerate(waves):
         axarr[0].set_title('%s, model is "%s"' % (wave, model_name))
         axarr[len(regions) - 1].set_xlabel(plotname[iparameter])
         plt.show()
-
 #
 # Scatter plots of the power law indices in different channels
 #
@@ -165,37 +208,44 @@ for iregion, region in enumerate(regions):
     for i in range(0, len(waves)):
         pass
 
+for iparameter, parameter in enumerate(parameters):
 
-for iregion, region in enumerate(regions):
-    for i in range(0, len(waves)):
-        wave1 = waves[i]
-        result1 = storage[model_name][wave1][region]
-        mask1 = result_filter(result1[0], result1[1], rchilimit)
-        index1 = result1[2]
-        for j in range(i+1, len(waves)):
-            wave2 = waves[j]
-            result2 = storage[model_name][wave2][region]
-            mask2 = result_filter(result2[0], result2[1], rchilimit)
-            index2 = result2[2]
+    for iregion, region in enumerate(regions):
+        for i in range(0, len(waves)):
+            wave1 = waves[i]
+            result1 = storage[model_name][wave1][region]
+            mask1 = result_filter(result1[0], result1[1], rchi2limit)
 
-            m1 = ma.array(index1, mask=np.logical_not(mask1 * mask2)).flatten()
-            m2 = ma.array(index2, mask=np.logical_not(mask1 * mask2)).flatten()
+            # Parameter to look at
+            par1 = result1[2][:, :, iparameter] * conversion[iparameter]
 
-            # Plot all the results
-            plt.scatter(index1.flatten(), index2.flatten(), marker='o', color='b', label='all')
+            plt.close('all')
+            for j in range(i+1, len(waves)):
+                wave2 = waves[j]
+                result2 = storage[model_name][wave2][region]
+                mask2 = result_filter(result2[0], result2[1], rchi2limit)
+                par2 = result2[2][:, :, iparameter] * conversion[iparameter]
 
-            # Plot the results with "good" reduced chi-squared
-            plt.scatter(m1.compressed(), m2.compressed(), marker='o', color='y', label='%f<%s<%f' % (rchilimit[0], rchistring, rchilimit[1]))
-            plt.xlabel(wave1)
-            plt.ylabel(wave2)
-            xlim = [np.min(index1), np.max(index1)]
-            ylim = [np.min(index2), np.max(index2)]
-            plt.xlim(xlim[0], xlim[1])
-            plt.ylim(ylim[0], ylim[1])
-            plt.plot([0, 8], [0, 8], color='k', label='%s parameter = %s parameter' % (wave1, wave2))
-            plt.title(region)
-            plt.legend()
-            plt.show()
+                mask = mask1 * mask2
+
+                m1 = ma.array(par1, mask=np.logical_not(mask)).flatten()
+                m2 = ma.array(par2, mask=np.logical_not(mask)).flatten()
+
+                # Plot all the results
+                plt.scatter(par1.flatten(), par2.flatten(), marker='o', color='b', label='all')
+
+                # Plot the results with "good" reduced chi-squared
+                plt.scatter(m1.compressed(), m2.compressed(), marker='o', color='y', label='best [%i%%]' % np.int(100 * np.sum(mask) / np.float(par1.size)) )
+                plt.xlabel(wave1 + ' (%s)' % plotname[iparameter])
+                plt.ylabel(wave2 + ' (%s)' % plotname[iparameter])
+                xlim = [np.min(par1), np.max(par1)]
+                ylim = [np.min(par2), np.max(par2)]
+                plt.xlim(xlim[0], xlim[1])
+                plt.ylim(ylim[0], ylim[1])
+                plt.plot([-100, 100], [-100, 100], color='k', label='%s $\equiv$ %s ' % (wave1, wave2))
+                plt.title(region + ' (%s, %s)' % (pstring, rchi2label))
+                plt.legend(framealpha=0.5)
+                plt.show()
 
 #
 # Distributions of reduced chi-squared as a function of region, channel and
@@ -209,3 +259,4 @@ for iregion, region in enumerate(regions):
 #
 # Spatial distribution of the power law index.
 #
+"""
