@@ -37,10 +37,11 @@ nposfreq= 899
 # Calculate reduced chi-squared properties
 rchi2limit = [lnlike_model_fit.rchi2_given_prob(pvalue[1], 1.0, nposfreq - nparameters - 1),
               lnlike_model_fit.rchi2_given_prob(pvalue[0], 1.0, nposfreq - nparameters - 1)]
-rchi2string = '$<\chi^{2}_{r}<$'
+rchi2s = '$\chi^{2}_{r}$'
+rchi2string = '$<$' + rchi2s + '$<$'
 rchi2label = '%1.2f%s%1.2f' % (rchi2limit[0], rchi2string, rchi2limit[1])
 pstring = '%2.1f%%<p<%2.1f%%' % (100 * pvalue[0], 100 * pvalue[1])
-
+rchi2limitcolor = ['r', 'y']
 
 # Label
 i2015label = i2015.label
@@ -130,18 +131,45 @@ for iwave, wave in enumerate(waves):
     f, axarr = plt.subplots(len(regions), 1, sharex=True)
 
     for iregion, region in enumerate(regions):
-        rchi2 = storage[model_name][wave][region][1]
-        axarr[iregion].hist(rchi2.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
-        axarr[iregion].legend(framealpha=0.5)
-        axarr[iregion].set_ylabel('pdf')
-        # add in percentage of reduced chi-squared values above and below the upper and lower limits
-        axarr[iregion].axvline(rchi2limit[0], color='r', linewidth=2, label='%2.1f%%' % (100 * pvalue[0]))
-        axarr[iregion].axvline(rchi2limit[1], color='y', linewidth=2, label='%2.1f%%' % (100 * pvalue[1]))
-        if iregion == 0:
-            axarr[0].legend(framealpha=0.5)
 
-    axarr[0].set_title('%s, model is "%s"' % (wave, model_name))
-    axarr[len(regions) - 1].set_xlabel('reduced chi-squared')
+        # Get the reduced chi-squared
+        rchi2 = storage[model_name][wave][region][1]
+
+        # Plot the histogram
+        axarr[iregion].hist(rchi2.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
+
+        # Show legend and define the lines that are plotted
+        if iregion == 0:
+            axarr[0].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s (p$<$%2.1f%%)' % (rchi2s, 100 * pvalue[0]))
+            axarr[0].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1]))
+            axarr[0].legend(framealpha=0.5)
+        else:
+            # Show legend first, then plot lines - no need for them to appear in the legend
+            axarr[iregion].legend(framealpha=0.5)
+            axarr[iregion].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s (p$<$%2.1f%%)' % (rchi2s, 100 * pvalue[0]))
+            axarr[iregion].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1]))
+
+
+        # Get the y limits of the plot and the x limits
+        ylim = axarr[iregion].get_ylim()
+        axarr[iregion].set_xlim(0.0, 4.0)
+
+        # add in percentage of reduced chi-squared values above and below the upper and lower limits
+        actual_pvalue = np.array([np.sum(rchi2 < rchi2limit[0]),
+                                        np.sum(rchi2 > rchi2limit[1])]) / np.float64(np.size(rchi2))
+        axarr[iregion].text(rchi2limit[0], ylim[0] + 0.67 * (ylim[1] - ylim[0]),
+                            '%2.1f%%' % (100 * actual_pvalue[0]),
+                            bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
+        axarr[iregion].text(rchi2limit[1], ylim[0] + 0.33 * (ylim[1] - ylim[0]),
+                            '%2.1f%%' % (100 * actual_pvalue[1]),
+                            bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
+
+        # y axis label
+        axarr[iregion].set_ylabel('pdf')
+
+
+    axarr[0].set_title('observed %s PDFs (%s, model is "%s)"' % (rchi2s, wave, model_name))
+    axarr[len(regions) - 1].set_xlabel(rchi2s)
     plt.show()
 """
 #
@@ -246,15 +274,6 @@ for iparameter, parameter in enumerate(parameters):
                 plt.title(region + ' (%s, %s)' % (pstring, rchi2label))
                 plt.legend(framealpha=0.5)
                 plt.show()
-
-#
-# Distributions of reduced chi-squared as a function of region, channel and
-# model
-#
-for iregion, region in enumerate(regions):
-    for iwave, wave in enumerate(waves):
-        for imodel, model_name in enumerate(model_names):
-            pass
 
 #
 # Spatial distribution of the power law index.
