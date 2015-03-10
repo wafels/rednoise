@@ -126,7 +126,7 @@ for index in indices:
             plt.savefig(os.path.join(outputdir, '%s.amplitude_vs_ratio.png' % particular))
 
             plt.figure(3)
-            plt.semilogx(ratio, rchi2s)
+            plt.loglog(ratio, rchi2s)
             plt.axhline(1.0, color='k', label='reduced chi-squared=1')
             plt.ylabel('reduced chi-squared')
             plt.xlabel(ratio_label)
@@ -136,29 +136,29 @@ for index in indices:
             pvalue = np.array([0.025, 0.975])
             rchi2limit = [lnlike_model_fit.rchi2_given_prob(pvalue[1], 1.0, nf - 2 - 1),
                           lnlike_model_fit.rchi2_given_prob(pvalue[0], 1.0, nf - 2 - 1)]
-            plt.axhline(rchi2limit[0], color='k', linestyle=':', label='lower')
-            plt.axhline(rchi2limit[1], color='k', linestyle=':', label='upper')
+            plt.axhline(rchi2limit[0], color='k', linestyle=':', label='lower limit=%f' % rchi2limit[0])
+            plt.axhline(rchi2limit[1], color='k', linestyle='-.', label='upper limit=%f' % rchi2limit[1])
             plt.legend(framealpha=0.5, loc=2)
             plt.savefig(os.path.join(outputdir, '%s.ratio_vs_rchi2.png' % particular))
 
             plt.figure(4)
-            plt.semilogx(ratio, power_law_index)
-            plt.axhline(plaw_values[1], color='k', label='true power law index = %f' % plaw_values[1])
             plt.xlabel(ratio_label)
             plt.ylabel('power law index')
             plt.title(title)
 
             # Indicate the ones with good fits
             label_first_one = True
-            for ipli in range(0, len(power_law_index)):
+            for ipli in range(0, len(ratio)):
                 if (rchi2s[ipli] >= rchi2limit[0]) and (rchi2s[ipli] <= rchi2limit[1]):
                     if label_first_one:
-                        label = 'power law index within reduced chi-squared limits'
+                        label = 'reduced chi-squared within 95% limits'
                         label_first_one = False
                     else:
                         label = None
-                    plt.axvline(power_law_index[ipli], color='r', label=label, linestyle=':')
-            plt.legend(framealpha=0.5, loc=2)
+                    plt.axvline(ratio[ipli], color='y', label=label)
+            plt.semilogx(ratio, power_law_index)
+            plt.axhline(plaw_values[1], color='k', label='true power law index = %f' % plaw_values[1])
+            plt.legend(framealpha=0.9, loc=2)
             plt.savefig(os.path.join(outputdir, '%s.ratio_vs_powerlawindex.png' % particular))
 
             plt.figure(5)
