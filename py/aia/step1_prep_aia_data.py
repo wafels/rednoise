@@ -12,6 +12,7 @@ import cPickle as pickle
 from sunpy.time import parse_time
 import numpy as np
 from matplotlib.patches import Rectangle
+from astropy.io import fits
 
 import study_details as sd
 import step1_plots
@@ -124,6 +125,11 @@ if sd.sunlocation == 'disk':
         # Close the data
         outputfile.close()
         print('Saved to ' + ofilename)
+
+        # Write out a FITS file
+        hdu = fits.PrimaryHDU(subdata)
+        hdulist = fits.HDUList([hdu])
+        hdulist.writeto(ofilename + '.fits')
 
 #
 # Save the regions
