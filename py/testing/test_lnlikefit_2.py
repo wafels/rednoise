@@ -15,9 +15,9 @@ outputdir = os.path.expanduser('~/ts/img/test_lnlikefit_2')
 #
 # set up some test data
 #
-indices = [1.2]#, 1.7, 2.2]
-widths = [0.01]#, 0.1, 1.0]
-pos_indices = [40]#, 100, 400]
+indices = [1.2, 1.7, 2.2]
+widths = [0.01, 0.1, 1.0]
+pos_indices = [40, 100, 400]
 
 for index in indices:
     for width in widths:
@@ -45,14 +45,14 @@ for index in indices:
             # Gaussian position in normalized frequency units
             pos = np.log(1.0 * pos_index)
 
-            # log(maximum amplitude)
-            max_amp = 1000.0
+            # log10(amplitude range)
+            amp_range = [-3.0, 3.0]
 
             # Number of amplitudes
-            namp = 100
+            namp = 1000
 
             # Amplitude multiplier
-            multiplier = np.arange(0.001, max_amp)
+            multiplier = 10.0 ** np.arange(amp_range[0], amp_range[1], (amp_range[1] - amp_range[0]) / np.float64(namp))
 
             # Storage for the reduced chi-squared results
             rchi2s = []
@@ -60,7 +60,6 @@ for index in indices:
             power_law_index = []
             amps = np.zeros_like(multiplier)
             for iamp in range(0, len(multiplier)):
-                print iamp, len(multiplier)
 
                 # Now set up some simulated data and do the fit
                 # Underlying power law
@@ -148,6 +147,17 @@ for index in indices:
             plt.xlabel(ratio_label)
             plt.ylabel('power law index')
             plt.title(title)
+
+            # Indicate the ones with good fits
+            label_first_one = True
+            for ipli in range(0, len(power_law_index)):
+                if (rchi2s[ipli] >= rchi2limit[0]) and (rchi2s[ipli] <= rchi2limit[1]):
+                    if label_first_one:
+                        label = 'power law index within reduced chi-squared limits'
+                        label_first_one = False
+                    else:
+                        label = None
+                    plt.axvline(power_law_index[ipli], color='r', label=label, linestyle=':')
             plt.legend(framealpha=0.5, loc=2)
             plt.savefig(os.path.join(outputdir, '%s.ratio_vs_powerlawindex.png' % particular))
 
