@@ -1,5 +1,6 @@
 #
-# Step 3 plots.  Load in all the power spectra fit results and make some plots
+# Analysis: perform cross-correlation analyses of the various characterizations
+# of the time-series
 #
 import os
 import cPickle as pickle
@@ -11,6 +12,7 @@ from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import lnlike_model_fit
 import ireland2015_details as i2015
+import analysis_details
 # Wavelengths we want to analyze
 waves = ['171', '193']
 
@@ -20,39 +22,46 @@ regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # Apodization windows
 windows = ['hanning']
 
-# Models to fit
+# Number of positive frequencies in the power spectra
+nposfreq= 899
+
+# Model results to examine
 model_names = ('power law with constant',)
 
 # Look at those results that have chi-squared values that give rise to
 # probabilities within these values
-pvalue = np.array([0.025, 0.975])
-
+pvalue = analysis_details.pvalue
 
 # Model fit parameter names
-parameters = ("amplitude", "power law index", "background")
+parameters = analysis_details.parameters(model_names)
 
 # Are the above parameters comparable to values found in ireland et al 2015?
-comparable = (False, True, False)
+comparable = analysis_details.comparable(model_names)
 
 # Conversion factors to convert the stored parameter values to ones which are
 # simpler to understand when plotting them out
-conversion = (1.0 / np.log(10.0), 1.0, 1.0 / np.log(10.0))
+conversion = analysis_details.conversion(model_names)
 
-#
-plotname = ('$\log_{10}$(amplitude)', "power law index", "$\log_{10}$background")
+# Informative plot labels
+plotname = analysis_details.plotname(model_names)
+
+# Number of parameters we are considering
 nparameters = len(parameters)
 
-nposfreq= 899
 # Calculate reduced chi-squared properties
-rchi2limit = [lnlike_model_fit.rchi2_given_prob(pvalue[1], 1.0, nposfreq - nparameters - 1),
-              lnlike_model_fit.rchi2_given_prob(pvalue[0], 1.0, nposfreq - nparameters - 1)]
-rchi2s = '$\chi^{2}_{r}$'
-rchi2string = '$<$' + rchi2s + '$<$'
-rchi2label = '%1.2f%s%1.2f' % (rchi2limit[0], rchi2string, rchi2limit[1])
-pstring = '%2.1f%%<p<%2.1f%%' % (100 * pvalue[0], 100 * pvalue[1])
-rchi2limitcolor = ['r', 'y']
+rchi2limit = analysis_details.rchi2limit(nposfreq, nparameters)
 
-# Label
+
+# Create a label which shows the limits of the reduced chi-squared value. Also
+# define some colors that signify the upper and lower levels of the reduced
+# chi-squared
+rchi2label = analysis_details.rchi2label(rchi2limit)
+rchi2limitcolor = analysis_details.rchi2limitcolor
+
+# Probability string that corresponds to the reduced chi-squared values
+pstring = analysis_details.percentstring(pvalue)
+
+# Ireland et al 2015 Label
 i2015label = i2015.label
 
 
