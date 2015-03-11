@@ -52,7 +52,7 @@ for index in indices:
             namp = 100
 
             # Amplitude multiplier
-            multiplier = np.arange(0.001, max_amp)
+            multiplier = np.arange(1, max_amp)
 
             # Storage for the reduced chi-squared results
             rchi2s = []
