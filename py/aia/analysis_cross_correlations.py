@@ -48,8 +48,8 @@ plotname = analysis_details.plotname(model_names)
 # Number of parameters we are considering
 nparameters = len(parameters)
 
-# Calculate reduced chi-squared properties
-rchi2limit = analysis_details.rchi2limit(nposfreq, nparameters)
+# Calculate reduced chi-squared limits for a given range of pvalues
+rchi2limit = analysis_details.rchi2limit(pvalue, nposfreq, nparameters)
 
 
 # Create a label which shows the limits of the reduced chi-squared value. Also

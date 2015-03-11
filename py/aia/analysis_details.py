@@ -35,7 +35,7 @@ def plotname(model_names):
 #
 # Calculate reduced chi-squared limits given pvalues
 #
-def rchi2limit(nposfreq, nparameters):
+def rchi2limit(pvalue, nposfreq, nparameters):
     return [lnlike_model_fit.rchi2_given_prob(pvalue[1], 1.0, nposfreq - nparameters - 1),
             lnlike_model_fit.rchi2_given_prob(pvalue[0], 1.0, nposfreq - nparameters - 1)]
 
