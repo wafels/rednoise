@@ -15,6 +15,11 @@ rchi2limitcolor = ['r', 'y']
 # probabilities within these values
 pvalue = np.array([0.025, 0.975])
 
+# Other parameter names
+othernames = ['total emission', 'maximum emission', 'minimum emission',
+              'standard deviation of the emission',
+              'standard deviation of log(emission)']
+
 # Model fit parameter names
 def parameters(model_names):
     return ("amplitude", "power law index", "background")
@@ -26,11 +31,25 @@ def comparable(model_names):
 # Conversion factors to convert the stored parameter values to ones which are
 # simpler to understand when plotting them out
 def conversion(model_names):
-    return (1.0 / np.log(10.0), 1.0, 1.0 / np.log(10.0))
+    return {"amplitude": 1.0 / np.log(10.0),
+            "power law index": 1,
+            "background": 1.0 / np.log(10.0),
+            'total emission': 1.0,
+            'maximum emission':  1.0,
+            'minimum emission':  1.0,
+            'standard deviation of the emission': 1.0,
+            'standard deviation of log(emission)': 1.0}
 
 # Informative plot labels
 def plotname(model_names):
-    return ('$\log_{10}$(amplitude)', "power law index", "$\log_{10}$background")
+    return {"amplitude": '$\log_{10}(A)$',
+            "power law index": "power law index",
+            "background": "$\log_{10}(C)$",
+            'total emission': 'total emission',
+            'maximum emission':  'max(emission)',
+            'minimum emission':  'min(emission)',
+            'standard deviation of the emission': 'standard deviation of the emission',
+            'standard deviation of log(emission)': 'standard deviation of the log(emission)'}
 
 #
 # Calculate reduced chi-squared limits given pvalues

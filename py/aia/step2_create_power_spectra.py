@@ -185,4 +185,4 @@ for iwave, wave in enumerate(waves):
             # Save the summary statistics
             filepath = os.path.join(output, ofilename + '.summary_stats.npz')
             print('Saving summary statistics to ' + filepath)
-            np.savez(filepath, dtotal, dmax, dmin, dsd, dlnsd)
+            np.savez(filepath, dtotal=dtotal, dmax=dmax, dmin=dmin, dsd=dsd, dlnsd=dlnsd)

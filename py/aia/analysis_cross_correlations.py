@@ -35,6 +35,9 @@ pvalue = analysis_details.pvalue
 # Model fit parameter names
 parameters = analysis_details.parameters(model_names)
 
+# Other time-series parameter names
+othernames = analysis_details.othernames
+
 # Are the above parameters comparable to values found in ireland et al 2015?
 comparable = analysis_details.comparable(model_names)
 
@@ -153,8 +156,10 @@ for iwave, wave in enumerate(waves):
 # Create the all parameter list of data and their names
 #
 all_parameter_names = []
-all_parameter_list = []
-
+for name in parameters:
+    all_parameter_names.append(name)
+for name in othernames:
+    all_parameter_names.append(name)
 
 #
 # Cross-correlations within channel and region for a given model name
@@ -180,6 +185,19 @@ for wave in waves:
 for iwave, wave in enumerate(waves):
     for iregion, region in enumerate(regions):
 
+        # branch location
+        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+
+        # Region identifier name
+        region_id = sd.datalocationtools.ident_creator(b)
+
+        # Output location
+        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
+        # Output filename
+        ofilename = os.path.join(output, region_id + '.datacube')
+
         # Get the results
         result = storage[model_name][wave][region]
 
@@ -189,6 +207,25 @@ for iwave, wave in enumerate(waves):
         # Generate a mask to filter the results
         mask = result_filter(result[0], result[1], rchi2limit)
 
+        # Number of results
+        nmask = np.sum(mask)
+
+        # Load the other time-series parameters
+        ofilename = ofilename + '.' + window
+        filepath = os.path.join(output, ofilename + '.summary_stats.npz')
+        with np.load(filepath) as otsp:
+            dtotal = otsp['dtotal']
+            dmax = otsp['dmax']
+            dmin = otsp['dmin']
+            dsd = otsp['dsd']
+            dlnsd = otsp['dlnsd']
+
+
+        # Create a list containing all the parameters
+        all_parameter_list = [result[2][:, :, 0], result[2][:, :, 1], result[2][:, :, 2],
+                              dtotal, dmax, dmin, dsd, dlnsd]
+
+
         # Get the first parameter
         for iparameter1, parameter1 in enumerate(all_parameter_list):
 
@@ -196,7 +233,7 @@ for iwave, wave in enumerate(waves):
             parameter1_name = all_parameter_names[iparameter1]
 
             # Data for this parameter, with the mask taken into account
-            v1 = ma.array(parameter1, mask=np.logical_not(mask)).flatten()
+            v1 = conversion[parameter1_name] * ma.array(parameter1, mask=np.logical_not(mask)).compressed()
 
             # Get the second parameter
             for iparameter2, parameter2 in enumerate(all_parameter_list):
@@ -205,10 +242,42 @@ for iwave, wave in enumerate(waves):
                 parameter2_name = all_parameter_names[iparameter2]
 
                 # Data for this parameter, with the mask taken into account
-                v2 = ma.array(parameter2, mask=np.logical_not(mask)).flatten()
+                v2 = conversion[parameter2_name] * ma.array(parameter2, mask=np.logical_not(mask)).compressed()
 
                 # Calculate and store the cross-correlation coefficients
-                cc_within_channel[wave][region][parameter1_name][parameter1_name] = [pearsonr(v1, v2), spearmanr(v1, v2)]
+                r = [pearsonr(v1, v2), spearmanr(v1, v2)]
+                cc_within_channel[wave][region][parameter1_name][parameter2_name] = r
+
+                # Make a scatter plot
+                title = wave + '-' + region + '(#pixels=%i, used=%f%%)' % (nmask, 100 * nmask/ np.float64(mask.size))
+                plt.close('all')
+                plt.title(title)
+                plt.xlabel(plotname[parameter1_name])
+                plt.ylabel(plotname[parameter2_name])
+                plt.scatter(v1, v2)
+                x0 = plt.xlim()[0]
+                ylim = plt.ylim()
+                y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
+                y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
+                plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
+                plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
+                ofilename = 'cc.within.scatter.' + wave + '.' + region + '.' + parameter1_name + '.' + parameter2_name + '.png'
+                plt.savefig(os.path.join(image, ofilename))
+
+                # Make a 2d histogram
+                plt.close('all')
+                plt.title(title)
+                plt.xlabel(plotname[parameter1_name])
+                plt.ylabel(plotname[parameter2_name])
+                plt.hist2d(v1, v2, bins=40)
+                x0 = plt.xlim()[0]
+                ylim = plt.ylim()
+                y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
+                y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
+                plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
+                plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
+                ofilename = 'cc.within.hist2d.' + wave + '.' + region + '.' + parameter1_name + '.' + parameter2_name + '.png'
+                plt.savefig(os.path.join(image, ofilename))
 
 #
 # Cross-correlate across channel for fixed region and given model name
