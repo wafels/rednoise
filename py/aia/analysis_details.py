@@ -45,11 +45,11 @@ def plotname(model_names):
     return {"amplitude": '$\log_{10}(A)$',
             "power law index": "power law index",
             "background": "$\log_{10}(C)$",
-            'total emission': 'total emission',
-            'maximum emission':  'max(emission)',
-            'minimum emission':  'min(emission)',
-            'standard deviation of the emission': 'standard deviation of the emission',
-            'standard deviation of log(emission)': 'standard deviation of the log(emission)'}
+            'total emission': 'sum(E)',
+            'maximum emission':  'max(E)',
+            'minimum emission':  'min(E)',
+            'standard deviation of the emission': 'sd(E)',
+            'standard deviation of log(emission)': 'sd(log(E))'}
 
 #
 # Calculate reduced chi-squared limits given pvalues
@@ -70,3 +70,20 @@ def rchi2label(rchi2limit):
 #
 def percentstring(pvalue):
     return '%2.1f%%<p<%2.1f%%' % (100 * pvalue[0], 100 * pvalue[1])
+
+
+def percent_lo(pvalue):
+    return '%s (p$<$%2.1f%%)' % (rchi2s, 100 * pvalue[0])
+
+
+def percent_hi(pvalue):
+    return '%s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1])
+
+#
+# Create a mask that shows where there was a successful fit, and the reduced
+# chi-squared is inside the required limits
+#
+def result_filter(success, rchi2, rchilimit):
+    rchi2_gt_low_limit = rchi2[1] > rchilimit[0]
+    rchi2_lt_high_limit = rchi2[1] < rchilimit[1]
+    return success * rchi2_gt_low_limit * rchi2_lt_high_limit

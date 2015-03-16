@@ -10,7 +10,6 @@ import numpy.ma as ma
 from scipy.stats import pearsonr, spearmanr
 
 import matplotlib.pyplot as plt
-import lnlike_model_fit
 import ireland2015_details as i2015
 import analysis_details
 # Wavelengths we want to analyze
@@ -76,15 +75,6 @@ for model_name in model_names:
         storage[model_name][wave] = {}
         for region in regions:
             storage[model_name][wave][region] = []
-
-#
-# Create a mask that shows where there was a successful fit, and the reduced
-# chi-squared is inside the required limits
-#
-def result_filter(success, rchi2, rchilimit):
-    rchi2_gt_low_limit = rchi2[1] > rchilimit[0]
-    rchi2_lt_high_limit = rchi2[1] < rchilimit[1]
-    return success * rchi2_gt_low_limit * rchi2_lt_high_limit
 
 
 #
@@ -182,6 +172,7 @@ for wave in waves:
             for parameter2 in all_parameter_names:
                 cc_within_channel[wave][region][parameter1][parameter2] = []
 
+plottype = 'cc.within'
 for iwave, wave in enumerate(waves):
     for iregion, region in enumerate(regions):
 
@@ -205,7 +196,9 @@ for iwave, wave in enumerate(waves):
         rchi2 = result[1]
 
         # Generate a mask to filter the results
-        mask = result_filter(result[0], result[1], rchi2limit)
+        mask = analysis_details.result_filter(result[0], result[1], rchi2limit)
+        nmask = np.sum(mask)
+        pixels_used_string = '(#pixels=%i, used=%3.1f%%)' % (nmask, 100 * nmask/ np.float64(mask.size))
 
         # Number of results
         nmask = np.sum(mask)
@@ -225,7 +218,6 @@ for iwave, wave in enumerate(waves):
         all_parameter_list = [result[2][:, :, 0], result[2][:, :, 1], result[2][:, :, 2],
                               dtotal, dmax, dmin, dsd, dlnsd]
 
-
         # Get the first parameter
         for iparameter1, parameter1 in enumerate(all_parameter_list):
 
@@ -236,7 +228,10 @@ for iwave, wave in enumerate(waves):
             v1 = conversion[parameter1_name] * ma.array(parameter1, mask=np.logical_not(mask)).compressed()
 
             # Get the second parameter
-            for iparameter2, parameter2 in enumerate(all_parameter_list):
+            for iparameter2 in range(iparameter1 + 1, len(all_parameter_list)):
+
+                # Get the parameter values
+                parameter2 = all_parameter_list[iparameter2]
 
                 # Parameter name
                 parameter2_name = all_parameter_names[iparameter2]
@@ -245,11 +240,17 @@ for iwave, wave in enumerate(waves):
                 v2 = conversion[parameter2_name] * ma.array(parameter2, mask=np.logical_not(mask)).compressed()
 
                 # Calculate and store the cross-correlation coefficients
-                r = [pearsonr(v1, v2), spearmanr(v1, v2)]
+                r = [spearmanr(v1, v2), pearsonr(v1, v2)]
                 cc_within_channel[wave][region][parameter1_name][parameter2_name] = r
 
+                # Form the rank correlation string
+                rstring = 'spr=%1.2f_pea=%1.2f' % (r[0][0], r[1][0])
+
+                # Identifier of the plot
+                plotident = rstring + '.' + wave + '.' + region + '.' + parameter1_name + '.' + parameter2_name
+
                 # Make a scatter plot
-                title = wave + '-' + region + '(#pixels=%i, used=%f%%)' % (nmask, 100 * nmask/ np.float64(mask.size))
+                title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (nmask, 100 * nmask/ np.float64(mask.size))
                 plt.close('all')
                 plt.title(title)
                 plt.xlabel(plotname[parameter1_name])
@@ -261,7 +262,8 @@ for iwave, wave in enumerate(waves):
                 y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
                 plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
                 plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-                ofilename = 'cc.within.scatter.' + wave + '.' + region + '.' + parameter1_name + '.' + parameter2_name + '.png'
+                ofilename = plottype + '.scatter.' + plotident + '.png'
+                plt.tight_layout()
                 plt.savefig(os.path.join(image, ofilename))
 
                 # Make a 2d histogram
@@ -276,8 +278,10 @@ for iwave, wave in enumerate(waves):
                 y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
                 plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
                 plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-                ofilename = 'cc.within.hist2d.' + wave + '.' + region + '.' + parameter1_name + '.' + parameter2_name + '.png'
+                ofilename = plottype + '.hist2d.' + plotident + '.png'
+                plt.tight_layout()
                 plt.savefig(os.path.join(image, ofilename))
+
 
 #
 # Cross-correlate across channel for fixed region and given model name
@@ -291,158 +295,158 @@ for iwave, wave in enumerate(waves):
 # 7.             cross-correlate parameter1 with parameter2
 #
 
-"""
-#
-# Histograms of reduced chi-squared
-#
-for iwave, wave in enumerate(waves):
-    plt.close('all')
-    f, axarr = plt.subplots(len(regions), 1, sharex=True)
+plottype = 'cc.across'
+for iregion, region in enumerate(regions):
 
-    for iregion, region in enumerate(regions):
+    # Get the first wave and create a parameter list
+    for iwave1, wave1 in enumerate(waves):
+
+        # branch location
+        b = [sd.corename, sd.sunlocation, sd.fits_level, wave1, region]
+
+        # Region identifier name
+        region_id = sd.datalocationtools.ident_creator(b)
+
+        # Output location
+        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
+        # Output filename
+        ofilename = os.path.join(output, region_id + '.datacube')
+
+        # Get the results
+        result = storage[model_name][wave1][region]
 
         # Get the reduced chi-squared
-        rchi2 = storage[model_name][wave][region][1]
+        rchi2 = result[1]
 
-        # Plot the histogram
-        axarr[iregion].hist(rchi2.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
+        # Generate a mask to filter the results
+        mask1 = analysis_details.result_filter(result[0], result[1], rchi2limit)
 
-        # Show legend and define the lines that are plotted
-        if iregion == 0:
-            axarr[0].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s (p$<$%2.1f%%)' % (rchi2s, 100 * pvalue[0]))
-            axarr[0].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1]))
-            axarr[0].legend(framealpha=0.5)
-        else:
-            # Show legend first, then plot lines - no need for them to appear in the legend
-            axarr[iregion].legend(framealpha=0.5)
-            axarr[iregion].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s (p$<$%2.1f%%)' % (rchi2s, 100 * pvalue[0]))
-            axarr[iregion].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1]))
+        # Number of results
+        nmask = np.sum(mask)
 
-
-        # Get the y limits of the plot and the x limits
-        ylim = axarr[iregion].get_ylim()
-        axarr[iregion].set_xlim(0.0, 4.0)
-
-        # add in percentage of reduced chi-squared values above and below the upper and lower limits
-        actual_pvalue = np.array([np.sum(rchi2 < rchi2limit[0]),
-                                        np.sum(rchi2 > rchi2limit[1])]) / np.float64(np.size(rchi2))
-        axarr[iregion].text(rchi2limit[0], ylim[0] + 0.67 * (ylim[1] - ylim[0]),
-                            '%2.1f%%' % (100 * actual_pvalue[0]),
-                            bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-        axarr[iregion].text(rchi2limit[1], ylim[0] + 0.33 * (ylim[1] - ylim[0]),
-                            '%2.1f%%' % (100 * actual_pvalue[1]),
-                            bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
-
-        # y axis label
-        axarr[iregion].set_ylabel('pdf')
+        # Load the other time-series parameters
+        ofilename = ofilename + '.' + window
+        filepath = os.path.join(output, ofilename + '.summary_stats.npz')
+        with np.load(filepath) as otsp:
+            dtotal = otsp['dtotal']
+            dmax = otsp['dmax']
+            dmin = otsp['dmin']
+            dsd = otsp['dsd']
+            dlnsd = otsp['dlnsd']
 
 
-    axarr[0].set_title('observed %s PDFs (%s, model is "%s)"' % (rchi2s, wave, model_name))
-    axarr[len(regions) - 1].set_xlabel(rchi2s)
-    plt.show()
+        # Create a list containing all the parameters
+        all_parameter_list1 = [result[2][:, :, 0], result[2][:, :, 1], result[2][:, :, 2],
+                               dtotal, dmax, dmin, dsd, dlnsd]
 
-#
-# Maps of reduced chi-squared
-#
-for iwave, wave in enumerate(waves):
-    f, axarr = plt.subplots(len(regions), 1)
+        for iwave2 in range(iwave1 + 1, len(waves)):
 
-    for iregion, region in enumerate(regions):
-        rchi2 = storage[model_name][wave][region][1]
-        rchi2[rchi2 > rchi2limit[1]] = rchi2limit[1]
-        rchi2[rchi2 < rchi2limit[0]] = rchi2limit[0]
-        cax = axarr[iregion].imshow(rchi2)
-        axarr[iregion].set_title('%s, model is "%s" in %s' % (wave, model_name, region))
-        f.colorbar(cax, ax=axarr[iregion])
-    plt.show()
+            wave2 = waves[iwave2]
 
+            # branch location
+            b = [sd.corename, sd.sunlocation, sd.fits_level, wave2, region]
 
-#
-# Histograms of model parameters
-#
-for iwave, wave in enumerate(waves):
-    for iparameter, parameter in enumerate(parameters):
-        plt.close('all')
-        f, axarr = plt.subplots(len(regions), 1, sharex=True)
-        for iregion, region in enumerate(regions):
-            result = storage[model_name][wave][region]
+            # Region identifier name
+            region_id = sd.datalocationtools.ident_creator(b)
+
+            # Output location
+            output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+            image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
+            # Output filename
+            ofilename = os.path.join(output, region_id + '.datacube')
+
+            # Get the results
+            result = storage[model_name][wave2][region]
+
+            # Get the reduced chi-squared
+            rchi2 = result[1]
 
             # Generate a mask to filter the results
-            mask = result_filter(result[0], result[1], rchi2limit)
+            mask2 = analysis_details.result_filter(result[0], result[1], rchi2limit)
 
-            # Parameter to look at
-            par = result[2][:, :, iparameter] * conversion[iparameter]
+            # Number of results
+            nmask = np.sum(mask)
 
-            # Masked array
-            m = ma.array(par, mask=np.logical_not(mask)).flatten()
+            # Load the other time-series parameters
+            ofilename = ofilename + '.' + window
+            filepath = os.path.join(output, ofilename + '.summary_stats.npz')
+            with np.load(filepath) as otsp:
+                dtotal = otsp['dtotal']
+                dmax = otsp['dmax']
+                dmin = otsp['dmin']
+                dsd = otsp['dsd']
+                dlnsd = otsp['dlnsd']
 
-            # Plot all the results
-            axarr[iregion].hist(par.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
 
-            # Plot the best results
-            axarr[iregion].hist(m.compressed(), bins=50, alpha=0.5, label='best %s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(par.size))), normed=True)
+            # Create a list containing all the parameters
+            all_parameter_list2 = [result[2][:, :, 0], result[2][:, :, 1], result[2][:, :, 2],
+                                   dtotal, dmax, dmin, dsd, dlnsd]
 
-            # Plot the Ireland et al 2015 results
-            if comparable[iparameter]:
-                z = i2015.df.loc[region]
-                i2015value = z[z['waveband'] == int(wave)][parameter]
-                axarr[iregion].axvline(i2015value[0], color='r', linewidth=2, label=i2015label)
+            # Final mask
+            mask = mask1 * mask2
+            nmask = np.sum(mask)
+            pixels_used_string = '(#pixels=%i, used=%3.1f%%)' % (nmask, 100 * nmask/ np.float64(mask.size))
 
-            # Annotate the plot
-            axarr[iregion].legend(framealpha=0.5)
-            axarr[iregion].set_ylabel('pdf')
-        axarr[0].set_title('%s, model is "%s"' % (wave, model_name))
-        axarr[len(regions) - 1].set_xlabel(plotname[iparameter])
-        plt.show()
-#
-# Scatter plots of the power law indices in different channels
-#
-# Get the limits of the parameters so that they are all plotted on the same
-# scale.
-for iregion, region in enumerate(regions):
-    for i in range(0, len(waves)):
-        pass
+            for iparameter1, parameter1 in enumerate(all_parameter_list1):
 
-for iparameter, parameter in enumerate(parameters):
+                # Parameter name
+                parameter1_name = all_parameter_names[iparameter1]
 
-    for iregion, region in enumerate(regions):
-        for i in range(0, len(waves)):
-            wave1 = waves[i]
-            result1 = storage[model_name][wave1][region]
-            mask1 = result_filter(result1[0], result1[1], rchi2limit)
+                # Data for this parameter, with the mask taken into account
+                v1 = conversion[parameter1_name] * ma.array(parameter1, mask=np.logical_not(mask)).compressed()
 
-            # Parameter to look at
-            par1 = result1[2][:, :, iparameter] * conversion[iparameter]
+                for iparameter2, parameter2 in enumerate(all_parameter_list2):
 
-            plt.close('all')
-            for j in range(i+1, len(waves)):
-                wave2 = waves[j]
-                result2 = storage[model_name][wave2][region]
-                mask2 = result_filter(result2[0], result2[1], rchi2limit)
-                par2 = result2[2][:, :, iparameter] * conversion[iparameter]
+                    # Parameter name
+                    parameter2_name = all_parameter_names[iparameter2]
 
-                mask = mask1 * mask2
+                    # Data for this parameter, with the mask taken into account
+                    v2 = conversion[parameter2_name] * ma.array(parameter2, mask=np.logical_not(mask)).compressed()
 
-                m1 = ma.array(par1, mask=np.logical_not(mask)).flatten()
-                m2 = ma.array(par2, mask=np.logical_not(mask)).flatten()
+                    # Calculate and store the cross-correlation coefficients
+                    r = [spearmanr(v1, v2), pearsonr(v1, v2)]
+                    #cc_within_channel[wave][region][parameter1_name][parameter2_name] = r
 
-                # Plot all the results
-                plt.scatter(par1.flatten(), par2.flatten(), marker='o', color='b', label='all')
+                    # Form the rank correlation string
+                    rstring = 'spr=%1.2f_pea=%1.2f' % (r[0][0], r[1][0])
 
-                # Plot the results with "good" reduced chi-squared
-                plt.scatter(m1.compressed(), m2.compressed(), marker='o', color='y', label='best [%i%%]' % np.int(100 * np.sum(mask) / np.float(par1.size)) )
-                plt.xlabel(wave1 + ' (%s)' % plotname[iparameter])
-                plt.ylabel(wave2 + ' (%s)' % plotname[iparameter])
-                xlim = [np.min(par1), np.max(par1)]
-                ylim = [np.min(par2), np.max(par2)]
-                plt.xlim(xlim[0], xlim[1])
-                plt.ylim(ylim[0], ylim[1])
-                plt.plot([-100, 100], [-100, 100], color='k', label='%s $\equiv$ %s ' % (wave1, wave2))
-                plt.title(region + ' (%s, %s)' % (pstring, rchi2label))
-                plt.legend(framealpha=0.5)
-                plt.show()
+                    # Identifier of the plot
+                    plotident = rstring + '.' + region + '.' + wave1 + '.' + parameter1_name + '.' +  wave2 + '.' + parameter2_name
 
-#
-# Spatial distribution of the power law index.
-#
-"""
+                    # Make a scatter plot
+                    title = region + '-' + wave1 + '(' + plotname[parameter1_name] + ')' + wave2 + '(' + plotname[parameter2_name] + ')' + pixels_used_string
+                    xlabel = wave1 + ' ' + plotname[parameter1_name]
+                    ylabel = wave2 + ' ' + plotname[parameter2_name]
+                    plt.close('all')
+                    plt.title(title)
+                    plt.xlabel(xlabel)
+                    plt.ylabel(ylabel)
+                    plt.scatter(v1, v2)
+                    x0 = plt.xlim()[0]
+                    ylim = plt.ylim()
+                    y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
+                    y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
+                    plt.text(x0, y0, 'Pearson=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
+                    plt.text(x0, y1, 'Spearman=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
+                    ofilename = plottype + '.scatter.' + plotident + '.png'
+                    plt.tight_layout()
+                    plt.savefig(os.path.join(image, ofilename))
+
+                    # Make a 2d histogram
+                    plt.close('all')
+                    plt.title(title)
+                    plt.xlabel(xlabel)
+                    plt.ylabel(ylabel)
+                    plt.hist2d(v1, v2, bins=40)
+                    x0 = plt.xlim()[0]
+                    ylim = plt.ylim()
+                    y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
+                    y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
+                    plt.text(x0, y0, 'Pearson=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
+                    plt.text(x0, y1, 'Spearman=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
+                    ofilename = plottype + '.hist2d.' + plotident + '.png'
+                    plt.tight_layout()
+                    plt.savefig(os.path.join(image, ofilename))
