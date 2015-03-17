@@ -163,6 +163,7 @@ for iwave, wave in enumerate(waves):
         # All the regions appear in one plot
         plt.close('all')
         f, axarr = plt.subplots(len(regions), 1, sharex=True)
+        f.set_size_inches(8.0, 16.0)
 
         # Go through all the regions
         for iregion, region in enumerate(regions):
@@ -182,9 +183,6 @@ for iwave, wave in enumerate(waves):
 
             # Get the results
             result = storage[model_name][wave][region]
-
-            # Get the reduced chi-squared
-            rchi2 = result[1]
 
             # Generate a mask to filter the results
             mask = analysis_details.result_filter(result[0], result[1], rchi2limit)
@@ -215,113 +213,26 @@ for iwave, wave in enumerate(waves):
             v1 = conversion[parameter1_name] * ma.array(parameter1, mask=np.logical_not(mask)).compressed()
 
             # Plot the histogram
-            axarr[iregion].hist(v1.flatten(), bins=50, label='all %s' % region, normed=True)
+            axarr[iregion].hist(v1.flatten(), bins=50, label='good %s' % region, normed=True, alpha=0.5)
+            axarr[iregion].hist(conversion[parameter1_name] * parameter1.flatten(), bins=50, label='all %s' % region, normed=True, alpha=0.5)
 
             # Show legend and define the lines that are plotted
             if iregion == 0:
-                axarr[0].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s')
-                axarr[0].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s')
                 axarr[0].legend(framealpha=0.5)
             else:
                 # Show legend first, then plot lines - no need for them to appear in the legend
                 axarr[iregion].legend(framealpha=0.5)
-                axarr[iregion].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s')
-                axarr[iregion].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s')
 
             # y axis label
             axarr[iregion].set_ylabel('pdf')
 
+        # File name to put the image in the correct
+        filepath = os.path.join(os.path.join(os.path.dirname(sd.save_locations['image']), wave), sd.ident + '.observed.%s-%s.pdfs.png' % (wave, parameter1_name))
+
         # Finish the plot
-        axarr[0].set_title('observed %s PDFs (%s, model is "%s)"' % (rchi2s, wave, model_name))
-        axarr[len(regions) - 1].set_xlabel(rchi2s)
-        plt.show()
-
-#
-# Histograms of reduced chi-squared
-#
-for iwave, wave in enumerate(waves):
-    plt.close('all')
-    f, axarr = plt.subplots(len(regions), 1, sharex=True)
-
-    for iregion, region in enumerate(regions):
-
-        # Get the reduced chi-squared
-        rchi2 = storage[model_name][wave][region][1]
-
-        # Plot the histogram
-        axarr[iregion].hist(rchi2.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
-
-        # Show legend and define the lines that are plotted
-        if iregion == 0:
-            axarr[0].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s' % percent_lo)
-            axarr[0].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s' % percent_hi)
-            axarr[0].legend(framealpha=0.5)
-        else:
-            # Show legend first, then plot lines - no need for them to appear in the legend
-            axarr[iregion].legend(framealpha=0.5)
-            axarr[iregion].axvline(rchi2limit[0], color=rchi2limitcolor[0], linewidth=2, label='expected %s' % percent_lo)
-            axarr[iregion].axvline(rchi2limit[1], color=rchi2limitcolor[1], linewidth=2, label='expected %s' % percent_hi)
-
-
-        # Get the y limits of the plot and the x limits
-        ylim = axarr[iregion].get_ylim()
-        axarr[iregion].set_xlim(0.0, 4.0)
-
-        # add in percentage of reduced chi-squared values above and below the upper and lower limits
-        actual_pvalue = np.array([np.sum(rchi2 < rchi2limit[0]),
-                                        np.sum(rchi2 > rchi2limit[1])]) / np.float64(np.size(rchi2))
-        axarr[iregion].text(rchi2limit[0], ylim[0] + 0.67 * (ylim[1] - ylim[0]),
-                            '%2.1f%%' % (100 * actual_pvalue[0]),
-                            bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-        axarr[iregion].text(rchi2limit[1], ylim[0] + 0.33 * (ylim[1] - ylim[0]),
-                            '%2.1f%%' % (100 * actual_pvalue[1]),
-                            bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
-
-        # y axis label
-        axarr[iregion].set_ylabel('pdf')
-
-
-    axarr[0].set_title('observed %s PDFs (%s, model is "%s)"' % (rchi2s, wave, model_name))
-    axarr[len(regions) - 1].set_xlabel(rchi2s)
-    plt.show()
-
-#
-# Histograms of model parameters
-#
-for iwave, wave in enumerate(waves):
-    for iparameter, parameter in enumerate(parameters):
-        plt.close('all')
-        f, axarr = plt.subplots(len(regions), 1, sharex=True)
-        for iregion, region in enumerate(regions):
-            result = storage[model_name][wave][region]
-
-            # Generate a mask to filter the results
-            mask = result_filter(result[0], result[1], rchi2limit)
-
-            # Parameter to look at
-            par = result[2][:, :, iparameter] * conversion[iparameter]
-
-            # Masked array
-            m = ma.array(par, mask=np.logical_not(mask)).flatten()
-
-            # Plot all the results
-            axarr[iregion].hist(par.flatten(), bins=50, alpha=0.5, label='all %s' % region, normed=True)
-
-            # Plot the best results
-            axarr[iregion].hist(m.compressed(), bins=50, alpha=0.5, label='best %s [%i%%]' % (region, np.int(100 * np.sum(mask) / np.float(par.size))), normed=True)
-
-            # Plot the Ireland et al 2015 results
-            if comparable[iparameter]:
-                z = i2015.df.loc[region]
-                i2015value = z[z['waveband'] == int(wave)][parameter]
-                axarr[iregion].axvline(i2015value[0], color='r', linewidth=2, label=i2015label)
-
-            # Annotate the plot
-            axarr[iregion].legend(framealpha=0.5)
-            axarr[iregion].set_ylabel('pdf')
-        axarr[0].set_title('%s, model is "%s"' % (wave, model_name))
-        axarr[len(regions) - 1].set_xlabel(plotname[iparameter])
-        plt.show()
+        axarr[0].set_title('observed %s-%s PDFs' % (wave, plotname[parameter1_name]))
+        axarr[len(regions) - 1].set_xlabel(plotname[parameter1_name])
+        plt.savefig(os.path.join(filepath))
 
 """
 #
