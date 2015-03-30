@@ -23,6 +23,9 @@ base_cross_correlation_channel = '171'
 # Use base cross-correlation channel?
 use_base_cross_correlation_channel = False
 
+# Fixed AIA scale across all channels
+fixed_aia_scale = {'x': 0.6, 'y': 0.6}
+
 #
 # Setup the details given the study type
 #

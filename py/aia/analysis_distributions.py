@@ -4,13 +4,14 @@
 #
 import os
 import cPickle as pickle
-import study_details as sd
+import copy
 import numpy as np
 import numpy.ma as ma
-
 import matplotlib.pyplot as plt
+import sunpy.map
 import analysis_details
 import ireland2015_details as i2015
+import study_details as sd
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -150,7 +151,7 @@ for name in othernames:
     all_parameter_names.append(name)
 
 #
-# Load in the other characterizations of the time-series
+# Load in the other characterizations of the time-series and plot
 #
 for iwave, wave in enumerate(waves):
 
@@ -204,7 +205,7 @@ for iwave, wave in enumerate(waves):
 
             # Create a list containing all the parameters
             all_parameter_list = [result[2][:, :, 0], result[2][:, :, 1], result[2][:, :, 2],
-                                  dtotal, dmax, dmin, dsd, dlnsd]
+                                  dtotal, dmax, dmin, dsd, dlnsd, result[1]]
 
             # Which parameter are we looking at
             parameter1 = all_parameter_list[iparameter1]
@@ -220,7 +221,8 @@ for iwave, wave in enumerate(waves):
             if iregion == 0:
                 axarr[0].legend(framealpha=0.5)
             else:
-                # Show legend first, then plot lines - no need for them to appear in the legend
+                # Show legend first, then plot lines - no need for them to
+                # appear in the legend
                 axarr[iregion].legend(framealpha=0.5)
 
             # y axis label
@@ -234,20 +236,95 @@ for iwave, wave in enumerate(waves):
         axarr[len(regions) - 1].set_xlabel(plotname[parameter1_name])
         plt.savefig(os.path.join(filepath))
 
-"""
+
 #
 # Spatial distribution of quantities
 #
+#
+# Create the all parameter list of data and their names
+#
+all_parameter_names = []
+for name in parameters:
+    all_parameter_names.append(name)
+for name in othernames:
+    all_parameter_names.append(name)
 
+#
+# Load in the other characterizations of the time-series and plot
+#
 for iwave, wave in enumerate(waves):
-    f, axarr = plt.subplots(len(regions), 1)
 
-    for iregion, region in enumerate(regions):
-        rchi2 = storage[model_name][wave][region][1]
-        rchi2[rchi2 > rchi2limit[1]] = rchi2limit[1]
-        rchi2[rchi2 < rchi2limit[0]] = rchi2limit[0]
-        cax = axarr[iregion].imshow(rchi2)
-        axarr[iregion].set_title('%s, model is "%s" in %s' % (wave, model_name, region))
-        f.colorbar(cax, ax=axarr[iregion])
-    plt.show()
-"""
+    # Get parameter we want to plot
+    for iparameter1, parameter1 in enumerate(all_parameter_names):
+
+        # Parameter name
+        parameter1_name = all_parameter_names[iparameter1]
+
+        # All the regions appear in one plot
+        plt.close('all')
+        f, axarr = plt.subplots(len(regions), 1)
+        f.set_size_inches(8.0, 16.0)
+
+        # Go through all the regions
+        for iregion, region in enumerate(regions):
+
+            # branch location
+            b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+
+            # Region identifier name
+            region_id = sd.datalocationtools.ident_creator(b)
+
+            # Output location
+            output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+            image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
+            # Output filename
+            ofilename = os.path.join(output, region_id + '.datacube')
+
+            # Get the results
+            result = storage[model_name][wave][region]
+
+            # Generate a mask to filter the results
+            mask = analysis_details.result_filter(result[0], result[1], rchi2limit)
+            nmask = np.sum(mask)
+            pixels_used_string = '(#pixels=%i, used=%3.1f%%)' % (nmask, 100 * nmask/ np.float64(mask.size))
+
+            # Number of results
+            nmask = np.sum(mask)
+
+            # Load the other time-series parameters
+            ofilename = ofilename + '.' + window
+            filepath = os.path.join(output, ofilename + '.summary_stats.npz')
+            with np.load(filepath) as otsp:
+                dtotal = otsp['dtotal']
+                dmax = otsp['dmax']
+                dmin = otsp['dmin']
+                dsd = otsp['dsd']
+                dlnsd = otsp['dlnsd']
+
+            # Create a list containing all the parameters
+            all_parameter_list = [result[2][:, :, 0], result[2][:, :, 1], result[2][:, :, 2],
+                                  dtotal, dmax, dmin, dsd, dlnsd, result[1]]
+
+            # Which parameter are we looking at
+            parameter1 = all_parameter_list[iparameter1]
+
+            # Data for this parameter, with the mask taken into account
+            v1 = conversion[parameter1_name] * ma.array(parameter1, mask=np.logical_not(mask))
+
+            # Get the map: Open the file that stores it and read it in
+            map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
+            get_map_data = open(map_data_filename, 'rb')
+            _dummy = pickle.load(get_map_data)
+            _dummy = pickle.load(get_map_data)
+            # map layer
+            mc_layer = pickle.load(get_map_data)
+            # Specific region information
+            R = pickle.load(get_map_data)
+            get_map_data.close()
+
+            # Make a new map with the correct variable in it
+            header = {"cdelt1": sd.fixed_aia_scale["x"],
+                      "cdelt2": sd.fixed_aia_scale["y"], }
+            v1_map = sunpy.map.Map(copy.deepcopy(mc_layer).meta, v1)
+

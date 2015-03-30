@@ -18,7 +18,10 @@ pvalue = np.array([0.025, 0.975])
 # Other parameter names
 othernames = ['total emission', 'maximum emission', 'minimum emission',
               'standard deviation of the emission',
-              'standard deviation of log(emission)']
+              'standard deviation of log(emission)', 'rchi2']
+
+# Fitting details
+fitdetails = ['rchi2']
 
 # Model fit parameter names
 def parameters(model_names):
@@ -38,7 +41,8 @@ def conversion(model_names):
             'maximum emission':  1.0,
             'minimum emission':  1.0,
             'standard deviation of the emission': 1.0,
-            'standard deviation of log(emission)': 1.0}
+            'standard deviation of log(emission)': 1.0,
+            'rchi2': 1.0}
 
 # Informative plot labels
 def plotname(model_names):
@@ -49,7 +53,8 @@ def plotname(model_names):
             'maximum emission':  'max(E)',
             'minimum emission':  'min(E)',
             'standard deviation of the emission': 'sd(E)',
-            'standard deviation of log(emission)': 'sd(log(E))'}
+            'standard deviation of log(emission)': 'sd(log(E))',
+            'rchi2': rchi2s}
 
 #
 # Calculate reduced chi-squared limits given pvalues
