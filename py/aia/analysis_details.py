@@ -89,6 +89,6 @@ def percent_hi(pvalue):
 # chi-squared is inside the required limits
 #
 def result_filter(success, rchi2, rchilimit):
-    rchi2_gt_low_limit = rchi2[1] > rchilimit[0]
-    rchi2_lt_high_limit = rchi2[1] < rchilimit[1]
+    rchi2_gt_low_limit = rchi2 > rchilimit[0]
+    rchi2_lt_high_limit = rchi2 < rchilimit[1]
     return success * rchi2_gt_low_limit * rchi2_lt_high_limit

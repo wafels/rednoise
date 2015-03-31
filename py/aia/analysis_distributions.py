@@ -8,6 +8,8 @@ import copy
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as colors
 import sunpy.map
 import analysis_details
 import ireland2015_details as i2015
@@ -325,6 +327,26 @@ for iwave, wave in enumerate(waves):
 
             # Make a new map with the correct variable in it
             header = {"cdelt1": sd.fixed_aia_scale["x"],
-                      "cdelt2": sd.fixed_aia_scale["y"], }
-            v1_map = sunpy.map.Map(copy.deepcopy(mc_layer).meta, v1)
+                      "cdelt2": sd.fixed_aia_scale["y"],
+                      "crval1": 0.5 * np.sum(R["xrange"]),
+                      "crval2": 0.5 * np.sum(R["yrange"]),
+                      "date_obs": mc_layer.date,
+                      "telescop": wave + ': ' + region + ': ' + plotname[parameter1_name]}
+            v1_map = sunpy.map.Map(v1, header).peek()
+            # Set up the palette we will use
+            palette = cm.gray
+            # Bad values are those that are masked out
+            palette.set_bad('r', 1.0)
+            im = plt.imshow(v1,
+                            interpolation='none',
+                            cmap=palette,
+                            norm=colors.Normalize(vmin=v1.compressed().min(),
+                                                  vmax=v1.compressed().max(),
+                                                  clip=False),
+                            origin='lower')
+            plt.title(wave + ': ' + region + ': ' + plotname[parameter1_name])
+            plt.xlabel('solar X (arcseconds)')
+            plt.ylabel('solar Y (arcseconds)')
+            plt.colorbar(im, extend='both', orientation='horizontal',
+                         shrink=0.8, label=plotname[parameter1_name])
 
