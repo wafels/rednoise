@@ -425,12 +425,19 @@ for iregion, region in enumerate(regions):
                     plt.xlabel(xlabel)
                     plt.ylabel(ylabel)
                     plt.scatter(v1, v2)
-                    x0 = plt.xlim()[0]
+                    xlim = plt.xlim()
+                    x0 = xlim[0]
                     ylim = plt.ylim()
                     y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
                     y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
                     plt.text(x0, y0, 'Pearson=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
                     plt.text(x0, y1, 'Spearman=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
+                    # If the same type of parameters are being plotted against
+                    # each other, plot an equality line and include a legend
+                    if parameter1_name == parameter2_name:
+                        parameter_extent = [np.min([xlim, ylim]), np.max([xlim, ylim])]
+                        plt.plot(parameter_extent, parameter_extent, label='%s=%s' % (xlabel, ylabel), color='r', linewidth=4)
+                        plt.legend(framealpha=0.5)
                     ofilename = plottype + '.scatter.' + plotident + '.png'
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
@@ -441,12 +448,19 @@ for iregion, region in enumerate(regions):
                     plt.xlabel(xlabel)
                     plt.ylabel(ylabel)
                     plt.hist2d(v1, v2, bins=40)
-                    x0 = plt.xlim()[0]
+                    xlim = plt.xlim()
+                    x0 = xlim[0]
                     ylim = plt.ylim()
                     y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
                     y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
                     plt.text(x0, y0, 'Pearson=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
                     plt.text(x0, y1, 'Spearman=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
+                    # If the same type of parameters are being plotted against
+                    # each other, plot an equality line and include a legend
+                    if parameter1_name == parameter2_name:
+                        parameter_extent = [np.min([xlim, ylim]), np.max([xlim, ylim])]
+                        plt.plot(parameter_extent, parameter_extent, label='%s=%s' % (xlabel, ylabel), color='r', linewidth=4)
+                        plt.legend(framealpha=0.5)
                     ofilename = plottype + '.hist2d.' + plotident + '.png'
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))

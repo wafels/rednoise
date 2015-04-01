@@ -81,6 +81,13 @@ for model_name in model_names:
         for region in regions:
             storage[model_name][wave][region] = []
 
+# Storage for the parameter limits
+param_range = {}
+for wave in waves:
+    param_range[wave] = {}
+    for region in regions:
+        param_range[wave][region] = {}
+
 
 #
 # Load in the fit results
@@ -215,6 +222,9 @@ for iwave, wave in enumerate(waves):
             # Data for this parameter, with the mask taken into account
             v1 = conversion[parameter1_name] * ma.array(parameter1, mask=np.logical_not(mask)).compressed()
 
+            # Parameter limits
+            param_range[wave][region][parameter1_name] = [v1.min(), v1.max()]
+
             # Plot the histogram
             axarr[iregion].hist(v1.flatten(), bins=50, label='good %s' % region, normed=True, alpha=0.5)
             axarr[iregion].hist(conversion[parameter1_name] * parameter1.flatten(), bins=50, label='all %s' % region, normed=True, alpha=0.5)
@@ -250,6 +260,29 @@ for name in parameters:
     all_parameter_names.append(name)
 for name in othernames:
     all_parameter_names.append(name)
+
+#
+# Define the parameter ranges over wavelength
+#
+#  Storage for the parameter limits
+param_lims = {}
+for region in regions:
+    param_lims[region] = {}
+    for parameter1 in all_parameter_names:
+        param_lims[region][parameter1] = []
+
+for iregion, region in enumerate(regions):
+    for parameter1 in all_parameter_names:
+        for iwave, wave in enumerate(waves):
+            lo_lim = param_range[wave][region][parameter1][0]
+            hi_lim = param_range[wave][region][parameter1][1]
+            if iwave == 0:
+                param_lims[region][parameter1] = [param_range[wave][region][parameter1][0],
+                                                  param_range[wave][region][parameter1][1]]
+            if param_lims[region][parameter1][0] < lo_lim:
+                param_lims[region][parameter1][0] = lo_lim
+            if param_lims[region][parameter1][1] > hi_lim:
+                param_lims[region][parameter1][1] = hi_lim
 
 #
 # Load in the other characterizations of the time-series and plot
@@ -320,28 +353,24 @@ for iwave, wave in enumerate(waves):
             _dummy = pickle.load(get_map_data)
             _dummy = pickle.load(get_map_data)
             # map layer
-            mc_layer = pickle.load(get_map_data)
+            _dummy = pickle.load(get_map_data)
             # Specific region information
             R = pickle.load(get_map_data)
             get_map_data.close()
 
-            # Make a new map with the correct variable in it
-            header = {"cdelt1": sd.fixed_aia_scale["x"],
-                      "cdelt2": sd.fixed_aia_scale["y"],
-                      "crval1": 0.5 * np.sum(R["xrange"]),
-                      "crval2": 0.5 * np.sum(R["yrange"]),
-                      "date_obs": mc_layer.date,
-                      "telescop": wave + ': ' + region + ': ' + plotname[parameter1_name]}
-            v1_map = sunpy.map.Map(v1, header).peek()
+            # Make a spatial distribution map that also shows where the bad
+            # fits are
+            plt.close('all')
             # Set up the palette we will use
-            palette = cm.gray
+            palette = cm.brg
             # Bad values are those that are masked out
-            palette.set_bad('r', 1.0)
+            palette.set_bad('k', 1.0)
             im = plt.imshow(v1,
+                            extent=(R["xrange"][0], R["xrange"][1], R["yrange"][0], R["yrange"][1]),
                             interpolation='none',
                             cmap=palette,
-                            norm=colors.Normalize(vmin=v1.compressed().min(),
-                                                  vmax=v1.compressed().max(),
+                            norm=colors.Normalize(vmin=param_lims[region][parameter1_name][0],
+                                                  vmax=param_lims[region][parameter1_name][1],
                                                   clip=False),
                             origin='lower')
             plt.title(wave + ': ' + region + ': ' + plotname[parameter1_name])
@@ -349,4 +378,7 @@ for iwave, wave in enumerate(waves):
             plt.ylabel('solar Y (arcseconds)')
             plt.colorbar(im, extend='both', orientation='horizontal',
                          shrink=0.8, label=plotname[parameter1_name])
+            filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.' + parameter1_name + '.png')
+            print('Saving to ' + filepath)
+            plt.savefig(filepath)
 
