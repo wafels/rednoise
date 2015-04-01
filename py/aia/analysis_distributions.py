@@ -25,7 +25,7 @@ regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 windows = ['hanning']
 
 # Number of positive frequencies in the power spectra
-nposfreq= 899
+nposfreq = 899
 
 # Model results to examine
 model_names = ('power law with constant',)
