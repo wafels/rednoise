@@ -78,3 +78,7 @@ save_locations = datalocationtools.save_location_calculator(roots, branches)
 
 # Identity of the data
 ident = datalocationtools.ident_creator(branches)
+
+# Limits
+structure_location_limits = {'lo': 2.0 * u.mHz,
+                             'hi': 7.0 * u.mHz}
