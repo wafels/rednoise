@@ -70,7 +70,6 @@ else:
     extension = extension + 'bcc_False'
 
 
-
 # Locations of the output datatypes
 roots = {"pickle": '~/ts/pickle/' + extension,
          "image": '~/ts/img/' + extension,

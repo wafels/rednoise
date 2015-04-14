@@ -20,8 +20,14 @@ regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 windows = ['hanning']
 
 # Models to fit
-models = (rnspectralmodels.power_law, rnspectralmodels.power_law_with_constant)
-model_names = ('power law', 'power law with constant')
+models = (rnspectralmodels.power_law,
+          rnspectralmodels.power_law_with_constant,
+          rnspectralmodels.power_law_with_constant_with_deltafn,
+          rnspectralmodels.power_law_with_constant_with_lognormal)
+model_names = ('power law',
+               'power law with constant',
+               'power law with constant and delta function',
+               'power law with constant and lognormal')
 
 #
 # Main analysis loops

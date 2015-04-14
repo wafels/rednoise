@@ -41,17 +41,25 @@ def most_probable_power_law_index(f, I, m, n):
         blp[inn] = bayeslogprob(f, I, nn, m)
     return n[np.argmax(blp)]
 
+
 #
 # Generate an initial guess to the log likelihood fit
 #
 def generate_initial_guess(model_name, f, p):
+
+    # Generate some initial simple estimates
+    log_amplitude = np.log(p[0])
+    index_estimate = most_probable_power_law_index(f, p, 0.0, np.arange(0.0, 4.0, 0.01))
+    log_background = np.log(p[-1])
+
     if model_name == 'power law':
-        index_estimate = most_probable_power_law_index(f, p, 0.0, np.arange(0.0, 4.0, 0.01))
-        initial_guess = [np.log(p[0]), index_estimate]
+        initial_guess = [log_amplitude, index_estimate]
 
     if model_name == 'power law with constant':
-        index_estimate = most_probable_power_law_index(f, p, 0.0, np.arange(0.0, 4.0, 0.01))
-        initial_guess = [np.log(p[0]), index_estimate, np.log(p[-1])]
+        initial_guess = [log_amplitude, index_estimate, log_background]
+
+    if model_name == 'power law with constant and delta function':
+        initial_guess = [log_amplitude, index_estimate, log_background]
 
 
     return initial_guess
