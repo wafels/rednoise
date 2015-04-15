@@ -78,7 +78,7 @@ if sd.sunlocation == 'disk':
         # Small changes in the plate scale in each AIA channel can mean that
         # the height and widths of each region depend on the data. To mitigate
         # against this we fix the size of the plate scale.
-        fixed_aia_scale = {'x': 0.6, 'y': 0.6}
+        fixed_aia_scale = sd.fixed_aia_scale{'x': 0.6, 'y': 0.6}
         R['width_pixel'] = np.floor(R['width'] / fixed_aia_scale['x'])
         R['height_pixel'] = np.floor(R['height'] / fixed_aia_scale['y'])
 
