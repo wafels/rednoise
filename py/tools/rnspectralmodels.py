@@ -8,9 +8,25 @@ import numpy as np
 #
 # Normalize the frequency
 #
-def fnorm(f, fnorm):
+def fnorm(f, normalization):
     """ Normalize the frequency spectrum."""
-    return f / fnorm
+    return f / normalization
+
+
+# ----------------------------------------------------------------------------
+# constant
+#
+def constant(a, f):
+    """The power spectrum is a constant across all frequencies
+
+    Parameters
+    ----------
+    a : ndarray(1)
+        a[0] : the natural logarithm of the constant
+    f : ndarray
+        frequencies
+    """
+    return np.exp(a[0])
 
 
 # ----------------------------------------------------------------------------
@@ -28,7 +44,7 @@ def power_law(a, f):
     f : ndarray
         frequencies
     """
-    return np.exp(a[0]) * (fnorm(f, f[0]) ** (-a[1]))
+    return np.exp(a[0]) * (f ** (-a[1]))
 
 
 # ----------------------------------------------------------------------------
@@ -49,7 +65,52 @@ def power_law_with_constant(a, f):
         frequencies
 
     """
-    return power_law(a[0:2], f) + np.exp(a[2])
+    return power_law(a[0:2], f) + constant(a[2], f)
+
+
+# ----------------------------------------------------------------------------
+# Lognormal
+#
+def lognormal(a, f):
+    """
+    A lognormal distribution
+
+    Parameters
+    ----------
+    a : ndarray(3)
+        a[0] : the natural logarithm of the Gaussian amplitude
+        a[1] : the natural logarithm of the center of the Gaussian
+        a[2] : the width of the Gaussian in units of natural logarithm of the
+               frequency
+    f : ndarray
+        frequencies
+
+    """
+    onent = (np.log(f) - a[1]) / a[2]
+    amp = np.exp(a[0])
+    return amp * np.exp(-0.5 * onent ** 2)
+
+
+# ----------------------------------------------------------------------------
+# Delta function
+#
+def deltafn(a, f):
+    """
+    A delta function
+
+    Parameters
+    ----------
+    a : ndarray(3)
+        a[0] : the natural logarithm of the amplitude
+        a[1] : the natural logarithm of the position of the delta function
+
+    f : ndarray
+        frequencies
+
+    """
+    delta_function = np.zeros(len(f))
+    delta_function[np.argmin(np.abs(np.log(f) - a[1]))] = 1.0
+    return np.exp(a[0]) * delta_function
 
 
 # ----------------------------------------------------------------------------
@@ -72,15 +133,11 @@ def power_law_with_constant_with_lognormal(a, f):
     f : ndarray
         frequencies
     """
-    fn = fnorm(f, f[0])
-    onent = (np.log(fn) - a[4]) / a[5]
-    amp = np.exp(a[3])
-    lognormal_term = amp * np.exp(-0.5 * onent ** 2)
-    return power_law_with_constant(a[0:3], f) + lognormal_term
+    return power_law_with_constant(a[0:3], f) + lognormal(a[3:6], f)
 
 
 # ----------------------------------------------------------------------------
-# Power law with lognormal
+# Power law with delta function
 #
 def power_law_with_constant_with_deltafn(a, f):
     """
@@ -98,7 +155,4 @@ def power_law_with_constant_with_deltafn(a, f):
     f : ndarray
         frequencies
     """
-    fn = fnorm(f, f[0])
-    delta_function = np.zeros(len(fn))
-    delta_function[np.argmin(np.abs(np.log(fn) - a[4]))] = 1.0
-    return power_law_with_constant(a[0:3], f) + np.exp(a[3]) * delta_function
+    return power_law_with_constant(a[0:3], f) + deltafn(a[3:4], f)
