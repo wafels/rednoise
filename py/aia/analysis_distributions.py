@@ -4,13 +4,16 @@
 #
 import os
 import cPickle as pickle
-import copy
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+from matplotlib.collections import PolyCollection
+import astropy.units as u
 import sunpy.map
+import sunpy.net.hek as hek
+from sunpy.physics.transforms.solar_rotation import rot_hpc
 import analysis_details
 import ireland2015_details as i2015
 import study_details as sd
@@ -284,6 +287,19 @@ for iregion, region in enumerate(regions):
             if param_lims[region][parameter1][1] > hi_lim:
                 param_lims[region][parameter1][1] = hi_lim
 
+# -----------------------------------------------------------------------------
+# Get the sunspot details at the time of its detection
+#
+client = hek.HEKClient()
+qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
+p1 = qr[0]["hpc_boundcc"][9: -2]
+p2 = p1.split(',')
+p3 = [v.split(" ") for v in p2]
+p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+polygon = np.zeros([1, len(p2), 2])
+polygon[0, :, :] = p4[:, :]
+
+
 #
 # Load in the other characterizations of the time-series and plot
 #
@@ -353,7 +369,7 @@ for iwave, wave in enumerate(waves):
             _dummy = pickle.load(get_map_data)
             _dummy = pickle.load(get_map_data)
             # map layer
-            _dummy = pickle.load(get_map_data)
+            mc_layer = pickle.load(get_map_data)
             # Specific region information
             R = pickle.load(get_map_data)
             get_map_data.close()
@@ -378,6 +394,43 @@ for iwave, wave in enumerate(waves):
             plt.ylabel('solar Y (arcseconds)')
             plt.colorbar(im, extend='both', orientation='horizontal',
                          shrink=0.8, label=plotname[parameter1_name])
+
+            # Create the map
+            header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -332.5, "crval2": 17.5,
+                  "telescop": 'AIA', "detector": "AIA", "wavelnth": "171",
+                  "date-obs": mc_layer.date}
+            my_map = sunpy.map.Map(v1, header)
+            # Begin the plot
+            fig, ax = plt.subplots()
+            # Plot the map
+            my_map.plot(cmap=palette,
+                        interpolation='none',
+                        norm=colors.Normalize(vmin=param_lims[region][parameter1_name][0],
+                                              vmax=param_lims[region][parameter1_name][1],
+                                              clip=False))
+            # Looking at sunspots?  If so, overplot the outline of the sunspot,
+            # ensuring that it has been rotated to the time of the layer_index
+            if region == 'sunspot':
+                rotated_polygon = np.zeros_like(polygon)
+                for i in range(0, len(p2)):
+                    new_coords = rot_hpc(polygon[0, i, 0] * u.arcsec,
+                                         polygon[0, i, 1] * u.arcsec,
+                                         sunspot_date,
+                                         mc_layer.date)
+                    rotated_polygon[0, i, 0] = new_coords[0].value
+                    rotated_polygon[0, i, 1] = new_coords[1].value
+                # Create the collection
+                coll = PolyCollection(rotated_polygon,
+                                      alpha=1.0,
+                                      edgecolors=['k'],
+                                      facecolors=['none'],
+                                      linewidth=[5])
+                # Add to the plot
+                ax.add_collection(coll)
+
+            # Fit everything in.
+            ax.autoscale_view()
+
             filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.' + parameter1_name + '.png')
             print('Saving to ' + filepath)
             plt.savefig(filepath)
