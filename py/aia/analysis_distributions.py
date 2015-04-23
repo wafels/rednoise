@@ -18,6 +18,17 @@ import analysis_details
 import ireland2015_details as i2015
 import study_details as sd
 
+
+def summary_statistics(a):
+    return {"mean": np.mean(a),
+            "median": np.percentile(a, 50.0),
+            "lo": np.percentile(a, 2.5),
+            "hi": np.percentile(a, 97.5),
+            "min":np.min(a),
+            "max": np.max(a),
+            "std": np.std(a)}
+
+
 # Wavelengths we want to analyze
 waves = ['171', '193']
 
@@ -178,6 +189,9 @@ for iwave, wave in enumerate(waves):
         f, axarr = plt.subplots(len(regions), 1, sharex=True)
         f.set_size_inches(8.0, 16.0)
 
+        # Summary stats storage
+        summary_stats = {}
+
         # Go through all the regions
         for iregion, region in enumerate(regions):
 
@@ -229,7 +243,9 @@ for iwave, wave in enumerate(waves):
             param_range[wave][region][parameter1_name] = [v1.min(), v1.max()]
 
             # Plot the histogram
+            # Good data
             axarr[iregion].hist(v1.flatten(), bins=50, label='good %s' % region, normed=True, alpha=0.5)
+            # All data
             axarr[iregion].hist(conversion[parameter1_name] * parameter1.flatten(), bins=50, label='all %s' % region, normed=True, alpha=0.5)
 
             # Show legend and define the lines that are plotted
@@ -243,14 +259,19 @@ for iwave, wave in enumerate(waves):
             # y axis label
             axarr[iregion].set_ylabel('pdf')
 
+            # Summary statistics of the distribution - mean, mode, median, etc
+            summary_stats[wave] = summary_statistics(v1)
+            if parameter1_name == 'power law index' and wave == '171':
+                print region, summary_stats[wave]
+
         # File name to put the image in the correct
         filepath = os.path.join(os.path.join(os.path.dirname(sd.save_locations['image']), wave), sd.ident + '.observed.%s-%s.pdfs.png' % (wave, parameter1_name))
 
         # Finish the plot
         axarr[0].set_title('observed %s-%s PDFs' % (wave, plotname[parameter1_name]))
         axarr[len(regions) - 1].set_xlabel(plotname[parameter1_name])
+        print("Saving " + filepath)
         plt.savefig(os.path.join(filepath))
-
 
 #
 # Spatial distribution of quantities
@@ -298,7 +319,7 @@ p3 = [v.split(" ") for v in p2]
 p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
 polygon = np.zeros([1, len(p2), 2])
 polygon[0, :, :] = p4[:, :]
-
+sunspot_date = qr[0]['event_endtime']
 
 #
 # Load in the other characterizations of the time-series and plot
@@ -360,7 +381,12 @@ for iwave, wave in enumerate(waves):
             # Which parameter are we looking at
             parameter1 = all_parameter_list[iparameter1]
 
-            # Data for this parameter, with the mask taken into account
+            # Data for this parameter, with the mask taken into account.
+            # The mask is defined such that True implies a "good value", and
+            # False implies "bad value".  In numpy masked arrays, "True" implies
+            # "masked value", and "False" implies "non-masked value".
+            # Therefore, when defining the masked array we need to take the
+            # logical not of the mask.
             v1 = conversion[parameter1_name] * ma.array(parameter1, mask=np.logical_not(mask))
 
             # Get the map: Open the file that stores it and read it in
@@ -380,7 +406,12 @@ for iwave, wave in enumerate(waves):
             # Set up the palette we will use
             palette = cm.brg
             # Bad values are those that are masked out
-            palette.set_bad('k', 1.0)
+            #over_level = 2 * np.abs(param_lims[region][parameter1_name][1])
+            #palette.set_over('#aaaaaa', over_level)
+            #palette.set_under('k', -999999.9)
+            palette.set_bad('0.75')
+
+            """
             im = plt.imshow(v1,
                             extent=(R["xrange"][0], R["xrange"][1], R["yrange"][0], R["yrange"][1]),
                             interpolation='none',
@@ -394,6 +425,7 @@ for iwave, wave in enumerate(waves):
             plt.ylabel('solar Y (arcseconds)')
             plt.colorbar(im, extend='both', orientation='horizontal',
                          shrink=0.8, label=plotname[parameter1_name])
+            """
 
             # Create the map
             header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -332.5, "crval2": 17.5,
@@ -403,7 +435,7 @@ for iwave, wave in enumerate(waves):
             # Begin the plot
             fig, ax = plt.subplots()
             # Plot the map
-            my_map.plot(cmap=palette,
+            ret = my_map.plot(cmap=palette, axes=ax,
                         interpolation='none',
                         norm=colors.Normalize(vmin=param_lims[region][parameter1_name][0],
                                               vmax=param_lims[region][parameter1_name][1],
@@ -428,9 +460,13 @@ for iwave, wave in enumerate(waves):
                 # Add to the plot
                 ax.add_collection(coll)
 
+            cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
+                                shrink=0.8, label=plotname[parameter1_name])
+
             # Fit everything in.
             ax.autoscale_view()
 
+            # Dump to file
             filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.' + parameter1_name + '.png')
             print('Saving to ' + filepath)
             plt.savefig(filepath)

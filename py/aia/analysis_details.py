@@ -86,7 +86,8 @@ def percent_hi(pvalue):
 
 #
 # Create a mask that shows where there was a successful fit, and the reduced
-# chi-squared is inside the required limits
+# chi-squared is inside the required limits.  True equals a value we want to
+# keep, false equals a value we don't want.
 #
 def result_filter(success, rchi2, rchilimit):
     rchi2_gt_low_limit = rchi2 > rchilimit[0]
