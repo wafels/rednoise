@@ -43,8 +43,8 @@ class SummedEventPowerSpectrum:
         while i < nsamples:
             i += 1
             timescale = self.timescale_distribution()
-            energy_per_event = self.event_energy(self.gamma, timescale)
-            number_of_events = self.number_distribution(self.alpha, energy_per_event)
+            energy_per_event = self.event_energy(timescale)
+            number_of_events = self.number_distribution(energy_per_event)
             power_spectrum += number_of_events * energy_per_event * self.spectrum_per_event(nu, timescale)
 
         return power_spectrum
