@@ -22,12 +22,9 @@ windows = ['hanning']
 # Models to fit
 models = (rnspectralmodels.power_law,
           rnspectralmodels.power_law_with_constant,
-          rnspectralmodels.power_law_with_constant_with_deltafn,
           rnspectralmodels.power_law_with_constant_with_lognormal)
-model_names = ('power law',
-               'power law with constant',
-               'power law with constant and delta function',
-               'power law with constant and lognormal')
+model_names = ('power law with constant and lognormal',
+               'power law with constant')
 
 #
 # Main analysis loops

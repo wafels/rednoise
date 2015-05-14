@@ -105,11 +105,14 @@ def generate_initial_guess(model_name, finput, p):
         # Keep the positive parts only
         positive_index = diff0 > 0.0
 
+        print background_spectrum
+
         # If there is any positive data
         if len(positive_index) > 0:
             diff1 = diff0[positive_index]
             f1 = f[positive_index]
             # Estimate a Gaussian
+            print diff1, np.max(diff1)
             amp = np.log(np.max(diff1))
             pos = np.log(f1[np.argmax(diff1)])
             std = np.std(diff1 * (np.log(diff1) - pos))

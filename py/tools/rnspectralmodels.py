@@ -16,17 +16,15 @@ def fnorm(f, normalization):
 # ----------------------------------------------------------------------------
 # constant
 #
-def constant(a, f):
+def constant(a):
     """The power spectrum is a constant across all frequencies
 
     Parameters
     ----------
-    a : ndarray(1)
-        a[0] : the natural logarithm of the constant
-    f : ndarray
-        frequencies
+    a : float
+        the natural logarithm of the power
     """
-    return np.exp(a[0])
+    return np.exp(a)
 
 
 # ----------------------------------------------------------------------------
@@ -65,7 +63,7 @@ def power_law_with_constant(a, f):
         frequencies
 
     """
-    return power_law(a[0:2], f) + constant(a[2], f)
+    return power_law(a[0:2], f) + constant(a[2])
 
 
 # ----------------------------------------------------------------------------
