@@ -89,6 +89,9 @@ def lognormal(a, f):
     return amp * np.exp(-0.5 * onent ** 2)
 
 
+def lognormal_CF(f, a, b, c):
+    return lognormal([a, b, c], f)
+
 # ----------------------------------------------------------------------------
 # Delta function
 #

@@ -20,9 +20,8 @@ regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 windows = ['hanning']
 
 # Models to fit
-models = (rnspectralmodels.power_law,
-          rnspectralmodels.power_law_with_constant,
-          rnspectralmodels.power_law_with_constant_with_lognormal)
+models = (rnspectralmodels.power_law_with_constant_with_lognormal,
+          rnspectralmodels.power_law_with_constant)
 model_names = ('power law with constant and lognormal',
                'power law with constant')
 
@@ -89,7 +88,7 @@ for iwave, wave in enumerate(waves):
                         # Get the next power spectrum
                         this = pwr[j, i, :]
                         # Generate an initial guess
-                        initial_guess = pstools.generate_initial_guess(model_name, normed_freqs, this)
+                        initial_guess = pstools.generate_initial_guess(model_name, normed_freqs.value, this)
 
                         # Do the fit
                         result = lnlike_model_fit.go(normed_freqs, this,

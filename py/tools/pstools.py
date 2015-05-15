@@ -4,6 +4,8 @@
 import numpy as np
 import rnspectralmodels
 import study_details
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 #
 # Assume a power law in power spectrum - Use a Bayesian marginal distribution
@@ -54,10 +56,27 @@ def structure_location(estimate):
     return estimate
 
 
+def background_spectrum_estimate(finput, p,
+                                 amp_range=[0, 5],
+                                 index_range=[0, 50],
+                                 background_range=[-50, -1]):
+
+    # Normalize the input frequency.
+    f = finput / finput[0]
+
+    log_amplitude_estimate = np.log(np.mean(p[amp_range[0]:amp_range[1]]))
+    index_estimate = most_probable_power_law_index(f[index_range[0]:index_range[1]],
+                                                   p[index_range[0]:index_range[1]],
+                                                   0.0, np.arange(0.0, 4.0, 0.01))
+    log_background_estimate = np.log(np.mean(p[background_range[0]:background_range[1]]))
+    return log_amplitude_estimate, index_estimate, log_background_estimate
 #
 # Generate an initial guess to the log likelihood fit
 #
-def generate_initial_guess(model_name, finput, p):
+def generate_initial_guess(model_name, finput, p,
+                                 amp_range=[0, 5],
+                                 index_range=[0, 50],
+                                 background_range=[-50, -1]):
 
     # No initial guess
     initial_guess = None
@@ -66,10 +85,22 @@ def generate_initial_guess(model_name, finput, p):
     f = finput / finput[0]
 
     # Generate some initial simple estimates to the power law component
-    log_amplitude = np.log(p[0])
-    index_estimate = most_probable_power_law_index(f, p, 0.0, np.arange(0.0, 4.0, 0.01))
-    log_background = np.log(p[-1])
+    log_amplitude, index_estimate, log_background = background_spectrum_estimate(finput, p,
+                                 amp_range=amp_range,
+                                 index_range=index_range,
+                                 background_range=background_range)
     background_spectrum = rnspectralmodels.power_law_with_constant([log_amplitude, index_estimate, log_background], f)
+
+    """
+    plt.loglog(f, p, label='data')
+    plt.loglog(f, background_spectrum, label='background spectrum estimate', linestyle='--')
+    plt.axvline(f[amp_range[0]], linestyle=':')
+    plt.axvline(f[amp_range[1]], linestyle=':', label='amplitude range')
+    plt.axvline(f[index_range[0]], linestyle=':', color='k')
+    plt.axvline(f[index_range[1]], linestyle=':', color='k', label='index range')
+    plt.axvline(f[background_range[0]], linestyle=':', color='g')
+    plt.axvline(f[background_range[1]], linestyle=':', color='g', label='background range')
+    """
 
     if model_name == 'power law':
         initial_guess = [log_amplitude, index_estimate]
@@ -105,23 +136,108 @@ def generate_initial_guess(model_name, finput, p):
         # Keep the positive parts only
         positive_index = diff0 > 0.0
 
-        print background_spectrum
+        # Limit the fit to a specific frequency range
+        f_lower_limit = 50.0
+        f_upper_limit = 200.0
+        f_above = f > f_lower_limit
+        f_below = f < f_upper_limit
 
-        # If there is any positive data
-        if len(positive_index) > 0:
-            diff1 = diff0[positive_index]
-            f1 = f[positive_index]
-            # Estimate a Gaussian
-            print diff1, np.max(diff1)
+        # Which data to fit
+        fit_here = positive_index * f_above * f_below
+
+        # If there is sufficient positive data
+        if len(fit_here) > 10:
+            diff1 = diff0[fit_here]
+            f1 = f[fit_here]
             amp = np.log(np.max(diff1))
             pos = np.log(f1[np.argmax(diff1)])
-            std = np.std(diff1 * (np.log(diff1) - pos))
-            initial_guess = [amp, pos, std]
+            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, 0.1]
         else:
-            initial_guess = [-100.0,
-                             0.5 * (study_details.structure_location_limits['lo'] +
-                                    study_details.structure_location_limits['hi']),
+            initial_guess = [log_amplitude, index_estimate, log_background,
+                             -100.0,
+                             0.5 * (study_details.structure_location_limits['lo'].value +
+                                    study_details.structure_location_limits['hi'].value),
                              0.1]
-
-
+        #plt.loglog(f, rnspectralmodels.power_law_with_constant_with_lognormal(initial_guess, f), label='overall estimate')
+        #plt.loglog(f1, diff1, label='used to fit lognormal,')
+    #plt.legend(framealpha=0.5, fontsize=10)
+    #plt.show()
     return initial_guess
+
+
+class ModelPowerSpectrum:
+    def __init__(self, frequencies, power, model):
+        self.frequencies = frequencies
+        self.power = power
+        self.model = model
+        self.f = self.frequencies / self.frequencies[0]
+
+    def generate_initial_guess(self):
+        pass
+
+
+class PowerLawWithConstant(ModelPowerSpectrum):
+
+    def __init__(self, frequencies, power):
+        ModelPowerSpectrum.__init__(frequencies, power, rnspectralmodels.power_law_with_constant)
+
+    def generate_initial_guess(self,
+                               amp_range=[0, 5],
+                               index_range=[0, 50],
+                               background_range=[-50, -1]):
+        self.amp_range = amp_range
+        self.index_range = index_range
+        self.background_range = background_range
+
+        log_amplitude_estimate = np.log(np.mean(self.power[self.amp_range[0]:self.amp_range[1]]))
+        index_estimate = most_probable_power_law_index(self.f[self.index_range[0]:self.index_range[1]],
+                                                       self.power[self.index_range[0]:self.index_range[1]],
+                                                       0.0, np.arange(0.0, 4.0, 0.01))
+        log_background_estimate = np.log(np.mean(self.power[self.background_range[0]:self.background_range[1]]))
+        return log_amplitude_estimate, index_estimate, log_background_estimate
+
+
+class PowerLawWithConstantWithLognormal(ModelPowerSpectrum):
+
+    def __init__(self, frequencies, power):
+        ModelPowerSpectrum.__init__(frequencies, power, rnspectralmodels.power_law_with_constant_with_lognormal)
+
+    def generate_initial_guess(self,
+                               amp_range=[0, 5],
+                               index_range=[0, 50],
+                               background_range=[-50, -1],
+                               f_lower_limit=50.0,
+                               f_upper_limit=200.0,
+                               sufficient_frequencies=10,
+                               initial_log_width=0.1):
+
+        log_amplitude, index_estimate, log_background = PowerLawWithConstant(self.frequencies, self.power).generate_initial_guess()
+        background_spectrum = PowerLawWithConstant.model([log_amplitude, index_estimate, log_background], self.frequencies)
+
+        # Difference between the data and the model
+        diff0 = self.power - background_spectrum
+
+        # Keep the positive parts only
+        positive_index = diff0 > 0.0
+
+        # Limit the fit to a specific frequency range
+        f_above = self.f > f_lower_limit
+        f_below = self.f < f_upper_limit
+
+        # Which data to fit
+        fit_here = positive_index * f_above * f_below
+
+        # If there is sufficient positive data
+        if len(fit_here) > sufficient_frequencies:
+            diff1 = diff0[fit_here]
+            f1 = self.f[fit_here]
+            amp = np.log(np.max(diff1))
+            pos = np.log(f1[np.argmax(diff1)])
+            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, initial_log_width]
+        else:
+            initial_guess = [log_amplitude, index_estimate, log_background,
+                             -100.0,
+                             0.5 * (study_details.structure_location_limits['lo'].value +
+                                    study_details.structure_location_limits['hi'].value),
+                             initial_log_width]
+        return initial_guess
