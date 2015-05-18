@@ -23,13 +23,42 @@ othernames = ['total emission', 'maximum emission', 'minimum emission',
 # Fitting details
 fitdetails = ['rchi2']
 
+
 # Model fit parameter names
 def parameters(model_names):
-    return ("amplitude", "power law index", "background")
+    result = {}
+    if 'power law with constant' in model_names:
+        result['power law with constant'] = "amplitude", "power law index", "background"
+
+    if 'power law with constant and lognormal' in model_names:
+        result['power law with constant and lognormal'] = "amplitude", "power law index", "background", "lognormal amplitude", "lognormal position", "lognormal width"
+
+    return result
+
+
+# Number of parameters
+def nparameters(model_names):
+    result = {}
+    if 'power law with constant' in model_names:
+        result['power law with constant'] = 3
+
+    if 'power law with constant and lognormal' in model_names:
+        result['power law with constant and lognormal'] = 6
+
+    return result
+
 
 # Are the above parameters comparable to values found in ireland et al 2015?
 def comparable(model_names):
-    return (False, True, False)
+    result = {}
+    if 'power law with constant' in model_names:
+        result['power law with constant'] =False, True, False
+
+    if 'power law with constant and lognormal' in model_names:
+        result['power law with constant and lognormal'] = False, True, False, False, False, False
+
+    return result
+
 
 # Conversion factors to convert the stored parameter values to ones which are
 # simpler to understand when plotting them out
@@ -37,6 +66,9 @@ def conversion(model_names):
     return {"amplitude": 1.0 / np.log(10.0),
             "power law index": 1,
             "background": 1.0 / np.log(10.0),
+            "lognormal amplitude": 1.0 / np.log(10.0),
+            "lognormal position": 1.0 / np.log(10.0),
+            "lognormal width": 1.0 / np.log(10.0),
             'total emission': 1.0,
             'maximum emission':  1.0,
             'minimum emission':  1.0,
@@ -44,11 +76,15 @@ def conversion(model_names):
             'standard deviation of log(emission)': 1.0,
             'rchi2': 1.0}
 
+
 # Informative plot labels
 def plotname(model_names):
     return {"amplitude": '$\log_{10}(A)$',
             "power law index": "power law index",
             "background": "$\log_{10}(C)$",
+            "lognormal amplitude": "$\log_{10}(A_{G})$",
+            "lognormal position": "$\log_{10}(f_{G})$",
+            "lognormal width": "$\log_{10}(\sigma_{G})$",
             'total emission': 'sum(E)',
             'maximum emission':  'max(E)',
             'minimum emission':  'min(E)',
