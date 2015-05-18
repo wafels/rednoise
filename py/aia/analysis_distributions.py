@@ -417,9 +417,6 @@ for iwave, wave in enumerate(waves):
                 nmask = np.sum(mask)
                 pixels_used_string = '(#pixels=%i, used=%3.1f%%)' % (nmask, 100 * nmask/ np.float64(mask.size))
 
-                # Number of results
-                nmask = np.sum(mask)
-
                 # Load the other time-series parameters
                 ofilename = ofilename + '.' + window
                 filepath = os.path.join(output, ofilename + '.summary_stats.npz')
@@ -505,7 +502,7 @@ for iwave, wave in enumerate(waves):
                     ax.add_collection(coll)
 
                 cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
-                                    shrink=0.8, label=plotname[parameter1_name])
+                                    shrink=0.8, label=plotname[parameter1_name] + ' : %s' % model_name)
 
                 # Fit everything in.
                 ax.autoscale_view()
@@ -514,4 +511,101 @@ for iwave, wave in enumerate(waves):
                 filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.' + parameter1_name + '.%s.png' % (model_name))
                 print('Saving to ' + filepath)
                 plt.savefig(filepath)
+
+
+#
+# Which model is better?
+#
+masks = {}
+rchi2all = {}
+for wave in waves:
+    masks[wave] = {}
+    rchi2all[wave] = {}
+    for region in regions:
+        masks[wave][region] = {}
+        rchi2all[wave][region] = {}
+        for model_name in model_names:
+            masks[wave][region][model_name] = {}
+            rchi2all[wave][region][model_name] = {}
+
+for iwave, wave in enumerate(waves):
+
+    # Model name
+    for itm, model_name in enumerate(model_names):
+
+        # Number of parameters
+        npars = nparameters[model_name]
+
+        # The parameters of this model
+        these_parameter_names = all_parameter_names[model_name]
+
+        # Calculate reduced chi-squared limits for a given range of
+        # pvalues
+        rchi2limit = analysis_details.rchi2limit(pvalue, nposfreq, npars)
+
+        # Create a label which shows the limits of the reduced
+        # chi-squared value. Also define some colors that signify the
+        # upper and lower levels of the reduced chi-squared
+        rchi2label = analysis_details.rchi2label(rchi2limit)
+        rchi2limitcolor = analysis_details.rchi2limitcolor
+        rchi2s = analysis_details.rchi2s
+
+        # Probability string that corresponds to the reduced
+        # chi-squared values
+        pstring = analysis_details.percentstring(pvalue)
+        percent_lo = analysis_details.percent_lo(pvalue)
+        percent_hi = analysis_details.percent_hi(pvalue)
+
+        # Go through all the regions
+        for iregion, region in enumerate(regions):
+
+            # branch location
+            b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+
+            # Region identifier name
+            region_id = sd.datalocationtools.ident_creator(b)
+
+            # Output location
+            output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+            image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
+            # Output filename
+            ofilename = os.path.join(output, region_id + '.datacube')
+
+            # Get the results
+            result = storage[model_name][wave][region]
+
+            # Generate a mask to filter the results
+            masks[wave][region][model_name] = analysis_details.result_filter(result[0], result[1], rchi2limit)
+
+            # Get the reduced chi-squared for each of these
+            rchi2all[wave][region][model_name] = result[1]
+
+
+# plot these results
+for iwave, wave in enumerate(waves):
+    for iregion, region in enumerate(regions):
+        this_mask = np.zeros((2, ny, nx))
+        final_mask = np.zeros((ny, nx))
+        # Get all the mask details
+        for imodel_name, model_name in enumerate(model_names):
+            this_mask[imodel_name, :, :] = masks[wave][region][model_name]
+
+        # Both models ok
+        masking = this_mask[0, :, :] and this_mask[1, :, :]
+        final_mask[np.where(masking)] = 2
+
+        # First model fits
+        masking = this_mask[0, :, :] and np.logical_not(this_mask[1, :, :])
+        final_mask[np.where(masking)] = 0
+
+        # Second model fits
+        masking = this_mask[1, :, :] and np.logical_not(this_mask[0, :, :])
+        final_mask[np.where(masking)] = 1
+
+        # Neither model fits
+        masking = np.logical_not(this_mask[1, :, :]) and np.logical_not(this_mask[0, :, :])
+        final_mask[np.where(masking)] = -1
+
+        # Plot
 
