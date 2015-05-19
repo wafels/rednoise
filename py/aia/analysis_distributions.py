@@ -148,7 +148,6 @@ for iwave, wave in enumerate(waves):
                         parameter_values[j, i, :] = result['x']
                         success[j, i] = result['success']
                 storage[model_name][wave][region] = [success, rchi2, parameter_values]
-
 #
 # Create the all parameter list of data and their names
 #
@@ -297,16 +296,6 @@ for iwave, wave in enumerate(waves):
 #
 # Spatial distribution of quantities
 #
-#
-# Create the all parameter list of data and their names
-#
-"""
-all_parameter_names = []
-for name in parameters:
-    all_parameter_names.append(name)
-for name in othernames:
-    all_parameter_names.append(name)
-"""
 
 #
 # Define the parameter ranges over wavelength
@@ -337,6 +326,7 @@ for model_name in model_names:
             if parameter1 == 'power law index':
                 param_lims[model_name][region][parameter1][0] = 1.0
                 param_lims[model_name][region][parameter1][1] = 4.0
+
 
 # -----------------------------------------------------------------------------
 # Get the sunspot details at the time of its detection
@@ -470,7 +460,7 @@ for iwave, wave in enumerate(waves):
 
                 # Create the map
                 header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -332.5, "crval2": 17.5,
-                      "telescop": 'AIA', "detector": "AIA", "wavelnth": "171",
+                      "telescop": 'AIA', "detector": "AIA", "wavelnth": wave,
                       "date-obs": mc_layer.date}
                 my_map = sunpy.map.Map(v1, header)
                 # Begin the plot
@@ -512,9 +502,14 @@ for iwave, wave in enumerate(waves):
                 print('Saving to ' + filepath)
                 plt.savefig(filepath)
 
-
 #
-# Which model is better?
+# Which model has better fitness?  Use the selection masks to make this
+# determination.  There are four possible outcomes
+#
+# -1 = neither model has a good fitness
+#  0 = model 0 has a good fitness, model 1 does not
+#  1 = model 1 has a good fitness, model 0 does not
+#  2 = models 0 and 1 both have a good fitness
 #
 masks = {}
 rchi2all = {}
@@ -559,19 +554,6 @@ for iwave, wave in enumerate(waves):
         # Go through all the regions
         for iregion, region in enumerate(regions):
 
-            # branch location
-            b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
-
-            # Region identifier name
-            region_id = sd.datalocationtools.ident_creator(b)
-
-            # Output location
-            output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-            image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
-
-            # Output filename
-            ofilename = os.path.join(output, region_id + '.datacube')
-
             # Get the results
             result = storage[model_name][wave][region]
 
@@ -582,9 +564,26 @@ for iwave, wave in enumerate(waves):
             rchi2all[wave][region][model_name] = result[1]
 
 
-# plot these results
+# Plot spatial distributions of the model fitness
 for iwave, wave in enumerate(waves):
     for iregion, region in enumerate(regions):
+
+        # branch location
+        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+
+        # Region identifier name
+        region_id = sd.datalocationtools.ident_creator(b)
+
+        # Output location
+        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
+        # Output filename
+        ofilename = os.path.join(output, region_id + '.datacube')
+
+
+        ny = masks[wave][region][model_names[0]].shape[0]
+        nx = masks[wave][region][model_names[0]].shape[1]
         this_mask = np.zeros((2, ny, nx))
         final_mask = np.zeros((ny, nx))
         # Get all the mask details
@@ -592,20 +591,72 @@ for iwave, wave in enumerate(waves):
             this_mask[imodel_name, :, :] = masks[wave][region][model_name]
 
         # Both models ok
-        masking = this_mask[0, :, :] and this_mask[1, :, :]
+        masking = np.logical_and(this_mask[0, :, :], this_mask[1, :, :])
         final_mask[np.where(masking)] = 2
 
         # First model fits
-        masking = this_mask[0, :, :] and np.logical_not(this_mask[1, :, :])
+        masking = np.logical_and(this_mask[0, :, :], np.logical_not(this_mask[1, :, :]))
         final_mask[np.where(masking)] = 0
 
         # Second model fits
-        masking = this_mask[1, :, :] and np.logical_not(this_mask[0, :, :])
+        masking = np.logical_and(this_mask[1, :, :], np.logical_not(this_mask[0, :, :]))
         final_mask[np.where(masking)] = 1
 
         # Neither model fits
-        masking = np.logical_not(this_mask[1, :, :]) and np.logical_not(this_mask[0, :, :])
+        masking = np.logical_and(np.logical_not(this_mask[1, :, :]), np.logical_not(this_mask[0, :, :]))
         final_mask[np.where(masking)] = -1
 
         # Plot
+        plt.close('all')
+        # Set up the palette we will use
+        palette = cm.jet
+        # Bad values are those that are masked out
+        palette.set_bad('0.75')
 
+        # Create the map
+        header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -332.5, "crval2": 17.5,
+              "telescop": 'AIA', "detector": "AIA", "wavelnth": wave,
+              "date-obs": mc_layer.date}
+        my_map = sunpy.map.Map(final_mask, header)
+        # Begin the plot
+        fig, ax = plt.subplots()
+        # Plot the map
+        ret = my_map.plot(cmap=palette, axes=ax,
+                    interpolation='none',
+                    norm=colors.Normalize())
+        # Looking at sunspots?  If so, overplot the outline of the sunspot,
+        # ensuring that it has been rotated to the time of the layer_index
+        if region == 'sunspot':
+            rotated_polygon = np.zeros_like(polygon)
+            for i in range(0, len(p2)):
+                new_coords = rot_hpc(polygon[0, i, 0] * u.arcsec,
+                                     polygon[0, i, 1] * u.arcsec,
+                                     sunspot_date,
+                                     mc_layer.date)
+                rotated_polygon[0, i, 0] = new_coords[0].value
+                rotated_polygon[0, i, 1] = new_coords[1].value
+
+            # Create the collection
+            coll = PolyCollection(rotated_polygon,
+                                  alpha=1.0,
+                                  edgecolors=['k'],
+                                  facecolors=['none'],
+                                  linewidth=[5])
+            # Add to the plot
+            ax.add_collection(coll)
+
+        cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
+                            shrink=0.8,
+                            label='model selection (based on %s)' % rchi2s,
+                            ticks=[-1, 0, 1, 2])
+        cbar.ax.set_xticklabels(['neither', model_names[0], model_names[1],
+                                'both'])
+        cbar.ax.tick_params(labelsize=10)
+
+        # Fit everything in.
+        ax.autoscale_view()
+
+        # Dump to file
+        filepath = os.path.join(image, 'spatial_distrib.model_selection_reduced_chi2.' + region_id + '.png')
+        print('Saving to ' + filepath)
+        plt.savefig(filepath)
