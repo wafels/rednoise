@@ -133,6 +133,9 @@ for iwave, wave in enumerate(waves):
             # Storage - Fourier power
             pwr = np.zeros((ny, nx, nposfreq))
 
+            # Storage - Fast Fourier transfrom
+            all_fft = np.zeros_like(pwr, dtype=np.complex64)
+
             # Storage - summary stats
             dtotal = np.zeros((ny, nx))
             dmax = np.zeros_like(dtotal)
@@ -167,11 +170,17 @@ for iwave, wave in enumerate(waves):
                     # Multiply the data by the apodization window
                     d = apply_window(d, win)
 
+                    # Get the Fourier transform
+                    this_fft = np.fft.fft(d)
+
                     # Get the Fourier power we will analyze later
-                    this_power = ((np.abs(np.fft.fft(d)) ** 2) / (1.0 * nt))[pindex]
+                    this_power = ((np.abs(this_fft) ** 2) / (1.0 * nt))[pindex]
 
                     # Store the individual Fourier power
                     pwr[j, i, :] = this_power
+
+                    # Store the FFT
+                    all_fft[j, i, :] = this_fft
 
             # Save the Fourier Power of the analyzed time-series
             ofilename = ofilename + '.' + window
@@ -180,6 +189,14 @@ for iwave, wave in enumerate(waves):
             f = open(filepath, 'wb')
             pickle.dump(pfrequencies, f)
             pickle.dump(pwr, f)
+            f.close()
+
+            # Save the FFT of the analyzed time-series
+            filepath = os.path.join(output, ofilename + '.fourier_transform.pkl')
+            print('Saving Fourier transform to ' + filepath)
+            f = open(filepath, 'wb')
+            pickle.dump(pfrequencies, f)
+            pickle.dump(all_fft, f)
             f.close()
 
             # Save the summary statistics
