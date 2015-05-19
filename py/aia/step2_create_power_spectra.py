@@ -134,7 +134,8 @@ for iwave, wave in enumerate(waves):
             pwr = np.zeros((ny, nx, nposfreq))
 
             # Storage - Fast Fourier transfrom
-            all_fft = np.zeros_like(pwr, dtype=np.complex64)
+            n_fft_freq = len(tsdummy.FFTPowerSpectrum.frequencies.frequencies)
+            all_fft = np.zeros((ny, nx, n_fft_freq), dtype=np.complex64)
 
             # Storage - summary stats
             dtotal = np.zeros((ny, nx))
