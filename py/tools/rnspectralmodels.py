@@ -3,7 +3,8 @@ Power Spectrum Models
 """
 
 import numpy as np
-
+import lnlike_model_fit
+import pstools
 
 #
 # Normalize the frequency
@@ -157,3 +158,82 @@ def power_law_with_constant_with_deltafn(a, f):
         frequencies
     """
     return power_law_with_constant(a[0:3], f) + deltafn(a[3:4], f)
+
+
+class CompoundSpectrum:
+    def __init__(self, components):
+        self.components = components
+        self.names = []
+        self.labels = []
+        for component in self.components:
+            spectrum = component[0]
+            for name in spectrum.names:
+                self.names.append(name)
+            for label in spectrum.labels:
+                self.labels.append(label)
+
+    def power(self, a, f):
+        total_power = np.zeros_like(f)
+        for component in self.components:
+            spectrum = component[0]
+            print spectrum
+            variables = a[component[1][0]: component[1][1]]
+            print variables
+            total_power += spectrum.power(variables, f)
+        return total_power
+
+    def guess(self, f, data):
+        pass
+
+    def fit(self, f, data, guess=None, method="Nelder-Mead"):
+        if guess is None:
+            return lnlike_model_fit.go(f, data, self.power, self.guess, method)
+        else:
+            return lnlike_model_fit.go(f, data, self.power, guess, method)
+
+
+class Constant:
+    def __init__(self):
+        self.names = ['log(constant)']
+        self.labels = ['$\log(constant)$']
+
+    def power(self, a, f):
+        return np.exp(a)
+
+
+class PowerLaw:
+    def __init__(self):
+        self.names = ['log(power law amplitude)', 'power law index']
+        self.labels = [r'$\log(A)$', r'$n$']
+
+    def power(self, a, f):
+        return np.exp(a[0]) * (f ** -a[1])
+
+
+class Lognormal:
+    def __init__(self):
+        self.names = ['log(lognormal amplitude)', 'lognormal location', 'lognormal width']
+        self.labels = ['$\log(A_{L})$', '$p_{L}$', '$w_{L}$']
+
+    def power(self, a, f):
+        onent = (np.log(f) - a[1]) / a[2]
+        amp = np.exp(a[0])
+        return amp * np.exp(-0.5 * onent ** 2)
+
+
+class PowerLawPlusConstant(CompoundSpectrum):
+    def __init__(self):
+        CompoundSpectrum.__init__(self, ((PowerLaw(), (0, 2)),
+                                         (Constant(), (2, 3))))
+
+    def guess(self, f, power,
+                               amp_range=[0, 5],
+                               index_range=[0, 50],
+                               background_range=[-50, -1])
+
+        log_amplitude_estimate = np.log(np.mean(power[amp_range[0]:amp_range[1]]))
+        index_estimate = pstools.most_probable_power_law_index(f[index_range[0]:index_range[1]],
+                                                       power[index_range[0]:index_range[1]],
+                                                       0.0, np.arange(0.0, 4.0, 0.01))
+        log_background_estimate = np.log(np.mean(power[background_range[0]:background_range[1]]))
+        return log_amplitude_estimate, index_estimate, log_background_estimate
