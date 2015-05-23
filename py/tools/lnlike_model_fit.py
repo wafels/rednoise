@@ -95,7 +95,6 @@ def rchi2distrib(m, nu):
 #
 def prob_this_rchi2_or_larger(rchi2, m, nu):
     """
-
     :param rchi2: reduced chi-squared value
     :param m: number of spectra considered
     :param nu:  degrees of freedom
@@ -111,3 +110,11 @@ def prob_this_rchi2_or_larger(rchi2, m, nu):
 def rchi2_given_prob(p, m, nu):
     a = (nu / 2.0) * np.float64(m) / (3.0 + np.float64(m))
     return gammainccinv(a, p) / a
+
+
+def AIC(k, variables, freqs, data, model_function):
+    return 2 * k - 2 * lnlike(variables, freqs, data, model_function)
+
+
+def BIC(k, variables, freqs, data, model_function, n):
+    return -2 * lnlike(variables, freqs, data, model_function) + k * np.log(n)

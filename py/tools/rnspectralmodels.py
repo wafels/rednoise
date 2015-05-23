@@ -320,7 +320,7 @@ class Fit:
         return lnlike_model_fit.rchi2(1, self.dof, self.rhoj())
 
     def AIC(self):
-        return 2 * self.k - 2 * lnlike_model_fit.lnlike(self.estimate, self.f, self.data, self.model)
+        return lnlike_model_fit.AIC(self.k, self.estimate, self.f, self.data, self.model)
 
     def BIC(self):
-        return -2 * lnlike_model_fit.lnlike(self.estimate, self.f, self.data, self.model) + self.k * np.log(self.n)
+        return lnlike_model_fit.BIC(self.k, self.estimate, self.f, self.data, self.model, self.n)
