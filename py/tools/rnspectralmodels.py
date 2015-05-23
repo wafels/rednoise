@@ -315,7 +315,7 @@ class Fit:
         return lnlike_model_fit.rchi2(1, self.dof, self.rhoj())
 
     def AIC(self):
-        return 2 * self.k - 2 * 
+        return 2 * self.k - 2 * lnlike_model_fit.lnlike(self.result['x'], self.f, self.data, self.model)
 
     def BIC(self):
         return None
