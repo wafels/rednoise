@@ -5,6 +5,7 @@ Power Spectrum Models
 import numpy as np
 import lnlike_model_fit
 import pstools
+import study_details
 
 #
 # Normalize the frequency
@@ -93,6 +94,7 @@ def lognormal(a, f):
 def lognormal_CF(f, a, b, c):
     return lognormal([a, b, c], f)
 
+
 # ----------------------------------------------------------------------------
 # Delta function
 #
@@ -176,20 +178,12 @@ class CompoundSpectrum:
         total_power = np.zeros_like(f)
         for component in self.components:
             spectrum = component[0]
-            print spectrum
             variables = a[component[1][0]: component[1][1]]
-            print variables
             total_power += spectrum.power(variables, f)
         return total_power
 
     def guess(self, f, data):
         pass
-
-    def fit(self, f, data, guess=None, method="Nelder-Mead"):
-        if guess is None:
-            return lnlike_model_fit.go(f, data, self.power, self.guess, method)
-        else:
-            return lnlike_model_fit.go(f, data, self.power, guess, method)
 
 
 class Constant:
@@ -198,7 +192,7 @@ class Constant:
         self.labels = ['$\log(constant)$']
 
     def power(self, a, f):
-        return np.exp(a)
+        return constant(a)
 
 
 class PowerLaw:
@@ -207,7 +201,7 @@ class PowerLaw:
         self.labels = [r'$\log(A)$', r'$n$']
 
     def power(self, a, f):
-        return np.exp(a[0]) * (f ** -a[1])
+        return power_law(a, f)
 
 
 class Lognormal:
@@ -216,9 +210,7 @@ class Lognormal:
         self.labels = ['$\log(A_{L})$', '$p_{L}$', '$w_{L}$']
 
     def power(self, a, f):
-        onent = (np.log(f) - a[1]) / a[2]
-        amp = np.exp(a[0])
-        return amp * np.exp(-0.5 * onent ** 2)
+        return lognormal(a, f)
 
 
 class PowerLawPlusConstant(CompoundSpectrum):
@@ -226,10 +218,8 @@ class PowerLawPlusConstant(CompoundSpectrum):
         CompoundSpectrum.__init__(self, ((PowerLaw(), (0, 2)),
                                          (Constant(), (2, 3))))
 
-    def guess(self, f, power,
-                               amp_range=[0, 5],
-                               index_range=[0, 50],
-                               background_range=[-50, -1])
+    def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
+              background_range=[-50, -1]):
 
         log_amplitude_estimate = np.log(np.mean(power[amp_range[0]:amp_range[1]]))
         index_estimate = pstools.most_probable_power_law_index(f[index_range[0]:index_range[1]],
@@ -237,3 +227,95 @@ class PowerLawPlusConstant(CompoundSpectrum):
                                                        0.0, np.arange(0.0, 4.0, 0.01))
         log_background_estimate = np.log(np.mean(power[background_range[0]:background_range[1]]))
         return log_amplitude_estimate, index_estimate, log_background_estimate
+
+
+class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
+    def __init__(self):
+        CompoundSpectrum.__init__(self, ((PowerLaw(), (0, 2)),
+                                         (Constant(), (2, 3)),
+                                         (Lognormal(), (3, 6))))
+
+    def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
+              background_range=[-50, -1], f_lower_limit=50.0,
+              f_upper_limit=200.0, sufficient_frequencies=10,
+              initial_log_width=0.1):
+
+        log_amplitude, index_estimate, log_background = PowerLawPlusConstant.guess().guess(f, power)
+        background_spectrum = PowerLawPlusConstant.power([log_amplitude, index_estimate, log_background], f)
+
+        # Difference between the data and the model
+        diff0 = power - background_spectrum
+
+        # Keep the positive parts only
+        positive_index = diff0 > 0.0
+
+        # Limit the fit to a specific frequency range
+        f_above = f > f_lower_limit
+        f_below = f < f_upper_limit
+
+        # Which data to fit
+        fit_here = positive_index * f_above * f_below
+
+        # If there is sufficient positive data
+        if len(fit_here) > sufficient_frequencies:
+            diff1 = diff0[fit_here]
+            f1 = f[fit_here]
+            amp = np.log(np.max(diff1))
+            pos = np.log(f1[np.argmax(diff1)])
+            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, initial_log_width]
+        else:
+            initial_guess = [log_amplitude, index_estimate, log_background,
+                             -100.0,
+                             0.5 * (f_lower_limit + f_upper_limit),
+                             initial_log_width]
+        return initial_guess
+
+#
+# A class that fits models to data
+#
+class Fit:
+    def __init__(self, f, data, model, guess=None, fit_method='Nelder-Mead',
+                 **kwargs):
+
+        # Frequencies
+        self.f = f
+
+        # Data
+        self.data = data
+
+        # Model that we are going to fit to the data
+        self.model = model
+
+        # Initial guess
+        if guess is None:
+            self.guess = model.guess(self.f, self.data, **kwargs)
+        else:
+            self.guess = guess
+
+        # Fit Method
+        self.fit_method = fit_method
+
+        # Number of parameters
+        self.k = len(self.guess)
+
+        # Degrees of freedom
+        self.dof = len(self.f) - self.k - 1
+
+        # Get the fit results
+        self.result = lnlike_model_fit.go(self.f, self.data, self.power,
+                                          self.guess, self.fit_method)
+
+    def best_fit(self):
+        return self.model.power(self.result['x'], self.f)
+
+    def rhoj(self):
+        return lnlike_model_fit.rhoj(self.data, self.best_fit)
+
+    def rchi2(self):
+        return lnlike_model_fit.rchi2(1, self.dof, self.rhoj())
+
+    def AIC(self):
+        return 2 * self.k - 2 * 
+
+    def BIC(self):
+        return None
