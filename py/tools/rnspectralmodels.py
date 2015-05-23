@@ -5,7 +5,7 @@ Power Spectrum Models
 import numpy as np
 import lnlike_model_fit
 import pstools
-import study_details
+
 
 #
 # Normalize the frequency
@@ -270,8 +270,9 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
                              initial_log_width]
         return initial_guess
 
+
 #
-# A class that fits models to data
+# A class that fits models to data and calculates various fit measures.
 #
 class Fit:
     def __init__(self, f, data, model, guess=None, fit_method='Nelder-Mead',
@@ -295,18 +296,22 @@ class Fit:
         # Fit Method
         self.fit_method = fit_method
 
-        # Number of parameters
+        # Number of free parameters
         self.k = len(self.guess)
 
+        # Number of data points
+        self.n = len(self.data)
+
         # Degrees of freedom
-        self.dof = len(self.f) - self.k - 1
+        self.dof = self.n - self.k - 1
 
         # Get the fit results
         self.result = lnlike_model_fit.go(self.f, self.data, self.power,
                                           self.guess, self.fit_method)
+        self.estimate = self.result['x']
 
     def best_fit(self):
-        return self.model.power(self.result['x'], self.f)
+        return self.model.power(self.estimate, self.f)
 
     def rhoj(self):
         return lnlike_model_fit.rhoj(self.data, self.best_fit)
@@ -315,7 +320,7 @@ class Fit:
         return lnlike_model_fit.rchi2(1, self.dof, self.rhoj())
 
     def AIC(self):
-        return 2 * self.k - 2 * lnlike_model_fit.lnlike(self.result['x'], self.f, self.data, self.model)
+        return 2 * self.k - 2 * lnlike_model_fit.lnlike(self.estimate, self.f, self.data, self.model)
 
     def BIC(self):
-        return None
+        return -2 * lnlike_model_fit.lnlike(self.estimate, self.f, self.data, self.model) + self.k * np.log(self.n)
