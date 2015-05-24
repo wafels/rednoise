@@ -564,7 +564,8 @@ for iwave, wave in enumerate(waves):
             rchi2all[wave][region][model_name] = result[1]
 
 
-# Plot spatial distributions of the model fitness
+# Plot spatial distributions of the model fitness, comparing two models to each
+# other.
 for iwave, wave in enumerate(waves):
     for iregion, region in enumerate(regions):
 
@@ -660,3 +661,23 @@ for iwave, wave in enumerate(waves):
         filepath = os.path.join(image, 'spatial_distrib.model_selection_reduced_chi2.' + region_id + '.png')
         print('Saving to ' + filepath)
         plt.savefig(filepath)
+
+
+# Plot spatial distributions of the AIC and BIC.  The AIC and BIC for each
+# model are subtracted, and the model with the lowest AIC or BIC is preferred.
+for iwave, wave in enumerate(waves):
+    for iregion, region in enumerate(regions):
+
+        # branch location
+        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+
+        # Region identifier name
+        region_id = sd.datalocationtools.ident_creator(b)
+
+        # Output location
+        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
+        # Output filename
+        ofilename = os.path.join(output, region_id + '.datacube')
+
