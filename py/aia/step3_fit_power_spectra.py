@@ -20,10 +20,9 @@ regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 windows = ['hanning']
 
 # Models to fit
-models = (rnspectralmodels.power_law_with_constant_with_lognormal,
-          rnspectralmodels.power_law_with_constant)
-model_names = ('power law with constant and lognormal',
-               'power law with constant')
+these_models = {'power law with constant and lognormal': rnspectralmodels.power_law_with_constant_with_lognormal,
+                'power law with constant': rnspectralmodels.power_law_with_constant}
+nmodels = len(these_models)
 
 #
 # Main analysis loops
@@ -75,10 +74,10 @@ for iwave, wave in enumerate(waves):
             results = {}
 
             # Go through the models
-            for itm, this_model in enumerate(models):
+            for itm, model_name in enumerate(these_models):
                 # Next model
-                model_name = model_names[itm]
-                print('Fitting model: %s (%i out of %i)' %(model_name, itm + 1, len(model_names)))
+                model_function = these_models[model_name]
+                print('Fitting model: %s (%i out of %i)' % (model_name, itm + 1, nmodels))
 
                 # Storage for the results
                 results[model_name] = [[None]*nx for i in range(ny)]
@@ -90,22 +89,42 @@ for iwave, wave in enumerate(waves):
                         # Generate an initial guess
                         initial_guess = pstools.generate_initial_guess(model_name, normed_freqs.value, this)
 
+                        # Number of data points to fit
+                        n = len(normed_freqs)
+
+                        # Number of parameters
+                        k = len(initial_guess)
+
                         # Do the fit
                         result = lnlike_model_fit.go(normed_freqs, this,
-                                                     this_model, initial_guess,
+                                                     model_function, initial_guess,
                                                      "Nelder-Mead")
 
                         # Calculate Nita et al reduced chi-squared value
-                        bestfit = this_model(result['x'], normed_freqs)
+                        bestfit = model_function(result['x'], normed_freqs)
 
                         # Sample to model ratio
                         rhoj = lnlike_model_fit.rhoj(this, bestfit)
 
                         # Nita et al (2014) value of the reduced chi-squared
-                        rchi2 = lnlike_model_fit.rchi2(1, len(normed_freqs) - len(initial_guess) - 1, rhoj)
+                        rchi2 = lnlike_model_fit.rchi2(1, n - k - 1, rhoj)
+
+                        # AIC value
+                        aic = lnlike_model_fit.AIC(k,
+                                                   result['x'],
+                                                   normed_freqs.value,
+                                                   this, model_function)
+
+                        # BIC value
+                        bic = lnlike_model_fit.BIC(len(initial_guess),
+                                                   result['x'],
+                                                   normed_freqs.value,
+                                                   this, model_function,
+                                                   n)
 
                         # Store the results
-                        results[model_name][j][i] = (initial_guess, result, rchi2)
+                        results[model_name][j][i] = (initial_guess, result,
+                                                     rchi2, aic, bic)
 
             # Dump the results
             filepath = os.path.join(output, ofilename + '.lnlike_fit_results.pkl')
