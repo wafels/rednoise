@@ -153,6 +153,8 @@ for iwave, wave in enumerate(waves):
                     # Fix the data for any non-finite entries
                     d = tsutils.fix_nonfinite(d)
 
+                    # ---
+                    # Basic statistics of the time series
                     # Get the total emission
                     dtotal[j, i] = np.sum(d)
 
@@ -168,22 +170,45 @@ for iwave, wave in enumerate(waves):
                     # Get the standard deviation of the log of the emission
                     dlnsd[j, i] = np.std(np.log(d))
 
+                    # ---
+                    # Fourier transform of the absolute intensities
                     # Multiply the data by the apodization window
-                    d = apply_window(d, win)
+                    d_with_window = apply_window(d, win)
 
                     # Get the Fourier transform
-                    this_fft = np.fft.fft(d)
+                    this_fft = np.fft.fft(d_with_window)
 
-                    # Get the Fourier power we will analyze later
+                    # Fourier power of the absolute intensities
                     this_power = ((np.abs(this_fft) ** 2) / (1.0 * nt))[pindex]
 
                     # Store the individual Fourier power
                     pwr[j, i, :] = this_power
 
-                    # Store the FFT
+                    # Store the full FFT
                     all_fft[j, i, :] = this_fft
 
-            # Save the Fourier Power of the analyzed time-series
+                    # ---
+                    # Relative change in intensity
+                    dmean = np.mean(d)
+                    d_relative_change = (d - dmean) / dmean
+                    d_relative_change_with_window = apply_window(d_relative_change, win)
+                    this_fft_relative_change_with_window = np.fft.fft(d_relative_change_with_window)
+                    this_power_relative_change_with_window = ((np.abs(this_fft_relative_change_with_window) ** 2) / (1.0 * nt))[pindex]
+
+                    # ---
+                    # Ireland et al (2015) summation
+                    # Sum over the log(Fourier power of the relative intensities)
+
+                    # ---
+                    # Sum over the log(Fourier power of the absolute intensities)
+
+                    # ---
+                    # Sum over the Fourier power of the relative intensities
+
+                    # ---
+                    # Sum over the Fourier power of the absolute intensities
+
+            # Save the Fourier power of the absolute intensities
             ofilename = ofilename + '.' + window
             filepath = os.path.join(output, ofilename + '.fourier_power.pkl')
             print('Saving power spectra to ' + filepath)
