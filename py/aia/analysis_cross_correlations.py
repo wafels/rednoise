@@ -162,7 +162,7 @@ for name in othernames:
 #
 
 # Create the cross-correlation storage
-cc_within_channel= {}
+cc_within_channel = {}
 for wave in waves:
     cc_within_channel[wave] = {}
     for region in regions:
@@ -212,7 +212,6 @@ for iwave, wave in enumerate(waves):
             dmin = otsp['dmin']
             dsd = otsp['dsd']
             dlnsd = otsp['dlnsd']
-
 
         # Create a list containing all the parameters
         all_parameter_list = [result[2][:, :, 0], result[2][:, :, 1], result[2][:, :, 2],

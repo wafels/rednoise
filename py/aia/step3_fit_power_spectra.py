@@ -116,7 +116,7 @@ for iwave, wave in enumerate(waves):
                                                    this, model_function)
 
                         # BIC value
-                        bic = lnlike_model_fit.BIC(len(initial_guess),
+                        bic = lnlike_model_fit.BIC(k,
                                                    result['x'],
                                                    normed_freqs.value,
                                                    this, model_function,
