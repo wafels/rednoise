@@ -126,6 +126,12 @@ for iwave, wave in enumerate(waves):
                         results[model_name][j][i] = (initial_guess, result,
                                                      rchi2, aic, bic)
 
+                        #results[model_name][j][i] = {"initial_guess": initial_guess,
+                        #                             "result": result,
+                        #                             "rchi2": rchi2,
+                        #                             "aic": aic,
+                        #                             "bic": bic}
+
             # Dump the results
             filepath = os.path.join(output, ofilename + '.lnlike_fit_results.pkl')
             print('Saving results to ' + filepath)

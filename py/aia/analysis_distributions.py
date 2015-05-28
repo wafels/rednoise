@@ -148,6 +148,11 @@ for iwave, wave in enumerate(waves):
                         parameter_values[j, i, :] = result['x']
                         success[j, i] = result['success']
                 storage[model_name][wave][region] = [success, rchi2, parameter_values]
+
+
+
+
+
 #
 # Create the all parameter list of data and their names
 #
@@ -512,16 +517,26 @@ for iwave, wave in enumerate(waves):
 #  2 = models 0 and 1 both have a good fitness
 #
 masks = {}
+aic_all = {}
+bic_all = {}
 rchi2all = {}
 for wave in waves:
     masks[wave] = {}
     rchi2all[wave] = {}
+    aic_all[wave] = {}
+    bic_all[wave] = {}
+
     for region in regions:
         masks[wave][region] = {}
         rchi2all[wave][region] = {}
+        aic_all[wave][region] = {}
+        bic_all[wave][region] = {}
+
         for model_name in model_names:
             masks[wave][region][model_name] = {}
             rchi2all[wave][region][model_name] = {}
+            aic_all[wave][region][model_name] = {}
+            bic_all[wave][region][model_name] = {}
 
 for iwave, wave in enumerate(waves):
 
@@ -563,6 +578,10 @@ for iwave, wave in enumerate(waves):
             # Get the reduced chi-squared for each of these
             rchi2all[wave][region][model_name] = result[1]
 
+            # Get the AIC and the BIC
+            aic_all[wave][region][model_name] = result[1]
+            bic_all[wave][region][model_name] = result[1]
+
 
 # Plot spatial distributions of the model fitness, comparing two models to each
 # other.
@@ -581,7 +600,6 @@ for iwave, wave in enumerate(waves):
 
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
-
 
         ny = masks[wave][region][model_names[0]].shape[0]
         nx = masks[wave][region][model_names[0]].shape[1]
@@ -681,3 +699,6 @@ for iwave, wave in enumerate(waves):
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
 
+        # Get all the mask details
+        for imodel_name, model_name in enumerate(model_names):
+            this_mask[imodel_name, :, :] = results[]
