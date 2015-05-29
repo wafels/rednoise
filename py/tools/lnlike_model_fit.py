@@ -84,7 +84,7 @@ def rchi2distrib(m, nu):
     of the data
     """
     # Calculate the gamma function parameter values as expressed in Eq. 17
-    k = (nu / 2.0) / ( 1.0 + 3.0 / m)
+    k = (nu / 2.0) / (1.0 + 3.0 / m)
     scale = 1.0 / k
     #
     return gamma(k, scale=scale, loc=0.0)
