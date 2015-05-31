@@ -681,6 +681,9 @@ for iwave, wave in enumerate(waves):
         plt.savefig(filepath)
 
 
+
+
+
 # Plot spatial distributions of the AIC and BIC.  The AIC and BIC for each
 # model are subtracted, and the model with the lowest AIC or BIC is preferred.
 for iwave, wave in enumerate(waves):

@@ -9,15 +9,16 @@ import os
 import cPickle as pickle
 import study_details as sd
 import numpy as np
+import analysis_details
 
 
 #
 # Function to get all the data in to one big dictionary
 #
 def get_all_data(waves=['171', '193'],
-             regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
-             windows=['hanning'],
-             model_names=('power law with constant and lognormal', 'power law with constant')):
+                 regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
+                 windows=['hanning'],
+                 model_names=('power law with constant and lognormal', 'power law with constant')):
 
     # Create the storage across all models, AIA channels and regions
     storage = {}
@@ -87,3 +88,36 @@ def as_numpy_array(data, indices):
                 x = x[index]
             results[j, i] = x
     return results
+
+
+#
+# Function to get all the data in to one big dictionary
+#
+def get_masks(storage, rchi2limit,
+              waves=['171', '193'],
+              regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
+              model_names=('power law with constant and lognormal', 'power law with constant')):
+
+    # Create the storage across all models, AIA channels and regions
+    masks = {}
+    for wave in waves:
+        masks[wave] = {}
+        for region in regions:
+            masks[wave][region] = {}
+            for model_name in model_names:
+                masks[wave][region][model_name] = []
+
+    #
+    # Get all the good fit masks
+    #
+    for iwave, wave in enumerate(waves):
+        for iregion, region in enumerate(regions):
+            for imodel_name, model_name in enumerate(model_names):
+
+                z = storage[wave][region][model_name]
+                rchi2 = as_numpy_array(z, [])
+                success = as_numpy_array(z, [])
+                mask = analysis_details.result_filter(success, rchi2, rchi2limit[model_name])
+                masks[wave][region][model_name] = mask
+
+    return masks
