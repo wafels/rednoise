@@ -7,6 +7,7 @@ import scipy.optimize as op
 from scipy.stats import gamma
 from scipy.special import gammaincc, gammainccinv
 
+
 #
 # Log likelihood function.  In this case we want the product of exponential
 # distributions.

@@ -23,6 +23,10 @@ othernames = ['total emission', 'maximum emission', 'minimum emission',
 # Fitting details
 fitdetails = ['rchi2']
 
+# Where in the main output from step3 is everything
+ic = {"AIC": [3], "BIC": [4]}
+rchi2 = [2]
+success = [1, 'success']
 
 # Model fit parameter names
 def parameters(model_names):

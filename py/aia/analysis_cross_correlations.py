@@ -25,7 +25,7 @@ windows = ['hanning']
 nposfreq= 899
 
 # Model results to examine
-model_names = ('power law with constant',)
+model_names = ('power law with constant and lognormal',)
 
 # Look at those results that have chi-squared values that give rise to
 # probabilities within these values
@@ -48,7 +48,7 @@ conversion = analysis_details.conversion(model_names)
 plotname = analysis_details.plotname(model_names)
 
 # Number of parameters we are considering
-nparameters = len(parameters)
+nparameters = analysis_details.nparameters(model_names)
 
 # Calculate reduced chi-squared limits for a given range of pvalues
 rchi2limit = analysis_details.rchi2limit(pvalue, nposfreq, nparameters)

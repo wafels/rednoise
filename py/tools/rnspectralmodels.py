@@ -281,46 +281,39 @@ class Fit:
         # Frequencies
         self.f = f
 
-        # Data
-        self.data = data
+        # Number of data points
+        self.n = len(self.f)
 
         # Model that we are going to fit to the data
         self.model = model
 
-        # Initial guess
-        if guess is None:
-            self.guess = model.guess(self.f, self.data, **kwargs)
-        else:
-            self.guess = guess
-
         # Fit Method
         self.fit_method = fit_method
 
+        # Initial guess
+        if guess is None:
+            self.guess = model.guess(self.f, data, **kwargs)
+        else:
+            self.guess = guess
+
         # Number of free parameters
         self.k = len(self.guess)
-
-        # Number of data points
-        self.n = len(self.data)
 
         # Degrees of freedom
         self.dof = self.n - self.k - 1
 
         # Get the fit results
-        self.result = lnlike_model_fit.go(self.f, self.data, self.power,
+        self.result = lnlike_model_fit.go(self.f, data, self.power,
                                           self.guess, self.fit_method)
+
         self.estimate = self.result['x']
 
-    def best_fit(self):
-        return self.model.power(self.estimate, self.f)
+        self.best_fit = self.model.power(self.estimate, self.f)
 
-    def rhoj(self):
-        return lnlike_model_fit.rhoj(self.data, self.best_fit)
+        self.rhoj = lnlike_model_fit.rhoj(data, self.best_fit)
 
-    def rchi2(self):
-        return lnlike_model_fit.rchi2(1, self.dof, self.rhoj())
+        self.rchi2 = lnlike_model_fit.rchi2(1, self.dof, self.rhoj)
 
-    def AIC(self):
-        return lnlike_model_fit.AIC(self.k, self.estimate, self.f, self.data, self.model)
+        self.AIC = lnlike_model_fit.AIC(self.k, self.estimate, self.f, data, self.model)
 
-    def BIC(self):
-        return lnlike_model_fit.BIC(self.k, self.estimate, self.f, self.data, self.model, self.n)
+        self.BIC = lnlike_model_fit.BIC(self.k, self.estimate, self.f, data, self.model, self.n)

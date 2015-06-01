@@ -9,7 +9,8 @@ import os
 import cPickle as pickle
 import study_details as sd
 import numpy as np
-import analysis_details
+import analysis_details as ad
+import sunpy.map
 
 
 #
@@ -91,7 +92,7 @@ def as_numpy_array(data, indices):
 
 
 #
-# Function to get all the data in to one big dictionary
+# Function to define all the masks
 #
 def get_masks(storage, rchi2limit,
               waves=['171', '193'],
@@ -115,9 +116,70 @@ def get_masks(storage, rchi2limit,
             for imodel_name, model_name in enumerate(model_names):
 
                 z = storage[wave][region][model_name]
-                rchi2 = as_numpy_array(z, [])
-                success = as_numpy_array(z, [])
-                mask = analysis_details.result_filter(success, rchi2, rchi2limit[model_name])
+                rchi2 = as_numpy_array(z, ad.rchi2)
+                success = as_numpy_array(z, ad.success)
+                mask = ad.result_filter(success, rchi2, rchi2limit[model_name])
                 masks[wave][region][model_name] = mask
 
     return masks
+
+
+#
+# Turn the input data in to a map
+#
+def make_map(output, region_id, wave, map_data):
+    # Get the map: Open the file that stores it and read it in
+    map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
+    get_map_data = open(map_data_filename, 'rb')
+    _dummy = pickle.load(get_map_data)
+    _dummy = pickle.load(get_map_data)
+    # map layer
+    mc_layer = pickle.load(get_map_data)
+    # Specific region information
+    get_map_data.close()
+
+    # Create the map
+    header = {'cdelt1': 0.6, 'cdelt2': 0.6, "crval1": -332.5, "crval2": 17.5,
+          "telescop": 'AIA', "detector": "AIA", "wavelnth": wave,
+          "date-obs": mc_layer.date}
+    my_map = sunpy.map.Map(map_data, header)
+
+    return my_map
+
+
+#
+# Define a dictionary that contains maps of the fit parameters of interest
+#
+def get_all_fit_quantities(storage, rchi2limit,
+                           waves=['171', '193'],
+                           regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
+                           model_names=('power law with constant and lognormal', 'power law with constant')):
+
+    # Create the storage across all models, AIA channels and regions
+    quantities = {}
+    for wave in waves:
+        quantities[wave] = {}
+        for region in regions:
+            quantities[wave][region] = {}
+            for model_name in model_names:
+                quantities[wave][region][model_name] = []
+
+
+
+    for iwave, wave in enumerate(waves):
+        for iregion, region in enumerate(regions):
+            for imodel_name, model_name in enumerate(model_names):
+
+                z = storage[wave][region][model_name]
+
+                result = {"rchi2": as_numpy_array(z, ad.rchi2),
+                          "aic": as_numpy_array(z, ad.aic),
+                          "bic": as_numpy_array(z, ad.bic),
+                          "success": as_numpy_array(z, ad.success)}
+
+                result["mask"] = ad.result_filter(result["success"], result["rchi2"], rchi2limit[model_name])
+                for iparameter_name, parameter_name in parameter_names:
+                    result[parameter_name] = as_numpy_array(z, [1, 'x', iparameter_name])
+
+
+                quantities[wave][region][model_name] = result
