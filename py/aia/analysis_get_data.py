@@ -74,8 +74,6 @@ def get_all_data(waves=['171', '193'],
     return storage
 
 
-def get_specific_data(storage, wave, region, model_name):
-    return storage[wave][region][model_name]
 
 
 def as_numpy_array(data, indices):
@@ -89,39 +87,6 @@ def as_numpy_array(data, indices):
                 x = x[index]
             results[j, i] = x
     return results
-
-
-#
-# Function to define all the masks
-#
-def get_masks(storage, rchi2limit,
-              waves=['171', '193'],
-              regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
-              model_names=('power law with constant and lognormal', 'power law with constant')):
-
-    # Create the storage across all models, AIA channels and regions
-    masks = {}
-    for wave in waves:
-        masks[wave] = {}
-        for region in regions:
-            masks[wave][region] = {}
-            for model_name in model_names:
-                masks[wave][region][model_name] = []
-
-    #
-    # Get all the good fit masks
-    #
-    for iwave, wave in enumerate(waves):
-        for iregion, region in enumerate(regions):
-            for imodel_name, model_name in enumerate(model_names):
-
-                z = storage[wave][region][model_name]
-                rchi2 = as_numpy_array(z, ad.rchi2)
-                success = as_numpy_array(z, ad.success)
-                mask = ad.result_filter(success, rchi2, rchi2limit[model_name])
-                masks[wave][region][model_name] = mask
-
-    return masks
 
 
 #
@@ -144,16 +109,25 @@ def make_map(output, region_id, wave, map_data):
           "date-obs": mc_layer.date}
     my_map = sunpy.map.Map(map_data, header)
 
-    return my_map
-
 
 #
 # Define a dictionary that contains maps of the fit parameters of interest
 #
-def get_all_fit_quantities(storage, rchi2limit,
-                           waves=['171', '193'],
+def get_all_fit_quantities(pvalue, nposfreq, waves=['171', '193'],
                            regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
+                           windows=('hanning'),
                            model_names=('power law with constant and lognormal', 'power law with constant')):
+
+    # Convert the parameters to more sensible values
+    conversion_factor = ad.conversion(model_names)
+
+    # Get the data
+    storage = get_all_data(waves=waves, regions=regions,
+                           model_names=model_names)
+
+    # Define the rchi2 limits for each model name
+    nparameters = ad.nparameters(model_names)
+    rchi2limit = ad.rchi2limit(pvalue, nposfreq, nparameters)
 
     # Create the storage across all models, AIA channels and regions
     quantities = {}
@@ -164,22 +138,27 @@ def get_all_fit_quantities(storage, rchi2limit,
             for model_name in model_names:
                 quantities[wave][region][model_name] = []
 
-
-
     for iwave, wave in enumerate(waves):
         for iregion, region in enumerate(regions):
+
             for imodel_name, model_name in enumerate(model_names):
 
                 z = storage[wave][region][model_name]
 
                 result = {"rchi2": as_numpy_array(z, ad.rchi2),
-                          "aic": as_numpy_array(z, ad.aic),
-                          "bic": as_numpy_array(z, ad.bic),
+                          "aic": as_numpy_array(z, ad.ic["AIC"]),
+                          "bic": as_numpy_array(z, ad.ic["BIC"]),
                           "success": as_numpy_array(z, ad.success)}
 
+                # Good results mask
+                parameters = ad.parameters(model_names)
+
                 result["mask"] = ad.result_filter(result["success"], result["rchi2"], rchi2limit[model_name])
-                for iparameter_name, parameter_name in parameter_names:
-                    result[parameter_name] = as_numpy_array(z, [1, 'x', iparameter_name])
 
+                # Put all the parameters in a separate dictionary entry
+                for iparameter_name, parameter_name in enumerate(parameters[model_name]):
+                    result[parameter_name] = as_numpy_array(z, [1, 'x', iparameter_name]) * conversion_factor[iparameter_name]
 
+                # Final storage dictionary
                 quantities[wave][region][model_name] = result
+    return quantities

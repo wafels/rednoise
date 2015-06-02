@@ -101,7 +101,7 @@ for iwave, wave in enumerate(waves):
                                                      "Nelder-Mead")
 
                         # Calculate Nita et al reduced chi-squared value
-                        bestfit = model_function(result['x'], normed_freqs)
+                        bestfit = model_function(result['x'], normed_freqs.value)
 
                         # Sample to model ratio
                         rhoj = lnlike_model_fit.rhoj(this, bestfit)
@@ -125,12 +125,6 @@ for iwave, wave in enumerate(waves):
                         # Store the results
                         results[model_name][j][i] = (initial_guess, result,
                                                      rchi2, aic, bic)
-
-                        #results[model_name][j][i] = {"initial_guess": initial_guess,
-                        #                             "result": result,
-                        #                             "rchi2": rchi2,
-                        #                             "aic": aic,
-                        #                             "bic": bic}
 
             # Dump the results
             filepath = os.path.join(output, ofilename + '.lnlike_fit_results.pkl')

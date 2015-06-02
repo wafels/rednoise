@@ -281,6 +281,9 @@ class Fit:
         # Frequencies
         self.f = f
 
+        # Normalized frequencies
+        self.fn = self.f / self.f[0]
+
         # Number of data points
         self.n = len(self.f)
 
@@ -292,7 +295,7 @@ class Fit:
 
         # Initial guess
         if guess is None:
-            self.guess = model.guess(self.f, data, **kwargs)
+            self.guess = model.guess(self.fn, data, **kwargs)
         else:
             self.guess = guess
 
@@ -303,17 +306,17 @@ class Fit:
         self.dof = self.n - self.k - 1
 
         # Get the fit results
-        self.result = lnlike_model_fit.go(self.f, data, self.power,
+        self.result = lnlike_model_fit.go(self.fn, data, self.power,
                                           self.guess, self.fit_method)
 
         self.estimate = self.result['x']
 
-        self.best_fit = self.model.power(self.estimate, self.f)
+        self.best_fit = self.model.power(self.estimate, self.fn)
 
         self.rhoj = lnlike_model_fit.rhoj(data, self.best_fit)
 
         self.rchi2 = lnlike_model_fit.rchi2(1, self.dof, self.rhoj)
 
-        self.AIC = lnlike_model_fit.AIC(self.k, self.estimate, self.f, data, self.model)
+        self.AIC = lnlike_model_fit.AIC(self.k, self.estimate, self.fn, data, self.model)
 
-        self.BIC = lnlike_model_fit.BIC(self.k, self.estimate, self.f, data, self.model, self.n)
+        self.BIC = lnlike_model_fit.BIC(self.k, self.estimate, self.fn, data, self.model, self.n)
