@@ -167,12 +167,15 @@ class CompoundSpectrum:
         self.components = components
         self.names = []
         self.labels = []
+        self.conversion = []
         for component in self.components:
             spectrum = component[0]
             for name in spectrum.names:
                 self.names.append(name)
             for label in spectrum.labels:
                 self.labels.append(label)
+            for conversion in spectrum.conversion:
+                self.conversion.append(conversion)
 
     def power(self, a, f):
         total_power = np.zeros_like(f)
@@ -188,8 +191,9 @@ class CompoundSpectrum:
 
 class Constant:
     def __init__(self):
-        self.names = ['log(constant)']
-        self.labels = ['$\log(constant)$']
+        self.names = ['log10(constant)']
+        self.labels = ['$\log_{10}(constant)$']
+        self.conversion = [1.0/np.log(10.0)]
 
     def power(self, a, f):
         return constant(a)
@@ -197,8 +201,9 @@ class Constant:
 
 class PowerLaw:
     def __init__(self):
-        self.names = ['log(power law amplitude)', 'power law index']
-        self.labels = [r'$\log(A)$', r'$n$']
+        self.names = ['log10(power law amplitude)', 'power law index']
+        self.labels = [r'$\log_{10}(A)$', r'$n$']
+        self.conversion = [1.0/np.log(10.0), 1.0]
 
     def power(self, a, f):
         return power_law(a, f)
@@ -206,8 +211,9 @@ class PowerLaw:
 
 class Lognormal:
     def __init__(self):
-        self.names = ['log(lognormal amplitude)', 'lognormal location', 'lognormal width']
-        self.labels = ['$\log(A_{L})$', '$p_{L}$', '$w_{L}$']
+        self.names = ['log10(lognormal amplitude)', 'log10(lognormal position)', 'lognormal width']
+        self.labels = ['$\log_{10}(A_{L})$', '$\log_{10}(p_{L})$', '$w_{L}$']
+        self.conversion = [1.0/np.log(10.0), 1.0/np.log(10.0), 1.0]
 
     def power(self, a, f):
         return lognormal(a, f)
@@ -275,7 +281,7 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
 # A class that fits models to data and calculates various fit measures.
 #
 class Fit:
-    def __init__(self, f, data, model, guess=None, fit_method='Nelder-Mead',
+    def __init__(self, f, data, model, fit_method='Nelder-Mead',
                  **kwargs):
 
         # Frequencies
@@ -293,30 +299,92 @@ class Fit:
         # Fit Method
         self.fit_method = fit_method
 
-        # Initial guess
-        if guess is None:
-            self.guess = model.guess(self.fn, data, **kwargs)
-        else:
-            self.guess = guess
-
         # Number of free parameters
-        self.k = len(self.guess)
+        self.k = len(self.model.names)
 
         # Degrees of freedom
         self.dof = self.n - self.k - 1
 
+        # Where the interesting parameters are stored in the storage array
+        self.index = {"success": [1, 'success'],
+                      "rchi2": [2],
+                      "AIC": [3],
+                      "BIC": [4]}
+        for i, parameter_name in model.names:
+            self.index[parameter_name] = [1, 'x', i]
+
+        # Spatial size of the data cube in pixels
+        self.ny = data.shape[0]
+        self.nx = data.shape[1]
+
         # Get the fit results
-        self.result = lnlike_model_fit.go(self.fn, data, self.power,
-                                          self.guess, self.fit_method)
+        self.result = [[None]*self.nx for i in range(self.ny)]
+        for i in range(0, self.nx):
+            for j in range(0, self.ny):
+                observed_power = data[j, i, :]
+                guess = self.model.guess(self.fn, observed_power, **kwargs)
+                result = lnlike_model_fit.go(self.fn,
+                                             observed_power,
+                                             self.model.power,
+                                             guess,
+                                             self.fit_method)
 
-        self.estimate = self.result['x']
+                self.result[j][i] = (self.guess, result, rchi2, aic, bic)
 
-        self.best_fit = self.model.power(self.estimate, self.fn)
+    def as_numpy_array(self, quantity):
+        """
+        Convert parts of the results nested list into a numpy array.
 
-        self.rhoj = lnlike_model_fit.rhoj(data, self.best_fit)
+        :param quantity: a string that indicates which quantity you want
+        :return: numpy array of size (ny, nx)
+        """
+        ny = len(self.result)
+        nx = len(self.result[0])
+        as_array = np.zeros((ny, nx))
+        for i in range(0, nx):
+            for j in range(0, ny):
+                x = self.result[j][i]
+                for index in self.index[quantity]:
+                    x = x[index]
+                as_array[j, i] = x
+        if quantity in self.model.names:
+            return as_array * self.model.conversion(self.model.names.index[quantity])
+        else:
+            return as_array
 
-        self.rchi2 = lnlike_model_fit.rchi2(1, self.dof, self.rhoj)
+    def good_rchi2_mask(self, p_value):
+        """
+        Calculate a numpy mask value array that indicates which positions in
+        the results array have good fits in the sense that they lie inside the
+        a range of reduced chi-squared defined by the passed in p.values.
+        Where mask = False indicates a GOOD fit, mask = True indicates a BAD
+        fit.  This can be passed directly into numpy's masked array.
 
-        self.AIC = lnlike_model_fit.AIC(self.k, self.estimate, self.fn, data, self.model)
+        :param p_value: Two element object that has the lower and upper p values
+        which are used to calculate corresponding reduced chi-squared values.
 
-        self.BIC = lnlike_model_fit.BIC(self.k, self.estimate, self.fn, data, self.model, self.n)
+        :return: A logical mask where mask = False indicates a GOOD fit,
+        mask = True indicates a BAD fit.  This can be passed directly into
+        numpy's masked array.
+        """
+        rchi2 = self.as_numpy_array("rchi2")
+        rchi2_gt_low_limit = rchi2 > self._rchilimit(p_value[0])
+        rchi2_lt_high_limit = rchi2 < self._rchilimit(p_value[1])
+        return np.logical_not(rchi2_gt_low_limit * rchi2_lt_high_limit)
+
+    def _rchi2limit(self, p_value):
+        return lnlike_model_fit.rchi2_given_prob(p_value, 1.0, self.dof)
+
+    def good_fits(self, p_value):
+        """
+        Find out where the good fits are.  Good fits are defined as those that
+        have a reduced-chi-squared within the range defined by the input
+        p values, and a successful fit as defined by the fitting algorithm/
+
+        :param p_value: Two element object that has the lower and upper p values
+        which are used to calculate corresponding reduced chi-squared values.
+        :return: A logical mask where mask = False indicates a GOOD fit,
+        mask = True indicates a BAD fit.  This can be passed directly into
+        numpy's masked array.
+        """
+        return self.good_rchi2_mask(p_value) * np.logical_not(self.as_numpy_array("success"))

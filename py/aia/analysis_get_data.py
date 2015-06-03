@@ -74,8 +74,6 @@ def get_all_data(waves=['171', '193'],
     return storage
 
 
-
-
 def as_numpy_array(data, indices):
     ny = len(data)
     nx = len(data[0])

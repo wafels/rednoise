@@ -67,6 +67,7 @@ def rchi2(m, nu, rhoj):
     """
     return (m / (1.0 * nu)) * np.sum((1.0 - rhoj) ** 2)
 
+
 #
 # PDF of the goodness-of-fit estimator (Eq. 17)
 #
