@@ -165,17 +165,20 @@ def power_law_with_constant_with_deltafn(a, f):
 class CompoundSpectrum:
     def __init__(self, components):
         self.components = components
+        self.name = ''
         self.names = []
         self.labels = []
         self.conversion = []
         for component in self.components:
             spectrum = component[0]
+            self.name = self.name + spectrum.name + ' + '
             for name in spectrum.names:
                 self.names.append(name)
             for label in spectrum.labels:
                 self.labels.append(label)
             for conversion in spectrum.conversion:
                 self.conversion.append(conversion)
+        self.name = self.name[:-3]
 
     def power(self, a, f):
         total_power = np.zeros_like(f)
@@ -191,8 +194,9 @@ class CompoundSpectrum:
 
 class Constant:
     def __init__(self):
+        self.name = 'Constant'
         self.names = ['log10(constant)']
-        self.labels = ['$\log_{10}(constant)$']
+        self.labels = ['$\log_{10}(C)$']
         self.conversion = [1.0/np.log(10.0)]
 
     def power(self, a, f):
@@ -201,8 +205,9 @@ class Constant:
 
 class PowerLaw:
     def __init__(self):
+        self.name = 'Power law'
         self.names = ['log10(power law amplitude)', 'power law index']
-        self.labels = [r'$\log_{10}(A)$', r'$n$']
+        self.labels = [r'$\log_{10}(A_{P})$', r'$n$']
         self.conversion = [1.0/np.log(10.0), 1.0]
 
     def power(self, a, f):
@@ -211,6 +216,7 @@ class PowerLaw:
 
 class Lognormal:
     def __init__(self):
+        self.name = 'Lognormal'
         self.names = ['log10(lognormal amplitude)', 'log10(lognormal position)', 'lognormal width']
         self.labels = ['$\log_{10}(A_{L})$', '$\log_{10}(p_{L})$', '$w_{L}$']
         self.conversion = [1.0/np.log(10.0), 1.0/np.log(10.0), 1.0]
@@ -246,7 +252,7 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
               f_upper_limit=200.0, sufficient_frequencies=10,
               initial_log_width=0.1):
 
-        log_amplitude, index_estimate, log_background = PowerLawPlusConstant.guess().guess(f, power)
+        log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
         background_spectrum = PowerLawPlusConstant.power([log_amplitude, index_estimate, log_background], f)
 
         # Difference between the data and the model
@@ -290,7 +296,7 @@ class Fit:
         # Normalized frequencies
         self.fn = self.f / self.f[0]
 
-        # Number of data points
+        # Number of data points in each power spectrum
         self.n = len(self.f)
 
         # Model that we are going to fit to the data
@@ -310,7 +316,7 @@ class Fit:
                       "rchi2": [2],
                       "AIC": [3],
                       "BIC": [4]}
-        for i, parameter_name in model.names:
+        for i, parameter_name in enumerate(model.names):
             self.index[parameter_name] = [1, 'x', i]
 
         # Spatial size of the data cube in pixels
@@ -329,7 +335,19 @@ class Fit:
                                              guess,
                                              self.fit_method)
 
-                self.result[j][i] = (self.guess, result, rchi2, aic, bic)
+                # Estimates of the quality of the fit to the data
+                parameter_estimate = result['x']
+                bestfit = self.model.power(parameter_estimate, self.fn)
+                rhoj = lnlike_model_fit.rhoj(observed_power, bestfit)
+                rchi2 = lnlike_model_fit.rchi2(1.0, self.dof, rhoj)
+                aic = lnlike_model_fit.AIC(self.k, parameter_estimate, self.fn,
+                                           observed_power, self.model.power)
+                bic = lnlike_model_fit.BIC(self.k, parameter_estimate, self.fn,
+                                           observed_power, self.model.power,
+                                           self.n)
+
+                # Store the final results
+                self.result[j][i] = (guess, result, rchi2, aic, bic)
 
     def as_numpy_array(self, quantity):
         """
@@ -338,21 +356,25 @@ class Fit:
         :param quantity: a string that indicates which quantity you want
         :return: numpy array of size (ny, nx)
         """
-        ny = len(self.result)
-        nx = len(self.result[0])
-        as_array = np.zeros((ny, nx))
-        for i in range(0, nx):
-            for j in range(0, ny):
-                x = self.result[j][i]
-                for index in self.index[quantity]:
-                    x = x[index]
-                as_array[j, i] = x
+        as_array = self._as_numpy_array(self.index[quantity])
+
+        # Convert to an easier to use value if returning a model parameter.
         if quantity in self.model.names:
-            return as_array * self.model.conversion(self.model.names.index[quantity])
+            return as_array * self.model.conversion(self.model.names.index(quantity))
         else:
             return as_array
 
-    def good_rchi2_mask(self, p_value):
+    def _as_numpy_array(self, indices):
+        as_array = np.zeros((self.ny, self.nx))
+        for i in range(0, self.nx):
+            for j in range(0, self.ny):
+                x = self.result[j][i]
+                for index in indices:
+                    x = x[index]
+                as_array[j, i] = x
+        return as_array
+
+    def good_rchi2_mask(self, p_value=[0.025, 0.975]):
         """
         Calculate a numpy mask value array that indicates which positions in
         the results array have good fits in the sense that they lie inside the
@@ -375,7 +397,7 @@ class Fit:
     def _rchi2limit(self, p_value):
         return lnlike_model_fit.rchi2_given_prob(p_value, 1.0, self.dof)
 
-    def good_fits(self, p_value):
+    def good_fits(self, p_value=[0.025, 0.975]):
         """
         Find out where the good fits are.  Good fits are defined as those that
         have a reduced-chi-squared within the range defined by the input
@@ -388,3 +410,15 @@ class Fit:
         numpy's masked array.
         """
         return self.good_rchi2_mask(p_value) * np.logical_not(self.as_numpy_array("success"))
+
+    def best_fit(self):
+        """
+        Calculate the best fit power spectrum at each pixel
+        :return: A three dimensional numpy array that has the best fit at each
+        spatial location.
+        """
+        bf = np.zeros((self.ny, self.nx, self.n))
+        for i in range(0, self.nx):
+            for j in range(0, self.ny):
+                bf[j, i, :] = self.model.power(self.result[j][i][1]['x'], self.fn)
+        return bf
