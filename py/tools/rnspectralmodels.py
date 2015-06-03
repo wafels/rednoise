@@ -3,6 +3,7 @@ Power Spectrum Models
 """
 
 import numpy as np
+import astropy.units as u
 import lnlike_model_fit
 import pstools
 
@@ -166,14 +167,14 @@ class CompoundSpectrum:
     def __init__(self, components):
         self.components = components
         self.name = ''
-        self.names = []
+        self.parameters = []
         self.labels = []
         self.conversion = []
         for component in self.components:
             spectrum = component[0]
             self.name = self.name + spectrum.name + ' + '
-            for name in spectrum.names:
-                self.names.append(name)
+            for name in spectrum.parameters:
+                self.parameters.append(name)
             for label in spectrum.labels:
                 self.labels.append(label)
             for conversion in spectrum.conversion:
@@ -195,7 +196,7 @@ class CompoundSpectrum:
 class Constant:
     def __init__(self):
         self.name = 'Constant'
-        self.names = ['log10(constant)']
+        self.parameters = ['log10(constant)']
         self.labels = ['$\log_{10}(C)$']
         self.conversion = [1.0/np.log(10.0)]
 
@@ -206,7 +207,7 @@ class Constant:
 class PowerLaw:
     def __init__(self):
         self.name = 'Power law'
-        self.names = ['log10(power law amplitude)', 'power law index']
+        self.parameters = ['log10(power law amplitude)', 'power law index']
         self.labels = [r'$\log_{10}(A_{P})$', r'$n$']
         self.conversion = [1.0/np.log(10.0), 1.0]
 
@@ -217,7 +218,7 @@ class PowerLaw:
 class Lognormal:
     def __init__(self):
         self.name = 'Lognormal'
-        self.names = ['log10(lognormal amplitude)', 'log10(lognormal position)', 'lognormal width']
+        self.parameters = ['log10(lognormal amplitude)', 'log10(lognormal position)', 'lognormal width']
         self.labels = ['$\log_{10}(A_{L})$', '$\log_{10}(p_{L})$', '$w_{L}$']
         self.conversion = [1.0/np.log(10.0), 1.0/np.log(10.0), 1.0]
 
@@ -253,7 +254,7 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
               initial_log_width=0.1):
 
         log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
-        background_spectrum = PowerLawPlusConstant.power([log_amplitude, index_estimate, log_background], f)
+        background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
 
         # Difference between the data and the model
         diff0 = power - background_spectrum
@@ -294,7 +295,10 @@ class Fit:
         self.f = f
 
         # Normalized frequencies
-        self.fn = self.f / self.f[0]
+        if isinstance(self.f, u.Quantity):
+            self.fn = (self.f / self.f[0]).value
+        else:
+            self.fn = self.f / self.f[0]
 
         # Number of data points in each power spectrum
         self.n = len(self.f)
@@ -306,7 +310,7 @@ class Fit:
         self.fit_method = fit_method
 
         # Number of free parameters
-        self.k = len(self.model.names)
+        self.k = len(self.model.parameters)
 
         # Degrees of freedom
         self.dof = self.n - self.k - 1
@@ -316,7 +320,7 @@ class Fit:
                       "rchi2": [2],
                       "AIC": [3],
                       "BIC": [4]}
-        for i, parameter_name in enumerate(model.names):
+        for i, parameter_name in enumerate(model.parameters):
             self.index[parameter_name] = [1, 'x', i]
 
         # Spatial size of the data cube in pixels
@@ -349,22 +353,22 @@ class Fit:
                 # Store the final results
                 self.result[j][i] = (guess, result, rchi2, aic, bic)
 
-    def as_numpy_array(self, quantity):
+    def as_array(self, quantity):
         """
         Convert parts of the results nested list into a numpy array.
 
         :param quantity: a string that indicates which quantity you want
         :return: numpy array of size (ny, nx)
         """
-        as_array = self._as_numpy_array(self.index[quantity])
+        as_array = self._as_array(self.index[quantity])
 
         # Convert to an easier to use value if returning a model parameter.
-        if quantity in self.model.names:
-            return as_array * self.model.conversion(self.model.names.index(quantity))
+        if quantity in self.model.parameters:
+            return as_array * self.model.conversion(self.model.parameters.index(quantity))
         else:
             return as_array
 
-    def _as_numpy_array(self, indices):
+    def _as_array(self, indices):
         as_array = np.zeros((self.ny, self.nx))
         for i in range(0, self.nx):
             for j in range(0, self.ny):
@@ -389,9 +393,9 @@ class Fit:
         mask = True indicates a BAD fit.  This can be passed directly into
         numpy's masked array.
         """
-        rchi2 = self.as_numpy_array("rchi2")
-        rchi2_gt_low_limit = rchi2 > self._rchilimit(p_value[0])
-        rchi2_lt_high_limit = rchi2 < self._rchilimit(p_value[1])
+        rchi2 = self.as_array("rchi2")
+        rchi2_gt_low_limit = rchi2 > self._rchi2limit(p_value[1])
+        rchi2_lt_high_limit = rchi2 < self._rchi2limit(p_value[0])
         return np.logical_not(rchi2_gt_low_limit * rchi2_lt_high_limit)
 
     def _rchi2limit(self, p_value):
@@ -409,7 +413,7 @@ class Fit:
         mask = True indicates a BAD fit.  This can be passed directly into
         numpy's masked array.
         """
-        return self.good_rchi2_mask(p_value) * np.logical_not(self.as_numpy_array("success"))
+        return self.good_rchi2_mask(p_value) * self.as_array("success")
 
     def best_fit(self):
         """

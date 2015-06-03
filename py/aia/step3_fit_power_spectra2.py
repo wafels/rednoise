@@ -71,8 +71,6 @@ for iwave, wave in enumerate(waves):
                 # Do the fit and store the results for later analysis
                 results[this_model.name] = rnspectralmodels.Fit(pfrequencies.value, pwr, this_model)
 
-                blah = blahblah
-
             # Dump the results
             filepath = os.path.join(output, ofilename + '.lnlike_fit_results.pkl')
             print('Saving results to ' + filepath)
