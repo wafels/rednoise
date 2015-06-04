@@ -28,8 +28,11 @@ storage = analysis_get_data.get_all_data(waves=waves)
 #
 rchi2limitcolor = analysis_details.rchi2limitcolor
 
+# Number of bins
+bins = 100
+
 # Plot cross-correlations of
-plot_type = 'cc.within.'
+plot_type = 'cc.within'
 for wave in waves:
     for region in regions:
 
@@ -55,9 +58,23 @@ for wave in waves:
                 n_mask = np.sum(np.logical_not(mask))
                 p1 = np.ma.array(this.as_array(p1_name), mask=mask).compressed()
 
-                for j in range(i, npar):
+                title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
+
+                # Identifier of the plot
+                plotident = wave + '.' + region + '.' + p1_name
+
+                plt.close('all')
+                plt.hist(p1, bins=bins)
+                plt.xlabel(label1)
+                plt.title(title)
+                ofilename = this_model + '.hist.' + plotident + '.png'
+                plt.tight_layout()
+                plt.savefig(os.path.join(image, ofilename))
+                print this_model, wave, region, 'mean ', p1_name, np.mean(p1)
+
+                for j in range(i+1, npar):
                     p2_name = parameters[j]
-                    label2 = this.model.labels[2]
+                    label2 = this.model.labels[j]
                     p2 = np.ma.array(this.as_array(p2_name), mask=mask).compressed()
 
                     # Cross correlation statistics
@@ -70,7 +87,7 @@ for wave in waves:
                     plotident = rstring + '.' + wave + '.' + region + '.' + p1_name + '.' + p2_name
 
                     # Make a scatter plot
-                    title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
+
                     plt.close('all')
                     plt.title(title)
                     plt.xlabel(label1)
@@ -82,7 +99,7 @@ for wave in waves:
                     y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
                     plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
                     plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-                    ofilename = plot_type + '.scatter.' + plotident + '.png'
+                    ofilename = this_model + '.' + plot_type + '.scatter.' + plotident + '.png'
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
 
@@ -91,13 +108,13 @@ for wave in waves:
                     plt.title(title)
                     plt.xlabel(label1)
                     plt.ylabel(label2)
-                    plt.hist2d(p1, p2, bins=40)
+                    plt.hist2d(p1, p2, bins=bins)
                     x0 = plt.xlim()[0]
                     ylim = plt.ylim()
                     y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
                     y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
                     plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
                     plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-                    ofilename = plot_type + '.hist2d.' + plotident + '.png'
+                    ofilename = this_model + '.' + plot_type + '.hist2d.' + plotident + '.png'
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
