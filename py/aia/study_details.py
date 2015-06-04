@@ -24,7 +24,9 @@ base_cross_correlation_channel = '171'
 use_base_cross_correlation_channel = False
 
 # Fixed AIA scale across all channels
-fixed_aia_scale = {'x': 0.6, 'y': 0.6}
+arcsec_per_pixel_unit = u.arcsec / u.pix
+fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
+                   'y': 0.6*arcsec_per_pixel_unit}
 
 #
 # Setup the details given the study type

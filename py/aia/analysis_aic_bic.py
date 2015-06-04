@@ -7,6 +7,7 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 
 import analysis_get_data
 import study_details as sd
@@ -25,6 +26,9 @@ model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves)
+
+# Get the sunspot outline
+sunspot_outline = analysis_get_data.sunspot_outline()
 
 # Plot spatial distributions of the AIC and BIC.  The AIC and BIC for each
 # model are subtracted, and the model with the lowest AIC or BIC is preferred.
@@ -51,37 +55,49 @@ for wave in waves:
             # Where are the good fits
             good_fit0 = this0.good_fits()
             good_fit1 = this1.good_fits()
-            good_fit_both = good_fit0 * good_fit1
+            good_fit_both = np.logical_not(good_fit0) * np.logical_not(good_fit1)
 
             # Difference in the information criteria
             measure_difference = this0.as_array(measure) - this1.as_array(measure)
 
-            # Make a masked array
-            map_data = ma.array(measure_difference, mask=good_fit_both)
+            for include_mask in (True, False):
 
-            # Make a SunPy map for nice spatially aware plotting.
-            my_map = analysis_get_data.make_map(output, region_id, map_data)
+                if include_mask:
+                    # Make a masked array
+                    map_data = ma.array(measure_difference, mask=np.logical_not(good_fit_both))
+                    mask_status = 'with_mask'
+                else:
+                    map_data = measure_difference
+                    mask_status = 'no_mask'
 
-            # Make a spatial distribution map that also shows where the bad
-            # fits are
-            plt.close('all')
-            # Set up the palette we will use
-            palette = cm.gnuplot2
-            # Bad values are those that are masked out
-            palette.set_bad('0.75')
+                # Make a SunPy map for nice spatially aware plotting.
+                my_map = analysis_get_data.make_map(output, region_id, map_data)
 
-            # Begin the plot
-            fig, ax = plt.subplots()
-            # Plot the map
-            ret = my_map.plot(cmap=palette, axes=ax, interpolation='none')
+                # Make a spatial distribution map of the difference in the
+                # information criterion.
+                plt.close('all')
+                # Normalize the color table so that zero is in the middle
+                map_data_abs_max = np.max([np.abs(np.max(map_data)), np.abs(np.min(map_data))])
+                norm = colors.Normalize(vmin=-map_data_abs_max, vmax=map_data_abs_max, clip=False)
 
-            cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
-                                shrink=0.8, label='$%s_{%s}$-$%s_{%s}$' % (measure, model_names[0], measure, model_names[1]))
+                # Set up the palette we will use
+                palette = cm.seismic
+                # Bad values are those that are masked out
+                palette.set_bad('y', 1.0)
+                # Begin the plot
+                fig, ax = plt.subplots()
+                # Plot the map
+                ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
+                                  norm=norm)
+                if region == 'sunspot':
+                    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
 
-            # Fit everything in.
-            ax.autoscale_view()
+                cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
+                                    shrink=0.8, label='$%s_{%s}$-$%s_{%s}$' % (measure, model_names[0], measure, model_names[1]))
+                # Fit everything in.
+                ax.autoscale_view()
 
-            # Dump to file
-            filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.%s.png' % measure)
-            print('Saving to ' + filepath)
-            plt.savefig(filepath)
+                # Dump to file
+                filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.%s.%s.png' % (measure, mask_status))
+                print('Saving to ' + filepath)
+                plt.savefig(filepath)

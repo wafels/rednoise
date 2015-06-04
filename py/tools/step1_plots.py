@@ -3,6 +3,7 @@
 #
 import numpy as np
 import matplotlib.pyplot as plt
+import analysis_get_data
 
 
 #
@@ -18,7 +19,7 @@ def plot_regions(image, regions, filepath):
     """
     plt.close('all')
     fig, ax = plt.subplots()
-    z = image.plot()
+    ret = image.plot()
     #for patch in patches:
     for region in sorted(regions.keys()):
         patch = regions[region]["patch"]
@@ -31,6 +32,12 @@ def plot_regions(image, regions, filepath):
                  llxy[1] + height + label_offset['y'],
                  patch.get_label(),
                  bbox=dict(facecolor='w', alpha=0.5))
+
+    # Get the sunspot outline
+    sunspot_outline = analysis_get_data.sunspot_outline()
+    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], image.date, linewidth=[1]))
+    ax.autoscale_view()
+
     #plt.show()
     if filepath is not None:
         plt.savefig(filepath)

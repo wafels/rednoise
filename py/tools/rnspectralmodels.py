@@ -364,7 +364,7 @@ class Fit:
 
         # Convert to an easier to use value if returning a model parameter.
         if quantity in self.model.parameters:
-            return as_array * self.model.conversion(self.model.parameters.index(quantity))
+            return as_array * self.model.conversion[self.model.parameters.index(quantity)]
         else:
             return as_array
 

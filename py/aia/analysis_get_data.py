@@ -7,9 +7,14 @@
 #
 import os
 import cPickle as pickle
+import numpy as np
+from matplotlib.collections import PolyCollection
+import astropy.units as u
+
 import study_details as sd
 import sunpy.map
-
+import sunpy.net.hek as hek
+from sunpy.physics.transforms.solar_rotation import rot_hpc
 
 #
 # Function to get all the data in to one big dictionary
@@ -80,20 +85,56 @@ def make_map(output, region_id, map_data):
     get_map_data = open(map_data_filename, 'rb')
     _dummy = pickle.load(get_map_data)
     _dummy = pickle.load(get_map_data)
-    # map layer
-    mc_layer = pickle.load(get_map_data)
+    _dummy = pickle.load(get_map_data)
+    _dummy = pickle.load(get_map_data)
+    region_submap = pickle.load(get_map_data)
     # Specific region information
     get_map_data.close()
 
     # Create the map header
-    header = {'cdelt1': mc_layer.meta['cdelt1'],
-              'cdelt2': mc_layer.meta['cdelt1'],
-              "crval1": mc_layer.center[0].value,
-              "crval2": mc_layer.center[1].value,
-              "telescop": mc_layer.observatory,
-              "detector": mc_layer.observatory,
-              "wavelnth": mc_layer.measurement.value,
-              "date-obs": mc_layer.date}
+    header = {'cdelt1': region_submap.meta['cdelt1'],
+              'cdelt2': region_submap.meta['cdelt2'],
+              "crval1": region_submap.center[0].value,
+              "crval2": region_submap.center[1].value,
+              "telescop": region_submap.observatory,
+              "detector": region_submap.observatory,
+              "wavelnth": region_submap.measurement.value,
+              "date-obs": region_submap.date}
 
     # Return a map using the input data
     return sunpy.map.Map(map_data, header)
+
+
+def sunspot_outline():
+    # -----------------------------------------------------------------------------
+    # Get the sunspot details at the time of its detection
+    #
+    client = hek.HEKClient()
+    qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
+    p1 = qr[0]["hpc_boundcc"][9: -2]
+    p2 = p1.split(',')
+    p3 = [v.split(" ") for v in p2]
+    p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+    polygon = np.zeros([1, len(p2), 2])
+    polygon[0, :, :] = p4[:, :]
+    sunspot_date = qr[0]['event_endtime']
+    return sunspot_date, polygon
+
+
+def rotate_sunspot_outline(sunspot_date, polygon, date, linewidth=[5]):
+    rotated_polygon = np.zeros_like(polygon)
+    n = polygon.shape[1]
+    for i in range(0, n):
+        new_coords = rot_hpc(polygon[0, i, 0] * u.arcsec,
+                             polygon[0, i, 1] * u.arcsec,
+                             sunspot_date,
+                             date)
+        rotated_polygon[0, i, 0] = new_coords[0].value
+        rotated_polygon[0, i, 1] = new_coords[1].value
+    # Create the collection
+    return PolyCollection(rotated_polygon,
+                          alpha=1.0,
+                          edgecolors=['k'],
+                          facecolors=['none'],
+                          linewidth=linewidth)
+

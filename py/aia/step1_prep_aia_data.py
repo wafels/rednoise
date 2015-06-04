@@ -13,6 +13,7 @@ from sunpy.time import parse_time
 import numpy as np
 from matplotlib.patches import Rectangle
 from astropy.io import fits
+import astropy.units as u
 
 import study_details as sd
 import step1_plots
@@ -47,10 +48,10 @@ if sd.sunlocation == 'disk':
     # co-ordinates.  These co-ordinates should be chosen in reference to the
     # time of the reference layer (layer_index).
     #
-    regions = {"sunspot": {"llx": -335.0, "lly": 0, "width": 40, "height": 32},
-               "loop footpoints": {"llx": -492, "lly": 0, "width": 23, "height": 22},
-               "quiet Sun": {"llx": -200, "lly": -45, "width": 15, "height": 26},
-               "moss": {"llx": -400, "lly": 25, "width": 45, "height": 25}}
+    regions = {"sunspot": {"llx": -335.0*u.arcsec, "lly": 0*u.arcsec, "width": 40*u.arcsec, "height": 32*u.arcsec},
+               "loop footpoints": {"llx": -492*u.arcsec, "lly": 0*u.arcsec, "width": 23*u.arcsec, "height": 22*u.arcsec},
+               "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
+               "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
 
     # Rectangular patches
     for region in regions:
@@ -58,8 +59,8 @@ if sd.sunlocation == 'disk':
         R = regions[region]
 
         # Define a matplotlib rectangular patch to show the region on a map
-        new_rectangle = Rectangle((R['llx'], R['lly']),
-                                  R['width'], R['height'],
+        new_rectangle = Rectangle((R['llx'].value, R['lly'].value),
+                                  R['width'].value, R['height'].value,
                                   label=region, fill=False,
                                   facecolor='b', edgecolor='r', linewidth=2)
 
@@ -69,18 +70,17 @@ if sd.sunlocation == 'disk':
         R['label_offset'] = {"x": 0.0, "y": -10}
 
         # Information about the ranges
-        R['xrange'] = [R['llx'], R['llx'] + R['width']]
-        R['yrange'] = [R['lly'], R['lly'] + R['height']]
-
-        R['llxy_pixel'] = np.floor([mc_layer.data_to_pixel(R['llx'], 'x'),
-                                    mc_layer.data_to_pixel(R['lly'], 'y')])
+        R['xrange'] = [R['llx'].value, R['llx'].value + R['width'].value]
+        R['yrange'] = [R['lly'].value, R['lly'].value + R['height'].value]
+        llxy_pixel = mc_layer.data_to_pixel(R['llx'], R['lly'])
+        R['llxy_pixel'] = np.floor([llxy_pixel[0].value, llxy_pixel[1].value])
 
         # Small changes in the plate scale in each AIA channel can mean that
         # the height and widths of each region depend on the data. To mitigate
         # against this we fix the size of the plate scale.
-        fixed_aia_scale = sd.fixed_aia_scale{'x': 0.6, 'y': 0.6}
-        R['width_pixel'] = np.floor(R['width'] / fixed_aia_scale['x'])
-        R['height_pixel'] = np.floor(R['height'] / fixed_aia_scale['y'])
+        fixed_aia_scale = sd.fixed_aia_scale#{'x': 0.6, 'y': 0.6}
+        R['width_pixel'] = np.floor(R['width'] / fixed_aia_scale['x']).value
+        R['height_pixel'] = np.floor(R['height'] / fixed_aia_scale['y']).value
 
     for region in regions:
         # Next region
@@ -90,10 +90,14 @@ if sd.sunlocation == 'disk':
         # the subcube using HPC co-ords will not work in this case.  Therefore
         # we need to convert the HPC co-ords into array indices and return
         # numpy arrays.  Create the subcube
-        subdata = (mc.as_array())[R['llxy_pixel'][1]: R['llxy_pixel'][1] + R['height_pixel'],
-                                  R['llxy_pixel'][0]: R['llxy_pixel'][0] + R['width_pixel'], :]
+        range_x = [R['llxy_pixel'][1], R['llxy_pixel'][1] + R['height_pixel']]
+        range_y = [R['llxy_pixel'][0], R['llxy_pixel'][0] + R['width_pixel']]
+        subdata = (mc.as_array())[range_x[0]: range_x[1], range_y[0]: range_y[1], :]
 
         print('\nSub datacube (size %i, %i, %i)' % subdata.shape)
+
+        # Create a SunPy map that describes the location of the data
+        region_submap = mc_layer.submap(range_y * u.pix, range_x * u.pix)
 
         # Region identifier name
         region_id = sd.ident + '_' + region
@@ -122,14 +126,17 @@ if sd.sunlocation == 'disk':
         # Write out the region information
         pickle.dump(R, outputfile)
 
+        # Write out the regional submap
+        pickle.dump(region_submap, outputfile)
+
         # Close the data
         outputfile.close()
         print('Saved to ' + ofilename)
 
         # Write out a FITS file
-        hdu = fits.PrimaryHDU(subdata)
-        hdulist = fits.HDUList([hdu])
-        hdulist.writeto(ofilename + '.fits')
+        # hdu = fits.PrimaryHDU(subdata)
+        # hdulist = fits.HDUList([hdu])
+        # hdulist.writeto(ofilename + '.fits')
 
 #
 # Save the regions
