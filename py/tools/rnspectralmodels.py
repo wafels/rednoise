@@ -181,14 +181,25 @@ class CompoundSpectrum:
                 self.conversion.append(conversion)
         self.name = self.name[:-3]
 
-    def power(self, a, f):
-        total_power = np.zeros_like(f)
+    # Calculate the power in each component.  Useful for plotting out the
+    # individual components, ratios, etc
+    def power_per_component(self, a, f):
+        ppc = []
         for component in self.components:
             spectrum = component[0]
             variables = a[component[1][0]: component[1][1]]
-            total_power += spectrum.power(variables, f)
+            ppc.append(spectrum.power(variables, f))
+        return ppc
+
+    # Return the total power
+    def power(self, a, f):
+        ppc = self.power_per_component(a, f)
+        total_power = np.zeros_like(f)
+        for power in range(0, len(self.components)):
+            total_power += ppc[power]
         return total_power
 
+    # Subclassed for any particular power law
     def guess(self, f, data):
         pass
 

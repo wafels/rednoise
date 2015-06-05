@@ -70,7 +70,6 @@ for wave in waves:
                 ofilename = this_model + '.hist.' + plotident + '.png'
                 plt.tight_layout()
                 plt.savefig(os.path.join(image, ofilename))
-                print this_model, wave, region, 'mean ', p1_name, np.mean(p1)
 
                 for j in range(i+1, npar):
                     p2_name = parameters[j]
