@@ -58,6 +58,10 @@ for wave in waves:
 
             p1_index = this.model.parameters.index(p1_name)
             label1 = this.model.labels[p1_index]
+            #
+            # Could also mask by the fits which have good lognormal chi-squared
+            # and are signifcantly preferred by both the AIC and the BIC
+            #
             mask = this.good_fits()
             n_mask = np.sum(np.logical_not(mask))
 
@@ -70,6 +74,8 @@ for wave in waves:
             mask[np.where(p1 > 3000)] = 1
             # Masked arrays
             p1 = np.ma.array(p1, mask=mask).compressed()
+            # Summary stats
+            ss = analysis_details.summary_statistics(p1, bins=bins)
 
             # Title of the plot
             title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
@@ -79,9 +85,14 @@ for wave in waves:
 
             plt.close('all')
             plt.hist(p1, bins=bins)
+            plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'])
+            plt.axvline(ss['mode'], color='g', label='mode=%f' % ss['mode'])
+            plt.axvline(300, color='k', label='5 minutes', linestyle="-")
+            plt.axvline(180, color='k', label='3 minutes', linestyle=":")
             plt.xlabel('Time-scale of location')
             plt.title(title)
             ofilename = this_model + '.hist.' + plotident + '.png'
+            plt.legend(framealpha=0.5, fontsize=8)
             plt.tight_layout()
             plt.savefig(os.path.join(image, ofilename))
 

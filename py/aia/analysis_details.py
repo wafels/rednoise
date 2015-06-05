@@ -137,3 +137,17 @@ def result_filter(success, rchi2, rchilimit):
     rchi2_gt_low_limit = rchi2 > rchilimit[0]
     rchi2_lt_high_limit = rchi2 < rchilimit[1]
     return success * rchi2_gt_low_limit * rchi2_lt_high_limit
+
+
+def summary_statistics(a, bins=100):
+    hist, bin_edges = np.histogram(a, bins)
+    hist_max_index = np.argmax(hist)
+    mode = 0.5*(bin_edges[hist_max_index] + bin_edges[hist_max_index+1])
+    return {"mean": np.mean(a),
+            "median": np.percentile(a, 50.0),
+            "lo": np.percentile(a, 2.5),
+            "hi": np.percentile(a, 97.5),
+            "min":np.min(a),
+            "max": np.max(a),
+            "std": np.std(a),
+            "mode": mode}
