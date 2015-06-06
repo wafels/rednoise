@@ -151,3 +151,16 @@ def summary_statistics(a, bins=100):
             "max": np.max(a),
             "std": np.std(a),
             "mode": mode}
+
+#
+# Periods are the inverse of frequencies.  Frequencies are returned as a
+# normalized value in base 10, and normalized.  If the normalization factor is
+# f_norm, and the original frequency is f, then what is returned in the Fit
+# object is
+#
+# log_{10}(f/f_norm)
+#
+# The function below returns the corresponding period for normalized
+# input frequency nu
+def convert_to_period(f_norm, nu):
+    return 1.0 / (f_norm * 10.0 ** nu)

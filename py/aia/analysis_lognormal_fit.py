@@ -3,9 +3,12 @@
 #
 # This program creates the following plots
 #
+# (1)
 # Distributions of the position of the lognormal
+# (2)
 # Distribution of the location of the maximum of the ratio of the lognormal
 # contribution to the background power law
+# (3)
 # Distribution of the maximum of the ratio of the lognormal contribution to the
 # background power law
 #
@@ -14,7 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import analysis_get_data
 import study_details as sd
-import analysis_details
+from analysis_details import convert_to_period, summary_statistics
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -31,8 +34,6 @@ model_names = ('Power law + Constant + Lognormal',)
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves)
 
-#
-rchi2limitcolor = analysis_details.rchi2limitcolor
 
 # Number of bins
 bins = 100
@@ -60,7 +61,7 @@ for wave in waves:
             label1 = this.model.labels[p1_index]
             #
             # Could also mask by the fits which have good lognormal chi-squared
-            # and are signifcantly preferred by both the AIC and the BIC
+            # and are significantly preferred by both the AIC and the BIC
             #
             mask = this.good_fits()
             n_mask = np.sum(np.logical_not(mask))
@@ -69,13 +70,14 @@ for wave in waves:
             # Plot out the time-scale of the location of the lognormal
             #
             # convert to a period
-            p1 = 1.0 / (this.f[0] * 10.0 ** this.as_array(p1_name))
+            f_norm = this.f[0]
+            p1 = convert_to_period(f_norm, this.as_array(p1_name))
             # Mask out the much longer time-scales
             mask[np.where(p1 > 3000)] = 1
             # Masked arrays
             p1 = np.ma.array(p1, mask=mask).compressed()
             # Summary stats
-            ss = analysis_details.summary_statistics(p1, bins=bins)
+            ss = summary_statistics(p1, bins=bins)
 
             # Title of the plot
             title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
@@ -99,3 +101,14 @@ for wave in waves:
             #
             # Ratio of the peak of the lognormal to the power law
             #
+            fn = this.model.fn
+            ratio_max = np.zeros((this.model.ny, this.model.nx))
+            ratio_max_fn = np.zeros_like(ratio_max)
+            for i in range(0, this.model.nx):
+                for j in range(0, this.model.ny):
+                    estimate = this.result[j][i][1]['x']
+                    power_law = this.model.power_per_component(estimate, fn)[0]
+                    lognormal = this.model.power_per_component(estimate, fn)[2]
+                    ratio = lognormal/power_law
+                    ratio_max[j, i] = np.max(ratio)
+                    ratio_max_fn[j, i] = convert_to_period(f_norm, fn[np.argmax(ratio)])
