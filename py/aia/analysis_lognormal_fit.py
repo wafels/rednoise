@@ -198,3 +198,8 @@ for wave in waves:
             plt.tight_layout()
             ofilename = this_model + '.hist.' + plotident + '.png'
             plt.savefig(os.path.join(image, ofilename))
+
+            #
+            # Look at the width of the lognormal
+            #
+            p2_name = 'log10(lognormal position)'
