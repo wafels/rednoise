@@ -43,6 +43,8 @@ hloc = (100, 'blocks', 'scott', 'knuth', 'freedman')
 period_limit = 3000.0
 ratio_limit = 5.0
 
+linewidth=3
+
 # Plot cross-correlations of
 plot_type = 'cc.within'
 for wave in waves:
@@ -64,16 +66,23 @@ for wave in waves:
 
             p1_index = this.model.parameters.index(p1_name)
             label1 = this.model.labels[p1_index]
-            #
-            # Could also mask by the fits which have good lognormal chi-squared
-            # and are significantly preferred by both the AIC and the BIC
-            #
-            mask = this.good_fits()
-            n_mask = np.sum(np.logical_not(mask))
 
-            #
+            # Mask where the lognormal fit is good.
+            mask = this.good_fits()
+
+            # AIC: Mask out the areas where Power law + Constant + Lognormal is
+            # not preferred
+            dAIC = storage[wave][region]['Power law + Constant + Lognormal'].as_array('AIC') - storage[wave][region]['Power law + Constant'].as_array('AIC')
+            dAIC_ignored = np.where(dAIC > 0.0)
+            mask[dAIC_ignored] = 1
+
+            # BIC: Mask out the areas where Power law + Constant + Lognormal is
+            # not preferred
+            dBIC = storage[wave][region]['Power law + Constant + Lognormal'].as_array('BIC') - storage[wave][region]['Power law + Constant'].as_array('BIC')
+            dBIC_ignored = np.where(dBIC > 0.0)
+            mask[dBIC_ignored] = 1
+
             # Plot out the time-scale of the location of the lognormal
-            #
             # convert to a period
             f_norm = this.f[0]
             p1 = convert_to_period(f_norm, this.as_array(p1_name))
@@ -85,6 +94,7 @@ for wave in waves:
             ss = summary_statistics(p1)
 
             # Title of the plot
+            n_mask = np.sum(np.logical_not(mask))
             title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
 
             # Identifier of the plot
@@ -98,14 +108,15 @@ for wave in waves:
                 plt.subplot(len(hloc), 1, ibinning+1)
                 h_info = hist(p1, bins=binning)
                 mode = get_mode(h_info)
-                plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'])
-                plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]))
-                plt.axvline(mode[1][1], color='g')
-                plt.axvline(300, color='k', label='5 minutes', linestyle="-")
-                plt.axvline(180, color='k', label='3 minutes', linestyle=":")
+                plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
+                plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]), linewidth=linewidth)
+                plt.axvline(mode[1][1], color='g', linewidth=linewidth)
+                plt.axvline(300, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
+                plt.axvline(180, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
                 plt.xlabel('Time-scale of location')
                 plt.title(str(binning) + ' : ' + title)
                 plt.legend(framealpha=0.5, fontsize=8)
+                plt.xlim(0, period_limit)
 
             plt.tight_layout()
             ofilename = this_model + '.hist.' + plotident + '.png'
@@ -135,6 +146,7 @@ for wave in waves:
             ss = summary_statistics(ratio_max)
 
             # Title of the plot
+            n_mask = np.sum(np.logical_not(new_mask))
             title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
 
             # Identifier of the plot
@@ -147,9 +159,9 @@ for wave in waves:
                 plt.subplot(len(hloc), 1, ibinning+1)
                 h_info = hist(ratio_max, bins=binning)
                 mode = get_mode(h_info)
-                plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'])
-                plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]))
-                plt.axvline(mode[1][1], color='g')
+                plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
+                plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]), linewidth=linewidth)
+                plt.axvline(mode[1][1], color='g', linewidth=linewidth)
                 plt.xlabel('$log_{10}\max$(lognormal / power law)')
                 plt.title(str(binning) + ' : ' + title)
                 plt.legend(framealpha=0.5, fontsize=8)
@@ -173,12 +185,15 @@ for wave in waves:
                 plt.subplot(len(hloc), 1, ibinning+1)
                 h_info = hist(ratio_max_f, bins=binning)
                 mode = get_mode(h_info)
-                plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'])
-                plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]))
-                plt.axvline(mode[1][1], color='g')
+                plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
+                plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]), linewidth=linewidth)
+                plt.axvline(mode[1][1], color='g', linewidth=linewidth)
+                plt.axvline(300, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
+                plt.axvline(180, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
                 plt.xlabel('argmax(lognormal / power law) [seconds]')
                 plt.title(str(binning) + ' : ' + title)
                 plt.legend(framealpha=0.5, fontsize=8)
+                plt.xlim(0, period_limit)
 
             plt.tight_layout()
             ofilename = this_model + '.hist.' + plotident + '.png'
