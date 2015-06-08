@@ -164,3 +164,12 @@ def summary_statistics(a, bins=100):
 # input frequency nu
 def convert_to_period(f_norm, nu):
     return 1.0 / (f_norm * 10.0 ** nu)
+
+#
+# Get the mode of a histogram
+#
+def get_mode(h_info):
+    i = np.argmax(h_info[0])
+    bin_edges = h_info[1][i: i+2]
+    return h_info[0][i], bin_edges
+
