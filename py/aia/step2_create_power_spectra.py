@@ -41,7 +41,8 @@ def DefineWindow(window, nt):
 waves = ['171', '193']
 
 # Regions we are interested in
-regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
+#regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
+regions = ['most_of_fov']
 
 # Apodization windows
 windows = ['hanning']

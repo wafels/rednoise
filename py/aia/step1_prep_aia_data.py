@@ -48,10 +48,13 @@ if sd.sunlocation == 'disk':
     # co-ordinates.  These co-ordinates should be chosen in reference to the
     # time of the reference layer (layer_index).
     #
+    """
     regions = {"sunspot": {"llx": -335.0*u.arcsec, "lly": 0*u.arcsec, "width": 40*u.arcsec, "height": 32*u.arcsec},
                "loop footpoints": {"llx": -492*u.arcsec, "lly": 0*u.arcsec, "width": 23*u.arcsec, "height": 22*u.arcsec},
                "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
                "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
+    """
+    regions = {"most_of_fov": {"llx": -530.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
 
     # Rectangular patches
     for region in regions:
@@ -145,5 +148,8 @@ if sd.sunlocation == 'disk':
 #
 # Plot where the regions are
 #
-filepath = os.path.join(sd.save_locations['image'], sd.ident + '.regions.png')
+filepath = os.path.join(sd.save_locations['image'], sd.ident + '.regions')
+for region in regions.keys():
+    filepath = filepath + '.' + region
+filepath = filepath + '.png'
 step1_plots.plot_regions(mc_layer, regions, filepath)
