@@ -28,7 +28,7 @@ storage = analysis_get_data.get_all_data(waves=waves)
 # Number of bins
 bins = 100
 
-# Plot cross-correlations of
+# Plot cross-correlations within the same AIA channel
 plot_type = 'cc.within'
 for wave in waves:
     for region in regions:
