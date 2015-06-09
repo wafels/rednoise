@@ -16,7 +16,7 @@ from analysis_details import limits, get_mask_info
 waves = ['171', '193']
 
 # Regions we are interested in
-regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
+regions = ['moss', 'sunspot', 'quiet Sun', 'loop footpoints']
 
 # Apodization windows
 windows = ['hanning']
@@ -79,11 +79,11 @@ for wave in waves:
                 norm = colors.Normalize(clip=False, vmin=limits[parameter][0], vmax=limits[parameter][1])
 
                 # Set up the palette we will use
-                palette = cm.Greys
+                palette = cm.cool
                 # Bad values are those that are masked out
-                palette.set_bad('yellow', 1.0)
+                palette.set_bad('black', 1.0)
                 palette.set_under('green', 1.0)
-                palette.set_over('red', 1.0)
+                palette.set_over('yellow', 1.0)
                 # Begin the plot
                 fig, ax = plt.subplots()
                 # Plot the map
