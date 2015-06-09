@@ -1,6 +1,5 @@
 #
-# Analysis - AIC and BIC.  Plot the spatial distributions of
-# the AIC and the BIC
+# Analysis - Plot the spatial distributions of spectral model parameters
 #
 import os
 import numpy as np
@@ -11,6 +10,7 @@ import matplotlib.colors as colors
 
 import analysis_get_data
 import study_details as sd
+from analysis_details import limits, get_mask_info
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -48,42 +48,42 @@ for wave in waves:
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
 
-        for measure in ("AIC", "BIC"):
-            # Get the information for each model
-            this0 = storage[wave][region][model_names[0]]
-            this1 = storage[wave][region][model_names[1]]
-            # Where are the good fits
-            good_fit0 = this0.good_fits()
-            good_fit1 = this1.good_fits()
-            good_fit_both = np.logical_not(good_fit0) * np.logical_not(good_fit1)
 
-            # Difference in the information criteria
-            measure_difference = this0.as_array(measure) - this1.as_array(measure)
 
-            for include_mask in (True, False):
+        for model_name in model_names:
+            # Get the data for this model
+            this = storage[wave][region][model_name]
 
-                if include_mask:
-                    # Make a masked array
-                    map_data = ma.array(measure_difference, mask=np.logical_not(good_fit_both))
-                    mask_status = 'with_mask'
-                else:
-                    map_data = measure_difference
-                    mask_status = 'no_mask'
+            # Parameters
+            parameters = this.model.parameters
 
+            for parameter in parameters:
+                # Where are the good fits
+                mask = this.good_fits()
+
+                # Data
+                p1 = this.as_array(parameter)
+
+                # Apply the limit masks
+                #mask[np.where(p1 < limits[parameter][0])] = 1
+                #mask[np.where(p1 > limits[parameter][1])] = 1
+
+                # Create the masked numpy array
+                map_data = ma.array(p1, mask=mask)
                 # Make a SunPy map for nice spatially aware plotting.
                 my_map = analysis_get_data.make_map(output, region_id, map_data)
 
-                # Make a spatial distribution map of the difference in the
-                # information criterion.
+                # Make a spatial distribution map spectral model parameter
                 plt.close('all')
-                # Normalize the color table so that zero is in the middle
-                map_data_abs_max = np.max([np.abs(np.max(map_data)), np.abs(np.min(map_data))])
-                norm = colors.Normalize(vmin=-map_data_abs_max, vmax=map_data_abs_max, clip=False)
+                # Normalize the color table
+                norm = colors.Normalize(clip=False, vmin=limits[parameter][0], vmax=limits[parameter][1])
 
                 # Set up the palette we will use
-                palette = cm.seismic
+                palette = cm.Greys
                 # Bad values are those that are masked out
-                palette.set_bad('y', 1.0)
+                palette.set_bad('yellow', 1.0)
+                palette.set_under('green', 1.0)
+                palette.set_over('red', 1.0)
                 # Begin the plot
                 fig, ax = plt.subplots()
                 # Plot the map
@@ -92,12 +92,13 @@ for wave in waves:
                 if region == 'sunspot':
                     ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
 
+                label_index = this.model.parameters.index(parameter)
                 cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
-                                    shrink=0.8, label='$%s_{%s}$-$%s_{%s}$' % (measure, model_names[0], measure, model_names[1]))
+                                    shrink=0.8, label=this.model.labels[label_index])
                 # Fit everything in.
                 ax.autoscale_view()
 
                 # Dump to file
-                filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.%s.%s.png' % (measure, mask_status))
+                filepath = os.path.join(image, '%s.spatial_distrib.' % (model_name,)  + region_id + '.%s.png' % parameter)
                 print('Saving to ' + filepath)
                 plt.savefig(filepath)
