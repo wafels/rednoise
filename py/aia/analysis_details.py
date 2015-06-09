@@ -96,6 +96,7 @@ def plotname(model_names):
             'standard deviation of log(emission)': 'sd(log(E))',
             'rchi2': rchi2s}
 
+
 #
 # Calculate reduced chi-squared limits given pvalues
 #
@@ -128,6 +129,7 @@ def percent_lo(pvalue):
 def percent_hi(pvalue):
     return '%s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1])
 
+
 #
 # Create a mask that shows where there was a successful fit, and the reduced
 # chi-squared is inside the required limits.  True equals a value we want to
@@ -152,6 +154,7 @@ def summary_statistics(a, bins=100):
             "std": np.std(a),
             "mode": mode}
 
+
 #
 # Periods are the inverse of frequencies.  Frequencies are returned as a
 # normalized value in base 10, and normalized.  If the normalization factor is
@@ -165,6 +168,7 @@ def summary_statistics(a, bins=100):
 def convert_to_period(f_norm, nu):
     return 1.0 / (f_norm * 10.0 ** nu)
 
+
 #
 # Get the mode of a histogram
 #
@@ -173,3 +177,24 @@ def get_mode(h_info):
     bin_edges = h_info[1][i: i+2]
     return h_info[0][i], bin_edges
 
+#
+# When looking at the data, we want to remove outliers.  The limits below
+# set thresholds on the data values
+#
+limits = {"power law index": [1., 7.],
+          "log10(constant)": [0., 5.],
+          "log10(power law amplitude)": [3.0, 10.0],
+          "log10(lognormal width)": [-0.5, 4.0],
+          "log10(lognormal position)": [-np.log10(3000.), np.log10(3000.)],
+          "log10(lognormal amplitude)": [0.0, 10.0],
+          "period": [24.0, 3000.0],
+          "ratio": [-5.0, 5.0]}
+
+
+#
+# Define a useful text string describing the number of masked entries.  It is
+# assumed that the input mask is a numpy mask where True means masked
+#
+def get_mask_info(mask):
+    n_not_masked = np.sum(np.logical_not(mask))
+    return '(#px=%i, used=%3.1f%%)' % (n_not_masked, 100 * n_not_masked/np.float64(mask.size))

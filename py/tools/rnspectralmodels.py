@@ -229,9 +229,9 @@ class PowerLaw:
 class Lognormal:
     def __init__(self):
         self.name = 'Lognormal'
-        self.parameters = ['log10(lognormal amplitude)', 'log10(lognormal position)', 'lognormal width']
-        self.labels = ['$\log_{10}(A_{L})$', '$\log_{10}(p_{L})$', '$w_{L}$']
-        self.conversion = [1.0/np.log(10.0), 1.0/np.log(10.0), 1.0]
+        self.parameters = ['log10(lognormal amplitude)', 'log10(lognormal position)', 'log10(lognormal width)']
+        self.labels = ['$\log_{10}(A_{L})$', '$\log_{10}(p_{L})$', '$\log_{10}(w_{L})$']
+        self.conversion = [1.0/np.log(10.0), 1.0/np.log(10.0), 1.0/np.log(10.0)]
 
     def power(self, a, f):
         return lognormal(a, f)

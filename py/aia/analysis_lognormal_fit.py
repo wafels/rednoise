@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from astroML.plotting import hist
 import analysis_get_data
 import study_details as sd
-from analysis_details import convert_to_period, summary_statistics, get_mode
+from analysis_details import convert_to_period, summary_statistics, get_mode, limits, get_mask_info
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -40,8 +40,8 @@ storage = analysis_get_data.get_all_data(waves=waves)
 hloc = (100, 'blocks', 'scott', 'knuth', 'freedman')
 
 # Period limit
-period_limit = 3000.0
-ratio_limit = 5.0
+period_limit = limits["period"]
+ratio_limit = limits["ratio"]
 
 linewidth=3
 
@@ -86,16 +86,15 @@ for wave in waves:
             # convert to a period
             f_norm = this.f[0]
             p1 = convert_to_period(f_norm, this.as_array(p1_name))
-            # Mask out the much longer time-scales
-            mask[np.where(p1 > period_limit)] = 1
+            # Mask out bad time scales
+            mask[np.where(p1 > period_limit[1])] = 1
             # Masked arrays
             p1 = np.ma.array(p1, mask=mask).compressed()
             # Summary stats
             ss = summary_statistics(p1)
 
             # Title of the plot
-            n_mask = np.sum(np.logical_not(mask))
-            title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
+            title = wave + "-" + region + get_mask_info(mask)
 
             # Identifier of the plot
             plotident = wave + '.' + region + '.' + 'time-scale'
@@ -103,7 +102,7 @@ for wave in waves:
             # For what it is worth, plot the same data using all the bin
             # choices.
             plt.close('all')
-            plt.figure(1, figsize=(10,10))
+            plt.figure(1, figsize=(10, 10))
             for ibinning, binning in enumerate(hloc):
                 plt.subplot(len(hloc), 1, ibinning+1)
                 h_info = hist(p1, bins=binning)
@@ -116,7 +115,7 @@ for wave in waves:
                 plt.xlabel('Time-scale of location')
                 plt.title(str(binning) + ' : ' + title)
                 plt.legend(framealpha=0.5, fontsize=8)
-                plt.xlim(0, period_limit)
+                plt.xlim(period_limit)
 
             plt.tight_layout()
             ofilename = this_model + '.hist.' + plotident + '.png'
@@ -137,8 +136,8 @@ for wave in waves:
                     ratio_max[j, i] = np.log10(np.max(ratio))
                     ratio_max_f[j, i] = 1.0 / this.f[np.argmax(ratio)]
             new_mask = copy.deepcopy(mask)
-            too_small = np.where(ratio_max < -ratio_limit)
-            too_big = np.where(ratio_max > ratio_limit)
+            too_small = np.where(ratio_max < ratio_limit[0])
+            too_big = np.where(ratio_max > ratio_limit[1])
             new_mask[too_small] = 1
             new_mask[too_big] = 1
             ratio_max = np.ma.array(ratio_max, mask=new_mask).compressed()
@@ -165,7 +164,7 @@ for wave in waves:
                 plt.xlabel('$log_{10}\max$(lognormal / power law)')
                 plt.title(str(binning) + ' : ' + title)
                 plt.legend(framealpha=0.5, fontsize=8)
-                plt.xlim(-ratio_limit, ratio_limit)
+                plt.xlim(ratio_limit)
 
             plt.tight_layout()
             ofilename = this_model + '.hist.' + plotident + '.png'
@@ -193,13 +192,8 @@ for wave in waves:
                 plt.xlabel('argmax(lognormal / power law) [seconds]')
                 plt.title(str(binning) + ' : ' + title)
                 plt.legend(framealpha=0.5, fontsize=8)
-                plt.xlim(0, period_limit)
+                plt.xlim(period_limit)
 
             plt.tight_layout()
             ofilename = this_model + '.hist.' + plotident + '.png'
             plt.savefig(os.path.join(image, ofilename))
-
-            #
-            # Look at the width of the lognormal
-            #
-            p2_name = 'log10(lognormal position)'

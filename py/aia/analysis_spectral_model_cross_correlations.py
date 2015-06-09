@@ -8,7 +8,7 @@ from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import analysis_get_data
 import study_details as sd
-import analysis_details
+from analysis_details import rchi2limitcolor, limits, get_mask_info
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -24,9 +24,6 @@ model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves)
-
-#
-rchi2limitcolor = analysis_details.rchi2limitcolor
 
 # Number of bins
 bins = 100
@@ -52,29 +49,38 @@ for wave in waves:
 
             npar = len(parameters)
             for i in range(0, npar):
+                # First parameter name
                 p1_name = parameters[i]
-                label1 = this.model.labels[i]
-                mask = this.good_fits()
-                n_mask = np.sum(np.logical_not(mask))
-                p1 = np.ma.array(this.as_array(p1_name), mask=mask).compressed()
-
-                title = wave + '-' + region + '(#pixels=%i, used=%3.1f%%)' % (n_mask, 100 * n_mask/ np.float64(mask.size))
-
-                # Identifier of the plot
-                plotident = wave + '.' + region + '.' + p1_name
-
-                plt.close('all')
-                plt.hist(p1, bins=bins)
-                plt.xlabel(label1)
-                plt.title(title)
-                ofilename = this_model + '.hist.' + plotident + '.png'
-                plt.tight_layout()
-                plt.savefig(os.path.join(image, ofilename))
+                # First parameter, label for the plot
+                p1_label = this.model.labels[i]
+                # First parameter, data
+                p1 = this.as_array(p1_name)
+                # First parameter, good fits mask
+                p1_mask = this.good_fits()
+                # Mask out extreme values
+                p1_mask[np.where(p1 < limits[p1_name][0])] = 1
+                p1_mask[np.where(p1 > limits[p1_name][1])] = 1
 
                 for j in range(i+1, npar):
+                    # Second parameter name
                     p2_name = parameters[j]
-                    label2 = this.model.labels[j]
-                    p2 = np.ma.array(this.as_array(p2_name), mask=mask).compressed()
+                    # Second parameter, label for the plot
+                    p2_label = this.model.labels[j]
+                    # First parameter, data
+                    p2 = this.as_array(p2_name)
+                    # Second parameter, good fits mask
+                    p2_mask = this.good_fits()
+                    # Mask out extreme values
+                    p2_mask[np.where(p2 < limits[p2_name][0])] = 1
+                    p2_mask[np.where(p2 > limits[p2_name][1])] = 1
+
+                    # Final mask for cross-correlation
+                    final_mask = np.logical_not(np.logical_not(p1_mask) * np.logical_not(p2_mask))
+                    title = wave + "-" + region + get_mask_info(final_mask)
+
+                    # Get the data using the final mask
+                    p1 = np.ma.array(this.as_array(p1_name), mask=final_mask).compressed()
+                    p2 = np.ma.array(this.as_array(p2_name), mask=final_mask).compressed()
 
                     # Cross correlation statistics
                     r = [spearmanr(p1, p2), pearsonr(p1, p2)]
@@ -86,11 +92,10 @@ for wave in waves:
                     plotident = rstring + '.' + wave + '.' + region + '.' + p1_name + '.' + p2_name
 
                     # Make a scatter plot
-
                     plt.close('all')
                     plt.title(title)
-                    plt.xlabel(label1)
-                    plt.ylabel(label2)
+                    plt.xlabel(p1_label)
+                    plt.ylabel(p2_label)
                     plt.scatter(p1, p2)
                     x0 = plt.xlim()[0]
                     ylim = plt.ylim()
@@ -105,8 +110,8 @@ for wave in waves:
                     # Make a 2d histogram
                     plt.close('all')
                     plt.title(title)
-                    plt.xlabel(label1)
-                    plt.ylabel(label2)
+                    plt.xlabel(p1_label)
+                    plt.ylabel(p2_label)
                     plt.hist2d(p1, p2, bins=bins)
                     x0 = plt.xlim()[0]
                     ylim = plt.ylim()
