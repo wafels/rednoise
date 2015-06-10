@@ -1,8 +1,10 @@
 #
 # Some magic numbers and parameters used in various analysis programs
 #
+import os
 import numpy as np
 import lnlike_model_fit
+import study_details as sd
 
 # Reduced chi-squared
 rchi2s = '$\chi^{2}_{r}$'
@@ -198,3 +200,31 @@ limits = {"power law index": [1., 7.],
 def get_mask_info(mask):
     n_not_masked = np.sum(np.logical_not(mask))
     return '(#px=%i, used=%3.1f%%)' % (n_not_masked, 100 * n_not_masked/np.float64(mask.size))
+
+
+# Define a mask where the IC say that one model is preferred over another
+def get_ic_location(this, this_model, model_names):
+    # Get the data for the first model
+    this_model_data = this[this_model]
+
+    # Get the data for the other model
+    other_model = model_names[1 - model_names.index(this_model)]
+    other_model_data = this[other_model]
+
+    # Where the information criteria are less than zero indicates the
+    # preferred model
+    dAIC = this_model_data.as_array("AIC") - other_model_data.as_array("AIC")
+    dBIC = this_model_data.as_array("BIC") - other_model_data.as_array("BIC")
+
+    # Return locations where either dAIC > 0, dBIC > 0 or both
+    mask_both = np.ones_like(dAIC, dtype=bool)
+    #mask_aic = dAIC < 0.0
+    #mask_bic = dBIC < 0.0
+    #mask_both = mask_aic * mask_bic
+    return np.where(np.logical_not(mask_both))
+
+def get_image_model_location(roots, b, this_model):
+    image = os.path.join(sd.datalocationtools.save_location_calculator(roots, b)["image"], this_model)
+    if not(os.path.exists(image)):
+        os.makedirs(image)
+    return image

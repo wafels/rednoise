@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from astroML.plotting import hist
 import analysis_get_data
 import study_details as sd
-from analysis_details import summary_statistics, get_mode, limits, get_mask_info
+from analysis_details import summary_statistics, get_mode, limits, get_mask_info, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -41,10 +41,10 @@ for wave in waves:
 
         # Output location
         output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
 
         for this_model in model_names:
             this = storage[wave][region][this_model]
+            image = get_image_model_location(sd.roots, b, this_model)
 
             for p1_name in this.model.parameters:
                 p1 = this.as_array(p1_name)
@@ -57,6 +57,10 @@ for wave in waves:
                 # Apply the limit masks
                 mask[np.where(p1 < limits[p1_name][0])] = 1
                 mask[np.where(p1 > limits[p1_name][1])] = 1
+
+                # Only consider those pixels where this_model is preferred
+                # by the information criteria
+                mask[get_ic_location(storage[wave][region], this_model, model_names)] = 1
 
                 # Masked arrays
                 p1 = np.ma.array(p1, mask=mask).compressed()

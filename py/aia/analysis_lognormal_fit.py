@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from astroML.plotting import hist
 import analysis_get_data
 import study_details as sd
-from analysis_details import convert_to_period, summary_statistics, get_mode, limits, get_mask_info
+from analysis_details import convert_to_period, summary_statistics, get_mode, limits, get_mask_info, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -32,6 +32,9 @@ windows = ['hanning']
 
 # Model results to examine
 model_names = ('Power law + Constant + Lognormal',)
+
+# Model results to examine
+model_comparison_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves)
@@ -63,33 +66,29 @@ for wave in waves:
         for this_model in model_names:
             this = storage[wave][region][this_model]
             p1_name = 'log10(lognormal position)'
-
+            image = get_image_model_location(sd.roots, b, this_model)
             p1_index = this.model.parameters.index(p1_name)
             label1 = this.model.labels[p1_index]
-
-            # Mask where the lognormal fit is good.
-            mask = this.good_fits()
-
-            # AIC: Mask out the areas where Power law + Constant + Lognormal is
-            # not preferred
-            dAIC = storage[wave][region]['Power law + Constant + Lognormal'].as_array('AIC') - storage[wave][region]['Power law + Constant'].as_array('AIC')
-            dAIC_ignored = np.where(dAIC > 0.0)
-            mask[dAIC_ignored] = 1
-
-            # BIC: Mask out the areas where Power law + Constant + Lognormal is
-            # not preferred
-            dBIC = storage[wave][region]['Power law + Constant + Lognormal'].as_array('BIC') - storage[wave][region]['Power law + Constant'].as_array('BIC')
-            dBIC_ignored = np.where(dBIC > 0.0)
-            mask[dBIC_ignored] = 1
 
             # Plot out the time-scale of the location of the lognormal
             # convert to a period
             f_norm = this.f[0]
             p1 = convert_to_period(f_norm, this.as_array(p1_name))
+
+            # Mask where the lognormal fit is good.
+            mask = this.good_fits()
+
+            # Apply the limit masks
             # Mask out bad time scales
             mask[np.where(p1 > period_limit[1])] = 1
+
+            # Only consider those pixels where this_model is preferred
+            # by the information criteria
+            mask[get_ic_location(storage[wave][region], this_model, model_comparison_names)] = 1
+
             # Masked arrays
             p1 = np.ma.array(p1, mask=mask).compressed()
+
             # Summary stats
             ss = summary_statistics(p1)
 
@@ -140,6 +139,11 @@ for wave in waves:
             too_big = np.where(ratio_max > ratio_limit[1])
             new_mask[too_small] = 1
             new_mask[too_big] = 1
+
+            # Only consider those pixels where this_model is preferred
+            # by the information criteria
+            new_mask[get_ic_location(storage[wave][region], this_model, model_comparison_names)] = 1
+
             ratio_max = np.ma.array(ratio_max, mask=new_mask).compressed()
             # Summary stats
             ss = summary_statistics(ratio_max)

@@ -8,7 +8,7 @@ from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import analysis_get_data
 import study_details as sd
-from analysis_details import rchi2limitcolor, limits, get_mask_info
+from analysis_details import rchi2limitcolor, limits, get_mask_info, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -49,13 +49,14 @@ for iwave1, wave1 in enumerate(waves):
 
             # Output location
             output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-            image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+
 
             for this_model in model_names:
                 this1 = storage[wave1][region][this_model]
                 this2 = storage[wave2][region][this_model]
                 parameters = this1.model.parameters
                 npar = len(parameters)
+                image = get_image_model_location(sd.roots, b, this_model)
 
                 # First parameter
                 for i in range(0, npar):
@@ -70,6 +71,9 @@ for iwave1, wave1 in enumerate(waves):
                     # Mask out extreme values
                     p1_mask[np.where(p1 < limits[p1_name][0])] = 1
                     p1_mask[np.where(p1 > limits[p1_name][1])] = 1
+                    # Only consider those pixels where this_model is preferred
+                    # by the AIC and the BIC
+                    p1_mask[get_ic_location(storage[wave1][region], this_model, model_names)] = 1
 
                     # Second parameter
                     for j in range(0, npar):
@@ -84,6 +88,9 @@ for iwave1, wave1 in enumerate(waves):
                         # Mask out extreme values
                         p2_mask[np.where(p2 < limits[p2_name][0])] = 1
                         p2_mask[np.where(p2 > limits[p2_name][1])] = 1
+                        # Only consider those pixels where this_model is
+                        # preferred by the AIC and the BIC
+                        p1_mask[get_ic_location(storage[wave2][region], this_model, model_names)] = 1
 
                         # Final mask for cross-correlation
                         final_mask = np.logical_not(np.logical_not(p1_mask) * np.logical_not(p2_mask))

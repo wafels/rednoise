@@ -8,7 +8,7 @@ from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import analysis_get_data
 import study_details as sd
-from analysis_details import rchi2limitcolor, limits, get_mask_info
+from analysis_details import rchi2limitcolor, limits, get_mask_info, get_ic_location
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -60,6 +60,9 @@ for wave in waves:
                 # Mask out extreme values
                 p1_mask[np.where(p1 < limits[p1_name][0])] = 1
                 p1_mask[np.where(p1 > limits[p1_name][1])] = 1
+                # Only consider those pixels where this_model is
+                # preferred by the AIC and the BIC
+                p1_mask[get_ic_location(storage[wave][region], this_model, model_names)] = 1
 
                 for j in range(i+1, npar):
                     # Second parameter name
@@ -73,6 +76,9 @@ for wave in waves:
                     # Mask out extreme values
                     p2_mask[np.where(p2 < limits[p2_name][0])] = 1
                     p2_mask[np.where(p2 > limits[p2_name][1])] = 1
+                    # Only consider those pixels where this_model is
+                    # preferred by the AIC and the BIC
+                    p2_mask[get_ic_location(storage[wave][region], this_model, model_names)] = 1
 
                     # Final mask for cross-correlation
                     final_mask = np.logical_not(np.logical_not(p1_mask) * np.logical_not(p2_mask))

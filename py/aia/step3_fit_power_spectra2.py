@@ -12,15 +12,15 @@ import rnspectralmodels
 waves = ['171', '193']
 
 # Regions we are interested in
-#regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
-regions = ['most_of_fov']
+regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
+#regions = ['most_of_fov']
 
 # Apodization windows
 windows = ['hanning']
 
 # Models to fit
-these_models = [rnspectralmodels.PowerLawPlusConstant(),
-                rnspectralmodels.PowerLawPlusConstantPlusLognormal()]
+these_models = [rnspectralmodels.PowerLawPlusConstantPlusLognormal(),
+                rnspectralmodels.PowerLawPlusConstant()]
 n_models = len(these_models)
 
 #

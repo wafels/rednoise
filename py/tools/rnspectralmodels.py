@@ -281,7 +281,7 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
         fit_here = positive_index * f_above * f_below
 
         # If there is sufficient positive data
-        if len(fit_here) > sufficient_frequencies:
+        if np.sum(fit_here) > sufficient_frequencies:
             diff1 = diff0[fit_here]
             f1 = f[fit_here]
             amp = np.log(np.max(diff1))

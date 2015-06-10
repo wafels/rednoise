@@ -49,7 +49,6 @@ for wave in waves:
         ofilename = os.path.join(output, region_id + '.datacube')
 
 
-
         for model_name in model_names:
             # Get the data for this model
             this = storage[wave][region][model_name]
