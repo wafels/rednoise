@@ -203,7 +203,7 @@ def get_mask_info(mask):
 
 
 # Define a mask where the IC say that one model is preferred over another
-def get_ic_location(this, this_model, model_names):
+def get_ic_location(this, this_model, model_names, ic_type=None):
     # Get the data for the first model
     this_model_data = this[this_model]
 
@@ -217,14 +217,29 @@ def get_ic_location(this, this_model, model_names):
     dBIC = this_model_data.as_array("BIC") - other_model_data.as_array("BIC")
 
     # Return locations where either dAIC > 0, dBIC > 0 or both
-    mask_both = np.ones_like(dAIC, dtype=bool)
-    #mask_aic = dAIC < 0.0
-    #mask_bic = dBIC < 0.0
-    #mask_both = mask_aic * mask_bic
-    return np.where(np.logical_not(mask_both))
+    if ic_type == 'none':
+        mask = np.ones_like(dAIC, dtype=bool)
 
-def get_image_model_location(roots, b, this_model):
-    image = os.path.join(sd.datalocationtools.save_location_calculator(roots, b)["image"], this_model)
-    if not(os.path.exists(image)):
-        os.makedirs(image)
+    if ic_type == 'AIC':
+        mask = dAIC < 0.0
+
+    if ic_type == 'BIC':
+        mask = dBIC < 0.0
+
+    if ic_type == 'both':
+        mask_aic = dAIC < 0.0
+        mask_bic = dBIC < 0.0
+        mask = mask_aic * mask_bic
+
+    # Return the indices of where to mask (assuming that the mask is to be used
+    # in a numpy masked array.
+    return np.where(np.logical_not(mask))
+
+
+def get_image_model_location(roots, b, dirs):
+    image = os.path.join(sd.datalocationtools.save_location_calculator(roots, b)["image"])
+    for d in dirs:
+        image = os.path.join(image, d)
+        if not(os.path.exists(image)):
+            os.makedirs(image)
     return image

@@ -27,6 +27,9 @@ storage = analysis_get_data.get_all_data(waves=waves)
 # Number of bins
 hloc = (100, 'blocks', 'scott', 'knuth', 'freedman')
 
+# IC
+ic_types = ('none', 'AIC', 'BIC', 'both')
+
 # Line width
 linewidth=3
 
@@ -44,52 +47,57 @@ for wave in waves:
 
         for this_model in model_names:
             this = storage[wave][region][this_model]
-            image = get_image_model_location(sd.roots, b, this_model)
 
             for p1_name in this.model.parameters:
                 p1 = this.as_array(p1_name)
                 p1_index = this.model.parameters.index(p1_name)
                 label1 = this.model.labels[p1_index]
+                for ic_type in ic_types:
+                    # Mask where the fit is good.
+                    mask = this.good_fits()
 
-                # Mask where the fit is good.
-                mask = this.good_fits()
+                    # Apply the limit masks
+                    mask[np.where(p1 < limits[p1_name][0])] = 1
+                    mask[np.where(p1 > limits[p1_name][1])] = 1
 
-                # Apply the limit masks
-                mask[np.where(p1 < limits[p1_name][0])] = 1
-                mask[np.where(p1 > limits[p1_name][1])] = 1
+                    # Only consider those pixels where this_model is preferred
+                    # by the information criteria
+                    mask[get_ic_location(storage[wave][region],
+                                         this_model,
+                                         model_names,
+                                         ic_type=ic_type)] = 1
 
-                # Only consider those pixels where this_model is preferred
-                # by the information criteria
-                mask[get_ic_location(storage[wave][region], this_model, model_names)] = 1
+                    # Masked arrays
+                    pm1 = np.ma.array(p1, mask=mask).compressed()
 
-                # Masked arrays
-                p1 = np.ma.array(p1, mask=mask).compressed()
+                    # Summary stats
+                    ss = summary_statistics(pm1)
 
-                # Summary stats
-                ss = summary_statistics(p1)
+                    # Identifier of the plot
+                    plot_identity = wave + '.' + region + '.' + p1_name + '.' + ic_type
 
-                # Title of the plot
-                title = wave + "-" + region + get_mask_info(mask)
+                    # Title of the plot
+                    title = plot_identity + get_mask_info(mask)
 
-                # Identifier of the plot
-                plotident = wave + '.' + region + '.' + p1_name
+                    # location of the image
+                    image = get_image_model_location(sd.roots, b, [this_model, ic_type])
 
-                # For what it is worth, plot the same data using all the bin
-                # choices.
-                plt.close('all')
-                plt.figure(1, figsize=(10, 10))
-                for ibinning, binning in enumerate(hloc):
-                    plt.subplot(len(hloc), 1, ibinning+1)
-                    h_info = hist(p1, bins=binning)
-                    mode = get_mode(h_info)
-                    plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
-                    plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]), linewidth=linewidth)
-                    plt.axvline(mode[1][1], color='g', linewidth=linewidth)
-                    plt.xlabel(label1)
-                    plt.title(str(binning) + ' : ' + title)
-                    plt.legend(framealpha=0.5, fontsize=8)
-                    plt.xlim(limits[p1_name])
+                    # For what it is worth, plot the same data using all the bin
+                    # choices.
+                    plt.close('all')
+                    plt.figure(1, figsize=(10, 10))
+                    for ibinning, binning in enumerate(hloc):
+                        plt.subplot(len(hloc), 1, ibinning+1)
+                        h_info = hist(pm1, bins=binning)
+                        mode = get_mode(h_info)
+                        plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
+                        plt.axvline(mode[1][0], color='g', label='%f<mode<%f' % (mode[1][0], mode[1][1]), linewidth=linewidth)
+                        plt.axvline(mode[1][1], color='g', linewidth=linewidth)
+                        plt.xlabel(label1)
+                        plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
+                        plt.legend(framealpha=0.5, fontsize=8)
+                        plt.xlim(limits[p1_name])
 
-                plt.tight_layout()
-                ofilename = this_model + '.hist.' + plotident + '.png'
-                plt.savefig(os.path.join(image, ofilename))
+                    plt.tight_layout()
+                    ofilename = this_model + '.' + plot_identity + '.hist.png'
+                    plt.savefig(os.path.join(image, ofilename))
