@@ -11,6 +11,8 @@
 # (3)
 # Distribution of the maximum of the ratio of the lognormal contribution to the
 # background power law
+# (4)
+# Distributions of the energy flux from each contribution
 #
 import os
 import copy

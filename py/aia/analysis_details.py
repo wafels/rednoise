@@ -186,8 +186,8 @@ def get_mode(h_info):
 limits = {"power law index": [1., 7.],
           "log10(constant)": [0., 5.],
           "log10(power law amplitude)": [3.0, 10.0],
-          "log10(lognormal width)": [-0.5, 4.0],
-          "log10(lognormal position)": [-np.log10(3000.), np.log10(3000.)],
+          "log10(lognormal width)": [0.0, 0.6],
+          "log10(lognormal position)": [0.0, np.log10(3000.)],
           "log10(lognormal amplitude)": [0.0, 10.0],
           "period": [24.0, 3000.0],
           "ratio": [-5.0, 5.0]}
@@ -243,3 +243,7 @@ def get_image_model_location(roots, b, dirs):
         if not(os.path.exists(image)):
             os.makedirs(image)
     return image
+
+sqrt_two_pi = np.sqrt(2 * np.pi)
+def integrate_lognormal_parameters(amplitude, width):
+    return sqrt_two_pi * width * 10.0 ** amplitude

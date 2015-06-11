@@ -364,6 +364,7 @@ class Fit:
                 # Store the final results
                 self.result[j][i] = (guess, result, rchi2, aic, bic)
 
+
     def as_array(self, quantity):
         """
         Convert parts of the results nested list into a numpy array.

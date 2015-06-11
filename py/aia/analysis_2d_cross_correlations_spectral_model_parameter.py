@@ -122,6 +122,8 @@ for wave in waves:
                         plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
                         plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
                         ofilename = this_model + '.' + plot_type + '.' + plot_identity + '.scatter.png'
+                        plt.xlim(limits[p1_name])
+                        plt.ylim(limits[p2_name])
                         plt.tight_layout()
                         plt.savefig(os.path.join(image, ofilename))
 
