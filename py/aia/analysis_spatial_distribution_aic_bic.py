@@ -13,11 +13,11 @@ import analysis_get_data
 import study_details as sd
 
 # Wavelengths we want to analyze
-waves = ['171', '193']
+waves = ['193']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-
+regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
@@ -25,7 +25,7 @@ windows = ['hanning']
 model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
 
 # Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves)
+storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
 
 # Get the sunspot outline
 sunspot_outline = analysis_get_data.sunspot_outline()

@@ -15,6 +15,7 @@ waves = ['171', '193']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
+regions = ['most_of_fov']
 
 # Apodization windows
 windows = ['hanning']
@@ -26,7 +27,7 @@ model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
 ic_types = ('none', 'AIC', 'BIC', 'both')
 
 # Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves)
+storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
 
 # Number of bins
 bins = 100

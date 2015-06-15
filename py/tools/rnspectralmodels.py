@@ -265,6 +265,10 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
               initial_log_width=0.1):
 
         log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
+        #
+        # Should use the above guess to seed a fit for PowerLawPlusConstant
+        # based on the excluded estimated location of the lognormal
+        #
         background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
 
         # Difference between the data and the model

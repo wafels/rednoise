@@ -24,11 +24,11 @@ import study_details as sd
 from analysis_details import convert_to_period, summary_statistics, get_mode, limits, get_mask_info, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
-waves = ['171', '193']
+waves = ['193']
 
 # Regions we are interested in
-regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-
+#regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
+regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
@@ -39,10 +39,10 @@ model_names = ('Power law + Constant + Lognormal',)
 model_comparison_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
 
 # Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves)
+storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
 
 # Number of bins
-hloc = (100, 'blocks', 'scott', 'knuth', 'freedman')
+hloc = (100,)# 'scott', 'knuth', 'freedman')
 
 # Period limit
 period_limit = limits["period"]
