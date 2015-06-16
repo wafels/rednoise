@@ -10,11 +10,11 @@ import study_details as sd
 from analysis_details import summary_statistics, get_mode, limits, get_mask_info, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
-waves = ['171', '193']
+waves = ['171']#, '193']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-
+regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
