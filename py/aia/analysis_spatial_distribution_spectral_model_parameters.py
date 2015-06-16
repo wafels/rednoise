@@ -13,7 +13,7 @@ import study_details as sd
 from analysis_details import summary_statistics, get_mode, limits, get_mask_info
 
 # Wavelengths we want to analyze
-waves = ['171']
+waves = ['193']
 
 # Regions we are interested in
 regions = ['moss', 'sunspot', 'quiet Sun', 'loop footpoints']
@@ -30,6 +30,7 @@ linewidth = 3
 
 # IC
 ic_types = ('none',)
+ic_limit = 10.0
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
@@ -140,11 +141,11 @@ for wave in waves:
                 label_index0 = this0.model.parameters.index(parameter)
 
                 # Model 0
-                model0_where = np.where(measure_difference < 0.0)
+                model0_where = np.where(measure_difference < -ic_limit)
                 p1[model0_where] = this0.as_array(parameter)[model0_where]
 
                 # Model 1
-                model1_where = np.where(measure_difference > 0.0)
+                model1_where = np.where(measure_difference > ic_limit)
                 p1[model1_where] = this1.as_array(parameter)[model1_where]
 
                 # Make a SunPy map for nice spatially aware plotting.
@@ -193,7 +194,7 @@ for wave in waves:
                 pm1 = map_data.compressed()
 
                 # Store the data for the next set of plots
-                storage_common_parameter[wave][region][measure][parameter] = map_data
+                #storage_common_parameter[wave][region][measure][parameter] = map_data
 
                 # Summary statistics
                 ss = summary_statistics(pm1)
