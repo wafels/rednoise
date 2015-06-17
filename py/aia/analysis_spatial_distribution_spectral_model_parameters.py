@@ -163,20 +163,17 @@ for wave in waves:
 
                 # Preference for model 0
                 #model0_where = np.where((measure_difference <= -this_ic_limit) & np.logical_not(good_fit0))
-                model0_where = np.where(measure_difference <= -this_ic_limit)# & np.logical_not(good_fit0))
-                print model0_where.size
+                model0_where = np.where((measure_difference <= -this_ic_limit) & np.logical_not(good_fit0))
 
                 p1[model0_where] = this0.as_array(parameter)[model0_where]
                 mask[model0_where] = False
 
                 # Preference for model 1
                 #model1_where = np.where((measure_difference >= ic_limit) & np.logical_not(good_fit1))
-                model1_where = np.where(measure_difference >= ic_limit)# & np.logical_not(good_fit1))
+                model1_where = np.where((measure_difference >= this_ic_limit) & np.logical_not(good_fit1))
 
                 p1[model1_where] = this1.as_array(parameter)[model1_where]
                 mask[model1_where] = False
-
-                zzz = qqq
 
 
                 # Make a SunPy map for nice spatially aware plotting.
