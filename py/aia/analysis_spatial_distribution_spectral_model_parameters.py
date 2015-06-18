@@ -14,10 +14,10 @@ import study_details as sd
 from analysis_details import summary_statistics, get_mode, limits, get_mask_info, rchi2limitcolor
 
 # Wavelengths we want to analyze
-waves = ['171']
+waves = ['171', '193']
 
 # Regions we are interested in
-#regions = ['moss', 'sunspot', 'quiet Sun', 'loop footpoints']
+# regions = ['moss', 'sunspot', 'quiet Sun', 'loop footpoints']
 regions = ['most_of_fov']
 
 # Apodization windows
@@ -37,13 +37,35 @@ bins_2d = 100
 
 # IC
 ic_types = ('none',)
-ic_limit = {"BIC": 0.0, "AIC": 0.0}
+ic_limit = {"BIC": 0.0}
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
 
 # Get the sunspot outline
 sunspot_outline = analysis_get_data.sunspot_outline()
+
+#
+# Some models have the same parameters in them.  The code below
+# first finds all the common parameters between two models.  At each
+# pixel, the difference in information criterion is calculated for each
+# power spectrum model.  A map is created containing parameter values
+# as found by either
+#
+par1 = storage[waves[0]][regions[0]][model_names[0]].model.parameters
+par2 = storage[waves[0]][regions[0]][model_names[1]].model.parameters
+common_parameters = set(par1).intersection(par2)
+
+# Define the storage for the common parameters
+storage_common_parameter = {}
+for wave in waves:
+    storage_common_parameter[wave] = {}
+    for region in regions:
+        storage_common_parameter[wave][region] = {}
+        for measure in ic_limit.keys():
+            storage_common_parameter[wave][region][measure] = {}
+            for parameter in common_parameters:
+                storage_common_parameter[wave][region][measure][parameter] = 0
 
 # Plot spatial distributions of the spectral model parameters.
 for wave in waves:
@@ -72,7 +94,7 @@ for wave in waves:
                 label_index = this.model.parameters.index(parameter)
 
                 # Different information criteria
-                for ic_type in ic_types:
+                for ic_type in ic_limit.keys():
                     image = get_image_model_location(sd.roots, b, [model_name, ic_type])
 
                     # Where are the good fits
@@ -124,17 +146,6 @@ for wave in waves:
                     plt.savefig(filepath)
             """
 
-        #
-        # Some models have the same parameters in them.  The code below
-        # first finds all the common parameters between two models.  At each
-        # pixel, the difference in information criterion is calculated for each
-        # power spectrum model.  A map is created containing parameter values
-        # as found by either
-        #
-        par1 = storage[wave][region][model_names[0]].model.parameters
-        par2 = storage[wave][region][model_names[1]].model.parameters
-        common_parameters = set(par1).intersection(par2)
-
         # Do each measure independently
         for measure in ic_limit.keys():
             # Information Criterion
@@ -162,22 +173,20 @@ for wave in waves:
                 mask = np.ones_like(good_fit0, dtype=bool)
 
                 # Preference for model 0
-                #model0_where = np.where((measure_difference <= -this_ic_limit) & np.logical_not(good_fit0))
                 model0_where = np.where((measure_difference <= -this_ic_limit) & np.logical_not(good_fit0))
 
                 p1[model0_where] = this0.as_array(parameter)[model0_where]
                 mask[model0_where] = False
 
                 # Preference for model 1
-                #model1_where = np.where((measure_difference >= ic_limit) & np.logical_not(good_fit1))
                 model1_where = np.where((measure_difference >= this_ic_limit) & np.logical_not(good_fit1))
 
                 p1[model1_where] = this1.as_array(parameter)[model1_where]
                 mask[model1_where] = False
 
-
                 # Make a SunPy map for nice spatially aware plotting.
                 map_data = ma.array(p1, mask=mask)
+
                 my_map = analysis_get_data.make_map(output, region_id, map_data)
 
                 # Make a spatial distribution map spectral model parameter
@@ -222,7 +231,7 @@ for wave in waves:
                 pm1 = map_data.compressed()
 
                 # Store the data for the next set of plots
-                #storage_common_parameter[wave][region][measure][parameter] = map_data
+                storage_common_parameter[wave][region][measure][parameter] = map_data
 
                 # Summary statistics
                 ss = summary_statistics(pm1)
@@ -253,7 +262,7 @@ for wave in waves:
                 plt.tight_layout()
                 ofilename = 'across_model.' + plot_identity + '.hist.png'
                 plt.savefig(os.path.join(image, ofilename))
-"""
+
 # Go through all the common parameters and make 2-d histograms of them across
 # wavelengths
 for region in regions:
@@ -268,7 +277,7 @@ for region in regions:
                 map_data1 = storage_common_parameter[wave1][region][measure][parameter]
 
                 # Get the mask out of the map data
-                mask1 = np.ma.get_mask(map_data1)
+                mask1 = np.ma.getmask(map_data1)
 
                 # branch location
                 b = [sd.corename, sd.sunlocation, sd.fits_level, wave1, region]
@@ -288,14 +297,14 @@ for region in regions:
                     map_data2 = storage_common_parameter[wave2][region][measure][parameter]
 
                     # Get the masks out of the map data
-                    mask2 = np.ma.get_mask(map_data1)
+                    mask2 = np.ma.getmask(map_data2)
 
                     # Combine the masks
                     combined_mask = np.logical_not(np.logical_not(mask1) * np.logical_not(mask2))
 
                     # Get the two parameters
-                    p1 = np.ma.array(np.ma.get_data(map_data1), mask=combined_mask).compressed()
-                    p2 = np.ma.array(np.ma.get_data(map_data2), mask=combined_mask).compressed()
+                    p1 = np.ma.array(np.ma.getdata(map_data1), mask=combined_mask).compressed()
+                    p2 = np.ma.array(np.ma.getdata(map_data2), mask=combined_mask).compressed()
 
                     # Cross correlation statistics
                     r = [spearmanr(p1, p2), pearsonr(p1, p2)]
@@ -309,7 +318,7 @@ for region in regions:
                     # Make a scatter plot
                     xlabel = p_label + r'$_{%s}$' % wave1
                     ylabel = p_label + r'$_{%s}$' % wave2
-                    title = '%s vs. %s, %s' % (xlabel, ylabel, title)
+                    title = '%s vs. %s, \n%s' % (xlabel, ylabel, plot_identity)
                     plt.close('all')
                     plt.title(title)
                     plt.xlabel(xlabel)
@@ -337,7 +346,7 @@ for region in regions:
                     plt.title(title)
                     plt.xlabel(xlabel)
                     plt.ylabel(ylabel)
-                    plt.hist2d(p1, p2, bins=bins)
+                    plt.hist2d(p1, p2, bins=bins_2d, range=[limits[parameter], limits[parameter]])
                     x0 = plt.xlim()[0]
                     ylim = plt.ylim()
                     y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
@@ -353,5 +362,5 @@ for region in regions:
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
 
-"""
+
 

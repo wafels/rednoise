@@ -203,7 +203,7 @@ def get_mask_info(mask):
 
 
 # Define a mask where the IC say that one model is preferred over another
-def get_ic_location(this, this_model, model_names, ic_type=None):
+def get_ic_location(this, this_model, model_names, ic_type=None, ic_limits=None):
     # Get the data for the first model
     this_model_data = this[this_model]
 
@@ -220,15 +220,20 @@ def get_ic_location(this, this_model, model_names, ic_type=None):
     if ic_type == 'none':
         mask = np.ones_like(dAIC, dtype=bool)
 
+    if ic_limits is None:
+        ic_limit = 0.0
+    else:
+        ic_limit = ic_limits[ic_type]
+
     if ic_type == 'AIC':
-        mask = dAIC < 0.0
+        mask = dAIC < ic_limit
 
     if ic_type == 'BIC':
-        mask = dBIC < 0.0
+        mask = dBIC < ic_limit
 
     if ic_type == 'both':
-        mask_aic = dAIC < 0.0
-        mask_bic = dBIC < 0.0
+        mask_aic = dAIC < ic_limit
+        mask_bic = dBIC < ic_limit
         mask = mask_aic * mask_bic
 
     # Return the indices of where to mask (assuming that the mask is to be used
