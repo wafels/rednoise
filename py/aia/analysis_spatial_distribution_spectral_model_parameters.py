@@ -263,6 +263,11 @@ for wave in waves:
                 ofilename = 'across_model.' + plot_identity + '.hist.png'
                 plt.savefig(os.path.join(image, ofilename))
 
+#
+# Make a power-law index difference map
+#
+
+
 # Go through all the common parameters and make 2-d histograms of them across
 # wavelengths
 for region in regions:
