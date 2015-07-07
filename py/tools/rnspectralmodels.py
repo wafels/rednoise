@@ -49,6 +49,53 @@ def power_law(a, f):
 
 
 # ----------------------------------------------------------------------------
+# Broken Power law
+#
+def broken_power_law(a, f):
+    """Broken power law.  This model assumes that there is a break in the power
+    spectrum at some given frequency.
+
+    Parameters
+    ----------
+    a : ndarray[3]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index at frequencies lower than the break frequency
+        a[2] : break frequency
+        a[3] : the power law index at frequencies higher than the break frequency
+    f : ndarray
+        frequencies
+    """
+    power = np.zeros_like(f)
+    less_than_break = f < a[2]
+    above_break = f >= a[2]
+    power[less_than_break] = np.exp(a[0]) * f[less_than_break] ** (-a[1])
+    power[above_break] = np.exp(a[0]) * (a[2]**(-a[1]+a[3])) * f[above_break] ** (-a[3])
+    return power
+
+
+# ----------------------------------------------------------------------------
+# Broken Power law with Constant
+#
+def broken_power_law_with_constant(a, f):
+    """Broken power law with constant.  This model assumes that there is a
+    break in the power spectrum at some given frequency.  At high
+    frequencies the power spectrum is dominated by the constant background.
+
+    Parameters
+    ----------
+    a : ndarray(5)
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index at frequencies lower than the break frequency
+        a[2] : break frequency
+        a[3] : the power law index at frequencies higher than the break frequency
+        a[4] : the natural logarithm of the constant background
+    f : ndarray
+        frequencies
+    """
+    return broken_power_law(a[0:4]) + constant(a[4])
+
+
+# ----------------------------------------------------------------------------
 # Power law with constant
 #
 def power_law_with_constant(a, f):
@@ -218,9 +265,29 @@ class Constant:
 class PowerLaw:
     def __init__(self):
         self.name = 'Power law'
-        self.parameters = ['log10(power law amplitude)', 'power law index']
-        self.labels = [r'$\log_{10}(A_{P})$', r'$n$']
-        self.conversion = [1.0/np.log(10.0), 1.0]
+        self.parameters = ['log10(power law amplitude)',
+                           'power law index']
+        self.labels = [r'$\log_{10}(A_{P})$',
+                       r'$n$']
+        self.conversion = [1.0/np.log(10.0),
+                           1.0]
+
+    def power(self, a, f):
+        return power_law(a, f)
+
+
+class BrokenPowerLaw:
+    def __init__(self):
+        self.name = 'Power law'
+        self.parameters = ['log10(power law amplitude)',
+                           'power law index (below break frequency)',
+                           'break frequency',
+                           'power law index (above break frequency)']
+        self.labels = [r'$\log_{10}(A_{P})$',
+                       r'$n_{B}$',
+                       r'$\nu_{K}',
+                       r'$n_{A}']
+        self.conversion = [1.0/np.log(10.0), 1.0, 1.0, 1.0]
 
     def power(self, a, f):
         return power_law(a, f)
