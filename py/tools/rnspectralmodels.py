@@ -275,6 +275,12 @@ class PowerLaw:
     def power(self, a, f):
         return power_law(a, f)
 
+    # A good enough guess that will allow a proper fitting algorithm to proceed.
+    def guess(self, f, observed_power, amp_range=[0, 5]):
+        index_estimate = pstools.most_probable_power_law_index(f, observed_power, 0.0, np.arange(0.0, 4.0, 0.01))
+        log_amplitude_estimate = np.log(np.mean(observed_power[amp_range[0]:amp_range[1]]))
+        return log_amplitude_estimate, index_estimate
+
 
 class BrokenPowerLaw:
     def __init__(self):
@@ -291,6 +297,18 @@ class BrokenPowerLaw:
 
     def power(self, a, f):
         return power_law(a, f)
+
+    # A good enough guess that will allow a proper fitting algorithm to proceed.
+    def guess(self, f, observed_power, amp_range=[0, 5],
+              break_frequency=100):
+        log_amplitude_estimate, index_estimate_below = PowerLaw.guess(f[0:break_frequency],
+                                                                      observed_power[0:break_frequency],
+                                                                      amp_range=amp_range)
+        _, index_estimate_above = PowerLaw.guess(f[break_frequency:],
+                                                 observed_power[break_frequency:],
+                                                 amp_range=amp_range)
+
+        return log_amplitude_estimate, index_estimate_below, break_frequency, index_estimate_above
 
 
 class Lognormal:
@@ -434,7 +452,6 @@ class Fit:
 
                 # Store the final results
                 self.result[j][i] = (guess, result, rchi2, aic, bic)
-
 
     def as_array(self, quantity):
         """
