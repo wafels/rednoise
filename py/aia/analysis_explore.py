@@ -12,56 +12,60 @@ import study_details as sd
 from analysis_details import rchi2limitcolor, limits, get_mask_info, get_image_model_location
 
 
-class Explore:
-    def __init__(self,
-                 waves=('171', '193'),
-                 regions=('sunspot', 'moss', 'quiet Sun', 'loop footpoints'),
-                 windows=('hanning',)):
+class MaskDefine:
+    def __init__(self, storage):
+        """
+        Defines masks for a given storage array.
+
+        :param storage:
+        :return:
+        """
 
         # Waves
-        self.waves = waves
+        self.waves = storage.keys()
 
         # Regions
-        self.regions = regions
-
-        # Apodization windows
-        self.windows = windows
-
-        # Get the data
-        self.storage = analysis_get_data.get_all_data(waves=self.waves,
-                                                      regions=self.regions)
+        self.regions = storage[self.waves[0]].keys()
 
         # Available models
-        self._available_models = ???
+        self.available_models = storage[self.waves[0]][self.regions[0]].keys()
 
         # Common parameters in all models
-        self._common_parameters = ???
+        self.common_parameters = set(storage[self.waves[0]][self.regions[0]][self.available_models[0]].model.parameters)
+        for model in self.available_models:
+            par = storage[self.waves[0]][self.regions[0]][model].model.parameters
+            self.common_parameters = self.common_parameters.intersection(par)
 
-        # Good fit masks
+        # Good fit masks.
+        # Find where the fitting algorithm has worked, and
+        # a reasonable value of reduced chi-squared has been achieved.  Points
+        # which have a bad fit are labeled True.
         self.good_fit_masks = {}
         for wave in self.waves:
             self.good_fit_masks[wave] = {}
             for region in self.regions:
                 self.good_fit_masks[wave][region] = {}
-                for model in self._available_models:
-                    self.good_fit_masks[wave][region][model] = self.storage[wave][region][model].good_fits()
+                for model in self.available_models:
+                    self.good_fit_masks[wave][region][model] = storage[wave][region][model].good_fits()
 
-        # Parameter limit masks
+        # Parameter limit masks.
+        # Find where the parameters exceed limits, and create a mask that can
+        # be used with numpy masked arrays.  Points in the mask marked True
+        # exceed the parameter limits.
         self.parameter_limit_masks = {}
         for wave in self.waves:
             self.parameter_limit_masks[wave] = {}
             for region in self.regions:
                 self.parameter_limit_masks[wave][region] = {}
-                for model in self._available_models:
+                for model in self.available_models:
                     self.parameter_limit_masks[wave][region][model] = {}
-                    this = self.storage[wave][region][model]
+                    this = storage[wave][region][model]
                     for parameter in this.parameters:
                         p = this.as_array(parameter)
                         p_mask = np.zeros_like(p, dtype=bool)
                         p_mask[np.where(p < limits[parameter][0])] = True
                         p_mask[np.where(p > limits[parameter][1])] = True
                         self.parameter_limit_masks[wave][region][model][parameter] = p_mask
-
 
         # IC data
         # Each model has an information quantity calculated.  The minimum value
@@ -71,32 +75,61 @@ class Explore:
             self.ic_data[wave] = {}
             for region in self.regions:
                 self.ic_data[wave][region] = {}
-                for model in self._available_models:
+                for model in self.available_models:
                     self.ic_data[wave][region][model] = {}
-                    this = self.storage[wave][region][model]
+                    this = storage[wave][region][model]
                     for ic in ('AIC', 'BIC'):
                         self.ic_data[wave][region][model][ic] = this.as_array(ic)
 
-        # Map information
+    def which_model_is_preferred(self, ic_type, ic_limit):
+        """
+        Return an array that indicates which model is preferred according to the
+        information criterion.
+        :param ic_type:
+        :param ic_limit:
+        :return:
+        """
+        preferred_model_index = {}
+        for wave in self.waves:
+            preferred_model_index[wave] = {}
+            for region in self.regions:
+                preferred_model_index[wave][region] = np.zeros()
+
+                # Storage for the IC value for all models as a function of space
+                this_ic = np.zeros(len(self.available_models), self.nx, self.ny)
+
+                # Fill up the array
+                for imodel, model in enumerate(self.available_models):
+                    this_ic[imodel, :, :] = self.ic_data[wave][region][model][ic_type]
+
+                # The minimum value of the information criterion.
+                pmi = np.argmin(this_ic, axis=0)
+
+                # Sort so the first entry is the minimum value
+                pmi_sort = np.sort(this_ic, axis=0)
+
+                # Find where the minimum value is less than that required by
+                # the IC limit
+                test = pmi_sort[0, :, :] - pmi_sort[1, :, :] < -ic_limit
+
+                # Return the index as to which model is preferred
+                return np.ma.array(pmi, mask=np.logical_not(test))
 
 
-        # Plotting information
-        self._linewidth = 3
 
-        # Oscillation locations
-        self.five_minute = {"period": 300 * u.s,
-                            "linewidth": self._linewidth,
-                            "linecolor": 'k',
-                            "linestyle": "-",
-                            "label": "5 minutes"}
 
-        self.three_minute = {"period": 180 * u.s,
-                             "linewidth": self._linewidth,
-                             "linecolor": 'k',
-                             "linestyle": ":",
-                             "label": "3 minutes"}
+        return preferred_model_index
 
     def preferred_model_mask(self, preferred_model, ic_type, ic_limit):
+        """
+        Return a mask that shows where a given is model according the specified information
+        criterion.
+
+        :param preferred_model: The spectral model that we are interested in.
+        :param ic_type: The information criterion (IC) we wish to use
+        :param ic_limit: The limit on the IC above which we expect the model to be preferred.
+        :return: A numpy mask for every wave and region
+        """
         mask = {}
         for wave in self.waves:
             mask[wave] = {}
@@ -109,8 +142,8 @@ class Explore:
                 # Mask definition
                 final_mask = np.ones_like(preferred_ic, dtype=bool)
 
-                # Go through all the preferred models
-                for model in self._available_models:
+                # Go through all the models
+                for model in self.available_models:
                     # Exclude the preferred model as it will by definition
                     # satisfy the limit criterion
                     if model != preferred_model:
@@ -136,135 +169,3 @@ class Explore:
         mask_ic = self.preferred_model_mask(this_model, ic_type, ic_limit)
 
         return np.logical_or(np.logical_or(mask_gfm1, mask_ev), mask_ic)
-
-    def polygon_mask(self, polygon=None):
-        """
-
-        :param polygon: a spatial polygon defining an area of interest in the
-        data.  If set to none, use the full spatial extent of the data
-        :return:
-        """
-        pass
-
-    # Plot cross-correlations across different AIA channels
-    def two_d_cc_across_wave_spectral_model_parameter(self,
-                                                      model_names=('Power law + Constant + Lognormal', 'Power law + Constant'),
-                                                      ic_types={'none': None, 'AIC': 0.0, 'BIC': 6.0},
-                                                      bins=100):
-
-
-        plot_type = 'cc.across'
-
-        # First wave
-        for iwave1, wave1 in enumerate(self.waves):
-
-            # Second wave
-            for iwave2 in range(iwave1+1, len(self.waves)):
-                wave2 = self.waves[iwave2]
-
-                # Select a region
-                for region in self.regions:
-
-                    # branch location
-                    b = [sd.corename, sd.sunlocation, sd.fits_level, wave1, region]
-
-                    # Region identifier name
-                    region_id = sd.datalocationtools.ident_creator(b)
-
-                    # Output location
-                    output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-
-                    # Different information criteria
-                    for ic_type in ic_types:
-                        for this_model in model_names:
-                            this1 = self.storage[wave1][region][this_model]
-                            this2 = self.storage[wave2][region][this_model]
-                            parameters = this1.model.parameters
-                            npar = len(parameters)
-                            image = get_image_model_location(sd.roots, b, [this_model, ic_type])
-
-                            # First parameter
-                            for i in range(0, npar):
-                                # First parameter name
-                                p1_name = parameters[i]
-                                # First parameter, label for the plot
-                                p1_label = this1.model.labels[i]
-                                # First parameter mask
-                                p1_mask = self.get_all_mask(wave1, region, this_model, p1_name, ic_type, ic_limit)
-
-                                # Second parameter
-                                for j in range(0, npar):
-                                    # Second parameter name
-                                    p2_name = parameters[j]
-                                    # Second parameter, label for the plot
-                                    p2_label = this2.model.labels[j]
-                                    # First parameter, data
-                                    p2 = this2.as_array(p2_name)
-                                    # Second parameter mask
-                                    p2_mask = self.get_all_mask(wave2, region, this_model, p1_name, ic_type, ic_limit)
-
-                                    # Final mask for cross-correlation
-                                    final_mask = np.logical_not(np.logical_not(p1_mask) * np.logical_not(p2_mask))
-                                    title = region + get_mask_info(final_mask) + '%s\n%s' % (ic_type, this_model)
-
-                                    # Get the data using the final mask
-                                    p1 = np.ma.array(this1.as_array(p1_name), mask=final_mask).compressed()
-                                    p2 = np.ma.array(this2.as_array(p2_name), mask=final_mask).compressed()
-
-                                    # Cross correlation statistics
-                                    r = [spearmanr(p1, p2), pearsonr(p1, p2)]
-
-                                    # Form the rank correlation string
-                                    rstring = 'spr=%1.2f_pea=%1.2f' % (r[0][0], r[1][0])
-
-                                    # Identifier of the plot
-                                    plot_identity = rstring + '.' + region + '.' + wave1 + '.' + p1_name + '.' +  wave2 + '.' + p2_name + '.' + ic_type
-
-                                    # Make a scatter plot
-                                    xlabel = p1_label + r'$_{%s}$' % wave1
-                                    ylabel = p2_label + r'$_{%s}$' % wave2
-                                    title = '%s vs. %s, %s' % (xlabel, ylabel, title)
-                                    plt.close('all')
-                                    plt.title(title)
-                                    plt.xlabel(xlabel)
-                                    plt.ylabel(ylabel)
-                                    plt.scatter(p1, p2)
-                                    plt.xlim(limits[p1_name])
-                                    plt.ylim(limits[p2_name])
-                                    x0 = plt.xlim()[0]
-                                    ylim = plt.ylim()
-                                    y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
-                                    y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
-                                    plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
-                                    plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-                                    if p1_name == p2_name:
-                                        plt.plot([limits[p1_name][0], limits[p1_name][1]],
-                                                 [limits[p1_name][0], limits[p1_name][1]],
-                                                 color='r', linewidth=3,
-                                                 label='%s=%s' % (xlabel, ylabel))
-                                    ofilename = this_model + '.' + plot_type + '.' + plot_identity + '.scatter.png'
-                                    plt.legend(framealpha=0.5)
-                                    plt.tight_layout()
-                                    plt.savefig(os.path.join(image, ofilename))
-
-                                    # Make a 2d histogram
-                                    plt.close('all')
-                                    plt.title(title)
-                                    plt.xlabel(xlabel)
-                                    plt.ylabel(ylabel)
-                                    plt.hist2d(p1, p2, bins=bins)
-                                    x0 = plt.xlim()[0]
-                                    ylim = plt.ylim()
-                                    y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
-                                    y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
-                                    plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=rchi2limitcolor[1], alpha=0.5))
-                                    plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=rchi2limitcolor[0], alpha=0.5))
-                                    if p1_name == p2_name:
-                                        plt.plot([limits[p1_name][0], limits[p1_name][1]],
-                                                 [limits[p1_name][0], limits[p1_name][1]],
-                                                 color='r', linewidth=3,
-                                                 label="%s=%s" % (xlabel, ylabel))
-                                    ofilename = this_model + '.' + plot_type + '.' + plot_identity + '.hist2d.png'
-                                    plt.legend(framealpha=0.5)
-                                    plt.tight_layout()
-                                    plt.savefig(os.path.join(image, ofilename))
