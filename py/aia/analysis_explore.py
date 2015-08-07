@@ -92,7 +92,7 @@ class MaskDefine:
     def which_model_is_preferred(self, ic_type, ic_limit):
         """
         Return an array that indicates which model is preferred according to the
-        information criterion.
+        information criterion, at each pixel.
         :param ic_type:
         :param ic_limit:
         :return:
@@ -130,46 +130,34 @@ class MaskDefine:
 
         return preferred_model_index
 
-    def preferred_model_mask(self, preferred_model, ic_type, ic_limit):
+    def is_this_model_preferred(self, ic_type, ic_limit, this_model):
         """
-        Return a mask that shows where a given is model according the specified
-        information criterion.
-
-        :param preferred_model: The spectral model that we are interested in.
-        :param ic_type: The information criterion (IC) we wish to use
-        :param ic_limit: The limit on the IC above which we expect the model to be preferred.
-        :return: A numpy mask for every wave and region
+        Return an array that indicates if this model is preferred at each pixel
+        :param ic_type:
+        :param ic_limit:
+        :return:
         """
-        mask = {}
+        pmi = self.which_model_is_preferred_at_each_pixel(ic_type, ic_limit)
+        itmp = {}
         for wave in self.waves:
-            mask[wave] = {}
+            itmp[wave] = {}
             for region in self.regions:
-                mask[wave][region] = 0.0
+                itmp[wave][region] = np.zeros_like(pmi[self.waves[0]][self.regions[0]], dtype=bool)
 
-                # Get the IC of the preferred model
-                preferred_ic = self.ic_data[wave][region][preferred_model][ic_type]
+                # Get the mask that indicates that the limit has been exceeded
+                pmi_mask = np.ma.getmask(pmi[wave][region])
 
-                # Mask definition
-                final_mask = np.ones_like(preferred_ic, dtype=bool)
+                # Find the model index
+                model_index = self.available_models.index(this_model)
 
-                # Go through all the models
-                for model in self.available_models:
-                    # Exclude the preferred model as it will by definition
-                    # satisfy the limit criterion
-                    if model != preferred_model:
-                        # Difference between the preferred model IC and the
-                        # current model IC
-                        diff = preferred_ic - self.ic_data[wave][region][model][ic_type]
-                        # The preferred mask assumes that none of the locations
-                        # are preferred.
-                        preferred_mask = np.zeros_like(preferred_ic, dtype=bool)
-                        # Find the locations of the preferred model
-                        preferred_mask[np.where(diff <= ic_limit)] = True
-                        # The final mask - keep the pixels in the preferred
-                        # model that really do have the lowest value compared
-                        # to all the other mode ICs
-                        final_mask = np.logical_and(final_mask, preferred_mask)
-                # Store in a form usable for numpy masked arrays.
-                mask[wave][region] = np.logical_not(final_mask)
-        return mask
+                this_model_here_mask = np.ma.getarray(pmi[wave][region]) != model_index
 
+                # Return the index as to which model is preferred.  Masked
+                # values indicate that the model with the minimum IC value has
+                # NOT exceeded the IC limit criterion.  When using this, you
+                # have to use the self.available_models, as this maintains the
+                # ordering of the models used here (since storage uses an
+                # OrderedDict at the model level).
+                itmp[wave][region] = np.logical_or(pmi_mask, this_model_here_mask)
+
+        return itmp

@@ -8,6 +8,7 @@ from astroML.plotting import hist
 import analysis_get_data
 import study_details as sd
 from analysis_details import summary_statistics, get_mode, limits, get_mask_info, get_ic_location, get_image_model_location
+import analysis_explore
 
 # Wavelengths we want to analyze
 waves = ['171']#, '193']
@@ -18,20 +19,22 @@ regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
-# Model results to examine
-model_names = ('Power law + Constant + Lognormal','Power law + Constant')
+# IC
+ic_types = ('BIC')
+ic_limit = 6.0
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves)
 
+# Define the masks
+mdefine = analysis_explore.MaskDefine(storage)
+available_models = mdefine.available_models
+
 # Number of bins
 hloc = (100, 'blocks', 'scott', 'knuth', 'freedman')
 
-# IC
-ic_types = ('none', 'AIC', 'BIC', 'both')
-
 # Line width
-linewidth=3
+linewidth = 3
 
 for wave in waves:
     for region in regions:
@@ -45,27 +48,30 @@ for wave in waves:
         # Output location
         output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
 
-        for this_model in model_names:
+        for this_model in available_models:
+            # Get the data
             this = storage[wave][region][this_model]
+
+            # Get the parameter limit masks
+            mask_aplm = mdefine.all_parameter_limit_masks[wave][region][this_model]
+
+            # Get the good fit mask
+            mask_gfm = mdefine.good_fit_masks[wave][region][this_model]
 
             for p1_name in this.model.parameters:
                 p1 = this.as_array(p1_name)
                 p1_index = this.model.parameters.index(p1_name)
                 label1 = this.model.labels[p1_index]
                 for ic_type in ic_types:
-                    # Mask where the fit is good.
-                    mask = this.good_fits()
 
-                    # Apply the limit masks
-                    mask[np.where(p1 < limits[p1_name][0])] = 1
-                    mask[np.where(p1 > limits[p1_name][1])] = 1
+                    model_by_ic = mdefine.which_model_is_preferred(ic_type, ic_limit)
 
-                    # Only consider those pixels where this_model is preferred
-                    # by the information criteria
-                    mask[get_ic_location(storage[wave][region],
-                                         this_model,
-                                         model_names,
-                                         ic_type=ic_type)] = 1
+                    mask_ic = mdefine.is_this_model_is_preferred(ic_type, ic_limit, this_model)
+
+                    # Final mask combines where the parameters are all nice,
+                    # where a good fit was achieved, and where the IC limit
+                    # criterion was satisfied.
+                    mask = np.logical_or(np.logical_or(mask_aplm, mask_gfm), mask_ic)
 
                     # Masked arrays
                     pm1 = np.ma.array(p1, mask=mask).compressed()
