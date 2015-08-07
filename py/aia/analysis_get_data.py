@@ -6,6 +6,7 @@
 # and spatial distributions
 #
 import os
+import collections
 import cPickle as pickle
 import numpy as np
 from matplotlib.collections import PolyCollection
@@ -29,7 +30,7 @@ def get_all_data(waves=['171', '193'],
     for wave in waves:
         storage[wave] = {}
         for region in regions:
-            storage[wave][region] = {}
+            storage[wave][region] = collections.OrderedDict()
             for model_name in model_names:
                 storage[wave][region][model_name] = []
 

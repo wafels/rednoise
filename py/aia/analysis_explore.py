@@ -27,7 +27,8 @@ class MaskDefine:
         # Regions
         self.regions = storage[self.waves[0]].keys()
 
-        # Available models
+        # Available models.  For the IC limit stuff to work the code is much
+        # easier if the results at the model level are stored as OrderedDict.
         self.available_models = storage[self.waves[0]][self.regions[0]].keys()
 
         # Common parameters in all models
@@ -53,12 +54,16 @@ class MaskDefine:
         # be used with numpy masked arrays.  Points in the mask marked True
         # exceed the parameter limits.
         self.parameter_limit_masks = {}
+        self.all_parameter_limit_masks = {}
         for wave in self.waves:
             self.parameter_limit_masks[wave] = {}
+            self.all_parameter_limit_masks[wave] = {}
             for region in self.regions:
                 self.parameter_limit_masks[wave][region] = {}
+                self.all_parameter_limit_masks[wave][region] = {}
                 for model in self.available_models:
                     self.parameter_limit_masks[wave][region][model] = {}
+                    self.all_parameter_limit_masks[wave][region][model] = {}
                     this = storage[wave][region][model]
                     for parameter in this.parameters:
                         p = this.as_array(parameter)
@@ -67,9 +72,12 @@ class MaskDefine:
                         p_mask[np.where(p > limits[parameter][1])] = True
                         self.parameter_limit_masks[wave][region][model][parameter] = p_mask
 
-        # IC data
-        # Each model has an information quantity calculated.  The minimum value
-        # indicates the preferred model.
+                        # This mask determines which positions have all their
+                        # parameter values within their specified limits.
+                        self.all_parameter_limit_masks[wave][region][model] = np.logical_or(p_mask, self.all_parameter_limit_masks[wave][region][model])
+
+        # IC data.
+        # Extract the IC from the storage array.
         self.ic_data = {}
         for wave in self.waves:
             self.ic_data[wave] = {}
@@ -108,22 +116,24 @@ class MaskDefine:
                 # Sort so the first entry is the minimum value
                 pmi_sort = np.sort(this_ic, axis=0)
 
-                # Find where the minimum value is less than that required by
-                # the IC limit
+                # Find where difference between the minimum value and the next
+                # largest is greater than that specified.
                 test = pmi_sort[0, :, :] - pmi_sort[1, :, :] < -ic_limit
 
-                # Return the index as to which model is preferred
-                return np.ma.array(pmi, mask=np.logical_not(test))
-
-
-
+                # Return the index as to which model is preferred.  Masked
+                # values indicate that the model with the minimum IC value has
+                # NOT exceeded the IC limit criterion.  When using this, you
+                # have to use the self.available_models, as this maintains the
+                # ordering of the models used here (since storage uses an
+                # OrderedDict at the model level).
+                preferred_model_index[wave][region] = np.ma.array(pmi, mask=np.logical_not(test))
 
         return preferred_model_index
 
     def preferred_model_mask(self, preferred_model, ic_type, ic_limit):
         """
-        Return a mask that shows where a given is model according the specified information
-        criterion.
+        Return a mask that shows where a given is model according the specified
+        information criterion.
 
         :param preferred_model: The spectral model that we are interested in.
         :param ic_type: The information criterion (IC) we wish to use
@@ -163,9 +173,3 @@ class MaskDefine:
                 mask[wave][region] = np.logical_not(final_mask)
         return mask
 
-    def get_all_mask(self, wave, region, this_model, parameter_name, ic_type, ic_limit):
-        mask_gfm1 = self.good_fit_masks()[wave][region][this_model]
-        mask_ev = self.parameter_limit_masks()[wave][region][this_model][parameter_name]
-        mask_ic = self.preferred_model_mask(this_model, ic_type, ic_limit)
-
-        return np.logical_or(np.logical_or(mask_gfm1, mask_ev), mask_ic)
