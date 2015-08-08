@@ -47,18 +47,39 @@ class MaskDefine:
         # Find where the parameters exceed limits, and create a mask that can
         # be used with numpy masked arrays.  Points in the mask marked True
         # exceed the parameter limits.
+        #
+        # parameter_limit_masks - masks that indicate where limits have been
+        #                         exceeded, for every parameter
+        # all_parameter_limit_masks - masks that indicate pixels where at least
+        #                             one of the parameter limits have been
+        #                             exceeded.
+        # combined_good_fit_parameter_limit - masks that indicate where a bad
+        #                                     fit has occurred, or where at
+        #                                     least one of the parameter limits
+        #                                     has been exceeded.  These masks
+        #                                     give the values you want to work
+        #                                     with in further analysis
         self.parameter_limit_masks = {}
         self.all_parameter_limit_masks = {}
+        self.combined_good_fit_parameter_limit = {}
         for wave in self.waves:
             self.parameter_limit_masks[wave] = {}
             self.all_parameter_limit_masks[wave] = {}
+            self.combined_good_fit_parameter_limit[wave] = {}
             for region in self.regions:
                 self.parameter_limit_masks[wave][region] = {}
                 self.all_parameter_limit_masks[wave][region] = {}
+                self.combined_good_fit_parameter_limit[wave][region] = {}
                 for model in self.available_models:
                     self.parameter_limit_masks[wave][region][model] = {}
                     self.all_parameter_limit_masks[wave][region][model] = {}
+                    self.combined_good_fit_parameter_limit[wave][region][model] = {}
+
+                    # Get the parameter data
                     this = storage[wave][region][model]
+
+                    # Go through each parameter and find where the limits are
+                    # exceeded.
                     for parameter in this.parameters:
                         p = this.as_array(parameter)
                         p_mask = np.zeros_like(p, dtype=bool)
@@ -69,6 +90,11 @@ class MaskDefine:
                         # This mask determines which positions have all their
                         # parameter values within their specified limits.
                         self.all_parameter_limit_masks[wave][region][model] = np.logical_or(p_mask, self.all_parameter_limit_masks[wave][region][model])
+
+                        # Combined good fit masks and parameter limit masks
+                        # This combination is used frequently, and so is worth
+                        # calculating explicitly
+                        self.combined_good_fit_parameter_limit[wave][region][model] = np.logical_or(self.all_parameter_limit_masks[wave][region][model], self.good_fit_masks[wave][region][model])
 
         # IC data.
         # Extract the IC from the storage array.

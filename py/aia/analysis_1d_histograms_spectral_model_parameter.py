@@ -52,11 +52,8 @@ for wave in waves:
             # Get the data
             this = storage[wave][region][this_model]
 
-            # Get the parameter limit masks
-            mask_aplm = mdefine.all_parameter_limit_masks[wave][region][this_model]
-
-            # Get the good fit mask
-            mask_gfm = mdefine.good_fit_masks[wave][region][this_model]
+            # Get the combined mask
+            mask_combined_gfpl = mdefine.combined_good_fit_parameter_limit[wave][region][this_model]
 
             for p1_name in this.model.parameters:
                 p1 = this.as_array(p1_name)
@@ -64,14 +61,13 @@ for wave in waves:
                 label1 = this.model.labels[p1_index]
                 for ic_type in ic_types:
 
-                    model_by_ic = mdefine.which_model_is_preferred(ic_type, ic_limit)
-
-                    mask_ic = mdefine.is_this_model_is_preferred(ic_type, ic_limit, this_model)
+                    # Find out if this model is preferred
+                    mask_ic = mdefine.is_this_model_preferred(ic_type, ic_limit, this_model)
 
                     # Final mask combines where the parameters are all nice,
                     # where a good fit was achieved, and where the IC limit
                     # criterion was satisfied.
-                    mask = np.logical_or(np.logical_or(mask_aplm, mask_gfm), mask_ic)
+                    mask = np.logical_or(mask_combined_gfpl, mask_ic)
 
                     # Masked arrays
                     pm1 = np.ma.array(p1, mask=mask).compressed()
