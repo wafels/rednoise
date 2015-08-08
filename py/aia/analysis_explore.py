@@ -2,14 +2,8 @@
 # Analysis - distributions.  Load in all the data and make some population
 # and spatial distributions
 #
-import os
 import numpy as np
-from scipy.stats import pearsonr, spearmanr
-import matplotlib.pyplot as plt
-import astropy.units as u
-import analysis_get_data
-import study_details as sd
-from analysis_details import rchi2limitcolor, limits, get_mask_info, get_image_model_location
+from analysis_details import limits
 
 
 class MaskDefine:
@@ -89,13 +83,22 @@ class MaskDefine:
                     for ic in ('AIC', 'BIC'):
                         self.ic_data[wave][region][model][ic] = this.as_array(ic)
 
+        # Spatial size of the data in pixels
+        self.nx = this.as_array(ic).shape[1]
+        self.ny = this.as_array(ic).shape[0]
+
     def which_model_is_preferred(self, ic_type, ic_limit):
         """
         Return an array that indicates which model is preferred according to the
         information criterion, at each pixel.
-        :param ic_type:
-        :param ic_limit:
-        :return:
+        :param ic_type: ic_type: information criterion we will use
+        :param ic_limit:  the difference in the IC that the best model must
+        exceed compared to the other models.
+        :return: for each wave/region pair, a numpy masked array where the
+        data array indicates which model is preferred.  The model is indicated
+        by the key index to self.available_models.  For the mask, True indicates
+        that the preferred model has NOT exceeded the information criterion
+        limit.
         """
         preferred_model_index = {}
         for wave in self.waves:
@@ -104,7 +107,7 @@ class MaskDefine:
                 preferred_model_index[wave][region] = np.zeros()
 
                 # Storage for the IC value for all models as a function of space
-                this_ic = np.zeros(len(self.available_models), self.nx, self.ny)
+                this_ic = np.zeros(len(self.available_models), self.ny, self.nx)
 
                 # Fill up the array
                 for imodel, model in enumerate(self.available_models):
@@ -132,12 +135,15 @@ class MaskDefine:
 
     def is_this_model_preferred(self, ic_type, ic_limit, this_model):
         """
-        Return an array that indicates if this model is preferred at each pixel
-        :param ic_type:
-        :param ic_limit:
-        :return:
+        Return an array that indicates if this model is preferred at each pixel.
+        :param ic_type: information criterion we will use
+        :param ic_limit: the difference in the IC that the best model must
+        exceed compared to the other models.
+        :param this_model: the spectral model we are interested in.
+        :return: for each wave/region pair, a numpy mask where True indicates
+         that the requested model is not preferred.
         """
-        pmi = self.which_model_is_preferred_at_each_pixel(ic_type, ic_limit)
+        pmi = self.which_model_is_preferred(ic_type, ic_limit)
         itmp = {}
         for wave in self.waves:
             itmp[wave] = {}
@@ -150,6 +156,8 @@ class MaskDefine:
                 # Find the model index
                 model_index = self.available_models.index(this_model)
 
+                # False means that the model at this pixel is the same as the
+                # requested model
                 this_model_here_mask = np.ma.getarray(pmi[wave][region]) != model_index
 
                 # Return the index as to which model is preferred.  Masked
