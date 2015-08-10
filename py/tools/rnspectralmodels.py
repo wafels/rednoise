@@ -210,6 +210,24 @@ def power_law_with_constant_with_deltafn(a, f):
     return power_law_with_constant(a[0:3], f) + deltafn(a[3:4], f)
 
 
+class Variable:
+    def __init__(self, parameter, label, conversion, unit):
+        self.parameter = parameter
+        self.label = label
+        self.conversion = conversion
+        self.unit = unit
+
+
+class FrequencyVariable(Variable):
+    def __init__(self, parameter, label, conversion):
+        Variable.__init__(self, parameter, label, conversion, u.Hz)
+
+
+class Log10Variable(Variable):
+    def __init__(self, parameter, label):
+        Variable.__init__(self, parameter, label, 1.0/np.log(10.0), u.none)
+
+
 class CompoundSpectrum:
     def __init__(self, components):
         self.components = components
@@ -251,12 +269,26 @@ class CompoundSpectrum:
         pass
 
 
-class Constant:
+class Spectrum:
+    def __init__(self, name, variables):
+        self.name = name
+        self.parameters = []
+        self.labels = []
+        self.conversion = []
+        for v in variables:
+            self.parameters.append(v.parameter)
+            self.labels.append(v.label)
+            self.conversion.append(v.conversion)
+
+    def power(self, a, f):
+        pass
+
+
+class Constant(Spectrum):
     def __init__(self):
+        variables = [Log10Variable('log10(constant)', r'$\log_{10}(C)$')]
         self.name = 'Constant'
-        self.parameters = ['log10(constant)']
-        self.labels = ['$\log_{10}(C)$']
-        self.conversion = [1.0/np.log(10.0)]
+        Spectrum.__init__(self, 'Constant', variables)
 
     def power(self, a, f):
         return constant(a)
