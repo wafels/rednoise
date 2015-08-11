@@ -218,6 +218,14 @@ class Variable:
         self.unit = unit
 
 
+def multiply_by_one_over_log10(a):
+    return a / np.log(10.0)
+
+
+def multiply_by_1(a):
+    return a * 1.0
+
+
 class FrequencyVariable(Variable):
     def __init__(self, parameter, label, conversion):
         Variable.__init__(self, parameter, label, conversion, u.Hz)
@@ -228,8 +236,7 @@ class Log10Variable(Variable):
         Variable.__init__(self,
                           'log(' + parameter + ')',
                           r"$log_{10}(" + label + ")$",
-                          1.0/np.log(10.0), u.none)
-
+                          1.0/np.log(10.0), u.dimensionless)
 
 
 class CompoundSpectrum:
@@ -301,7 +308,7 @@ class Constant(Spectrum):
 class PowerLaw(Spectrum):
     def __init__(self):
         variables = [Log10Variable('power law amplitude', 'A_{P}'),
-                     Variable('power law index', 'n', 1.0, None)]
+                     Variable('power law index', 'n', 1.0, u.dimensionless)]
         Spectrum.__init__(self, 'Power Law', variables)
 
     def power(self, a, f):
