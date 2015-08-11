@@ -225,7 +225,11 @@ class FrequencyVariable(Variable):
 
 class Log10Variable(Variable):
     def __init__(self, parameter, label):
-        Variable.__init__(self, parameter, label, 1.0/np.log(10.0), u.none)
+        Variable.__init__(self,
+                          'log(' + parameter + ')',
+                          r"$log_{10}(" + label + ")$",
+                          1.0/np.log(10.0), u.none)
+
 
 
 class CompoundSpectrum:
@@ -272,6 +276,7 @@ class CompoundSpectrum:
 class Spectrum:
     def __init__(self, name, variables):
         self.name = name
+        self.variables = variables
         self.parameters = []
         self.labels = []
         self.conversion = []
@@ -286,23 +291,18 @@ class Spectrum:
 
 class Constant(Spectrum):
     def __init__(self):
-        variables = [Log10Variable('log10(constant)', r'$\log_{10}(C)$')]
-        self.name = 'Constant'
+        variables = [Log10Variable('constant', 'C')]
         Spectrum.__init__(self, 'Constant', variables)
 
     def power(self, a, f):
         return constant(a)
 
 
-class PowerLaw:
+class PowerLaw(Spectrum):
     def __init__(self):
-        self.name = 'Power law'
-        self.parameters = ['log10(power law amplitude)',
-                           'power law index']
-        self.labels = [r'$\log_{10}(A_{P})$',
-                       r'$n$']
-        self.conversion = [1.0/np.log(10.0),
-                           1.0]
+        variables = [Log10Variable('power law amplitude', 'A_{P}'),
+                     Variable('power law index', 'n', 1.0, None)]
+        Spectrum.__init__(self, 'Power Law', variables)
 
     def power(self, a, f):
         return power_law(a, f)
