@@ -12,7 +12,6 @@ import cPickle as pickle
 from sunpy.time import parse_time
 import numpy as np
 from matplotlib.patches import Rectangle
-from astropy.io import fits
 import astropy.units as u
 
 import study_details as sd
@@ -153,3 +152,8 @@ for region in regions.keys():
     filepath = filepath + '.' + region
 filepath = filepath + '.png'
 step1_plots.plot_regions(mc_layer, regions, filepath)
+
+for region in regions.keys():
+    R = regions[region]
+    mc_layer_submap = mc_layer.submap(R['xrange'] * u.arcsec, R['yrange'] * u.arcsec)
+    step1_plots.plot_regions_hsr2015(mc_layer_submap, filepath + 'submap.png')
