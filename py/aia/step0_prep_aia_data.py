@@ -23,9 +23,8 @@ import numpy as np
 
 from sunpy.time import parse_time
 from sunpy.map import Map
-from sunpy.image.coalignment import mapcube_coalign_by_match_template
+from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
-
 import step0_plots
 import study_details as sd
 
@@ -67,7 +66,7 @@ times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 
 # Solar de-rotation and cross-correlation operations will be performed relative
 # to the map at this index.
-layer_index = len(mc) / 2
+layer_index = 0#len(mc) / 2
 t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_index]
 filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
 #
@@ -82,15 +81,16 @@ if sd.derotate:
 
     # Plot out the solar rotation shifts
     filepath = os.path.join(save_locations['image'], ident + '.solar_derotation.png')
-    step0_plots.plot_shifts(sr_shifts,'shifts due to solar de-rotation',
+    step0_plots.plot_shifts(sr_shifts, 'shifts due to solar de-rotation',
                             layer_index, filepath=filepath)
     filepath = os.path.join(save_locations['image'], ident + '.time.solar_derotation.png')
-    step0_plots.plot_shifts(sr_shifts,'shifts due to solar de-rotation',
+    step0_plots.plot_shifts(sr_shifts, 'shifts due to solar de-rotation',
                             layer_index, filepath=filepath,
                             x=t_since_layer_index, xlabel='time relative to reference layer (s)')
 
     # Apply the solar rotation shifts
-    data = mapcube_solar_derotate(mc, layer_index=layer_index, shifts=sr_shifts)
+    print("Applying solar rotation shifts")
+    data = mapcube_solar_derotate(mc, layer_index=layer_index, shift=sr_shifts, clip=True)
 else:
     data = Map(list_of_data, cube=True)
 
@@ -106,11 +106,14 @@ if sd.cross_correlate:
 
         if sd.wave == sd.base_cross_correlation_channel:
             print("\nPerforming cross_correlation and image shifting")
-            data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
+            cc_shifts = calculate_match_template_shift(mc, layer_index=layer_index)
             print("Saving cross correlation shifts to %s" % filepath)
             f = open(ccfilepath, "wb")
             pickle.dump(cc_shifts, f)
             f.close()
+
+            # Now apply the shifts
+            data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
         else:
             print("\nUsing base cross-correlation channel information.")
             print("Loading in shifts to due cross-correlation from %s" % ccfilepath)
@@ -118,15 +121,18 @@ if sd.cross_correlate:
             cc_shifts = pickle.load(f)
             f.close()
             print("Shifting images")
-            data = mapcube_coalign_by_match_template(data, layer_index=layer_index, apply_displacements=cc_shifts)
+            data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
     else:
-        print("\nPerforming cross_correlation and image shifting.")
-        data, cc_shifts = mapcube_coalign_by_match_template(data, layer_index=layer_index, with_displacements=True)
+        print("\nCalculating cross_correlations.")
+        cc_shifts = calculate_match_template_shift(data, layer_index=layer_index)
+        print("Applying cross-correlation shifts to the data.")
+        data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
 
     # Plot out the cross correlation shifts
     filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
     step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation',
                             layer_index, filepath=filepath)
+
     filepath = os.path.join(save_locations['image'], ident + '.time.cross_correlation.png')
     step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation',
                             layer_index, filepath=filepath,

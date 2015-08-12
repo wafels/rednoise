@@ -99,7 +99,7 @@ if sd.sunlocation == 'disk':
         print('\nSub datacube (size %i, %i, %i)' % subdata.shape)
 
         # Create a SunPy map that describes the location of the data
-        region_submap = mc_layer.submap(range_y * u.pix, range_x * u.pix)
+        region_submap = mc_layer.submap(range_x * u.pix, range_y * u.pix)
 
         # Region identifier name
         region_id = sd.ident + '_' + region
@@ -156,4 +156,4 @@ step1_plots.plot_regions(mc_layer, regions, filepath)
 for region in regions.keys():
     R = regions[region]
     mc_layer_submap = mc_layer.submap(R['xrange'] * u.arcsec, R['yrange'] * u.arcsec)
-    step1_plots.plot_regions_hsr2015(mc_layer_submap, filepath + 'submap.png')
+    step1_plots.plot_regions_hsr2015(mc_layer_submap, filepath + '.submap.png')

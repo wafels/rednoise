@@ -118,11 +118,11 @@ def sunspot_outline():
     p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
     polygon = np.zeros([1, len(p2), 2])
     polygon[0, :, :] = p4[:, :]
-    sunspot_date = qr[0]['event_endtime']
-    return sunspot_date, polygon
+    sunspot_date = qr[0]['event_starttime']
+    return polygon, sunspot_date
 
 
-def rotate_sunspot_outline(sunspot_date, polygon, date, linewidth=[5]):
+def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[5]):
     rotated_polygon = np.zeros_like(polygon)
     n = polygon.shape[1]
     for i in range(0, n):

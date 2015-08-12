@@ -1,7 +1,6 @@
 #
 # Utilities to plot out details of step 1 of the analysis
 #
-import numpy as np
 import matplotlib.pyplot as plt
 import analysis_get_data
 
@@ -60,7 +59,11 @@ def plot_regions_hsr2015(image, filepath):
 
     # Get the sunspot outline
     sunspot_outline = analysis_get_data.sunspot_outline()
-    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], image.date, linewidth=[1]))
+    polygon = sunspot_outline[0]
+    sunspot_date = sunspot_outline[1]
+    print 'Sunspot date = %s' % sunspot_date
+    print 'Image date = %s' % image.date
+    ax.add_collection(analysis_get_data.rotate_sunspot_outline(polygon, sunspot_date, image.date, linewidth=[1]))
     ax.autoscale_view()
 
     #plt.show()
