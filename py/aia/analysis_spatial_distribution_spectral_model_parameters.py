@@ -2,6 +2,7 @@
 # Analysis - Plot the spatial distributions of spectral model parameters
 #
 import os
+from copy import deepcopy
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
@@ -9,6 +10,10 @@ import matplotlib.cm as cm
 import matplotlib.colors as colors
 from scipy.stats import pearsonr, spearmanr
 from astroML.plotting import hist
+
+import sunpy.map
+
+
 import analysis_get_data
 import study_details as sd
 from analysis_details import summary_statistics, get_mode, limits, get_mask_info, rchi2limitcolor
@@ -37,7 +42,7 @@ bins_2d = 100
 
 # IC
 ic_types = ('none',)
-ic_limit = {"BIC": 0.0}
+ic_limit = {"BIC": 0.0, "AIC": 0.0}
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
@@ -83,6 +88,9 @@ for wave in waves:
 
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
+
+        # Get the region submap
+        region_submap = analysis_get_data.get_region_submap(output, region_id)
 
         for model_name in model_names:
             # Get the data for this model
@@ -187,7 +195,7 @@ for wave in waves:
                 # Make a SunPy map for nice spatially aware plotting.
                 map_data = ma.array(p1, mask=mask)
 
-                my_map = analysis_get_data.make_map(output, region_id, map_data)
+                my_map = sunpy.map.Map(map_data, deepcopy(region_submap.meta))
 
                 # Make a spatial distribution map spectral model parameter
                 plt.close('all')
@@ -208,8 +216,8 @@ for wave in waves:
                 ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                   norm=norm)
                 ret.axes.set_title('across models %s %s %s %s %f' % (wave, region, this0.model.labels[label_index0], measure, this_ic_limit))
-                if region == 'sunspot':
-                    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
+                if region == 'most_of_fov':
+                    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['k'], linewidth=[2]))
 
                 cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
                                     shrink=0.8, label=this.model.labels[label_index0])

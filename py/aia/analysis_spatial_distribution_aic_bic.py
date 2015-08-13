@@ -9,15 +9,19 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 
+import sunpy.map
+from copy import deepcopy
+
 import analysis_get_data
 import study_details as sd
 
 # Wavelengths we want to analyze
-waves = ['193']
+waves = ['171']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 regions = ['most_of_fov']
+
 # Apodization windows
 windows = ['hanning']
 
@@ -48,6 +52,9 @@ for wave in waves:
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
 
+        # Region submap
+        region_submap = analysis_get_data.get_region_submap(output, region_id)
+
         for measure in ("AIC", "BIC"):
             # Get the information for each model
             this0 = storage[wave][region][model_names[0]]
@@ -71,7 +78,7 @@ for wave in waves:
                     mask_status = 'no_mask'
 
                 # Make a SunPy map for nice spatially aware plotting.
-                my_map = analysis_get_data.make_map(output, region_id, map_data)
+                my_map = sunpy.map.Map(map_data, deepcopy(region_submap.meta))
 
                 # Make a spatial distribution map of the difference in the
                 # information criterion.
@@ -89,7 +96,7 @@ for wave in waves:
                 # Plot the map
                 ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                   norm=norm)
-                if region == 'sunspot':
+                if region == 'sunspot' or region == 'most_of_fov':
                     ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
 
                 cbar = fig.colorbar(ret, extend='both', orientation='horizontal',

@@ -53,7 +53,7 @@ if sd.sunlocation == 'disk':
                "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
                "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
     """
-    regions = {"most_of_fov": {"llx": -530.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
 
     # Rectangular patches
     for region in regions:
@@ -99,7 +99,7 @@ if sd.sunlocation == 'disk':
         print('\nSub datacube (size %i, %i, %i)' % subdata.shape)
 
         # Create a SunPy map that describes the location of the data
-        region_submap = mc_layer.submap(range_x * u.pix, range_y * u.pix)
+        region_submap = mc_layer.submap(range_y * u.pix, range_x * u.pix)
 
         # Region identifier name
         region_id = sd.ident + '_' + region

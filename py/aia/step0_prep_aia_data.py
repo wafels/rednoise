@@ -66,7 +66,7 @@ times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 
 # Solar de-rotation and cross-correlation operations will be performed relative
 # to the map at this index.
-layer_index = 0#len(mc) / 2
+layer_index = len(mc) / 2
 t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_index]
 filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
 #

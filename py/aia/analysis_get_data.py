@@ -6,6 +6,7 @@
 # and spatial distributions
 #
 import os
+from copy import deepcopy
 import collections
 import cPickle as pickle
 import numpy as np
@@ -78,11 +79,12 @@ def get_all_data(waves=['171', '193'],
 
 
 #
-#  Define a SunPy map
+# Get the region submap
 #
-def make_map(output, region_id, map_data):
+def get_region_submap(output, region_id):
     # Get the map: Open the file that stores it and read it in
     map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
+    print map_data_filename
     get_map_data = open(map_data_filename, 'rb')
     _dummy = pickle.load(get_map_data)
     _dummy = pickle.load(get_map_data)
@@ -91,6 +93,28 @@ def make_map(output, region_id, map_data):
     region_submap = pickle.load(get_map_data)
     # Specific region information
     get_map_data.close()
+    print region_id + " region_submap: ",  region_submap.data.shape
+
+    # Return a map using the input data
+    return region_submap
+
+#
+#  Define a SunPy map
+#
+def make_map(output, region_id, map_data):
+    # Get the map: Open the file that stores it and read it in
+    map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
+    print map_data_filename
+    get_map_data = open(map_data_filename, 'rb')
+    _dummy = pickle.load(get_map_data)
+    _dummy = pickle.load(get_map_data)
+    _dummy = pickle.load(get_map_data)
+    _dummy = pickle.load(get_map_data)
+    region_submap = pickle.load(get_map_data)
+    # Specific region information
+    get_map_data.close()
+    print region_id + " region_submap: ",  region_submap.data.shape
+    print "map data shape ", map_data.shape
 
     # Create the map header
     header = {'cdelt1': region_submap.meta['cdelt1'],
@@ -103,7 +127,7 @@ def make_map(output, region_id, map_data):
               "date-obs": region_submap.date}
 
     # Return a map using the input data
-    return sunpy.map.Map(map_data, header)
+    return sunpy.map.Map(map_data, deepcopy(region_submap.meta))
 
 
 def sunspot_outline():
@@ -122,7 +146,7 @@ def sunspot_outline():
     return polygon, sunspot_date
 
 
-def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[5]):
+def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[1], edgecolors=['k']):
     rotated_polygon = np.zeros_like(polygon)
     n = polygon.shape[1]
     for i in range(0, n):
@@ -135,7 +159,7 @@ def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[5]):
     # Create the collection
     return PolyCollection(rotated_polygon,
                           alpha=1.0,
-                          edgecolors=['k'],
+                          edgecolors=edgecolors,
                           facecolors=['none'],
                           linewidth=linewidth)
 
