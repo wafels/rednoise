@@ -79,6 +79,9 @@ for wave in waves:
 
                 # Make a SunPy map for nice spatially aware plotting.
                 my_map = sunpy.map.Map(map_data, deepcopy(region_submap.meta))
+                my_map = analysis_get_data.hsr2015_map(my_map)
+                model_name_0 = analysis_get_data.hsr2015_model_name(model_names[0])
+                model_name_1 = analysis_get_data.hsr2015_model_name(model_names[1])
 
                 # Make a spatial distribution map of the difference in the
                 # information criterion.
@@ -100,7 +103,7 @@ for wave in waves:
                     ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
 
                 cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
-                                    shrink=0.8, label='$%s_{%s}$-$%s_{%s}$' % (measure, model_names[0], measure, model_names[1]))
+                                    shrink=0.8, label='$%s_{%s}$-$%s_{%s}$' % (measure, model_name_0, measure, model_name_1))
                 # Fit everything in.
                 ax.autoscale_view()
 

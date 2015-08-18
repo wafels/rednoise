@@ -196,6 +196,7 @@ for wave in waves:
                 map_data = ma.array(p1, mask=mask)
 
                 my_map = sunpy.map.Map(map_data, deepcopy(region_submap.meta))
+                my_map = analysis_get_data.hsr2015_map(my_map)
 
                 # Make a spatial distribution map spectral model parameter
                 plt.close('all')

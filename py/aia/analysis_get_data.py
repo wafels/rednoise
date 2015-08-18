@@ -129,6 +129,17 @@ def make_map(output, region_id, map_data):
     # Return a map using the input data
     return sunpy.map.Map(map_data, deepcopy(region_submap.meta))
 
+#
+# Cut down a map to some specific region
+#
+def hsr2015_map(m):
+    submap = m.submap(sd.hsr2015_range_x, sd.hsr2015_range_y)
+    return submap
+
+
+def hsr2015_model_name(n):
+    return sd.hsr2015_model_name(n)
+
 
 def sunspot_outline():
     # -----------------------------------------------------------------------------

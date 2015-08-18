@@ -53,6 +53,9 @@ def plot_regions_hsr2015(image, filepath):
     :param filepath:
     :return:
     """
+    # Cut down the map
+    image = analysis_get_data.hsr2015_map(image)
+
     plt.close('all')
     fig, ax = plt.subplots()
     ret = image.plot()

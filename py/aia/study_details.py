@@ -87,3 +87,9 @@ ident = datalocationtools.ident_creator(branches)
 # Limits
 structure_location_limits = {'lo': 2.0 * u.mHz,
                              'hi': 7.0 * u.mHz}
+
+# Cutdown map details
+hsr2015_range_x = []
+hsr2015_range_y = [-98.0, 98.0] * u.arcsec
+hsr2015_model_name = {'Power law + Constant + Lognormal': '2',
+                      'Power law + Constant': '1'}
