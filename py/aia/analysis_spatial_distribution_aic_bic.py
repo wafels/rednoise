@@ -16,7 +16,7 @@ import analysis_get_data
 import study_details as sd
 
 # Wavelengths we want to analyze
-waves = ['171']
+waves = ['193']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']

@@ -16,7 +16,7 @@ import sunpy.map
 
 import analysis_get_data
 import study_details as sd
-from analysis_details import summary_statistics, get_mode, limits, get_mask_info, rchi2limitcolor
+from analysis_details import summary_statistics, get_mode, limits, get_mask_info, rchi2limitcolor, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
 waves = ['171', '193']
@@ -95,7 +95,6 @@ for wave in waves:
         for model_name in model_names:
             # Get the data for this model
             this = storage[wave][region][model_name]
-            """
             # Parameters
             parameters = this.model.parameters
             for parameter in parameters:
@@ -122,6 +121,7 @@ for wave in waves:
                     map_data = ma.array(p1, mask=mask)
                     # Make a SunPy map for nice spatially aware plotting.
                     my_map = analysis_get_data.make_map(output, region_id, map_data)
+                    my_map = analysis_get_data.hsr2015_map(my_map)
 
                     # Make a spatial distribution map spectral model parameter
                     plt.close('all')
@@ -140,7 +140,7 @@ for wave in waves:
                     ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                       norm=norm)
                     ret.axes.set_title('%s %s %s %s' % (wave, region, this.model.labels[label_index], ic_type))
-                    if region == 'sunspot':
+                    if region == 'sunspot' or region == 'most_of_fov':
                         ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
 
                     cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
@@ -152,8 +152,7 @@ for wave in waves:
                     filepath = os.path.join(image, '%s.spatial_distrib.%s.%s.%s.png' % (model_name, region_id, parameter, ic_type))
                     print('Saving to ' + filepath)
                     plt.savefig(filepath)
-            """
-
+"""
         # Do each measure independently
         for measure in ic_limit.keys():
             # Information Criterion
@@ -218,7 +217,7 @@ for wave in waves:
                                   norm=norm)
                 ret.axes.set_title('across models %s %s %s %s %f' % (wave, region, this0.model.labels[label_index0], measure, this_ic_limit))
                 if region == 'most_of_fov':
-                    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['k'], linewidth=[2]))
+                    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['k']))
 
                 cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
                                     shrink=0.8, label=this.model.labels[label_index0])
@@ -375,6 +374,6 @@ for region in regions:
                     plt.legend(framealpha=0.5)
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
-
+"""
 
 

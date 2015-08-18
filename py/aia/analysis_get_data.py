@@ -138,7 +138,7 @@ def hsr2015_map(m):
 
 
 def hsr2015_model_name(n):
-    return sd.hsr2015_model_name(n)
+    return sd.hsr2015_model_name[n]
 
 
 def sunspot_outline():
@@ -157,7 +157,7 @@ def sunspot_outline():
     return polygon, sunspot_date
 
 
-def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[1], edgecolors=['k']):
+def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[2], edgecolors=['k']):
     rotated_polygon = np.zeros_like(polygon)
     n = polygon.shape[1]
     for i in range(0, n):
