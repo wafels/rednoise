@@ -93,3 +93,4 @@ hsr2015_range_x = [-498.0, -498 + 340.0] * u.arcsec
 hsr2015_range_y = [-98.0, 98.0] * u.arcsec
 hsr2015_model_name = {'Power law + Constant + Lognormal': '2',
                       'Power law + Constant': '1'}
+
