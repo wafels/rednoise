@@ -92,6 +92,7 @@ for wave in waves:
         # Get the region submap
         region_submap = analysis_get_data.get_region_submap(output, region_id)
 
+        """
         for model_name in model_names:
             # Get the data for this model
             this = storage[wave][region][model_name]
@@ -117,8 +118,13 @@ for wave in waves:
                                          model_names,
                                          ic_type=ic_type)] = 1
 
+                    # Apply the limit masks
+                    mask[np.where(p1 < limits[parameter][0])] = True
+                    mask[np.where(p1 > limits[parameter][1])] = True
+
                     # Create the masked numpy array
                     map_data = ma.array(p1, mask=mask)
+
                     # Make a SunPy map for nice spatially aware plotting.
                     my_map = analysis_get_data.make_map(output, region_id, map_data)
                     my_map = analysis_get_data.hsr2015_map(my_map)
@@ -132,18 +138,20 @@ for wave in waves:
                     palette = cm.Set2
                     # Bad values are those that are masked out
                     palette.set_bad('black', 1.0)
-                    palette.set_under('green', 1.0)
-                    palette.set_over('red', 1.0)
+                    #palette.set_under('green', 1.0)
+                    #palette.set_over('red', 1.0)
                     # Begin the plot
                     fig, ax = plt.subplots()
                     # Plot the map
                     ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                       norm=norm)
-                    ret.axes.set_title('%s %s %s %s' % (wave, region, this.model.labels[label_index], ic_type))
+                    #ret.axes.set_title('%s %s %s %s' % (wave, region, this.model.labels[label_index], ic_type))
+                    # HSR 2015
+                    ret.axes.set_title('%s %s' % (wave, region))
                     if region == 'sunspot' or region == 'most_of_fov':
                         ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
 
-                    cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
+                    cbar = fig.colorbar(ret, extend='both', orientation='vertical',
                                         shrink=0.8, label=this.model.labels[label_index])
                     # Fit everything in.
                     ax.autoscale_view()
@@ -152,7 +160,7 @@ for wave in waves:
                     filepath = os.path.join(image, '%s.spatial_distrib.%s.%s.%s.png' % (model_name, region_id, parameter, ic_type))
                     print('Saving to ' + filepath)
                     plt.savefig(filepath)
-"""
+        """
         # Do each measure independently
         for measure in ic_limit.keys():
             # Information Criterion
@@ -172,7 +180,7 @@ for wave in waves:
                 label_index0 = this0.model.parameters.index(parameter)
 
                 # Zero out the data
-                p1 = np.zeros_like(this.as_array('AIC'))
+                p1 = np.ones_like(this0.as_array('AIC'))
 
                 # Where are the good fits
                 good_fit0 = this0.good_fits()
@@ -191,6 +199,10 @@ for wave in waves:
                 p1[model1_where] = this1.as_array(parameter)[model1_where]
                 mask[model1_where] = False
 
+                # Apply the limit masks
+                # For HSR 2015 mask[np.where(p1 < limits[parameter][0])] = True
+                # For HSR 2015 mask[np.where(p1 > limits[parameter][1])] = True
+
                 # Make a SunPy map for nice spatially aware plotting.
                 map_data = ma.array(p1, mask=mask)
 
@@ -208,19 +220,21 @@ for wave in waves:
                 palette = cm.Set2
                 # Bad values are those that are masked out
                 palette.set_bad('black', 1.0)
-                palette.set_under('green', 1.0)
-                palette.set_over('red', 1.0)
+                #palette.set_under('green', 1.0)
+                #palette.set_over('red', 1.0)
                 # Begin the plot
                 fig, ax = plt.subplots()
                 # Plot the map
                 ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                   norm=norm)
-                ret.axes.set_title('across models %s %s %s %s %f' % (wave, region, this0.model.labels[label_index0], measure, this_ic_limit))
+                #ret.axes.set_title('across models %s %s %s %s %f' % (wave, region, this0.model.labels[label_index0], measure, this_ic_limit))
+                ret.axes.set_title("%s, cross-model parameter %s " % (wave, this0.model.labels[label_index0]))
+
                 if region == 'most_of_fov':
                     ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['k']))
 
-                cbar = fig.colorbar(ret, extend='both', orientation='horizontal',
-                                    shrink=0.8, label=this.model.labels[label_index0])
+                cbar = fig.colorbar(ret, extend='both', orientation='vertical',
+                                    shrink=0.8, label=this0.model.labels[label_index0])
                 # Fit everything in.
                 ax.autoscale_view()
 
@@ -374,6 +388,3 @@ for region in regions:
                     plt.legend(framealpha=0.5)
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
-"""
-
-

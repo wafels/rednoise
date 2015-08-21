@@ -66,7 +66,13 @@ def plot_regions_hsr2015(image, filepath):
     sunspot_date = sunspot_outline[1]
     print 'Sunspot date = %s' % sunspot_date
     print 'Image date = %s' % image.date
-    ax.add_collection(analysis_get_data.rotate_sunspot_outline(polygon, sunspot_date, image.date, linewidth=[1]))
+    ax.add_collection(analysis_get_data.rotate_sunspot_outline(polygon, sunspot_date, image.date))
+
+    cbar = fig.colorbar(ret, extend='both', orientation='vertical',
+                        shrink=0.8, label="emission")
+
+    cbar.ax.tick_params(labelsize=8)
+
     ax.autoscale_view()
 
     #plt.show()
