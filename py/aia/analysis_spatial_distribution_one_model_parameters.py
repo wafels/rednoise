@@ -30,6 +30,7 @@ windows = ['hanning']
 
 # Model results to examin
 model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
+one_model_name = ('Power law + Constant + Lognormal',)
 
 # Number of bins in the histograms
 hloc = (100,)
@@ -42,7 +43,7 @@ bins_2d = 100
 
 # IC
 ic_types = ('none',)
-ic_limit = {"BIC": 0.0, "AIC": 0.0}
+ic_limit = {"AIC": 0.0}
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
@@ -94,7 +95,7 @@ for wave in waves:
         # Get the region submap
         region_submap = analysis_get_data.get_region_submap(output, region_id)
 
-        for model_name in model_names:
+        for model_name in one_model_name:
             # Get the data for this model
             this = storage[wave][region][model_name]
             # Parameters
@@ -139,6 +140,7 @@ for wave in waves:
 
                     # Set up the palette we will use
                     palette = cm.Set2
+                    palette = cm.Paired
                     # Bad values are those that are masked out
                     palette.set_bad('black', 1.0)
                     #palette.set_under('green', 1.0)
@@ -150,14 +152,15 @@ for wave in waves:
                                       norm=norm)
                     #ret.axes.set_title('%s %s %s %s' % (wave, region, this.model.labels[label_index], ic_type))
                     # HSR 2015
-                    ret.axes.set_title('%s %s, lognormal position (mHz)' % (wave, region))
+                    mhz_label = r"peak frequency (narrow-band oscillation) $\beta$ (mHz)"
+                    ret.axes.set_title('%s, %s' % (wave, mhz_label))
                     if region == 'sunspot' or region == 'most_of_fov':
-                        ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
+                        ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['white']))
 
                     cbar = fig.colorbar(ret, extend='both',
                                         orientation='vertical',
                                         shrink=0.8,
-                                        label='lognormal position (mHz)')
+                                        label=mhz_label)
                     # Fit everything in.
                     ax.autoscale_view()
 

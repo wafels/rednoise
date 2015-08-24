@@ -228,7 +228,7 @@ for wave in waves:
                 ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                   norm=norm)
                 #ret.axes.set_title('across models %s %s %s %s %f' % (wave, region, this0.model.labels[label_index0], measure, this_ic_limit))
-                ret.axes.set_title("%s, cross-model parameter %s " % (wave, this0.model.labels[label_index0]))
+                ret.axes.set_title("%s, power law index %s " % (wave, this0.model.labels[label_index0]))
 
                 if region == 'most_of_fov':
                     ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['k']))
