@@ -17,6 +17,9 @@ import astropy.units as u
 import study_details as sd
 import step1_plots
 
+import sunpy.map
+from copy import deepcopy
+
 # Load in the derotated data into a datacube
 directory = sd.save_locations['pickle']
 filename = sd.ident + '.full_mapcube.pkl'
@@ -157,3 +160,10 @@ for region in regions.keys():
     R = regions[region]
     mc_layer_submap = mc_layer.submap(R['xrange'] * u.arcsec, R['yrange'] * u.arcsec)
     step1_plots.plot_regions_hsr2015(mc_layer_submap, filepath + '.submap.png')
+
+#
+# Plot an average emission over the duration of the time-series.
+#
+    av_emission = np.mean(subdata, axis=2)
+    av_map = sunpy.map.Map(deepcopy(mc_layer_submap.meta), av_emission)
+    step1_plots.plot_regions_hsr2015(av_map, filepath + '.average_submap.png')
