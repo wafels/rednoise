@@ -17,8 +17,6 @@ import astropy.units as u
 import study_details as sd
 import step1_plots
 
-import sunpy.map
-from copy import deepcopy
 
 # Load in the derotated data into a datacube
 directory = sd.save_locations['pickle']
@@ -41,23 +39,12 @@ times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 # Layer on which all de-rotations, etc are based on.
 mc_layer = mc[layer_index]
 
-#
-# Create some time-series for further analysis
-#
-if sd.sunlocation == 'disk':
-    #
-    # Define the number of regions and their extents.  Use Helio-projective
-    # co-ordinates.  These co-ordinates should be chosen in reference to the
-    # time of the reference layer (layer_index).
-    #
-    """
-    regions = {"sunspot": {"llx": -335.0*u.arcsec, "lly": 0*u.arcsec, "width": 40*u.arcsec, "height": 32*u.arcsec},
-               "loop footpoints": {"llx": -492*u.arcsec, "lly": 0*u.arcsec, "width": 23*u.arcsec, "height": 22*u.arcsec},
-               "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
-               "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
-    """
-    regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
 
+#
+# A function that calculates some necessary region information in order to
+# for us to extract a subcube of data.
+#
+def calculate_region_information(regions):
     # Rectangular patches
     for region in regions:
         # Next region
@@ -86,6 +73,35 @@ if sd.sunlocation == 'disk':
         fixed_aia_scale = sd.fixed_aia_scale#{'x': 0.6, 'y': 0.6}
         R['width_pixel'] = np.floor(R['width'] / fixed_aia_scale['x']).value
         R['height_pixel'] = np.floor(R['height'] / fixed_aia_scale['y']).value
+    return regions
+#
+# Create some time-series for further analysis
+#
+if sd.sunlocation == 'disk':
+    #
+    # Define the number of regions and their extents.  Use Helio-projective
+    # co-ordinates.  These co-ordinates should be chosen in reference to the
+    # time of the reference layer (layer_index).
+    #
+    """
+    regions = {"sunspot": {"llx": -335.0*u.arcsec, "lly": 0*u.arcsec, "width": 40*u.arcsec, "height": 32*u.arcsec},
+               "loop footpoints": {"llx": -492*u.arcsec, "lly": 0*u.arcsec, "width": 23*u.arcsec, "height": 22*u.arcsec},
+               "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
+               "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
+    """
+    #
+    # Regions are difficult to recreate since the code has changed substantially.
+    # The plots are meant to be illustrative, so
+    #
+    regions = {"loop footpoints": {"llx": -460*u.arcsec, "lly": -10*u.arcsec, "width": 23*u.arcsec, "height": 32*u.arcsec},
+               "moss": {"llx": -390*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 22*u.arcsec}}
+    region_most_of_fov = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    """
+    regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    """
+
+    regions = calculate_region_information(regions)
+    region_most_of_fov = calculate_region_information(region_most_of_fov)
 
     for region in regions:
         # Next region
@@ -150,12 +166,33 @@ if sd.sunlocation == 'disk':
 #
 # Plot where the regions are
 #
+"""
 filepath = os.path.join(sd.save_locations['image'], sd.ident + '.regions')
 for region in regions.keys():
     filepath = filepath + '.' + region
-filepath = filepath + '.png'
+filepath = filepath + '.nanoflare.png'
 step1_plots.plot_regions(mc_layer, regions, filepath)
+"""
 
+
+#
+# HSR 2015 oscillations nanoflares
+#
+filepath = os.path.join(sd.save_locations['image'], sd.ident + '.regions')
+for region in regions.keys():
+    filepath = filepath + '.nanoflares.' + region
+filepath = filepath + '.png'
+mc_layer_submap = mc_layer.submap(region_most_of_fov['most_of_fov']['xrange'] * u.arcsec,
+                                  region_most_of_fov['most_of_fov']['yrange'] * u.arcsec)
+step1_plots.plot_regions_hsr2015_nanoflares(mc_layer_submap,
+                                            regions,
+                                            filepath)
+
+
+"""
+#
+# HSR 2015 oscillations
+#
 for region in regions.keys():
     R = regions[region]
     mc_layer_submap = mc_layer.submap(R['xrange'] * u.arcsec, R['yrange'] * u.arcsec)
@@ -167,3 +204,4 @@ for region in regions.keys():
     av_emission = np.mean(subdata, axis=2)
     av_map = sunpy.map.Map(deepcopy(mc_layer_submap.meta), av_emission)
     step1_plots.plot_regions_hsr2015(av_map, filepath + '.average_submap.png')
+"""
