@@ -45,7 +45,7 @@ if study_type == 'paper2':
     corename = 'request4'
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '193'
+    wave = '171'
     cross_correlate = True
     derotate = True
 
@@ -87,3 +87,10 @@ ident = datalocationtools.ident_creator(branches)
 # Limits
 structure_location_limits = {'lo': 2.0 * u.mHz,
                              'hi': 7.0 * u.mHz}
+
+# Cutdown map details
+hsr2015_range_x = [-498.0, -498 + 340.0] * u.arcsec
+hsr2015_range_y = [-98.0, 98.0] * u.arcsec
+hsr2015_model_name = {'Power law + Constant + Lognormal': '2',
+                      'Power law + Constant': '1'}
+

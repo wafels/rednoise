@@ -28,8 +28,9 @@ regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
-# Model results to examine
-model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')\
+# Model results to examin
+model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
+one_model_name = ('Power law + Constant + Lognormal',)
 
 # Number of bins in the histograms
 hloc = (100,)
@@ -42,7 +43,7 @@ bins_2d = 100
 
 # IC
 ic_types = ('none',)
-ic_limit = {"BIC": 0.0, "AIC": 0.0}
+ic_limit = {"AIC": 0.0}
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
@@ -57,6 +58,7 @@ sunspot_outline = analysis_get_data.sunspot_outline()
 # power spectrum model.  A map is created containing parameter values
 # as found by either
 #
+"""
 par1 = storage[waves[0]][regions[0]][model_names[0]].model.parameters
 par2 = storage[waves[0]][regions[0]][model_names[1]].model.parameters
 common_parameters = set(par1).intersection(par2)
@@ -71,6 +73,7 @@ for wave in waves:
             storage_common_parameter[wave][region][measure] = {}
             for parameter in common_parameters:
                 storage_common_parameter[wave][region][measure][parameter] = 0
+"""
 
 # Plot spatial distributions of the spectral model parameters.
 for wave in waves:
@@ -92,12 +95,11 @@ for wave in waves:
         # Get the region submap
         region_submap = analysis_get_data.get_region_submap(output, region_id)
 
-        """
-        for model_name in model_names:
+        for model_name in one_model_name:
             # Get the data for this model
             this = storage[wave][region][model_name]
             # Parameters
-            parameters = this.model.parameters
+            parameters = ("log10(lognormal position)",)
             for parameter in parameters:
                 label_index = this.model.parameters.index(parameter)
 
@@ -122,6 +124,8 @@ for wave in waves:
                     mask[np.where(p1 < limits[parameter][0])] = True
                     mask[np.where(p1 > limits[parameter][1])] = True
 
+                    p1 = 1000 * 4.6296296296296294e-05 * 10.0 ** p1  # mHz
+
                     # Create the masked numpy array
                     map_data = ma.array(p1, mask=mask)
 
@@ -132,10 +136,11 @@ for wave in waves:
                     # Make a spatial distribution map spectral model parameter
                     plt.close('all')
                     # Normalize the color table
-                    norm = colors.Normalize(clip=False, vmin=limits[parameter][0], vmax=limits[parameter][1])
+                    norm = colors.Normalize(clip=False, vmin=1.0, vmax=10.0)
 
                     # Set up the palette we will use
                     palette = cm.Set2
+                    palette = cm.Paired
                     # Bad values are those that are masked out
                     palette.set_bad('black', 1.0)
                     #palette.set_under('green', 1.0)
@@ -147,12 +152,15 @@ for wave in waves:
                                       norm=norm)
                     #ret.axes.set_title('%s %s %s %s' % (wave, region, this.model.labels[label_index], ic_type))
                     # HSR 2015
-                    ret.axes.set_title('%s %s' % (wave, region))
+                    mhz_label = r"peak frequency (narrow-band oscillation) $\beta$ (mHz)"
+                    ret.axes.set_title('%s, %s' % (wave, mhz_label))
                     if region == 'sunspot' or region == 'most_of_fov':
-                        ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
+                        ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['white']))
 
-                    cbar = fig.colorbar(ret, extend='both', orientation='vertical',
-                                        shrink=0.8, label=this.model.labels[label_index])
+                    cbar = fig.colorbar(ret, extend='both',
+                                        orientation='vertical',
+                                        shrink=0.8,
+                                        label=mhz_label)
                     # Fit everything in.
                     ax.autoscale_view()
 
@@ -228,7 +236,7 @@ for wave in waves:
                 ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                   norm=norm)
                 #ret.axes.set_title('across models %s %s %s %s %f' % (wave, region, this0.model.labels[label_index0], measure, this_ic_limit))
-                ret.axes.set_title("%s, power law index %s " % (wave, this0.model.labels[label_index0]))
+                ret.axes.set_title("%s, cross-model parameter %s " % (wave, this0.model.labels[label_index0]))
 
                 if region == 'most_of_fov':
                     ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['k']))
@@ -388,3 +396,4 @@ for region in regions:
                     plt.legend(framealpha=0.5)
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
+"""
