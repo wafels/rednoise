@@ -210,8 +210,38 @@ def power_law_with_constant_with_deltafn(a, f):
     return power_law_with_constant(a[0:3], f) + deltafn(a[3:4], f)
 
 
+#
+# Conversion functions
+#
+class ConverterInfo:
+    def __init__(self, array, converted_unit, factors):
+        self.array = array
+        self.converted_unit = converted_unit
+        self.factors = factors
+
+
+def no_conversion(ci):
+    return ci.converted_unit * ci.array
+
+
+def convert_ln_to_log10(ci):
+    return ci.converted_unit * ci.array / np.log(10.0)
+
+
+def convert_dimensionless_frequency_to_frequency(ci):
+    return ci.converted_unit * ci.array * ci.factors[0]
+
+
+def convert_ln_dimensionless_frequency_to_frequency(ci):
+    return ci.converted_unit * np.exp(ci.array) * ci.factors[0]
+
+
+#
+# Describe a variable as it is fit, and how we want to display and handle it.
+#
 class Variable:
-    def __init__(self, fit_parameter,
+    def __init__(self,
+                 fit_parameter,
                  conversion_function,
                  converted_label,
                  converted_unit):
@@ -219,62 +249,147 @@ class Variable:
         self.fit_parameter = fit_parameter
 
         # The conversion function that turns the fit parameter into something
-        # that is easy to understand
+        # that is easy to understand.
         self.conversion_function = conversion_function
 
-        # Converted label
+        # Converted label - used in plotting
         self.converted_label = converted_label
 
-        # Unit of the converted_function
+        # Astropy unit of the variable after conversion
         self.converted_unit = converted_unit
 
 
-def convert_ln_to_log10(f_input):
-    return f_input[0] / np.log(10.0)
-
-
-def convert_dimensionless_frequency_to_frequency(f_input):
-    return f_input[0] * f_input[1]
-
-
-def convert_ln_dimensionless_frequency_to_frequency(f_input):
-    return np.exp(f_input[0]) * f_input[1]
-
-
+#
+# Specific variable types.
+#
 class FrequencyVariable(Variable):
-    def __init__(self):
+    def __init__(self, label):
         Variable.__init__(self,
                           'dimensionless frequency',
                           convert_dimensionless_frequency_to_frequency,
-                          r"$\nu",
+                          label,
                           u.Hz)
 
 
-class Log10Variable(Variable):
+class LnVariable(Variable):
     def __init__(self, parameter, label):
         Variable.__init__(self,
-                          'log(' + parameter + ')',
+                          'ln(' + parameter + ')',
                           convert_ln_to_log10,
                           r"$\log_{10}(" + label + ")$",
                           u.dimensionless)
+
+
+#
+# Spectrum model class
+#
+class Spectrum:
+    def __init__(self, name, variables):
+        # Spectral model name
+        self.name = name
+
+        # Variables of the spectral model.  The variables listed here are
+        # instances or subclasses of the Variable class.
+        self.variables = variables
+
+    def power(self, a, f):
+        pass
+
+    def guess(self, a, f):
+        pass
+
+
+#
+# Specific spectral models
+#
+class Constant(Spectrum):
+    def __init__(self):
+        Spectrum.__init__(self, 'Constant', [LnVariable('constant', 'C')])
+
+    def power(self, a, f):
+        return constant(a)
+
+
+class PowerLaw(Spectrum):
+    def __init__(self):
+        power_law_amplitude = LnVariable('power law amplitude',
+                                         'A_{P}')
+        power_law_index = Variable('power law index',
+                                   no_conversion,
+                                   r'$n$',
+                                   u.dimensionless)
+
+        Spectrum.__init__(self, 'Power Law', [power_law_amplitude, power_law_index])
+
+    def power(self, a, f):
+        return power_law(a, f)
+
+    # A good enough guess that will allow a proper fitting algorithm to proceed.
+    def guess(self, f, observed_power, amp_range=[0, 5]):
+        index_estimate = pstools.most_probable_power_law_index(f, observed_power, 0.0, np.arange(0.0, 4.0, 0.01))
+        log_amplitude_estimate = np.log(np.mean(observed_power[amp_range[0]:amp_range[1]]))
+        return log_amplitude_estimate, index_estimate
+
+
+class BrokenPowerLaw(Spectrum):
+    def __init__(self):
+
+        power_law_amplitude = LnVariable('power law amplitude', 'A_{P}')
+        power_law_index_below_break = Variable('power law index below break',
+                                               no_conversion,
+                                               r'$n_{below}',
+                                               u.dimensionless)
+        break_frequency = FrequencyVariable(r"$\nu_{break}$")
+        power_law_index_above_break = Variable('power law index above break',
+                                               no_conversion,
+                                               r'$n_{above}',
+                                               u.dimensionless)
+
+        Spectrum.__init__(self, 'broken power law',
+                          [power_law_amplitude, power_law_index_below_break,
+                           break_frequency, power_law_index_above_break])
+
+    def power(self, a, f):
+        return power_law(a, f)
+
+    # A good enough guess that will allow a proper fitting algorithm to proceed.
+    def guess(self, f, observed_power, amp_range=[0, 5],
+              break_frequency=100):
+        log_amplitude_estimate, index_estimate_below = PowerLaw.guess(f[0:break_frequency],
+                                                                      observed_power[0:break_frequency],
+                                                                      amp_range=amp_range)
+        _, index_estimate_above = PowerLaw.guess(f[break_frequency:],
+                                                 observed_power[break_frequency:],
+                                                 amp_range=amp_range)
+
+        return log_amplitude_estimate, index_estimate_below, break_frequency, index_estimate_above
+
+
+class Lognormal(Spectrum):
+    def __init__(self):
+
+        amplitude = LnVariable('lognormal amplitude', 'A_{L}')
+        position = Variable('lognormal position', convert_ln_dimensionless_frequency_to_frequency, r"$p_{L}$", u.Hz)
+        width = LnVariable('lognormal width', 'w_{L}')
+
+        Spectrum.__init__(self, 'Lognormal', [amplitude, position, width])
+
+    def power(self, a, f):
+        return lognormal(a, f)
 
 
 class CompoundSpectrum:
     def __init__(self, components):
         self.components = components
         self.name = ''
-        self.parameters = []
-        self.labels = []
-        self.conversion = []
+        self.variables = []
+
         for component in self.components:
             spectrum = component[0]
             self.name = self.name + spectrum.name + ' + '
-            for name in spectrum.parameters:
-                self.parameters.append(name)
-            for label in spectrum.labels:
-                self.labels.append(label)
-            for conversion in spectrum.conversion:
-                self.conversion.append(conversion)
+            for variable in spectrum.variables:
+                self.variables.append(variable)
+
         self.name = self.name[:-3]
 
     # Calculate the power in each component.  Useful for plotting out the
@@ -298,87 +413,6 @@ class CompoundSpectrum:
     # Subclassed for any particular power law
     def guess(self, f, data):
         pass
-
-
-class Spectrum:
-    def __init__(self, name, variables):
-        self.name = name
-        self.variables = variables
-        self.parameters = []
-        self.labels = []
-        self.conversion = []
-        for v in variables:
-            self.parameters.append(v.parameter)
-            self.labels.append(v.label)
-            self.conversion.append(v.conversion)
-
-    def power(self, a, f):
-        pass
-
-
-class Constant(Spectrum):
-    def __init__(self):
-        variables = [Log10Variable('constant', 'C')]
-        Spectrum.__init__(self, 'Constant', variables)
-
-    def power(self, a, f):
-        return constant(a)
-
-
-class PowerLaw(Spectrum):
-    def __init__(self):
-        variables = [Log10Variable('power law amplitude', 'A_{P}'),
-                     Variable('power law index', 'n', 1.0, u.dimensionless)]
-        Spectrum.__init__(self, 'Power Law', variables)
-
-    def power(self, a, f):
-        return power_law(a, f)
-
-    # A good enough guess that will allow a proper fitting algorithm to proceed.
-    def guess(self, f, observed_power, amp_range=[0, 5]):
-        index_estimate = pstools.most_probable_power_law_index(f, observed_power, 0.0, np.arange(0.0, 4.0, 0.01))
-        log_amplitude_estimate = np.log(np.mean(observed_power[amp_range[0]:amp_range[1]]))
-        return log_amplitude_estimate, index_estimate
-
-
-class BrokenPowerLaw:
-    def __init__(self):
-        self.name = 'Power law'
-        self.parameters = ['log10(power law amplitude)',
-                           'power law index (below break frequency)',
-                           'break frequency',
-                           'power law index (above break frequency)']
-        self.labels = [r'$\log_{10}(A_{P})$',
-                       r'$n_{B}$',
-                       r'$\nu_{K}',
-                       r'$n_{A}']
-        self.conversion = [1.0/np.log(10.0), 1.0, 1.0, 1.0]
-
-    def power(self, a, f):
-        return power_law(a, f)
-
-    # A good enough guess that will allow a proper fitting algorithm to proceed.
-    def guess(self, f, observed_power, amp_range=[0, 5],
-              break_frequency=100):
-        log_amplitude_estimate, index_estimate_below = PowerLaw.guess(f[0:break_frequency],
-                                                                      observed_power[0:break_frequency],
-                                                                      amp_range=amp_range)
-        _, index_estimate_above = PowerLaw.guess(f[break_frequency:],
-                                                 observed_power[break_frequency:],
-                                                 amp_range=amp_range)
-
-        return log_amplitude_estimate, index_estimate_below, break_frequency, index_estimate_above
-
-
-class Lognormal:
-    def __init__(self):
-        self.name = 'Lognormal'
-        self.parameters = ['log10(lognormal amplitude)', 'log10(lognormal position)', 'log10(lognormal width)']
-        self.labels = ['$\log_{10}(A_{L})$', '$\log_{10}(p_{L})$', '$\log_{10}(w_{L})$']
-        self.conversion = [1.0/np.log(10.0), 1.0/np.log(10.0), 1.0/np.log(10.0)]
-
-    def power(self, a, f):
-        return lognormal(a, f)
 
 
 class PowerLawPlusConstant(CompoundSpectrum):
@@ -525,8 +559,10 @@ class Fit:
 
         # Convert to an easier to use value if returning a model parameter.
         if quantity in self.model.parameters:
+            converted_unit = ???
+            quantity_info = ConverterInfo(as_array, converted_unit, [self.f_norm])
             func = self.model.conversion[self.model.parameters.index(quantity)]
-            return func([as_array, self.f_norm])
+            return func(quantity_info)
 
         else:
             return as_array
