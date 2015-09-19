@@ -380,16 +380,22 @@ class Lognormal(Spectrum):
 
 class CompoundSpectrum:
     def __init__(self, components):
-        self.components = components
         self.name = ''
         self.variables = []
+        self.components = components
 
         for component in self.components:
+            # Get the spectrum model
             spectrum = component[0]
+
+            # Update the name
             self.name = self.name + spectrum.name + ' + '
+
+            # Update the variable list
             for variable in spectrum.variables:
                 self.variables.append(variable)
 
+        # Remove the last ' + '
         self.name = self.name[:-3]
 
     # Calculate the power in each component.  Useful for plotting out the
@@ -558,12 +564,13 @@ class Fit:
         as_array = self._as_array(self.index[quantity])
 
         # Convert to an easier to use value if returning a model parameter.
-        if quantity in self.model.parameters:
-            converted_unit = ???
+        fit_parameters = [variable.fit_parameter for variable in self.model.variables]
+        if quantity in fit_parameters:
+            fp_index = fit_parameters.index(quantity)
+            converted_unit = self.model.variables[fp_index].converted_unit
+            conversion_function = self.model.variables[fp_index].conversion_function
             quantity_info = ConverterInfo(as_array, converted_unit, [self.f_norm])
-            func = self.model.conversion[self.model.parameters.index(quantity)]
-            return func(quantity_info)
-
+            return conversion_function(quantity_info)
         else:
             return as_array
 
