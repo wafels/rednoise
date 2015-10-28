@@ -277,7 +277,7 @@ class LnVariable(Variable):
                           'ln(' + parameter + ')',
                           convert_ln_to_log10,
                           r"$\log_{10}(" + label + ")$",
-                          u.dimensionless)
+                          u.dimensionless_unscaled)
 
 
 #
@@ -317,7 +317,7 @@ class PowerLaw(Spectrum):
         power_law_index = Variable('power law index',
                                    no_conversion,
                                    r'$n$',
-                                   u.dimensionless)
+                                   u.dimensionless_unscaled)
 
         Spectrum.__init__(self, 'Power Law', [power_law_amplitude, power_law_index])
 
@@ -338,12 +338,12 @@ class BrokenPowerLaw(Spectrum):
         power_law_index_below_break = Variable('power law index below break',
                                                no_conversion,
                                                r'$n_{below}',
-                                               u.dimensionless)
+                                               u.dimensionless_unscaled)
         break_frequency = FrequencyVariable(r"$\nu_{break}$")
         power_law_index_above_break = Variable('power law index above break',
                                                no_conversion,
                                                r'$n_{above}',
-                                               u.dimensionless)
+                                               u.dimensionless_unscaled)
 
         Spectrum.__init__(self, 'broken power law',
                           [power_law_amplitude, power_law_index_below_break,
@@ -511,7 +511,7 @@ class Fit:
         self.fit_method = fit_method
 
         # Number of free parameters
-        self.k = len(self.model.parameters)
+        self.k = len(self.model.variables)
 
         # Degrees of freedom
         self.dof = self.n - self.k - 1
@@ -521,8 +521,8 @@ class Fit:
                       "rchi2": [2],
                       "AIC": [3],
                       "BIC": [4]}
-        for i, parameter_name in enumerate(model.parameters):
-            self.index[parameter_name] = [1, 'x', i]
+        for i, variable in enumerate(model.variables):
+            self.index[variable.fit_parameter] = [1, 'x', i]
 
         # Spatial size of the data cube in pixels
         self.ny = data.shape[0]

@@ -38,11 +38,11 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['171', '193']
+waves = ['211']
 
 # Regions we are interested in
-#regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
-regions = ['most_of_fov']
+regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
+#regions = ['most_of_fov']
 
 # Apodization windows
 windows = ['hanning']

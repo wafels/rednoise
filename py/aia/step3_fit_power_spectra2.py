@@ -6,21 +6,21 @@ import cPickle as pickle
 import os
 
 import study_details as sd
-import rnspectralmodels
+import rnspectralmodels2
 
 # Wavelengths we want to analyze
-waves = ['171', '193']
+waves = ['211']
 
 # Regions we are interested in
-# regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
-regions = ['most_of_fov']
+regions = ['sunspot', 'quiet Sun']
+#regions = ['most_of_fov']
 
 # Apodization windows
 windows = ['hanning']
 
 # Models to fit
-these_models = [rnspectralmodels.PowerLawPlusConstantPlusLognormal(),
-                rnspectralmodels.PowerLawPlusConstant()]
+these_models = [rnspectralmodels2.PowerLawPlusConstantPlusLognormal(),
+                rnspectralmodels2.PowerLawPlusConstant()]
 n_models = len(these_models)
 
 #
@@ -70,7 +70,7 @@ for iwave, wave in enumerate(waves):
                 print('Fitting model: %s (%i out of %i)' % (this_model.name, itm+1, n_models))
 
                 # Do the fit and store the results for later analysis
-                results[this_model.name] = rnspectralmodels.Fit(pfrequencies.value, pwr, this_model)
+                results[this_model.name] = rnspectralmodels2.Fit(pfrequencies.value, pwr, this_model)
 
             # Dump the results
             filepath = os.path.join(output, ofilename + '.lnlike_fit_results.pkl')

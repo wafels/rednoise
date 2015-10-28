@@ -23,7 +23,7 @@ import numpy as np
 
 from sunpy.time import parse_time
 from sunpy.map import Map
-from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift
+from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift, _default_fmap_function
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 import step0_plots
 import study_details as sd
@@ -47,7 +47,14 @@ ident = sd.ident
 print('Acquiring data from ' + aia_data_location)
 
 # Get the list of data and sort it
-list_of_data = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
+directory_listing = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
+list_of_data = []
+for f in directory_listing:
+    if f[-5:] == '.fits':
+        list_of_data.append(f)
+    else:
+        print('File that does not end in ".fits" detected, and not included in list = %s ' %f)
+
 print("Number of files = %i" % len(list_of_data))
 #
 # Start manipulating the data
@@ -124,17 +131,28 @@ if sd.cross_correlate:
             data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
     else:
         print("\nCalculating cross_correlations.")
-        cc_shifts = calculate_match_template_shift(data, layer_index=layer_index)
+        #
+        # The 131 data has some very significant shifts that may be
+        # related to large changes in the intensity in small portions of the
+        # data, i.e. flares.  This may be throwing the fits off.  Perhaps
+        # better to apply something like a log?
+        #
+        if sd.wave == '131':
+            cc_func = np.sqrt
+        else:
+            cc_func = _default_fmap_function
+        print('Data will have %s applied to it.' % cc_func.__name__)
+        cc_shifts = calculate_match_template_shift(data, layer_index=layer_index, func=cc_func)
         print("Applying cross-correlation shifts to the data.")
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
 
     # Plot out the cross correlation shifts
     filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
-    step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation',
+    step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s' % cc_func.__name__,
                             layer_index, filepath=filepath)
 
     filepath = os.path.join(save_locations['image'], ident + '.time.cross_correlation.png')
-    step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation',
+    step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s'  % cc_func.__name__,
                             layer_index, filepath=filepath,
                             x=t_since_layer_index, xlabel='time relative to reference layer (s)')
 #

@@ -17,18 +17,20 @@ class MaskDefine:
 
         # Waves
         self.waves = storage.keys()
+        w0 = self.waves[0]
 
         # Regions
-        self.regions = storage[self.waves[0]].keys()
+        self.regions = storage[w0].keys()
+        r0 = self.regions[0]
 
         # Available models.  For the IC limit stuff to work the code is much
         # easier if the results at the model level are stored as OrderedDict.
-        self.available_models = storage[self.waves[0]][self.regions[0]].keys()
+        self.available_models = storage[w0][r0].keys()
 
         # Common parameters in all models
-        self.common_parameters = set(storage[self.waves[0]][self.regions[0]][self.available_models[0]].model.parameters)
+        self.common_parameters = set(v.fit_parameter for v in storage[w0][r0][self.available_models[0]].model.variables)
         for model in self.available_models:
-            par = storage[self.waves[0]][self.regions[0]][model].model.parameters
+            par = [v.fit_parameter for v in storage[w0][r0][model].model.variables]
             self.common_parameters = self.common_parameters.intersection(par)
 
         # Good fit masks.
@@ -71,30 +73,49 @@ class MaskDefine:
                 self.all_parameter_limit_masks[wave][region] = {}
                 self.combined_good_fit_parameter_limit[wave][region] = {}
                 for model in self.available_models:
-                    self.parameter_limit_masks[wave][region][model] = {}
-                    self.all_parameter_limit_masks[wave][region][model] = {}
-                    self.combined_good_fit_parameter_limit[wave][region][model] = {}
 
                     # Get the parameter data
                     this = storage[wave][region][model]
 
                     # Go through each parameter and find where the limits are
                     # exceeded.
-                    for parameter in this.parameters:
-                        p = this.as_array(parameter)
+                    parameters = [v.fit_parameter for v in this.model.variables]
+
+                    # Stores a mask such that True means that parameter value
+                    # either exceeded its low or high limit
+                    self.parameter_limit_masks[wave][region][model] = {}
+
+                    # Stores a mask where True means that at least one parameter
+                    # limit was exceeded in the model.
+                    dummy_p_mask = np.zeros_like(this.as_array(parameters[0]).value, dtype=bool)
+                    self.all_parameter_limit_masks[wave][region][model] = dummy_p_mask
+
+                    # Stores a mask where True means that either (a) at least
+                    # one parameter limit was exceeded, or (b) a bad fit was
+                    # detected during the fir process
+                    self.combined_good_fit_parameter_limit[wave][region][model] = dummy_p_mask
+
+                    for parameter in parameters:
+                        # Next parameter
+                        p = this.as_array(parameter).value
+
+                        # Default - all parameters values are NOT masked
                         p_mask = np.zeros_like(p, dtype=bool)
+
+                        # Mask out where the limits are exceeded for this
+                        # parameter and store it
                         p_mask[np.where(p < limits[parameter][0])] = True
                         p_mask[np.where(p > limits[parameter][1])] = True
                         self.parameter_limit_masks[wave][region][model][parameter] = p_mask
 
                         # This mask determines which positions have all their
-                        # parameter values within their specified limits.
+                        # model parameter values within their specified limits.
                         self.all_parameter_limit_masks[wave][region][model] = np.logical_or(p_mask, self.all_parameter_limit_masks[wave][region][model])
 
-                        # Combined good fit masks and parameter limit masks
-                        # This combination is used frequently, and so is worth
-                        # calculating explicitly
-                        self.combined_good_fit_parameter_limit[wave][region][model] = np.logical_or(self.all_parameter_limit_masks[wave][region][model], self.good_fit_masks[wave][region][model])
+                    # Combined good fit masks and parameter limit masks
+                    # This combination is used frequently, and so is worth
+                    # calculating explicitly
+                    self.combined_good_fit_parameter_limit[wave][region][model] = np.logical_or(self.all_parameter_limit_masks[wave][region][model], self.good_fit_masks[wave][region][model])
 
         # IC data.
         # Extract the IC from the storage array.
@@ -109,14 +130,10 @@ class MaskDefine:
                     for ic in ('AIC', 'BIC'):
                         self.ic_data[wave][region][model][ic] = this.as_array(ic)
 
-        # Spatial size of the data in pixels
-        self.nx = this.as_array(ic).shape[1]
-        self.ny = this.as_array(ic).shape[0]
-
     def which_model_is_preferred(self, ic_type, ic_limit):
         """
         Return an array that indicates which model is preferred according to the
-        information criterion, at each pixel.
+        information criterion.
         :param ic_type: ic_type: information criterion we will use
         :param ic_limit:  the difference in the IC that the best model must
         exceed compared to the other models.
@@ -130,10 +147,11 @@ class MaskDefine:
         for wave in self.waves:
             preferred_model_index[wave] = {}
             for region in self.regions:
-                preferred_model_index[wave][region] = np.zeros()
+                preferred_model_index[wave][region] = 0.0
+                _shape = self.ic_data[wave][region][self.available_models[0]][ic_type].shape
 
                 # Storage for the IC value for all models as a function of space
-                this_ic = np.zeros(len(self.available_models), self.ny, self.nx)
+                this_ic = np.zeros((len(self.available_models), _shape[0], _shape[1]), dtype=np.float64)
 
                 # Fill up the array
                 for imodel, model in enumerate(self.available_models):

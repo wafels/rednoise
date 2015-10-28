@@ -83,11 +83,16 @@ if sd.sunlocation == 'disk':
     # co-ordinates.  These co-ordinates should be chosen in reference to the
     # time of the reference layer (layer_index).
     #
-    """
+
+    #
+    # Smaller cutouts, good for testing
+    #
+
     regions = {"sunspot": {"llx": -335.0*u.arcsec, "lly": 0*u.arcsec, "width": 40*u.arcsec, "height": 32*u.arcsec},
                "loop footpoints": {"llx": -492*u.arcsec, "lly": 0*u.arcsec, "width": 23*u.arcsec, "height": 22*u.arcsec},
                "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
                "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
+
     """
     #
     # Regions are difficult to recreate since the code has changed substantially.
@@ -97,11 +102,15 @@ if sd.sunlocation == 'disk':
                "moss": {"llx": -390*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 22*u.arcsec}}
     region_most_of_fov = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
     """
+    #
+    # Most of field of view, good for large scale studies (Paper 2)
+    #
+    """
     regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
     """
 
     regions = calculate_region_information(regions)
-    region_most_of_fov = calculate_region_information(region_most_of_fov)
+    #region_most_of_fov = calculate_region_information(region_most_of_fov)
 
     for region in regions:
         # Next region
@@ -166,15 +175,14 @@ if sd.sunlocation == 'disk':
 #
 # Plot where the regions are
 #
-"""
 filepath = os.path.join(sd.save_locations['image'], sd.ident + '.regions')
 for region in regions.keys():
     filepath = filepath + '.' + region
 filepath = filepath + '.nanoflare.png'
 step1_plots.plot_regions(mc_layer, regions, filepath)
+
+
 """
-
-
 #
 # HSR 2015 oscillations nanoflares
 #
@@ -189,7 +197,6 @@ step1_plots.plot_regions_hsr2015_nanoflares(mc_layer_submap,
                                             filepath)
 
 
-"""
 #
 # HSR 2015 oscillations
 #

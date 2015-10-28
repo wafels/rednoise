@@ -184,11 +184,11 @@ def get_mode(h_info):
 # set thresholds on the data values
 #
 limits = {"power law index": [1., 7.],
-          "log10(constant)": [0., 5.],
-          "log10(power law amplitude)": [3.0, 10.0],
-          "log10(lognormal width)": [0.0, 0.6],
-          "log10(lognormal position)": [0.0, np.log10(3000.)],
-          "log10(lognormal amplitude)": [0.0, 10.0],
+          "ln(constant)": [0., 5.],
+          "ln(power law amplitude)": [3.0, 10.0],
+          "ln(lognormal width)": [0.0, 0.6],
+          "lognormal position": [0.0, 100.0],
+          "ln(lognormal amplitude)": [0.0, 10.0],
           "period": [24.0, 3000.0],
           "ratio": [-5.0, 5.0]}
 

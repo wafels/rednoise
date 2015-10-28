@@ -20,26 +20,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astroML.plotting import hist
 import analysis_get_data
+import analysis_explore
 import study_details as sd
 from analysis_details import convert_to_period, summary_statistics, get_mode, limits, get_mask_info, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
-waves = ['193']
+waves = ['211']
 
 # Regions we are interested in
-#regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-regions = ['most_of_fov']
+regions = ['sunspot', 'quiet Sun']
+#regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power law + Constant + Lognormal',)
+model_names = ('Power Law + Constant + Lognormal',)
 
 # Model results to examine
-model_comparison_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
+model_comparison_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
 # Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
+storage = analysis_get_data.get_all_data(waves=waves,
+                                         regions=regions,
+                                         model_names=model_comparison_names)
+
+zzz = analysis_explore.MaskDefine(storage)
 
 # Number of bins
 hloc = (100,)# 'scott', 'knuth', 'freedman')

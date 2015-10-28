@@ -24,7 +24,7 @@ from sunpy.physics.transforms.solar_rotation import rot_hpc
 def get_all_data(waves=['171', '193'],
                  regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
                  windows=['hanning'],
-                 model_names=('Power law + Constant', 'Power law + Constant + Lognormal')):
+                 model_names=('Power Law + Constant', 'Power Law + Constant + Lognormal')):
 
     # Create the storage across all models, AIA channels and regions
     storage = {}
