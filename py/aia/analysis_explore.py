@@ -202,7 +202,7 @@ class MaskDefine:
 
                 # False means that the model at this pixel is the same as the
                 # requested model
-                this_model_here_mask = np.ma.getarray(pmi[wave][region]) != model_index
+                this_model_here_mask = np.ma.getdata(pmi[wave][region]) != model_index
 
                 # Return the index as to which model is preferred.  Masked
                 # values indicate that the model with the minimum IC value has

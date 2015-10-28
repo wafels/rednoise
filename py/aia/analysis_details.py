@@ -3,6 +3,7 @@
 #
 import os
 import numpy as np
+import astropy
 import lnlike_model_fit
 import study_details as sd
 
@@ -147,14 +148,18 @@ def summary_statistics(a, bins=100):
     hist, bin_edges = np.histogram(a, bins)
     hist_max_index = np.argmax(hist)
     mode = 0.5*(bin_edges[hist_max_index] + bin_edges[hist_max_index+1])
+    if isinstance(a, astropy.units.Quantity):
+        unit = a.unit
+    else:
+        unit = 1.0
     return {"mean": np.mean(a),
-            "median": np.percentile(a, 50.0),
-            "lo": np.percentile(a, 2.5),
-            "hi": np.percentile(a, 97.5),
-            "min":np.min(a),
+            "median": np.percentile(a, 50.0) * unit,
+            "lo": np.percentile(a, 2.5) * unit,
+            "hi": np.percentile(a, 97.5) * unit,
+            "min": np.min(a),
             "max": np.max(a),
             "std": np.std(a),
-            "mode": mode}
+            "mode": mode * unit}
 
 
 #
