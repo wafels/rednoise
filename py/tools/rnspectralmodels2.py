@@ -258,7 +258,6 @@ class Variable:
         # Astropy unit of the variable after conversion
         self.converted_unit = converted_unit
 
-
 #
 # Specific variable types.
 #

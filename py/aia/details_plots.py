@@ -10,12 +10,35 @@ import details_study as ds
 # Units that frequencies will be plotted in
 fz = 'mHz'
 
-# Three minute oscillation
-three_minutes = 180 * u.s
+class LineSelection:
+    def __init__(self, color='k', label="", linestyle="-", linewidth=1,
+                 position=0.0):
+        self.color = color
+        self.label = label
+        self.linestyle = linestyle
+        self.linewidth = linewidth
+        self.position = position
 
-# Five minute oscillation
-five_minutes = 300 * u.s
 
+
+three_minutes = LineSelection(color='k',
+                              label='3 minutes',
+                              linestyle="-",
+                              linewidth=3,
+                              position=180*u.s)
+
+
+five_minutes = LineSelection(color='k',
+                             label='5 minutes',
+                             linestyle="-",
+                             linewidth=3,
+                             position=300*u.s)
+
+meanline = LineSelection(color='r',
+                         linewidth=3)
+
+modeline = LineSelection(color='g',
+                         linewidth=3)
 
 # Histograms have the following type
 hloc = (100,)  # 'scott', 'knuth', 'freedman')
@@ -67,3 +90,12 @@ def get_image_model_location(roots, b, dirs):
         if not(os.path.exists(image)):
             os.makedirs(image)
     return image
+
+#
+# Concatenate a bunch of string elements
+#
+def concat_string(elements):
+    output = elements[0]
+    for element in elements[1:]:
+        output += '.%s' % element
+    return output

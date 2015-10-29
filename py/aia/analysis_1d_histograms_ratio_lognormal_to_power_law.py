@@ -54,15 +54,9 @@ ic_types = da.ic_details.keys()
 # Details of the plotting
 #
 fz = dp.fz
-three_minutes = (1.0 / dp.three_minutes).to(fz).value
-five_minutes = (1.0 / dp.five_minutes).to(fz).value
+three_minutes = dp.three_minutes
+five_minutes = dp.five_minutes
 hloc = dp.hloc
-
-
-# Period limit
-ratio_limit = limits["ratio"]
-
-
 linewidth = 3
 
 #
@@ -132,8 +126,17 @@ for wave in waves:
                     plt.hist(p1, bins=binning)
                     plt.axvline(ss['mean'].value, color='r', label='mean=%f %s' % (ss['mean'].value, fz), linewidth=linewidth)
                     plt.axvline(ss['mode'].value, color='g', label='mode=%f %s' % (ss['mode'].value, fz), linewidth=linewidth)
-                    plt.axvline(five_minutes, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
-                    plt.axvline(three_minutes, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
+                    plt.axvline((1.0/five_minutes.position).to('fz'),
+                                color=five_minutes.color,
+                                label=five_minutes.label,
+                                linestyle=five_minutes.linestyle,
+                                linewidth=five_minutes.linewidth)
+
+                    plt.axvline((1.0/three_minutes.position).to('fz'),
+                                color=three_minutes.color,
+                                label=three_minutes.label,
+                                linestyle=three_minutes.linestyle,
+                                linewidth=three_minutes.linewidth)
                     plt.xlabel(p1_name + ' (%s)' % fz)
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
@@ -192,7 +195,6 @@ for wave in waves:
                     plt.xlabel('$log_{10}\max$(lognormal/power law)')
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
-                    plt.xlim(ratio_limit)
 
                 plt.tight_layout()
                 ofilename = this_model + '.' + plot_identity + '.hist.png'
@@ -229,8 +231,17 @@ for wave in waves:
                     h_info = hist(ratio_max_f, bins=binning)
                     plt.axvline(ss['mean'].value, color='r', label='mean=%f %s' % (ss['mean'].value, fz), linewidth=linewidth)
                     plt.axvline(ss['mode'].value, color='g', label='mode=%f %s' % (ss['mode'].value, fz), linewidth=linewidth)
-                    plt.axvline(five_minutes, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
-                    plt.axvline(three_minutes, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
+                    plt.axvline((1.0/five_minutes.position).to('fz'),
+                                color=five_minutes.color,
+                                label=five_minutes.label,
+                                linestyle=five_minutes.linestyle,
+                                linewidth=five_minutes.linewidth)
+
+                    plt.axvline((1.0/three_minutes.position).to('fz'),
+                                color=three_minutes.color,
+                                label=three_minutes.label,
+                                linestyle=three_minutes.linestyle,
+                                linewidth=three_minutes.linewidth)
                     plt.xlabel('argmax(lognormal / power law) (%s)' % fz)
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
@@ -293,7 +304,6 @@ for wave in waves:
                     plt.xlabel('equivalency frequency')
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
-                    plt.xlim(ratio_limit)
 
                 plt.tight_layout()
                 ofilename = this_model + '.' + plot_identity + '.hist.png'
