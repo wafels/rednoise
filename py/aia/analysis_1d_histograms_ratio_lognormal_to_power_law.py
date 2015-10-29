@@ -97,7 +97,9 @@ for wave in waves:
                 parameters = [v.fit_parameter for v in this.model.variables]
 
                 # Frequencies
-                f = this.f  #
+                f = this.f
+                if not isinstance(f, u.Quantity):
+                    f = f * u.Hz
                 fn = this.fn  # normalized frequencies (no units)
 
                 # Mask
@@ -107,7 +109,7 @@ for wave in waves:
 
                 ##############################################################
                 #
-                # Plot a histogram of the position of the lognorma
+                # Plot a histogram of the position of the lognormal
                 #
                 p1_name = 'lognormal position'
                 p1 = this.as_array(p1_name).to(fz)
@@ -206,7 +208,7 @@ for wave in waves:
                 # Location of the ratio maximum.  This is meant to signify the
                 # frequency where the lognormal is most likely to be detected.
                 #
-                rmf_data = (f[0] * np.ma.getdata(ratio_max_fn)* u.Hz).to(fz).value
+                rmf_data = (f[0] * np.ma.getdata(ratio_max_fn)).to(fz).value
                 rmf_mask = np.ma.getmask(ratio_max_fn)
                 too_small = np.where(rmf_data < limits['frequency']).to(fz).value
                 too_big = np.where(rmf_data > limits['frequency']).to(fz).value
@@ -248,16 +250,54 @@ for wave in waves:
                 # is equal to the estimated constant background.
                 #
                 # Background value
-                p_background = this.as_array(background_name)
+                p_background = this.as_array('constant')
 
                 # Amplitude of the power law
-                p_power_law_amplitude = this.as_array(background_name)
+                p_power_law_amplitude = this.as_array('power law amplitude')
 
                 # Power law index
-                p_power_law_index = this.as_array(background_name)
+                p_power_law_index = this.as_array('power law index')
 
                 # Normalized frequency where equivalency is reached
                 normalized_equivalency_frequency = (p_background / p_power_law_amplitude) ** (-1.0/p_power_law_index)
 
-                # Convert to a Quantity
-                equivalency_frequency = this.f[0] * (normalized_equivalency_frequency * u.Hz).to(fz)
+                # Find the value of the equivalency frequency
+                equivalency_frequency = (f[0] * normalized_equivalency_frequency).to(fz).value
+
+                # Make a mask for these data
+                ef_mask = copy.deepcopy(mask)
+                too_small = np.where(equivalency_frequency < limits['frequency']).to(fz).value
+                too_big = np.where(equivalency_frequency > limits['frequency']).to(fz).value
+                ef_mask[too_small] = True
+                ef_mask[too_big] = True
+
+                equivalency_frequency = np.ma.array(equivalency_frequency * u.Unit(fz),
+                                                    mask=ef_mask).compressed()
+
+                # Summary stats
+                ss = summary_statistics(equivalency_frequency)
+
+                # Identifier of the plot
+                plot_identity = wave + '.' + region + '.equivalency_frequency.' + ic_type + '>%f' % ic_limit
+
+                # Title of the plot
+                title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
+
+                # Plot
+                plt.close('all')
+                plt.figure(1, figsize=(10, 10))
+                for ibinning, binning in enumerate(hloc):
+                    plt.subplot(len(hloc), 1, ibinning+1)
+                    h_info = hist(ratio_max, bins=binning)
+                    plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
+                    plt.axvline(ss['mode'], color='g', label='mode=%f' % ss['mode'], linewidth=linewidth)
+                    plt.axvline(five_minutes, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
+                    plt.axvline(three_minutes, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
+                    plt.xlabel('equivalency frequency')
+                    plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
+                    plt.legend(framealpha=0.5, fontsize=8)
+                    plt.xlim(ratio_limit)
+
+                plt.tight_layout()
+                ofilename = this_model + '.' + plot_identity + '.hist.png'
+                plt.savefig(os.path.join(image, ofilename))
