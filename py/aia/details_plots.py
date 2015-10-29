@@ -1,8 +1,11 @@
 #
 # Some magic numbers and parameters used in plots
 #
+import os
 import numpy as np
 import astropy.units as u
+import details_study as ds
+
 
 # Units that frequencies will be plotted in
 fz = 'mHz'
@@ -56,3 +59,11 @@ def get_mask_info_string(mask):
     n_not_masked = np.sum(np.logical_not(mask))
     return '(#px=%i, used=%3.1f%%)' % (n_not_masked, 100 * n_not_masked/np.float64(mask.size))
 
+
+def get_image_model_location(roots, b, dirs):
+    image = os.path.join(ds.datalocationtools.save_location_calculator(roots, b)["image"])
+    for d in dirs:
+        image = os.path.join(image, d)
+        if not(os.path.exists(image)):
+            os.makedirs(image)
+    return image

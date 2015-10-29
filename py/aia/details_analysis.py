@@ -1,20 +1,23 @@
 #
 # Some magic numbers and parameters used in various analysis programs
 #
-import os
 import numpy as np
 import astropy
 import astropy.units as u
 import lnlike_model_fit
-import study_details as sd
 
 
 # Information criterion limit
-ic_limit = 5.0
+# For the BIC, see https://en.wikipedia.org/wiki/Bayesian_information_criterion
+# and Kass, Robert E.; Raftery, Adrian E. (1995), "Bayes Factors", Journal of
+# the American Statistical Association 90 (430): 773–795, doi:10.2307/2291091,
+# ISSN 0162-1459.
+# Setting the ic_limit to 6.0 for the BIC picks out models that have "strong"
+# evidence in their favour according to the Kass and Raftery 1995 above.
+ic_limit = 6.0
 
 # Information criteria we want to examine
-ic_details = {'AIC': ic_limit,
-              'BIC': ic_limit}
+ic_details = {'BIC': ic_limit}
 
 
 # Where in the main output from step3 is everything
@@ -196,15 +199,6 @@ def get_ic_location(this, this_model, model_names, ic_type=None, ic_limits=None)
     # Return the indices of where to mask (assuming that the mask is to be used
     # in a numpy masked array.
     return np.where(np.logical_not(mask))
-
-
-def get_image_model_location(roots, b, dirs):
-    image = os.path.join(sd.datalocationtools.save_location_calculator(roots, b)["image"])
-    for d in dirs:
-        image = os.path.join(image, d)
-        if not(os.path.exists(image)):
-            os.makedirs(image)
-    return image
 
 sqrt_two_pi = np.sqrt(2 * np.pi)
 def integrate_lognormal_parameters(amplitude, width):

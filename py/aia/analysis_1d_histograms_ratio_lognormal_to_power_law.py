@@ -1,18 +1,14 @@
 #
-# Analysis - examine the lognormal fit.
+# Analysis - examine the details of the Power Law + Constant + Lognormal fit.
 #
 # This program creates the following plots
 #
-# (1)
-# Distributions of the position of the lognormal
-# (2)
-# Distribution of the location of the maximum of the ratio of the lognormal
-# contribution to the background power law
-# (3)
-# Distribution of the maximum of the ratio of the lognormal contribution to the
-# background power law
-# (4)
-# Distributions of the energy flux from each contribution
+# (1) Histograms of the position of the lognormal.
+# (2) Histograms of the maximum of the ratio of the lognormal contribution to
+#      the background power law.
+# (3) Histograms of the frequency at which the maximum above occurs.
+# (4) Histograms of the frequency at which the power law component equals the
+#      the constant background component.
 #
 import os
 import copy
@@ -22,8 +18,7 @@ from astroML.plotting import hist
 import astropy.units as u
 import analysis_get_data
 import analysis_explore
-import study_details as sd
-import summary_statistics, get_mode, get_image_model_location
+import details_study as ds
 import details_analysis as da
 import details_plots as dp
 
@@ -76,13 +71,13 @@ for wave in waves:
     for region in regions:
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+        b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
 
         # Region identifier name
-        region_id = sd.datalocationtools.ident_creator(b)
+        region_id = ds.datalocationtools.ident_creator(b)
 
         # Output location
-        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
         for this_model in model_names:
             for ic_type in ic_types:
@@ -118,7 +113,7 @@ for wave in waves:
                 p1 = np.ma.array(p1, mask=mask).compressed()
 
                 # Summary stats
-                ss = summary_statistics(p1)
+                ss = da.summary_statistics(p1)
 
                 # Identifier of the plot
                 plot_identity = wave + '.' + region + '.%s.' + ic_type + '>%f' % (p1_name, ic_limit)
@@ -127,7 +122,7 @@ for wave in waves:
                 title = plot_identity + dp.get_mask_info_string(mask)
 
                 # location of the image
-                image = get_image_model_location(sd.roots, b, [this_model, ic_type])
+                image = dp.get_image_model_location(ds.roots, b, [this_model, ic_type])
 
                 # Plot the same data using all the bin choices.
                 plt.close('all')
@@ -178,7 +173,7 @@ for wave in waves:
                 ratio_max_fn = np.ma.array(ratio_max_fn, mask=ratio_max_mask).compressed()
 
                 # Summary stats
-                ss = summary_statistics(ratio_max)
+                ss = da.summary_statistics(ratio_max)
 
                 # Identifier of the plot
                 plot_identity = wave + '.' + region + '.max(lognormal/power law).' + ic_type + '>%f' % ic_limit
@@ -218,7 +213,7 @@ for wave in waves:
                 ratio_max_f = np.ma.array(rmf_data * u.Unit(fz), mask=rmf_mask).compressed()
 
                 # Summary stats
-                ss = summary_statistics(ratio_max_f)
+                ss = da.summary_statistics(ratio_max_f)
 
                 # Identifier of the plot
                 plot_identity = wave + '.' + region + '.argmax(lognormal/power law).' + ic_type + '>%f' % ic_limit
@@ -277,7 +272,7 @@ for wave in waves:
                                                     mask=ef_mask).compressed()
 
                 # Summary stats
-                ss = summary_statistics(equivalency_frequency)
+                ss = da.summary_statistics(equivalency_frequency)
 
                 # Identifier of the plot
                 plot_identity = wave + '.' + region + '.equivalency_frequency.' + ic_type + '>%f' % ic_limit
