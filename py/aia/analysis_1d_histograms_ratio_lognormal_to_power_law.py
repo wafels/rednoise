@@ -247,7 +247,9 @@ for wave in waves:
                 ###############################################################
                 #
                 # Find the frequency at which the estimated power law component
-                # is equal to the estimated constant background.
+                # is equal to the estimated constant background.  The constant
+                # component of the power spectrum model dominates at frequencies
+                # above this frequency.
                 #
                 # Background value
                 p_background = this.as_array('constant')
