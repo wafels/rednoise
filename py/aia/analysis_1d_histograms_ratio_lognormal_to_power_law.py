@@ -23,7 +23,9 @@ import astropy.units as u
 import analysis_get_data
 import analysis_explore
 import study_details as sd
-from analysis_details import convert_to_period, summary_statistics, get_mode, limits, get_mask_info, get_ic_location, get_image_model_location
+import summary_statistics, get_mode, get_image_model_location
+import details_analysis as da
+import details_plots as dp
 
 # Wavelengths we want to analyze
 waves = ['211']
@@ -45,23 +47,26 @@ storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=model_comparison_names)
 
-zzz = analysis_explore.MaskDefine(storage)
+masks = analysis_explore.MaskDefine(storage)
 
-fz = 'mHz'
-three_minutes = 180 * u.s
-five_minutes = 300 * u.s
+#
+# Details of the analysis
+#
+limits = da.limits
+ic_types = da.ic_details.keys()
 
+#
+# Details of the plotting
+#
+fz = dp.fz
+three_minutes = (1.0 / dp.three_minutes).to(fz).value
+five_minutes = (1.0 / dp.five_minutes).to(fz).value
+hloc = dp.hloc
 
-# Number of bins
-hloc = (100,)# 'scott', 'knuth', 'freedman')
 
 # Period limit
-period_limit = limits["period"]
 ratio_limit = limits["ratio"]
 
-# IC
-ic_types = ('BIC', 'AIC')
-ic_limit = 5.0
 
 linewidth = 3
 
@@ -81,34 +86,48 @@ for wave in waves:
 
         for this_model in model_names:
             for ic_type in ic_types:
+
+                # Get the IC limit
+                ic_limit = da.ic_details[ic_type]
+
+                # Next data set
                 this = storage[wave][region][this_model]
+
+                # List of parameters
                 parameters = [v.fit_parameter for v in this.model.variables]
-                p1_name = 'lognormal position'
-                p1_index = parameters.index(p1_name)
 
-                p1 = this.as_array(p1_name).to(fz)
+                # Frequencies
+                f = this.f  #
+                fn = this.fn  # normalized frequencies (no units)
 
-                mask1 = zzz.combined_good_fit_parameter_limit[wave][region][this_model]
-                mask2 = zzz.is_this_model_preferred(ic_type, ic_limit, this_model)[wave][region]
+                # Mask
+                mask1 = masks.combined_good_fit_parameter_limit[wave][region][this_model]
+                mask2 = masks.is_this_model_preferred(ic_type, ic_limit, this_model)[wave][region]
                 mask = np.logical_or(mask1, mask2)
 
-                # Masked arrays
+                ##############################################################
+                #
+                # Plot a histogram of the position of the lognorma
+                #
+                p1_name = 'lognormal position'
+                p1 = this.as_array(p1_name).to(fz)
+
+                # Create the masked data
                 p1 = np.ma.array(p1, mask=mask).compressed()
 
                 # Summary stats
                 ss = summary_statistics(p1)
 
                 # Identifier of the plot
-                plot_identity = wave + '.' + region + '.frequency.' + ic_type + '>%f' % ic_limit
+                plot_identity = wave + '.' + region + '.%s.' + ic_type + '>%f' % (p1_name, ic_limit)
 
                 # Title of the plot
-                title = plot_identity + get_mask_info(mask)
+                title = plot_identity + dp.get_mask_info_string(mask)
 
                 # location of the image
                 image = get_image_model_location(sd.roots, b, [this_model, ic_type])
 
-                # For what it is worth, plot the same data using all the bin
-                # choices.
+                # Plot the same data using all the bin choices.
                 plt.close('all')
                 plt.figure(1, figsize=(10, 10))
                 for ibinning, binning in enumerate(hloc):
@@ -116,8 +135,8 @@ for wave in waves:
                     plt.hist(p1, bins=binning)
                     plt.axvline(ss['mean'].value, color='r', label='mean=%f %s' % (ss['mean'].value, fz), linewidth=linewidth)
                     plt.axvline(ss['mode'].value, color='g', label='mode=%f %s' % (ss['mode'].value, fz), linewidth=linewidth)
-                    plt.axvline((1.0/five_minutes).to(fz).value, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
-                    plt.axvline((1.0/three_minutes).to(fz).value, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
+                    plt.axvline(five_minutes, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
+                    plt.axvline(three_minutes, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
                     plt.xlabel(p1_name + ' (%s)' % fz)
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
@@ -126,12 +145,18 @@ for wave in waves:
                 ofilename = this_model + '.' + plot_identity + '.hist.png'
                 plt.savefig(os.path.join(image, ofilename))
 
+                ##############################################################
                 #
-                # Ratio of the peak of the lognormal to the power law
+                # Maximum value of the ratio of the lognormal component to the
+                # power law at the
                 #
-                fn = this.fn
+                # Ratio maximum
                 ratio_max = np.zeros((this.ny, this.nx))
-                ratio_max_f = np.zeros_like(ratio_max)
+
+                # Normalized frequency at which the ratio maximum occurs
+                ratio_max_fn = np.zeros_like(ratio_max)
+
+                # Calculate the ratio maximum and the frequency it occurs at
                 for i in range(0, this.nx):
                     for j in range(0, this.ny):
                         estimate = this.result[j][i][1]['x']
@@ -139,25 +164,25 @@ for wave in waves:
                         lognormal = this.model.power_per_component(estimate, fn)[2]
                         ratio = lognormal/power_law
                         ratio_max[j, i] = np.log10(np.max(ratio))
-                        ratio_max_f[j, i] = this.f[np.argmax(ratio)]
+                        ratio_max_fn[j, i] = fn[np.argmax(ratio)]
 
                 # Make a mask for these data
-                new_mask = copy.deepcopy(mask)
-                too_small = np.where(ratio_max < ratio_limit[0])
-                too_big = np.where(ratio_max > ratio_limit[1])
-                new_mask[too_small] = True
-                new_mask[too_big] = True
-                ratio_max = np.ma.array(ratio_max, mask=new_mask).compressed()
-                ratio_max_f_normalized_frequencies = np.ma.array(ratio_max_f, mask=new_mask)
+                ratio_max_mask = copy.deepcopy(mask)
+                too_small = np.where(ratio_max < limits['ratio'][0])
+                too_big = np.where(ratio_max > limits['ratio'][1])
+                ratio_max_mask[too_small] = True
+                ratio_max_mask[too_big] = True
+                ratio_max = np.ma.array(ratio_max, mask=ratio_max_mask).compressed()
+                ratio_max_fn = np.ma.array(ratio_max_fn, mask=ratio_max_mask).compressed()
 
                 # Summary stats
                 ss = summary_statistics(ratio_max)
 
                 # Identifier of the plot
-                plot_identity = wave + '.' + region + '.ratio(maximum).' + ic_type + '>%f' % ic_limit
+                plot_identity = wave + '.' + region + '.max(lognormal/power law).' + ic_type + '>%f' % ic_limit
 
                 # Title of the plot
-                title = plot_identity + get_mask_info(new_mask)
+                title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
 
                 # Plot
                 plt.close('all')
@@ -165,10 +190,9 @@ for wave in waves:
                 for ibinning, binning in enumerate(hloc):
                     plt.subplot(len(hloc), 1, ibinning+1)
                     h_info = hist(ratio_max, bins=binning)
-                    mode = get_mode(h_info)
                     plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
                     plt.axvline(ss['mode'], color='g', label='mode=%f' % ss['mode'], linewidth=linewidth)
-                    plt.xlabel('$log_{10}\max$(lognormal / power law)')
+                    plt.xlabel('$log_{10}\max$(lognormal/power law)')
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
                     plt.xlim(ratio_limit)
@@ -177,12 +201,15 @@ for wave in waves:
                 ofilename = this_model + '.' + plot_identity + '.hist.png'
                 plt.savefig(os.path.join(image, ofilename))
 
-                # location of the ratio maximum
-                # Convert the normalized frequencies to the actual frequencies
-                rmf_data = (np.ma.getdata(ratio_max_f_normalized_frequencies)* u.Hz).to(fz).value
-                rmf_mask = np.ma.getmask(ratio_max_f_normalized_frequencies)
-                too_small = np.where(rmf_data < 0.0)
-                too_big = np.where(rmf_data > 10.0)
+                ##############################################################
+                #
+                # Location of the ratio maximum.  This is meant to signify the
+                # frequency where the lognormal is most likely to be detected.
+                #
+                rmf_data = (f[0] * np.ma.getdata(ratio_max_fn)* u.Hz).to(fz).value
+                rmf_mask = np.ma.getmask(ratio_max_fn)
+                too_small = np.where(rmf_data < limits['frequency']).to(fz).value
+                too_big = np.where(rmf_data > limits['frequency']).to(fz).value
                 rmf_mask[too_small] = True
                 rmf_mask[too_big] = True
 
@@ -192,10 +219,10 @@ for wave in waves:
                 ss = summary_statistics(ratio_max_f)
 
                 # Identifier of the plot
-                plot_identity = wave + '.' + region + '.argmax(ratio).' + ic_type + '>%f' % ic_limit
+                plot_identity = wave + '.' + region + '.argmax(lognormal/power law).' + ic_type + '>%f' % ic_limit
 
                 # Title of the plot
-                title = plot_identity + get_mask_info(new_mask)
+                title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
 
                 # Plot
                 plt.close('all')
@@ -203,19 +230,34 @@ for wave in waves:
                 for ibinning, binning in enumerate(hloc):
                     plt.subplot(len(hloc), 1, ibinning+1)
                     h_info = hist(ratio_max_f, bins=binning)
-                    mode = get_mode(h_info)
                     plt.axvline(ss['mean'].value, color='r', label='mean=%f %s' % (ss['mean'].value, fz), linewidth=linewidth)
                     plt.axvline(ss['mode'].value, color='g', label='mode=%f %s' % (ss['mode'].value, fz), linewidth=linewidth)
-                    plt.axvline((1.0/five_minutes).to(fz).value, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
-                    plt.axvline((1.0/three_minutes).to(fz).value, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
+                    plt.axvline(five_minutes, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
+                    plt.axvline(three_minutes, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
                     plt.xlabel('argmax(lognormal / power law) (%s)' % fz)
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
-                    plt.xlim(0,10)
 
                 plt.tight_layout()
                 ofilename = this_model + '.' + plot_identity + '.hist.png'
                 plt.savefig(os.path.join(image, ofilename))
 
+                ###############################################################
+                #
                 # Find the frequency at which the estimated power law component
                 # is equal to the estimated constant background.
+                #
+                # Background value
+                p_background = this.as_array(background_name)
+
+                # Amplitude of the power law
+                p_power_law_amplitude = this.as_array(background_name)
+
+                # Power law index
+                p_power_law_index = this.as_array(background_name)
+
+                # Normalized frequency where equivalency is reached
+                normalized_equivalency_frequency = (p_background / p_power_law_amplitude) ** (-1.0/p_power_law_index)
+
+                # Convert to a Quantity
+                equivalency_frequency = this.f[0] * (normalized_equivalency_frequency * u.Hz).to(fz)

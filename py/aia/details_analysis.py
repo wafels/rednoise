@@ -4,43 +4,39 @@
 import os
 import numpy as np
 import astropy
+import astropy.units as u
 import lnlike_model_fit
 import study_details as sd
 
-# Reduced chi-squared
-rchi2s = '$\chi^{2}_{r}$'
-rchi2string = '$<$' + rchi2s + '$<$'
 
-# Reduced chi-squared limit colors
-rchi2limitcolor = ['r', 'y']
+# Information criterion limit
+ic_limit = 5.0
 
-# Look at those results that have chi-squared values that give rise to
-# probabilities within these values
-pvalue = np.array([0.025, 0.975])
+# Information criteria we want to examine
+ic_details = {'AIC': ic_limit,
+              'BIC': ic_limit}
 
-# Other parameter names
-othernames = ['total emission', 'maximum emission', 'minimum emission',
-              'standard deviation of the emission',
-              'standard deviation of log(emission)', 'rchi2']
-
-# Fitting details
-fitdetails = ['rchi2']
 
 # Where in the main output from step3 is everything
 ic = {"AIC": [3], "BIC": [4]}
 rchi2 = [2]
 success = [1, 'success']
 
-# Model fit parameter names
-def parameters(model_names):
-    result = {}
-    if 'power law with constant' in model_names:
-        result['power law with constant'] = "amplitude", "power law index", "background"
 
-    if 'power law with constant and lognormal' in model_names:
-        result['power law with constant and lognormal'] = "amplitude", "power law index", "background", "lognormal amplitude", "lognormal position", "lognormal width"
+#
+# When looking at the data, we want to remove outliers.  The limits below
+# set thresholds on the fit parameters and derived values
+#
+limits = {"power law index": [1., 7.],
+          "ln(constant)": [0., 5.],
+          "ln(power law amplitude)": [3.0, 10.0],
+          "ln(lognormal width)": [0.0, 0.6],
+          "lognormal position": [0.0, 100.0],
+          "ln(lognormal amplitude)": [0.0, 10.0],
+          "period": [24.0, 3000.0],
+          "frequency": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
+          "ratio": [-5.0, 5.0]}
 
-    return result
 
 
 # Number of parameters
@@ -112,37 +108,6 @@ def rchi2limit(pvalue, nposfreq, nparameters):
     return x
 
 
-# Create a label which shows the limits of the reduced chi-squared value. Also
-# define some colors that signify the upper and lower levels of the reduced
-# chi-squared/
-def rchi2label(rchi2limit):
-    return '%1.2f%s%1.2f' % (rchi2limit[0], rchi2string, rchi2limit[1])
-
-#
-# Probability string that defines a percentage output
-#
-def percentstring(pvalue):
-    return '%2.1f%%<p<%2.1f%%' % (100 * pvalue[0], 100 * pvalue[1])
-
-
-def percent_lo(pvalue):
-    return '%s (p$<$%2.1f%%)' % (rchi2s, 100 * pvalue[0])
-
-
-def percent_hi(pvalue):
-    return '%s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1])
-
-
-#
-# Create a mask that shows where there was a successful fit, and the reduced
-# chi-squared is inside the required limits.  True equals a value we want to
-# keep, false equals a value we don't want.
-#
-def result_filter(success, rchi2, rchilimit):
-    rchi2_gt_low_limit = rchi2 > rchilimit[0]
-    rchi2_lt_high_limit = rchi2 < rchilimit[1]
-    return success * rchi2_gt_low_limit * rchi2_lt_high_limit
-
 
 def summary_statistics(a, bins=100):
     hist, bin_edges = np.histogram(a, bins)
@@ -183,19 +148,6 @@ def get_mode(h_info):
     i = np.argmax(h_info[0])
     bin_edges = h_info[1][i: i+2]
     return h_info[0][i], bin_edges
-
-#
-# When looking at the data, we want to remove outliers.  The limits below
-# set thresholds on the data values
-#
-limits = {"power law index": [1., 7.],
-          "ln(constant)": [0., 5.],
-          "ln(power law amplitude)": [3.0, 10.0],
-          "ln(lognormal width)": [0.0, 0.6],
-          "lognormal position": [0.0, 100.0],
-          "ln(lognormal amplitude)": [0.0, 10.0],
-          "period": [24.0, 3000.0],
-          "ratio": [-5.0, 5.0]}
 
 
 #
