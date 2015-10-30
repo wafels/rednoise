@@ -3,17 +3,17 @@
 # and spatial distributions
 #
 import numpy as np
-from analysis_details import limits
 
 
 class MaskDefine:
-    def __init__(self, storage):
+    def __init__(self, storage, limits):
         """
         Defines masks for a given storage array.
 
         :param storage:
         :return:
         """
+        #
 
         # Waves
         self.waves = storage.keys()
@@ -104,8 +104,8 @@ class MaskDefine:
 
                         # Mask out where the limits are exceeded for this
                         # parameter and store it
-                        p_mask[np.where(p < limits[parameter][0])] = True
-                        p_mask[np.where(p > limits[parameter][1])] = True
+                        p_mask[np.where(p < limits[parameter][0].value)] = True
+                        p_mask[np.where(p > limits[parameter][1].value)] = True
                         self.parameter_limit_masks[wave][region][model][parameter] = p_mask
 
                         # This mask determines which positions have all their

@@ -19,11 +19,9 @@ class LineSelection:
         self.linewidth = linewidth
         self.position = position
 
-
-
 three_minutes = LineSelection(color='k',
                               label='3 minutes',
-                              linestyle="-",
+                              linestyle=":",
                               linewidth=3,
                               position=180*u.s)
 
@@ -34,14 +32,20 @@ five_minutes = LineSelection(color='k',
                              linewidth=3,
                              position=300*u.s)
 
+
 meanline = LineSelection(color='r',
                          linewidth=3)
+
 
 modeline = LineSelection(color='g',
                          linewidth=3)
 
 # Histograms have the following type
 hloc = (100,)  # 'scott', 'knuth', 'freedman')
+
+
+# Parameters which are frequencies
+frequency_parameters = ['lognormal position']
 
 #
 # Useful strings for plots

@@ -42,7 +42,7 @@ storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=model_comparison_names)
 
-masks = analysis_explore.MaskDefine(storage)
+masks = analysis_explore.MaskDefine(storage, da.limits)
 
 #
 # Details of the analysis
@@ -110,7 +110,8 @@ for wave in waves:
                 ss = da.summary_statistics(p1)
 
                 # Identifier of the plot
-                plot_identity = wave + '.' + region + '.%s.' + ic_type + '>%f' % (p1_name, ic_limit)
+                plot_identity = dp.concat_string([wave, region, p1_name,
+                                                 '%s>%f' % (ic_type, ic_limit)])
 
                 # Title of the plot
                 title = plot_identity + dp.get_mask_info_string(mask)
@@ -126,13 +127,13 @@ for wave in waves:
                     plt.hist(p1, bins=binning)
                     plt.axvline(ss['mean'].value, color='r', label='mean=%f %s' % (ss['mean'].value, fz), linewidth=linewidth)
                     plt.axvline(ss['mode'].value, color='g', label='mode=%f %s' % (ss['mode'].value, fz), linewidth=linewidth)
-                    plt.axvline((1.0/five_minutes.position).to('fz'),
+                    plt.axvline((1.0/five_minutes.position).to(fz).value,
                                 color=five_minutes.color,
                                 label=five_minutes.label,
                                 linestyle=five_minutes.linestyle,
                                 linewidth=five_minutes.linewidth)
 
-                    plt.axvline((1.0/three_minutes.position).to('fz'),
+                    plt.axvline((1.0/three_minutes.position).to(fz).value,
                                 color=three_minutes.color,
                                 label=three_minutes.label,
                                 linestyle=three_minutes.linestyle,
@@ -173,13 +174,14 @@ for wave in waves:
                 ratio_max_mask[too_small] = True
                 ratio_max_mask[too_big] = True
                 ratio_max = np.ma.array(ratio_max, mask=ratio_max_mask).compressed()
-                ratio_max_fn = np.ma.array(ratio_max_fn, mask=ratio_max_mask).compressed()
+                ratio_max_fn = np.ma.array(ratio_max_fn, mask=ratio_max_mask)
 
                 # Summary stats
                 ss = da.summary_statistics(ratio_max)
 
                 # Identifier of the plot
-                plot_identity = wave + '.' + region + '.max(lognormal/power law).' + ic_type + '>%f' % ic_limit
+                plot_identity = dp.concat_string([wave, region, 'max(ratio(lognormal, power law))',
+                                                 '%s>%f' % (ic_type, ic_limit)])
 
                 # Title of the plot
                 title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
@@ -207,8 +209,8 @@ for wave in waves:
                 #
                 rmf_data = (f[0] * np.ma.getdata(ratio_max_fn)).to(fz).value
                 rmf_mask = np.ma.getmask(ratio_max_fn)
-                too_small = np.where(rmf_data < limits['frequency']).to(fz).value
-                too_big = np.where(rmf_data > limits['frequency']).to(fz).value
+                too_small = np.where(rmf_data < limits['frequency'][0].to(fz).value)
+                too_big = np.where(rmf_data > limits['frequency'][1].to(fz).value)
                 rmf_mask[too_small] = True
                 rmf_mask[too_big] = True
 
@@ -218,7 +220,7 @@ for wave in waves:
                 ss = da.summary_statistics(ratio_max_f)
 
                 # Identifier of the plot
-                plot_identity = wave + '.' + region + '.argmax(lognormal/power law).' + ic_type + '>%f' % ic_limit
+                plot_identity = wave + '.' + region + '.argmax(ratio(lognormal, power law)).' + ic_type + '>%f' % ic_limit
 
                 # Title of the plot
                 title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
@@ -231,13 +233,13 @@ for wave in waves:
                     h_info = hist(ratio_max_f, bins=binning)
                     plt.axvline(ss['mean'].value, color='r', label='mean=%f %s' % (ss['mean'].value, fz), linewidth=linewidth)
                     plt.axvline(ss['mode'].value, color='g', label='mode=%f %s' % (ss['mode'].value, fz), linewidth=linewidth)
-                    plt.axvline((1.0/five_minutes.position).to('fz'),
+                    plt.axvline((1.0/five_minutes.position).to(fz).value,
                                 color=five_minutes.color,
                                 label=five_minutes.label,
                                 linestyle=five_minutes.linestyle,
                                 linewidth=five_minutes.linewidth)
 
-                    plt.axvline((1.0/three_minutes.position).to('fz'),
+                    plt.axvline((1.0/three_minutes.position).to(fz).value,
                                 color=three_minutes.color,
                                 label=three_minutes.label,
                                 linestyle=three_minutes.linestyle,
@@ -258,13 +260,13 @@ for wave in waves:
                 # above this frequency.
                 #
                 # Background value
-                p_background = this.as_array('constant')
+                p_background = 10.0 ** this.as_array('ln(constant)').value
 
                 # Amplitude of the power law
-                p_power_law_amplitude = this.as_array('power law amplitude')
+                p_power_law_amplitude = 10.00 ** this.as_array('ln(power law amplitude)').value
 
                 # Power law index
-                p_power_law_index = this.as_array('power law index')
+                p_power_law_index = this.as_array('power law index').value
 
                 # Normalized frequency where equivalency is reached
                 normalized_equivalency_frequency = (p_background / p_power_law_amplitude) ** (-1.0/p_power_law_index)
@@ -274,8 +276,8 @@ for wave in waves:
 
                 # Make a mask for these data
                 ef_mask = copy.deepcopy(mask)
-                too_small = np.where(equivalency_frequency < limits['frequency']).to(fz).value
-                too_big = np.where(equivalency_frequency > limits['frequency']).to(fz).value
+                too_small = np.where(equivalency_frequency < limits['frequency'][0].to(fz).value)
+                too_big = np.where(equivalency_frequency > limits['frequency'][1].to(fz).value)
                 ef_mask[too_small] = True
                 ef_mask[too_big] = True
 
@@ -296,12 +298,21 @@ for wave in waves:
                 plt.figure(1, figsize=(10, 10))
                 for ibinning, binning in enumerate(hloc):
                     plt.subplot(len(hloc), 1, ibinning+1)
-                    h_info = hist(ratio_max, bins=binning)
-                    plt.axvline(ss['mean'], color='r', label='mean=%f' % ss['mean'], linewidth=linewidth)
-                    plt.axvline(ss['mode'], color='g', label='mode=%f' % ss['mode'], linewidth=linewidth)
-                    plt.axvline(five_minutes, color='k', label='5 minutes', linestyle="-", linewidth=linewidth)
-                    plt.axvline(three_minutes, color='k', label='3 minutes', linestyle=":", linewidth=linewidth)
-                    plt.xlabel('equivalency frequency')
+                    h_info = hist(equivalency_frequency, bins=binning)
+                    plt.axvline(ss['mean'].value, color='r', label='mean=%f' % ss['mean'].value, linewidth=linewidth)
+                    plt.axvline(ss['mode'].value, color='g', label='mode=%f' % ss['mode'].value, linewidth=linewidth)
+                    plt.axvline((1.0/five_minutes.position).to(fz).value,
+                                color=five_minutes.color,
+                                label=five_minutes.label,
+                                linestyle=five_minutes.linestyle,
+                                linewidth=five_minutes.linewidth)
+
+                    plt.axvline((1.0/three_minutes.position).to(fz).value,
+                                color=three_minutes.color,
+                                label=three_minutes.label,
+                                linestyle=three_minutes.linestyle,
+                                linewidth=three_minutes.linewidth)
+                    plt.xlabel('equivalency frequency (%s)' % fz)
                     plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                     plt.legend(framealpha=0.5, fontsize=8)
 

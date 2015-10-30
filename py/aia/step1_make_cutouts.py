@@ -14,14 +14,14 @@ import numpy as np
 from matplotlib.patches import Rectangle
 import astropy.units as u
 
-import study_details as sd
+import details_study as ds
 import step1_plots
 
 
 # Load in the derotated data into a datacube
-directory = sd.save_locations['pickle']
-filename = sd.ident + '.full_mapcube.pkl'
-print('Acquiring mapcube from ' + sd.save_locations['pickle'])
+directory = ds.save_locations['pickle']
+filename = ds.ident + '.full_mapcube.pkl'
+print('Acquiring mapcube from ' + ds.save_locations['pickle'])
 print('Filename = ' + filename)
 outputfile = open(os.path.join(directory, filename), 'rb')
 mc = pickle.load(outputfile)
@@ -70,14 +70,14 @@ def calculate_region_information(regions):
         # Small changes in the plate scale in each AIA channel can mean that
         # the height and widths of each region depend on the data. To mitigate
         # against this we fix the size of the plate scale.
-        fixed_aia_scale = sd.fixed_aia_scale#{'x': 0.6, 'y': 0.6}
+        fixed_aia_scale = ds.fixed_aia_scale#{'x': 0.6, 'y': 0.6}
         R['width_pixel'] = np.floor(R['width'] / fixed_aia_scale['x']).value
         R['height_pixel'] = np.floor(R['height'] / fixed_aia_scale['y']).value
     return regions
 #
 # Create some time-series for further analysis
 #
-if sd.sunlocation == 'disk':
+if ds.sunlocation == 'disk':
     #
     # Define the number of regions and their extents.  Use Helio-projective
     # co-ordinates.  These co-ordinates should be chosen in reference to the
@@ -87,12 +87,12 @@ if sd.sunlocation == 'disk':
     #
     # Smaller cutouts, good for testing
     #
-
+    """
     regions = {"sunspot": {"llx": -335.0*u.arcsec, "lly": 0*u.arcsec, "width": 40*u.arcsec, "height": 32*u.arcsec},
                "loop footpoints": {"llx": -492*u.arcsec, "lly": 0*u.arcsec, "width": 23*u.arcsec, "height": 22*u.arcsec},
                "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
                "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
-
+    """
     """
     #
     # Regions are difficult to recreate since the code has changed substantially.
@@ -105,9 +105,17 @@ if sd.sunlocation == 'disk':
     #
     # Most of field of view, good for large scale studies (Paper 2)
     #
-    """
-    regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
-    """
+
+    #regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
+    #                           "width": 340*u.arcsec, "height": 200*u.arcsec}}
+
+    regions = {"most_of_fov": {"llx": -460.0*u.arcsec, "lly": -70*u.arcsec,
+                               "width": 340*u.arcsec, "height": 150*u.arcsec}}
+
+    regions = {"most_of_fov": {"llx": -470.0*u.arcsec, "lly": -75*u.arcsec,
+                               "width": 360*u.arcsec, "height": 180*u.arcsec}}
+
+
 
     regions = calculate_region_information(regions)
     #region_most_of_fov = calculate_region_information(region_most_of_fov)
@@ -130,13 +138,13 @@ if sd.sunlocation == 'disk':
         region_submap = mc_layer.submap(range_y * u.pix, range_x * u.pix)
 
         # Region identifier name
-        region_id = sd.ident + '_' + region
+        region_id = ds.ident + '_' + region
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, sd.wave, region]
+        b = [ds.corename, ds.sunlocation, ds.fits_level, ds.wave, region]
 
         # Output location
-        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube.pkl')
@@ -175,7 +183,7 @@ if sd.sunlocation == 'disk':
 #
 # Plot where the regions are
 #
-filepath = os.path.join(sd.save_locations['image'], sd.ident + '.regions')
+filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions')
 for region in regions.keys():
     filepath = filepath + '.' + region
 filepath = filepath + '.nanoflare.png'
@@ -186,7 +194,7 @@ step1_plots.plot_regions(mc_layer, regions, filepath)
 #
 # HSR 2015 oscillations nanoflares
 #
-filepath = os.path.join(sd.save_locations['image'], sd.ident + '.regions')
+filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions')
 for region in regions.keys():
     filepath = filepath + '.nanoflares.' + region
 filepath = filepath + '.png'

@@ -12,21 +12,20 @@ import details_plots as dp
 import analysis_explore
 
 # Wavelengths we want to analyze
-waves = ['171']#, '193']
+waves = ['211']#, '193']
 
 # Regions we are interested in
-regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-regions = ['most_of_fov']
+regions = ['sunspot', 'quiet Sun']
+#regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
 # Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves)
+storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
 
 # Define the masks
-mdefine = analysis_explore.MaskDefine(storage)
+mdefine = analysis_explore.MaskDefine(storage, limits)
 available_models = mdefine.available_models
-
 
 #
 # Details of the analysis
@@ -65,17 +64,20 @@ for wave in waves:
             # Get the parameters
             parameters = [v.fit_parameter for v in this.model.variables]
 
+            # Get the labels
+            labels = [v.converted_label for v in this.model.variables]
+
             for p1_name in parameters:
                 p1 = this.as_array(p1_name)
-                p1_index = this.model.parameters.index(p1_name)
-                label1 = this.model.labels[p1_index]
+                p1_index = parameters.index(p1_name)
+                label1 = labels[p1_index] + ' (%s)' % display_unit[p1_name]
                 for ic_type in ic_types:
 
                     # Get the IC limit
                     ic_limit = da.ic_details[ic_type]
 
                     # Find out if this model is preferred
-                    mask2 = mdefine.is_this_model_preferred(ic_type, ic_limit, this_model)
+                    mask2 = mdefine.is_this_model_preferred(ic_type, ic_limit, this_model)[wave][region]
 
                     # Final mask combines where the parameters are all nice,
                     # where a good fit was achieved, and where the IC limit
@@ -90,11 +92,15 @@ for wave in waves:
 
                     # Define the mean and mode lines
                     if p1_name in dp.frequency_parameters:
-                        mean = dp.meanline(label='mean=%f' % ss['mean'])
-                        mode = dp.modeline(label='mode=%f' % ss['mode'])
+                        mean = dp.meanline
+                        mean.label = 'mean=%f' % ss['mean'].value
+                        mode = dp.modeline
+                        mode.label = 'mode=%f' % ss['mode'].value
                     else:
-                        mean = dp.meanline(label='mean=%f' % ss['mean'])
-                        mode = dp.modeline(label='mode=%f' % ss['mode'])
+                        mean = dp.meanline
+                        mean.label = 'mean=%f' % ss['mean'].value
+                        mode = dp.modeline
+                        mode.label = 'mode=%f' % ss['mode'].value
 
                     # Identifier of the plot
                     plot_identity = dp.concat_string([wave,
@@ -116,22 +122,22 @@ for wave in waves:
                     for ibinning, binning in enumerate(hloc):
                         plt.subplot(len(hloc), 1, ibinning+1)
                         h_info = hist(pm1, bins=binning)
-                        plt.axvline(ss['mean'],
+                        plt.axvline(ss['mean'].value,
                                     color=mean.color,
                                     label=mean.label,
                                     linewidth=mean.linewidth)
-                        plt.axvline(ss['mode'],
+                        plt.axvline(ss['mode'].value,
                                     color=mode.color,
-                                    label=mode.color,
+                                    label=mode.label,
                                     linewidth=mode.linewidth)
                         if p1_name in dp.frequency_parameters:
-                            plt.axvline((1.0/five_minutes.position).to('fz'),
+                            plt.axvline((1.0/five_minutes.position).to(fz).value,
                                         color=five_minutes.color,
                                         label=five_minutes.label,
                                         linestyle=five_minutes.linestyle,
                                         linewidth=five_minutes.linewidth)
 
-                            plt.axvline((1.0/three_minutes.position).to('fz'),
+                            plt.axvline((1.0/three_minutes.position).to(fz).value,
                                         color=three_minutes.color,
                                         label=three_minutes.label,
                                         linestyle=three_minutes.linestyle,
@@ -140,7 +146,7 @@ for wave in waves:
                         plt.xlabel(label1)
                         plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
                         plt.legend(framealpha=0.5, fontsize=8)
-                        plt.xlim(limits[p1_name])
+                        plt.xlim(limits[p1_name].value)
 
                     plt.tight_layout()
                     ofilename = this_model + '.' + plot_identity + '.hist.png'

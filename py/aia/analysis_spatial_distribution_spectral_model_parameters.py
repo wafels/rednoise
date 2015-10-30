@@ -15,7 +15,7 @@ import sunpy.map
 
 
 import analysis_get_data
-import study_details as sd
+import details_study as ds
 from analysis_details import summary_statistics, get_mode, limits, get_mask_info, rchi2limitcolor, get_ic_location, get_image_model_location
 
 # Wavelengths we want to analyze
@@ -77,14 +77,14 @@ for wave in waves:
     for region in regions:
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+        b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
 
         # Region identifier name
-        region_id = sd.datalocationtools.ident_creator(b)
+        region_id = ds.datalocationtools.ident_creator(b)
 
         # Output location
-        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
+        image = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
 
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
@@ -103,7 +103,7 @@ for wave in waves:
 
                 # Different information criteria
                 for ic_type in ic_limit.keys():
-                    image = get_image_model_location(sd.roots, b, [model_name, ic_type])
+                    image = get_image_model_location(ds.roots, b, [model_name, ic_type])
 
                     # Where are the good fits
                     mask = this.good_fits()
@@ -307,14 +307,14 @@ for region in regions:
                 mask1 = np.ma.getmask(map_data1)
 
                 # branch location
-                b = [sd.corename, sd.sunlocation, sd.fits_level, wave1, region]
+                b = [ds.corename, ds.sunlocation, ds.fits_level, wave1, region]
 
                 # Region identifier name
-                region_id = sd.datalocationtools.ident_creator(b)
+                region_id = ds.datalocationtools.ident_creator(b)
 
                 # Output location
-                output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-                image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+                output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
+                image = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
 
                 # Output filename
                 ofilename = os.path.join(output, region_id + '.datacube')

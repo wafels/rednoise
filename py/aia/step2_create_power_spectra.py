@@ -38,7 +38,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['211']
+waves = ['211', '131', '171', '193']
 
 # Regions we are interested in
 regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']

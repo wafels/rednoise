@@ -10,8 +10,6 @@ import lnlike_model_fit
 # Information criterion limit
 # For the BIC, see https://en.wikipedia.org/wiki/Bayesian_information_criterion
 # and Kass, Robert E.; Raftery, Adrian E. (1995), "Bayes Factors", Journal of
-# the American Statistical Association 90 (430): 773–795, doi:10.2307/2291091,
-# ISSN 0162-1459.
 # Setting the ic_limit to 6.0 for the BIC picks out models that have "strong"
 # evidence in their favour according to the Kass and Raftery 1995 above.
 ic_limit = 6.0
@@ -30,15 +28,16 @@ success = [1, 'success']
 # When looking at the data, we want to remove outliers.  The limits below
 # set thresholds on the fit parameters and derived values
 #
-limits = {"power law index": [1., 7.],
-          "ln(constant)": [0., 5.],
-          "ln(power law amplitude)": [3.0, 10.0],
-          "ln(lognormal width)": [0.0, 0.6],
-          "lognormal position": [0.0, 100.0],
-          "ln(lognormal amplitude)": [0.0, 10.0],
-          "period": [24.0, 3000.0],
+
+limits = {"power law index": [1., 7.] * u.dimensionless_unscaled,
+          "ln(constant)": [0., 5.] * u.dimensionless_unscaled,
+          "ln(power law amplitude)": [3.0, 10.0] * u.dimensionless_unscaled,
+          "ln(lognormal width)": [0.0, 0.6] * u.dimensionless_unscaled,
+          "lognormal position": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
+          "ln(lognormal amplitude)": [0.0, 10.0] * u.dimensionless_unscaled,
+          "period": [24.0, 3000.0] * u.s,
           "frequency": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
-          "ratio": [-5.0, 5.0]}
+          "ratio": [-5.0, 5.0] * u.dimensionless_unscaled}
 
 
 

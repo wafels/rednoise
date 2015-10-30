@@ -45,10 +45,10 @@ if study_type == 'paper2':
     corename = 'request4'
     sunlocation = 'disk'
     fits_level = '1.5'
-    #wave = '171'
+    wave = '211'
     #wave = '193'
     #wave = '131'
-    wave = '211'
+    #wave = '211'
     cross_correlate = True
     derotate = True
 

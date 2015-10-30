@@ -28,7 +28,7 @@ regions = ['most_of_fov']
 # Apodization windows
 windows = ['hanning']
 
-# Model results to examin
+# Model results to examine
 model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
 one_model_name = ('Power law + Constant + Lognormal',)
 
