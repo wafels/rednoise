@@ -113,7 +113,7 @@ if ds.sunlocation == 'disk':
                                "width": 340*u.arcsec, "height": 150*u.arcsec}}
 
     regions = {"most_of_fov": {"llx": -470.0*u.arcsec, "lly": -75*u.arcsec,
-                               "width": 360*u.arcsec, "height": 180*u.arcsec}}
+                               "width": 310*u.arcsec, "height": 180*u.arcsec}}
 
 
 
