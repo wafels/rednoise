@@ -26,22 +26,22 @@ from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift, _default_fmap_function
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 import step0_plots
-import study_details as sd
+import details_study as ds
 
 # Use base cross-correlation channel?
-use_base_cross_correlation_channel = sd.use_base_cross_correlation_channel
+use_base_cross_correlation_channel = ds.use_base_cross_correlation_channel
 
 # Create the AIA source data location
-aia_data_location = sd.aia_data_location["aiadata"]
+aia_data_location = ds.aia_data_location["aiadata"]
 
 # Extend the name if cross correlation is requested
-extension = sd.aia_data_location
+extension = ds.aia_data_location
 
 # Locations of the output datatypes
-save_locations = sd.save_locations
+save_locations = ds.save_locations
 
 # Identity of the data
-ident = sd.ident
+ident = ds.ident
 
 # Load in the derotated data into a datacube
 print('Acquiring data from ' + aia_data_location)
@@ -79,7 +79,7 @@ filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png
 #
 # Apply solar derotation
 #
-if sd.derotate:
+if ds.derotate:
     print("\nPerforming de-rotation")
 
     # Calculate the solar rotation of the mapcube
@@ -104,14 +104,14 @@ else:
 #
 # Coalign images by cross correlation
 #
-if sd.cross_correlate:
+if ds.cross_correlate:
     if use_base_cross_correlation_channel:
-        ccbranches = [sd.corename, sd.sunlocation, sd.fits_level, sd.base_cross_correlation_channel]
-        ccsave_locations = sd.datalocationtools.save_location_calculator(sd.roots, ccbranches)
-        ccident = sd.datalocationtools.ident_creator(ccbranches)
+        ccbranches = [ds.corename, ds.sunlocation, ds.fits_level, ds.base_cross_correlation_channel]
+        ccsave_locations = ds.datalocationtools.save_location_calculator(ds.roots, ccbranches)
+        ccident = ds.datalocationtools.ident_creator(ccbranches)
         ccfilepath = os.path.join(ccsave_locations['pickle'], ccident + '.cross_correlation.pkl')
 
-        if sd.wave == sd.base_cross_correlation_channel:
+        if ds.wave == ds.base_cross_correlation_channel:
             print("\nPerforming cross_correlation and image shifting")
             cc_shifts = calculate_match_template_shift(mc, layer_index=layer_index)
             print("Saving cross correlation shifts to %s" % filepath)
@@ -137,7 +137,7 @@ if sd.cross_correlate:
         # data, i.e. flares.  This may be throwing the fits off.  Perhaps
         # better to apply something like a log?
         #
-        if sd.wave == '131':
+        if ds.wave == '131':
             cc_func = np.sqrt
         else:
             cc_func = _default_fmap_function

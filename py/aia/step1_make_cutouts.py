@@ -77,7 +77,7 @@ def calculate_region_information(regions):
 #
 # Create some time-series for further analysis
 #
-if ds.sunlocation == 'disk':
+if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
     #
     # Define the number of regions and their extents.  Use Helio-projective
     # co-ordinates.  These co-ordinates should be chosen in reference to the
@@ -112,8 +112,8 @@ if ds.sunlocation == 'disk':
     regions = {"most_of_fov": {"llx": -460.0*u.arcsec, "lly": -70*u.arcsec,
                                "width": 340*u.arcsec, "height": 150*u.arcsec}}
 
-    regions = {"most_of_fov": {"llx": -470.0*u.arcsec, "lly": -75*u.arcsec,
-                               "width": 310*u.arcsec, "height": 180*u.arcsec}}
+    regions = {"four_wavebands": {"llx": -470.0*u.arcsec, "lly": -75*u.arcsec,
+                                  "width": 310*u.arcsec, "height": 180*u.arcsec}}
 
 
 

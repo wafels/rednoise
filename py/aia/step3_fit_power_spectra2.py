@@ -9,11 +9,12 @@ import study_details as sd
 import rnspectralmodels2
 
 # Wavelengths we want to analyze
-waves = ['211']
+waves = ['131', '171', '193', '211']
 
 # Regions we are interested in
-regions = ['sunspot', 'quiet Sun']
+#regions = ['sunspot', 'quiet Sun']
 #regions = ['most_of_fov']
+regions = ['four_wavebands']
 
 # Apodization windows
 windows = ['hanning']
