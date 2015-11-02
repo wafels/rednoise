@@ -11,7 +11,7 @@ import analysis_get_data
 import analysis_explore
 import details_study as ds
 import details_plots as dp
-import details_analysis as da rchi2limitcolor, limits, get_mask_info, get_ic_location, get_image_model_location
+import details_analysis as da
 
 # Wavelengths we want to cross correlate
 waves = ['171', '193']
@@ -116,6 +116,9 @@ for ic_type in ic_types:
                         # First parameter, data
                         p1 = this1.as_array(p1_name)
 
+                        # First parameter limits
+                        p1_limits = limits[p1_name]
+
                         # Second parameter
                         for j in range(0, npar):
                             # Second parameter name
@@ -127,9 +130,18 @@ for ic_type in ic_types:
                             # Second parameter, data
                             p2 = this1.as_array(p2_name)
 
-                            # Final mask for cross-correlation
+                            # Second parameter limits
+                            p2_limits = limits[p2_name]
+
+                            # Final mask for cross-correlation is the
+                            # combination of the first and second parameter
+                            # masks
                             final_mask = np.logical_or(mask_p1, mask_p2)
-                            title = dp.concat_string([region,
+
+                            # Create the subtitle - region, information on how
+                            # much of the field of view is not masked, and the
+                            # information criterion and limit used.
+                            subtitle = dp.concat_string([region,
                                                       dp.get_mask_info_string(final_mask),
                                                       '%s\n%s' % (ic_type, this_model)])
 
@@ -143,24 +155,25 @@ for ic_type in ic_types:
                             # Form the rank correlation string
                             rstring = 'spr=%1.2f_pea=%1.2f' % (r[0][0], r[1][0])
 
-                            # Identifier of the plot
-                            plot_identity = dp.concat_string([rstring,
-                                                              region,
-                                                              wave1,
-                                                              p1_name,
-                                                              wave2,
-                                                              p2_name,
-                                                              ic_type])
+                            # Plot identity as a file name
+                            plot_identity_filename = dp.concat_string([rstring,
+                                                                      region,
+                                                                      wave1,
+                                                                      p1_name,
+                                                                      wave2,
+                                                                      p2_name,
+                                                                      ic_type])
 
                             # Make a scatter plot
-                            title = '%s vs. %s \n %s' % (xlabel, ylabel, title)
+                            # Make the plot title
+                            title = '%s vs. %s \n %s' % (xlabel, ylabel, subtitle)
                             plt.close('all')
                             plt.title(title)
                             plt.xlabel(xlabel)
                             plt.ylabel(ylabel)
                             plt.scatter(p1, p2)
-                            plt.xlim(limits[p1_name])
-                            plt.ylim(limits[p2_name])
+                            plt.xlim(p1_limits)
+                            plt.ylim(p2_limits)
                             x0 = plt.xlim()[0]
                             ylim = plt.ylim()
                             y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
@@ -168,14 +181,17 @@ for ic_type in ic_types:
                             plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.5))
                             plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.5))
                             if p1_name == p2_name:
-                                plt.plot([limits[p1_name][0], limits[p1_name][1]],
-                                         [limits[p1_name][0], limits[p1_name][1]],
+                                plt.plot([p1_limits[0], p1_limits[1]],
+                                         [p1_limits[0], p1_limits[1]],
                                          color='r', linewidth=3,
                                          label='%s=%s' % (xlabel, ylabel))
-                            ofilename = this_model + '.' + plot_type + '.' + plot_identity + '.scatter.png'
+                            final_filename = dp.concat_string([this_model,
+                                                              plot_type,
+                                                              plot_identity_filename,
+                                                              'scatter.png'])
                             plt.legend(framealpha=0.5)
                             plt.tight_layout()
-                            plt.savefig(os.path.join(image, ofilename))
+                            plt.savefig(os.path.join(image, final_filename))
 
                             # Make a 2d histogram
                             plt.close('all')
@@ -183,6 +199,8 @@ for ic_type in ic_types:
                             plt.xlabel(xlabel)
                             plt.ylabel(ylabel)
                             plt.hist2d(p1, p2, bins=bins)
+                            plt.xlim(p1_limits)
+                            plt.ylim(p2_limits)
                             x0 = plt.xlim()[0]
                             ylim = plt.ylim()
                             y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
@@ -190,11 +208,14 @@ for ic_type in ic_types:
                             plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.5))
                             plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.5))
                             if p1_name == p2_name:
-                                plt.plot([limits[p1_name][0], limits[p1_name][1]],
-                                         [limits[p1_name][0], limits[p1_name][1]],
+                                plt.plot([p1_limits[0], p1_limits[1]],
+                                         [p1_limits[0], p1_limits[1]],
                                          color='r', linewidth=3,
                                          label="%s=%s" % (xlabel, ylabel))
-                            ofilename = this_model + '.' + plot_type + '.' + plot_identity + '.hist2d.png'
+                            final_filename = dp.concat_string([this_model,
+                                                              plot_type,
+                                                              plot_identity_filename,
+                                                              'hist2d.png'])
                             plt.legend(framealpha=0.5)
                             plt.tight_layout()
-                            plt.savefig(os.path.join(image, ofilename))
+                            plt.savefig(os.path.join(image, final_filename))
