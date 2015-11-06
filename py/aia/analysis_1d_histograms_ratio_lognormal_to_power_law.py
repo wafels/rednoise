@@ -23,11 +23,13 @@ import details_analysis as da
 import details_plots as dp
 
 # Wavelengths we want to analyze
-waves = ['211']
+waves = ['131', '171', '193', '211']
 
 # Regions we are interested in
 regions = ['sunspot', 'quiet Sun']
 #regions = ['most_of_fov']
+regions = ['four_wavebands']
+
 # Apodization windows
 windows = ['hanning']
 
@@ -184,7 +186,7 @@ for wave in waves:
                                                  '%s>%f' % (ic_type, ic_limit)])
 
                 # Title of the plot
-                title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
+                title = '%s\n%s' % (plot_identity, dp.get_mask_info_string(ratio_max_mask))
 
                 # Plot
                 plt.close('all')
@@ -223,7 +225,7 @@ for wave in waves:
                 plot_identity = wave + '.' + region + '.argmax(ratio(lognormal, power law)).' + ic_type + '>%f' % ic_limit
 
                 # Title of the plot
-                title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
+                title = '%s\n%s' % (plot_identity, dp.get_mask_info_string(ratio_max_mask))
 
                 # Plot
                 plt.close('all')
@@ -291,7 +293,7 @@ for wave in waves:
                 plot_identity = wave + '.' + region + '.equivalency_frequency.' + ic_type + '>%f' % ic_limit
 
                 # Title of the plot
-                title = plot_identity + dp.get_mask_info_string(ratio_max_mask)
+                title = '%s\n%s' % (plot_identity, dp.get_mask_info_string(ratio_max_mask))
 
                 # Plot
                 plt.close('all')

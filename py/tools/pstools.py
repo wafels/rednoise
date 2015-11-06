@@ -3,7 +3,7 @@
 #
 import numpy as np
 import rnspectralmodels
-import study_details
+import details_study as ds
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
@@ -49,10 +49,10 @@ def most_probable_power_law_index(f, I, m, n):
 # Implement what to do with the isolated structure limits
 #
 def structure_location(estimate):
-    if estimate > study_details.structure_location_limits['hi']:
-        return study_details.structure_location_limits['hi']
-    if estimate < study_details.structure_location_limits['lo']:
-        return study_details.structure_location_limits['lo']
+    if estimate > ds.structure_location_limits['hi']:
+        return ds.structure_location_limits['hi']
+    if estimate < ds.structure_location_limits['lo']:
+        return ds.structure_location_limits['lo']
     return estimate
 
 
@@ -155,8 +155,8 @@ def generate_initial_guess(model_name, finput, p,
         else:
             initial_guess = [log_amplitude, index_estimate, log_background,
                              -100.0,
-                             0.5 * (study_details.structure_location_limits['lo'].value +
-                                    study_details.structure_location_limits['hi'].value),
+                             0.5 * (ds.structure_location_limits['lo'].value +
+                                    ds.structure_location_limits['hi'].value),
                              0.1]
         #plt.loglog(f, rnspectralmodels.power_law_with_constant_with_lognormal(initial_guess, f), label='overall estimate')
         #plt.loglog(f1, diff1, label='used to fit lognormal,')

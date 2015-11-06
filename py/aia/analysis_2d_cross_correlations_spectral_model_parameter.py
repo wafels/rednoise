@@ -16,17 +16,18 @@ import details_plots as dp
 import details_analysis as da
 
 # Wavelengths we want to cross correlate
-waves = ['171', '193']
+waves = ['131', '171', '193', '211']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 regions = ['most_of_fov']
+regions = ['four_wavebands']
 
 # Apodization windows
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
+model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
 #
 # Details of the analysis
@@ -42,7 +43,7 @@ three_minutes = dp.three_minutes
 five_minutes = dp.five_minutes
 hloc = dp.hloc
 linewidth = 3
-
+bins = 100
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves,
@@ -58,13 +59,10 @@ for ic_type in ic_types:
 
     # Get the IC limit
     ic_limit = da.ic_details[ic_type]
-    ic_limit_string = '%s>%f' % (ic_type, ic_limit[ic_type])
+    ic_limit_string = '%s>%f' % (ic_type, ic_limit)
 
     # Model name
     for this_model in model_names:
-
-        parameters = this.model.parameters
-        npar = len(parameters)
 
         # Select a region
         for region in regions:
@@ -83,6 +81,10 @@ for ic_type in ic_types:
 
                 # Get the parameter information
                 this = storage[wave][region][this_model]
+
+                # Parameters
+                parameters = [v.fit_parameter for v in this.model.variables]
+                npar = len(parameters)
 
                 # Different information criteria
                 image = dp.get_image_model_location(ds.roots, b, [this_model, ic_type])
@@ -151,7 +153,7 @@ for ic_type in ic_types:
                         # Make the plot title
                         title = '%s vs. %s \n %s' % (xlabel, ylabel, subtitle)
 
-                        for plot_function in (1,2):
+                        for plot_function in (1, 2):
                             plt.close('all')
                             plt.title(title)
                             plt.xlabel(xlabel)
@@ -162,8 +164,8 @@ for ic_type in ic_types:
                             else:
                                 plt.hist2d(p1, p2, bins=bins)
                                 plot_name = 'hist2d'
-                            plt.xlim(p1_limits)
-                            plt.ylim(p2_limits)
+                            plt.xlim(p1_limits.value)
+                            plt.ylim(p2_limits.value)
                             x0 = plt.xlim()[0]
                             ylim = plt.ylim()
                             y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])

@@ -95,11 +95,12 @@ def get_image_model_location(roots, b, dirs):
             os.makedirs(image)
     return image
 
+
 #
 # Concatenate a bunch of string elements
 #
-def concat_string(elements):
+def concat_string(elements, sep='.'):
     output = elements[0]
     for element in elements[1:]:
-        output += '.%s' % element
+        output += '%s%s' % (sep, element)
     return output

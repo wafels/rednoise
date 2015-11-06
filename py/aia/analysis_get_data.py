@@ -13,7 +13,7 @@ import numpy as np
 from matplotlib.collections import PolyCollection
 import astropy.units as u
 
-import study_details as sd
+import details_study as ds
 import sunpy.map
 import sunpy.net.hek as hek
 from sunpy.physics.transforms.solar_rotation import rot_hpc
@@ -43,13 +43,13 @@ def get_all_data(waves=['171', '193'],
         for iregion, region in enumerate(regions):
 
             # branch location
-            b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+            b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
 
             # Region identifier name
-            region_id = sd.datalocationtools.ident_creator(b)
+            region_id = ds.datalocationtools.ident_creator(b)
 
             # Output location
-            output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+            output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
             # Go through all the windows
             for iwindow, window in enumerate(windows):
@@ -134,12 +134,12 @@ def make_map(output, region_id, map_data):
 # Cut down a map to some specific region
 #
 def hsr2015_map(m):
-    submap = m.submap(sd.hsr2015_range_x, sd.hsr2015_range_y)
+    submap = m.submap(ds.hsr2015_range_x, ds.hsr2015_range_y)
     return submap
 
 
 def hsr2015_model_name(n):
-    return sd.hsr2015_model_name[n]
+    return ds.hsr2015_model_name[n]
 
 
 def sunspot_outline():

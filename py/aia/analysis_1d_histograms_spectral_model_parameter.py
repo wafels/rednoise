@@ -12,11 +12,13 @@ import details_plots as dp
 import analysis_explore
 
 # Wavelengths we want to analyze
-waves = ['211']#, '193']
+waves = ['131', '171', '193', '211']
 
 # Regions we are interested in
-regions = ['sunspot', 'quiet Sun']
+#regions = ['sunspot', 'quiet Sun']
 #regions = ['most_of_fov']
+regions = ['four_wavebands']
+
 # Apodization windows
 windows = ['hanning']
 
@@ -24,7 +26,7 @@ windows = ['hanning']
 storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
 
 # Define the masks
-mdefine = analysis_explore.MaskDefine(storage, limits)
+mdefine = analysis_explore.MaskDefine(storage, da.limits)
 available_models = mdefine.available_models
 
 #
@@ -70,7 +72,7 @@ for wave in waves:
             for p1_name in parameters:
                 p1 = this.as_array(p1_name)
                 p1_index = parameters.index(p1_name)
-                label1 = labels[p1_index] + ' (%s)' % display_unit[p1_name]
+                label1 = labels[p1_index] + ' (%s)'
                 for ic_type in ic_types:
 
                     # Get the IC limit
@@ -109,8 +111,7 @@ for wave in waves:
                                                       '%s>%f' % (ic_type, ic_limit)])
 
                     # Title of the plot
-                    title = dp.concat_string([plot_identity,
-                                              dp.get_mask_info_string(mask)])
+                    title = '%s\n%s' % (plot_identity, dp.get_mask_info_string(mask))
 
                     # location of the image
                     image = dp.get_image_model_location(ds.roots, b, [this_model, ic_type])
