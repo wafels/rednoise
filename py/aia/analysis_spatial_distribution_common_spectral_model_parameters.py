@@ -1,8 +1,8 @@
 #
-# Analysis - spatial distributions of spectral model parameter values
+# Analysis - spatial distributions of spectral model parameter values.
 #
-# Show the spatial distributions of spectral model parameter values for a
-# list of models.
+# Show the spatial distribution of the parameters that are common across a
+# number of models, as defined by the user.
 #
 import os
 from copy import deepcopy
@@ -11,134 +11,83 @@ import numpy.ma as ma
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+from scipy.stats import pearsonr, spearmanr
+from astroML.plotting import hist
+
 import sunpy.map
+
+
 import analysis_get_data
 import details_study as ds
-import details_analysis as da summary_statistics, get_mode, limits, get_mask_info, rchi2limitcolor, get_ic_location, get_image_model_location
+from analysis_details import summary_statistics, get_mode, limits, get_mask_info, rchi2limitcolor, get_ic_location, get_image_model_location
 
-# Wavelengths we want to cross correlate
+# Wavelengths we want to analyze
 waves = ['171', '193']
 
 # Regions we are interested in
-regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
+# regions = ['moss', 'sunspot', 'quiet Sun', 'loop footpoints']
 regions = ['most_of_fov']
 
 # Apodization windows
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
+model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')\
 
-#
-# Details of the analysis
-#
-limits = da.limits
-ic_types = da.ic_details.keys()
+# Number of bins in the histograms
+hloc = (100,)
 
-#
-# Details of the plotting
-#
-fz = dp.fz
-three_minutes = dp.three_minutes
-five_minutes = dp.five_minutes
-hloc = dp.hloc
+# Line widths of the indicating lines
 linewidth = 3
 
+# Bins per axis in the 2-d histograms
+bins_2d = 100
+
+# IC
+ic_types = ('none',)
+ic_limit = {"BIC": 0.0, "AIC": 0.0}
 
 # Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves,
-                                         regions=regions,
-                                         model_names=model_names)
-mdefine = analysis_explore.MaskDefine(storage, limits)
-
+storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
 
 # Get the sunspot outline
 sunspot_outline = analysis_get_data.sunspot_outline()
 
+#
+# Some models have the same parameters in them.  The code below
+# first finds all the common parameters between two models.  At each
+# pixel, the difference in information criterion is calculated for each
+# power spectrum model.  A map is created containing parameter values
+# as found by either
+#
+par1 = storage[waves[0]][regions[0]][model_names[0]].model.parameters
+par2 = storage[waves[0]][regions[0]][model_names[1]].model.parameters
+common_parameters = set(par1).intersection(par2)
 
-# Plot cross-correlations within the same AIA channel
-plot_type = 'spatial.within'
-
-# Different information criteria
-for ic_type in ic_types:
-
-    # Get the IC limit
-    ic_limit = da.ic_details[ic_type]
-    ic_limit_string = '%s>%f' % (ic_type, ic_limit[ic_type])
-
-    # Model name
-    for this_model in model_names:
-
-        parameters = this.model.parameters
-        npar = len(parameters)
-
-        # Select a region
-        for region in regions:
-
-            # Select a wave
-            for wave in waves:
-
-                # branch location
-                b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
-
-                # Region identifier name
-                region_id = ds.datalocationtools.ident_creator(b)
-
-                # Output location
-                output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
-
-                # Get the parameter information
-                this = storage[wave][region][this_model]
-
-                # Different information criteria
-                image = dp.get_image_model_location(ds.roots, b, [this_model, ic_type])
-
-                for i in range(0, npar):
-                    # First parameter name
-                    p1_name = parameters[i]
-
-                    # First parameter, label for the plot
-                    xlabel = this.model.variables[i].converted_label
-
-                    # First parameter, data
-                    p1 = this.as_array(p1_name)
-
-                    # First parameter limits
-                    p1_limits = limits[p1_name]
-
-                    # Mask for the first and second parameters
-                    mask1 = mdefine.combined_good_fit_parameter_limit[wave][region][this_model]
-                    mask2 = mdefine.is_this_model_preferred(ic_type, ic_limit, this_model)[wave][region]
-                    final_mask = np.logical_or(mask1, mask2)
-
-                    # Get the final data for the first parameter
-                    p1 = np.ma.array(this.as_array(p1_name), mask=final_mask).compressed()
-
-                    # Create the subtitle - model, region, information
-                    # on how much of the field of view is not masked,
-                    # and the information criterion and limit used.
-                    subtitle = dp.concat_string([this_model,
-                                                 region,
-                                                 dp.get_mask_info_string(final_mask),
-                                                 ic_limit_string
-                                                 ])
-
-
-
+# Define the storage for the common parameters
+storage_common_parameter = {}
+for wave in waves:
+    storage_common_parameter[wave] = {}
+    for region in regions:
+        storage_common_parameter[wave][region] = {}
+        for measure in ic_limit.keys():
+            storage_common_parameter[wave][region][measure] = {}
+            for parameter in common_parameters:
+                storage_common_parameter[wave][region][measure][parameter] = 0
 
 # Plot spatial distributions of the spectral model parameters.
 for wave in waves:
     for region in regions:
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+        b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
 
         # Region identifier name
-        region_id = sd.datalocationtools.ident_creator(b)
+        region_id = ds.datalocationtools.ident_creator(b)
 
         # Output location
-        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
+        image = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
 
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
@@ -146,17 +95,18 @@ for wave in waves:
         # Get the region submap
         region_submap = analysis_get_data.get_region_submap(output, region_id)
 
-        for model_name in one_model_name:
+        """
+        for model_name in model_names:
             # Get the data for this model
             this = storage[wave][region][model_name]
             # Parameters
-            parameters = ("log10(lognormal position)",)
+            parameters = this.model.parameters
             for parameter in parameters:
                 label_index = this.model.parameters.index(parameter)
 
                 # Different information criteria
                 for ic_type in ic_limit.keys():
-                    image = get_image_model_location(sd.roots, b, [model_name, ic_type])
+                    image = get_image_model_location(ds.roots, b, [model_name, ic_type])
 
                     # Where are the good fits
                     mask = this.good_fits()
@@ -175,8 +125,6 @@ for wave in waves:
                     mask[np.where(p1 < limits[parameter][0])] = True
                     mask[np.where(p1 > limits[parameter][1])] = True
 
-                    p1 = 1000 * 4.6296296296296294e-05 * 10.0 ** p1  # mHz
-
                     # Create the masked numpy array
                     map_data = ma.array(p1, mask=mask)
 
@@ -187,11 +135,10 @@ for wave in waves:
                     # Make a spatial distribution map spectral model parameter
                     plt.close('all')
                     # Normalize the color table
-                    norm = colors.Normalize(clip=False, vmin=1.0, vmax=10.0)
+                    norm = colors.Normalize(clip=False, vmin=limits[parameter][0], vmax=limits[parameter][1])
 
                     # Set up the palette we will use
                     palette = cm.Set2
-                    palette = cm.Paired
                     # Bad values are those that are masked out
                     palette.set_bad('black', 1.0)
                     #palette.set_under('green', 1.0)
@@ -203,15 +150,12 @@ for wave in waves:
                                       norm=norm)
                     #ret.axes.set_title('%s %s %s %s' % (wave, region, this.model.labels[label_index], ic_type))
                     # HSR 2015
-                    mhz_label = r"peak frequency (narrow-band oscillation) $\beta$ (mHz)"
-                    ret.axes.set_title('%s, %s' % (wave, mhz_label))
+                    ret.axes.set_title('%s %s' % (wave, region))
                     if region == 'sunspot' or region == 'most_of_fov':
-                        ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['white']))
+                        ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date))
 
-                    cbar = fig.colorbar(ret, extend='both',
-                                        orientation='vertical',
-                                        shrink=0.8,
-                                        label=mhz_label)
+                    cbar = fig.colorbar(ret, extend='both', orientation='vertical',
+                                        shrink=0.8, label=this.model.labels[label_index])
                     # Fit everything in.
                     ax.autoscale_view()
 
@@ -287,7 +231,7 @@ for wave in waves:
                 ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                   norm=norm)
                 #ret.axes.set_title('across models %s %s %s %s %f' % (wave, region, this0.model.labels[label_index0], measure, this_ic_limit))
-                ret.axes.set_title("%s, cross-model parameter %s " % (wave, this0.model.labels[label_index0]))
+                ret.axes.set_title("%s, power law index %s " % (wave, this0.model.labels[label_index0]))
 
                 if region == 'most_of_fov':
                     ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date, edgecolors=['k']))
@@ -366,14 +310,14 @@ for region in regions:
                 mask1 = np.ma.getmask(map_data1)
 
                 # branch location
-                b = [sd.corename, sd.sunlocation, sd.fits_level, wave1, region]
+                b = [ds.corename, ds.sunlocation, ds.fits_level, wave1, region]
 
                 # Region identifier name
-                region_id = sd.datalocationtools.ident_creator(b)
+                region_id = ds.datalocationtools.ident_creator(b)
 
                 # Output location
-                output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-                image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+                output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
+                image = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
 
                 # Output filename
                 ofilename = os.path.join(output, region_id + '.datacube')
@@ -447,4 +391,3 @@ for region in regions:
                     plt.legend(framealpha=0.5)
                     plt.tight_layout()
                     plt.savefig(os.path.join(image, ofilename))
-"""
