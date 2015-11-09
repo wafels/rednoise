@@ -16,17 +16,18 @@ import details_plots as dp
 import details_analysis as da
 
 # Wavelengths we want to cross correlate
-waves = ['171', '193']
+waves = ['131', '171', '193', '211']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 regions = ['most_of_fov']
+regions = ['four_wavebands']
 
 # Apodization windows
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power law + Constant + Lognormal', 'Power law + Constant')
+model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
 #
 # Details of the analysis
@@ -42,6 +43,7 @@ three_minutes = dp.three_minutes
 five_minutes = dp.five_minutes
 hloc = dp.hloc
 linewidth = 3
+bins = 100
 
 
 # Load in all the data
@@ -58,7 +60,7 @@ for ic_type in ic_types:
 
     # Get the IC limit
     ic_limit = da.ic_details[ic_type]
-    ic_limit_string = '%s>%f' % (ic_type, ic_limit[ic_type])
+    ic_limit_string = '%s>%f' % (ic_type, ic_limit)
 
     # Model name
     for this_model in model_names:
@@ -116,10 +118,16 @@ for ic_type in ic_types:
                         xlabel = this1.model.variables[i].converted_label + r'$_{%s}$' % wave1
 
                         # First parameter, data
-                        p1 = this1.as_array(p1_name)
+                        p1_data = this1.as_array(p1_name)
 
                         # First parameter limits
                         p1_limits = limits[p1_name]
+
+                        # Unit
+                        if str(this1.model.variables[i].converted_unit) == '':
+                            xunit = '(dimensionless)'
+                        else:
+                            xunit = '(%s)' % str(this1.model.variables[i].converted_unit)
 
                         # Second parameter
                         for j in range(0, npar):
@@ -130,10 +138,16 @@ for ic_type in ic_types:
                             ylabel = this2.model.variables[j].converted_label + r'$_{%s}$' % wave2
 
                             # Second parameter, data
-                            p2 = this1.as_array(p2_name)
+                            p2_data = this2.as_array(p2_name)
 
                             # Second parameter limits
                             p2_limits = limits[p2_name]
+
+                            # Unit
+                            if str(this2.model.variables[j].converted_unit) == '':
+                                yunit = '(dimensionless)'
+                            else:
+                                yunit = '(%s)' % str(this2.model.variables[j].converted_unit)
 
                             # Final mask for cross-correlation is the
                             # combination of the first and second parameter
@@ -150,14 +164,25 @@ for ic_type in ic_types:
                                                          ])
 
                             # Get the data using the final mask
-                            p1 = np.ma.array(p1, mask=final_mask).compressed()
-                            p2 = np.ma.array(p2, mask=final_mask).compressed()
+                            p1 = np.ma.array(p1_data, mask=final_mask).compressed()
+                            p2 = np.ma.array(p2_data, mask=final_mask).compressed()
 
                             # Cross correlation statistics
                             r = [spearmanr(p1, p2), pearsonr(p1, p2)]
 
                             # Form the rank correlation string
                             rstring = 'spr=%1.2f_pea=%1.2f' % (r[0][0], r[1][0])
+
+                            # Create the subtitle - model, region, information
+                            # on how much of the field of view is not masked,
+                            # and the information criterion and limit used.
+                            ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
+                            subtitle = dp.concat_string([this_model,
+                                                         '%s' % region,
+                                                         ic_info_string], sep='\n')
+                            subtitle_filename = dp.concat_string([this_model,
+                                                                  region,
+                                                                  ic_info_string], sep='.')
 
                             # Plot identity - measurement of the cross
                             # correlation and the physical quantities in the x
@@ -175,16 +200,17 @@ for ic_type in ic_types:
                             for plot_function in (1, 2):
                                 plt.close('all')
                                 plt.title(title)
-                                plt.xlabel(xlabel)
-                                plt.ylabel(ylabel)
+                                plt.xlabel('%s %s' % (xlabel, xunit))
+                                plt.ylabel('%s %s' % (ylabel, yunit))
                                 if plot_function == 1:
                                     plt.scatter(p1, p2)
                                     plot_name = 'scatter'
                                 else:
-                                    plt.hist2d(p1, p2, bins=bins)
+                                    plt.hist2d(p1, p2, bins=bins,
+                                               range=[p1_limits.value, p2_limits.value])
                                     plot_name = 'hist2d'
-                                plt.xlim(p1_limits)
-                                plt.ylim(p2_limits)
+                                plt.xlim(p1_limits.value)
+                                plt.ylim(p2_limits.value)
                                 x0 = plt.xlim()[0]
                                 ylim = plt.ylim()
                                 y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
@@ -192,13 +218,13 @@ for ic_type in ic_types:
                                 plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.5))
                                 plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.5))
                                 if p1_name == p2_name:
-                                    plt.plot([p1_limits[0], p1_limits[1]],
-                                             [p1_limits[0], p1_limits[1]],
+                                    plt.plot([p1_limits[0].value, p1_limits[1].value],
+                                             [p1_limits[0].value, p1_limits[1].value],
                                              color='r', linewidth=3,
                                              label='%s=%s' % (xlabel, ylabel))
                                 final_filename = dp.concat_string([plot_type,
                                                                    plot_identity_filename,
-                                                                   subtitle,
+                                                                   subtitle_filename,
                                                                    plot_name]) + '.png'
                                 plt.legend(framealpha=0.5)
                                 plt.tight_layout()

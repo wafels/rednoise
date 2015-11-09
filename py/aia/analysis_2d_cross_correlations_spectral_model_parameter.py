@@ -27,7 +27,7 @@ regions = ['four_wavebands']
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
+model_names = ('Power Law + Constant', 'Power Law + Constant + Lognormal')
 
 #
 # Details of the analysis
@@ -110,14 +110,22 @@ for ic_type in ic_types:
                     # Get the final data for the first parameter
                     p1 = np.ma.array(this.as_array(p1_name), mask=final_mask).compressed()
 
+                    # Unit
+                    if str(this.model.variables[i].converted_unit) == '':
+                        xunit = '(dimensionless)'
+                    else:
+                        xunit = '(%s)' % str(this.model.variables[i].converted_unit)
+
                     # Create the subtitle - model, region, information
                     # on how much of the field of view is not masked,
                     # and the information criterion and limit used.
+                    ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
                     subtitle = dp.concat_string([this_model,
-                                                 region,
-                                                 dp.get_mask_info_string(final_mask),
-                                                 ic_limit_string
-                                                 ])
+                                                 '%s - %s' % (region, wave),
+                                                 ic_info_string], sep='\n')
+                    subtitle_filename = dp.concat_string([this_model,
+                                                          region,
+                                                          ic_info_string], sep='.')
 
                     for j in range(i+1, npar):
                         # Second parameter name
@@ -135,13 +143,17 @@ for ic_type in ic_types:
                         # Get the data using the final mask
                         p2 = np.ma.array(this.as_array(p2_name), mask=final_mask).compressed()
 
+                        # Unit
+                        if str(this.model.variables[j].converted_unit) == '':
+                            yunit = '(dimensionless)'
+                        else:
+                            yunit = '(%s)' % str(this.model.variables[j].converted_unit)
+
                         # Cross correlation statistics
                         r = [spearmanr(p1, p2), pearsonr(p1, p2)]
 
                         # Form the rank correlation string
                         rstring = 'spr=%1.2f_pea=%1.2f' % (r[0][0], r[1][0])
-
-                        # Identifier of the plot
 
                         # Plot identity as a file name
                         plot_identity_filename = dp.concat_string([rstring,
@@ -156,13 +168,14 @@ for ic_type in ic_types:
                         for plot_function in (1, 2):
                             plt.close('all')
                             plt.title(title)
-                            plt.xlabel(xlabel)
-                            plt.ylabel(ylabel)
+                            plt.xlabel('%s %s' % (xlabel, xunit))
+                            plt.ylabel('%s %s' % (ylabel, yunit))
                             if plot_function == 1:
                                 plt.scatter(p1, p2)
                                 plot_name = 'scatter'
                             else:
-                                plt.hist2d(p1, p2, bins=bins)
+                                plt.hist2d(p1, p2, bins=bins,
+                                           range=[p1_limits.value, p2_limits.value])
                                 plot_name = 'hist2d'
                             plt.xlim(p1_limits.value)
                             plt.ylim(p2_limits.value)
@@ -172,15 +185,9 @@ for ic_type in ic_types:
                             y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
                             plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.5))
                             plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.5))
-                            if p1_name == p2_name:
-                                plt.plot([p1_limits[0], p1_limits[1]],
-                                         [p1_limits[0], p1_limits[1]],
-                                         color='r', linewidth=3,
-                                         label='%s=%s' % (xlabel, ylabel))
                             final_filename = dp.concat_string([plot_type,
                                                                plot_identity_filename,
-                                                               subtitle,
+                                                               subtitle_filename,
                                                                plot_name]) + '.png'
-                            plt.legend(framealpha=0.5)
                             plt.tight_layout()
                             plt.savefig(os.path.join(image, final_filename))

@@ -12,10 +12,9 @@ import lnlike_model_fit
 # and Kass, Robert E.; Raftery, Adrian E. (1995), "Bayes Factors", Journal of
 # Setting the ic_limit to 6.0 for the BIC picks out models that have "strong"
 # evidence in their favour according to the Kass and Raftery 1995 above.
-ic_limit = 6.0
 
 # Information criteria we want to examine
-ic_details = {'BIC': ic_limit}
+ic_details = {'BIC': [6.0, 0.0]}
 
 
 # Where in the main output from step3 is everything
@@ -30,15 +29,15 @@ success = [1, 'success']
 #
 
 limits = {"power law index": [1., 7.] * u.dimensionless_unscaled,
-          "ln(constant)": [0., 5.] * u.dimensionless_unscaled,
-          "ln(power law amplitude)": [3.0, 10.0] * u.dimensionless_unscaled,
+          "ln(constant)": [0., 10.] * u.dimensionless_unscaled,
+          "ln(power law amplitude)": [0.0, 10.0] * u.dimensionless_unscaled,
           "ln(lognormal width)": [0.0, 0.6] * u.dimensionless_unscaled,
-          "lognormal position": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
+          # "lognormal position": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
+          "lognormal position": [1.0/(1800 * 12.0), 0.015] * u.Hz,
           "ln(lognormal amplitude)": [0.0, 10.0] * u.dimensionless_unscaled,
           "period": [24.0, 3000.0] * u.s,
           "frequency": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
           "ratio": [-5.0, 5.0] * u.dimensionless_unscaled}
-
 
 
 # Number of parameters
@@ -82,22 +81,6 @@ def conversion(model_names):
             'rchi2': 1.0}
 
 
-# Informative plot labels
-def plotname(model_names):
-    return {"amplitude": '$\log_{10}(A)$',
-            "power law index": "power law index",
-            "background": "$\log_{10}(C)$",
-            "lognormal amplitude": "$\log_{10}(A_{G})$",
-            "lognormal position": "$\log_{10}(f_{G})$",
-            "lognormal width": "$\log_{10}(\sigma_{G})$",
-            'total emission': 'sum(E)',
-            'maximum emission':  'max(E)',
-            'minimum emission':  'min(E)',
-            'standard deviation of the emission': 'sd(E)',
-            'standard deviation of log(emission)': 'sd(log(E))',
-            'rchi2': rchi2s}
-
-
 #
 # Calculate reduced chi-squared limits given pvalues
 #
@@ -108,7 +91,6 @@ def rchi2limit(pvalue, nposfreq, nparameters):
         x[model_name] = [lnlike_model_fit.rchi2_given_prob(pvalue[1], 1.0, nposfreq - n - 1),
                          lnlike_model_fit.rchi2_given_prob(pvalue[0], 1.0, nposfreq - n - 1)]
     return x
-
 
 
 def summary_statistics(a, bins=100):
