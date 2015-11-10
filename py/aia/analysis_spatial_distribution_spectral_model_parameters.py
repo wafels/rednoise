@@ -2,15 +2,11 @@
 # Analysis - Plot the spatial distributions of spectral model parameters
 #
 import os
-from copy import deepcopy
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
-from astroML.plotting import hist
-
-import sunpy.map
 
 import analysis_get_data
 import analysis_explore
@@ -20,6 +16,7 @@ import details_plots as dp
 
 # Wavelengths we want to cross correlate
 waves = ['131'] #, '171', '193', '211']
+waves = ['171', '193', '211']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']

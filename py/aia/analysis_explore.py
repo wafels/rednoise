@@ -28,10 +28,12 @@ class MaskDefine:
         self.available_models = storage[w0][r0].keys()
 
         # Common parameters in all models
-        self.common_parameters = set(v.fit_parameter for v in storage[w0][r0][self.available_models[0]].model.variables)
-        for model in self.available_models:
+
+        for imodel, model in enumerate(self.available_models):
+            if imodel == 0:
+                self.common_parameters = [v.fit_parameter for v in storage[w0][r0][model].model.variables]
             par = [v.fit_parameter for v in storage[w0][r0][model].model.variables]
-            self.common_parameters = self.common_parameters.intersection(par)
+            self.common_parameters = self._intersect(self.common_parameters, par)
 
         # Good fit masks.
         # Find where the fitting algorithm has worked, and
@@ -129,6 +131,9 @@ class MaskDefine:
                     this = storage[wave][region][model]
                     for ic in ('AIC', 'BIC'):
                         self.ic_data[wave][region][model][ic] = this.as_array(ic)
+
+    def _intersect(self, a, b):
+        return list(set(a) & set(b))
 
     def which_model_is_preferred(self, ic_type, ic_limit):
         """
