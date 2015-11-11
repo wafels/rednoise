@@ -23,7 +23,7 @@ import details_plots as dp
 
 
 # Wavelengths we want to cross correlate
-waves = ['131']#, '171', '193', '211']
+waves = ['131', '171', '193', '211']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
@@ -100,7 +100,8 @@ for ic_type in ic_types:
                 ofilename = os.path.join(output, region_id + '.datacube')
 
                 # Get the region submap
-                region_submap = analysis_get_data.get_region_submap(output, region_id)
+                if iwave == 0:
+                    region_submap = analysis_get_data.get_region_submap(output, region_id)
 
                 # Get preferred model index.  This is an index to the list of
                 # models used.  If the mask value is true, then the preferred
@@ -145,7 +146,6 @@ for ic_type in ic_types:
 
                         # Update the final mask
                         final_mask[these_data] = False
-                        print this_model, final_mask.sum()
 
                     # Label
                     fit_parameters = [v.fit_parameter for v in this.model.variables]
@@ -170,7 +170,7 @@ for ic_type in ic_types:
                     map_data = ma.array(final_data, mask=final_mask)
 
                     # Make a SunPy map for nice spatially aware plotting.
-                    my_map = analysis_get_data.make_map(output, region_id, map_data)
+                    my_map = analysis_get_data.make_map(region_submap, map_data)
 
                     # Get the sunspot
                     sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date)

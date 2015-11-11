@@ -36,10 +36,12 @@ if study_type == 'debugpaper2':
     corename = 'request4'
     sunlocation = 'debug'
     fits_level = '1.5'
+    wave = '94'
     wave = '131'
     wave = '171'
     wave = '193'
     wave = '211'
+    wave = '335'
     cross_correlate = True
     derotate = True
 
@@ -48,10 +50,12 @@ if study_type == 'paper2':
     corename = 'request4'
     sunlocation = 'disk'
     fits_level = '1.5'
+    wave = '94'
     wave = '131'
     wave = '171'
     wave = '193'
     wave = '211'
+    wave = '335'
     cross_correlate = True
     derotate = True
 

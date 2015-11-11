@@ -82,12 +82,17 @@ def get_all_data(waves=['171', '193'],
 #
 # Get the region submap
 #
-def get_region_submap(output, region_id):
+def get_region_submap(output, region_id, average_submap=False):
     # Get the map: Open the file that stores it and read it in
     map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
     print map_data_filename
     get_map_data = open(map_data_filename, 'rb')
     _dummy = pickle.load(get_map_data)
+
+    # Get the 3-d data array
+    data = _dummy.as_array()
+
+    # Load everything else
     _dummy = pickle.load(get_map_data)
     _dummy = pickle.load(get_map_data)
     _dummy = pickle.load(get_map_data)
@@ -96,37 +101,20 @@ def get_region_submap(output, region_id):
     get_map_data.close()
     print region_id + " region_submap: ",  region_submap.data.shape
 
-    # Return a map using the input data
-    return region_submap
+    # Return the maps using the input data
+    meta = deepcopy(region_submap.meta)
+    return {"reference region": region_submap,
+            "mean": sunpy.map.Map(np.mean(data, axis=2), meta),
+            "standard deviation": sunpy.map.Map(np.std(data, axis=2), meta),
+            "minimum": sunpy.map.Map(np.min(data, axis=2), meta),
+            "maximum": sunpy.map.Map(np.max(data, axis=2), meta),
+            "range": sunpy.map.Map(np.ptp(data, axis=2), meta),
+            "median": sunpy.map.Map(np.median(data, axis=2), meta)}
 
 #
 #  Define a SunPy map
 #
-def make_map(output, region_id, map_data):
-    # Get the map: Open the file that stores it and read it in
-    map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
-    print map_data_filename
-    get_map_data = open(map_data_filename, 'rb')
-    _dummy = pickle.load(get_map_data)
-    _dummy = pickle.load(get_map_data)
-    _dummy = pickle.load(get_map_data)
-    _dummy = pickle.load(get_map_data)
-    region_submap = pickle.load(get_map_data)
-    # Specific region information
-    get_map_data.close()
-    print region_id + " region_submap: ",  region_submap.data.shape
-    print "map data shape ", map_data.shape
-
-    # Create the map header
-    header = {'cdelt1': region_submap.meta['cdelt1'],
-              'cdelt2': region_submap.meta['cdelt2'],
-              "crval1": region_submap.center[0].value,
-              "crval2": region_submap.center[1].value,
-              "telescop": region_submap.observatory,
-              "detector": region_submap.observatory,
-              "wavelnth": region_submap.measurement.value,
-              "date-obs": region_submap.date}
-
+def make_map(region_submap, map_data):
     # Return a map using the input data
     return sunpy.map.Map(map_data, deepcopy(region_submap.meta))
 
