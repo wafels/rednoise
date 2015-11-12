@@ -106,15 +106,19 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
     # Most of field of view, good for large scale studies (Paper 2)
     #
 
-    #regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
-    #                           "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
+                           "width": 340*u.arcsec, "height": 200*u.arcsec}}
+
+    """
+    regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
+                               "width": 340*u.arcsec, "height": 200*u.arcsec}}
 
     regions = {"most_of_fov": {"llx": -460.0*u.arcsec, "lly": -70*u.arcsec,
                                "width": 340*u.arcsec, "height": 150*u.arcsec}}
 
     regions = {"four_wavebands": {"llx": -470.0*u.arcsec, "lly": -75*u.arcsec,
                                   "width": 310*u.arcsec, "height": 180*u.arcsec}}
-
+    """
 
 
     regions = calculate_region_information(regions)
@@ -186,7 +190,7 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
 filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions')
 for region in regions.keys():
     filepath = filepath + '.' + region
-filepath = filepath + '.nanoflare.png'
+filepath = filepath + '.png'
 step1_plots.plot_regions(mc_layer, regions, filepath)
 
 

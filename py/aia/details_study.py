@@ -8,8 +8,8 @@ import astropy.units as u
 #
 # Study type
 #
-#study_type = 'debugpaper2'
-study_type = 'paper2'
+study_type = 'debugpaper2'
+#study_type = 'paper2'
 
 # Target cadence
 target_cadence = 12
@@ -33,7 +33,8 @@ fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
 #
 if study_type == 'debugpaper2':
     dataroot = '~/Data/ts/'
-    corename = 'request4'
+    # corename = 'request4'
+    corename = 'paper2_six_euv'
     sunlocation = 'debug'
     fits_level = '1.5'
     wave = '94'
@@ -41,13 +42,13 @@ if study_type == 'debugpaper2':
     wave = '171'
     wave = '193'
     wave = '211'
-    wave = '335'
+    #wave = '335'
     cross_correlate = True
     derotate = True
 
 if study_type == 'paper2':
     dataroot = '~/Data/ts/'
-    corename = 'request4'
+    corename = 'paper2_six_euv'
     sunlocation = 'disk'
     fits_level = '1.5'
     wave = '94'
