@@ -42,7 +42,9 @@ modeline = LineSelection(color='g',
 
 # Histograms have the following type
 hloc = (100,)  # 'scott', 'knuth', 'freedman')
+histogram_1d_bins = 100
 
+linewidth = 3
 
 # Parameters which are frequencies
 frequency_parameters = ['lognormal position']

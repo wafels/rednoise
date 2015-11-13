@@ -5,16 +5,17 @@
 import cPickle as pickle
 import os
 
-import study_details as sd
+import details_study as ds
 import rnspectralmodels2
 
 # Wavelengths we want to analyze
-waves = ['131', '171', '193', '211']
+waves = ['131', '171', '193', '211', '335', '94']
 
 # Regions we are interested in
 #regions = ['sunspot', 'quiet Sun']
 #regions = ['most_of_fov']
-regions = ['four_wavebands']
+#regions = ['four_wavebands']
+regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']
@@ -32,13 +33,13 @@ for iwave, wave in enumerate(waves):
     for iregion, region in enumerate(regions):
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+        b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
 
         # Region identifier name
-        region_id = sd.datalocationtools.ident_creator(b)
+        region_id = ds.datalocationtools.ident_creator(b)
 
         # Output location
-        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):

@@ -15,8 +15,7 @@ import details_analysis as da
 import details_plots as dp
 
 # Wavelengths we want to cross correlate
-waves = ['131'] #, '171', '193', '211']
-waves = ['171', '193', '211']
+waves = ['171', '193', '211', '131']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
@@ -29,10 +28,14 @@ windows = ['hanning']
 # Model results to examine
 model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
+# Which limit to use
+limit_type = 'low_lognormal_width'
+
+
 #
 # Details of the analysis
 #
-limits = da.limits
+limits = da.limits[limit_type]
 ic_types = da.ic_details.keys()
 
 #
@@ -41,9 +44,8 @@ ic_types = da.ic_details.keys()
 fz = dp.fz
 three_minutes = dp.three_minutes
 five_minutes = dp.five_minutes
-hloc = dp.hloc
-linewidth = 3
-bins = 100
+linewidth = dp.linewidth
+bins = dp.histogram_1d_bins
 
 
 # Load in all the data
@@ -92,7 +94,7 @@ for ic_type in ic_types:
                     ofilename = os.path.join(output, region_id + '.datacube')
 
                     # Get the region submap
-                    region_submap = analysis_get_data.get_region_submap(output, region_id)
+                    submaps = analysis_get_data.get_region_submap(output, region_id)
 
                     # Get the data for this model
                     this = storage[wave][region][this_model]
@@ -131,10 +133,12 @@ for ic_type in ic_types:
                         ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
                         subtitle = dp.concat_string([this_model,
                                                      '%s - %s' % (region, wave),
-                                                     ic_info_string], sep='\n')
+                                                     ic_info_string,
+                                                     limit_type], sep='\n')
                         subtitle_filename = dp.concat_string([this_model,
                                                               region,
-                                                              ic_info_string], sep='.')
+                                                              ic_info_string,
+                                                              limit_type], sep='.')
 
                         # Plot identity
                         plot_identity_filename = dp.concat_string([wave, parameter])
@@ -143,7 +147,7 @@ for ic_type in ic_types:
                         map_data = ma.array(p1, mask=final_mask)
 
                         # Make a SunPy map for nice spatially aware plotting.
-                        my_map = analysis_get_data.make_map(output, region_id, map_data)
+                        my_map = analysis_get_data.make_map(submaps['reference region'], map_data)
 
                         # Get the sunspot
                         sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date)

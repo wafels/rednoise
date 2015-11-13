@@ -92,7 +92,30 @@ def broken_power_law_with_constant(a, f):
     f : ndarray
         frequencies
     """
-    return broken_power_law(a[0:4]) + constant(a[4])
+    return broken_power_law(a[0:4], f) + constant(a[4])
+
+
+# ----------------------------------------------------------------------------
+# Broken Power law with Constant
+#
+def broken_power_law_with_constant_with_lognormal(a, f):
+    """Broken power law with constant with lognormal.  This model assumes that
+    there is a break in the power spectrum at some given frequency.  At high
+    frequencies the power spectrum is dominated by the constant background.  At
+    some particular frequency there is a lognormal (narrowband distribution)
+
+    Parameters
+    ----------
+    a : ndarray(5)
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the power law index at frequencies lower than the break frequency
+        a[2] : break frequency
+        a[3] : the power law index at frequencies higher than the break frequency
+        a[4] : the natural logarithm of the constant background
+    f : ndarray
+        frequencies
+    """
+    return broken_power_law(a[0:4], f) + constant(a[4])
 
 
 # ----------------------------------------------------------------------------
@@ -480,6 +503,54 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
                              0.5 * (f_lower_limit + f_upper_limit),
                              initial_log_width]
         return initial_guess
+
+
+class BrokenPowerLawPlusConstantPlusLognormal(CompoundSpectrum):
+    def __init__(self):
+        CompoundSpectrum.__init__(self, ((BrokenPowerLaw(), (0, 3)),
+                                         (Constant(), (3, 4)),
+                                         (Lognormal(), (4, 7))))
+
+    def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
+              background_range=[-50, -1], f_lower_limit=50.0,
+              f_upper_limit=200.0, sufficient_frequencies=10,
+              initial_log_width=0.1):
+
+        log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
+        #
+        # Should use the above guess to seed a fit for PowerLawPlusConstant
+        # based on the excluded estimated location of the lognormal
+        #
+        background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
+
+        # Difference between the data and the model
+        diff0 = power - background_spectrum
+
+        # Keep the positive parts only
+        positive_index = diff0 > 0.0
+
+        # Limit the fit to a specific frequency range
+        f_above = f > f_lower_limit
+        f_below = f < f_upper_limit
+
+        # Which data to fit
+        fit_here = positive_index * f_above * f_below
+
+        # If there is sufficient positive data
+        if np.sum(fit_here) > sufficient_frequencies:
+            diff1 = diff0[fit_here]
+            f1 = f[fit_here]
+            amp = np.log(np.max(diff1))
+            pos = np.log(f1[np.argmax(diff1)])
+            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, initial_log_width]
+        else:
+            initial_guess = [log_amplitude, index_estimate, log_background,
+                             -100.0,
+                             0.5 * (f_lower_limit + f_upper_limit),
+                             initial_log_width]
+        return initial_guess
+
+
 
 
 #

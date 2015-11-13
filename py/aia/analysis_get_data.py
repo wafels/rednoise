@@ -85,13 +85,9 @@ def get_all_data(waves=['171', '193'],
 def get_region_submap(output, region_id, average_submap=False):
     # Get the map: Open the file that stores it and read it in
     map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
-    print map_data_filename
+    print("Getting map data from %s " % map_data_filename)
     get_map_data = open(map_data_filename, 'rb')
-    _dummy = pickle.load(get_map_data)
-
-    # Get the 3-d data array
-    data = _dummy.as_array()
-
+    data = pickle.load(get_map_data)
     # Load everything else
     _dummy = pickle.load(get_map_data)
     _dummy = pickle.load(get_map_data)
@@ -130,19 +126,34 @@ def hsr2015_model_name(n):
     return ds.hsr2015_model_name[n]
 
 
-def sunspot_outline():
+def sunspot_outline(directory='~/ts/pickle/', filename='sunspot.info.pkl'):
     # -----------------------------------------------------------------------------
     # Get the sunspot details at the time of its detection
     #
-    client = hek.HEKClient()
-    qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
-    p1 = qr[0]["hpc_boundcc"][9: -2]
-    p2 = p1.split(',')
-    p3 = [v.split(" ") for v in p2]
-    p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
-    polygon = np.zeros([1, len(p2), 2])
-    polygon[0, :, :] = p4[:, :]
-    sunspot_date = qr[0]['event_starttime']
+    filepath = os.path.expanduser(os.path.join(directory, filename))
+    if os.path.isfile(filepath):
+        print("Acquiring sunspot data from %s" % filepath)
+        f = open(filepath, 'rb')
+        polygon = pickle.load(f)
+        sunspot_date = pickle.load(f)
+        f.close()
+    else:
+        print("Acquiring sunspot data from the HEK...")
+        client = hek.HEKClient()
+        qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
+        p1 = qr[0]["hpc_boundcc"][9: -2]
+        p2 = p1.split(',')
+        p3 = [v.split(" ") for v in p2]
+        p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+        polygon = np.zeros([1, len(p2), 2])
+        polygon[0, :, :] = p4[:, :]
+        sunspot_date = qr[0]['event_starttime']
+
+        f = open(filepath, 'wb')
+        pickle.dump(polygon, f)
+        pickle.dump(sunspot_date, f)
+        f.close()
+        print('Saved sunspot data to %s' % filepath)
     return polygon, sunspot_date
 
 

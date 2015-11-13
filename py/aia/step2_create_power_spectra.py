@@ -17,7 +17,7 @@ import astropy.units as u
 from tstools import is_evenly_sampled
 from timeseries import TimeSeries
 
-import study_details as sd
+import details_study as ds
 
 
 # Apply the window
@@ -38,18 +38,19 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['131', '171', '193', '211']
+waves = ['94', '131', '171', '193', '211', '335']
 
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 # regions = ['most_of_fov']
-regions = ['four_wavebands']
+# regions = ['four_wavebands']
+regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']
 
 # Absolute tolerance in seconds when deciding if data is evenly sampled
-absolute_tolerance = sd.absolute_tolerance
+absolute_tolerance = ds.absolute_tolerance
 
 #
 # Main FFT power and time-series characteristic preparation loop
@@ -59,13 +60,13 @@ for iwave, wave in enumerate(waves):
     for iregion, region in enumerate(regions):
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+        b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
 
         # Region identifier name
-        region_id = sd.datalocationtools.ident_creator(b)
+        region_id = ds.datalocationtools.ident_creator(b)
 
         # Output location
-        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
+        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
@@ -97,7 +98,7 @@ for iwave, wave in enumerate(waves):
             # Should be evenly sampled data.  It not, then resample to get
             # evenly sampled data
             t = time_information["time_in_seconds"]
-            dt = sd.target_cadence
+            dt = ds.target_cadence
             ts_evenly_sampled = is_evenly_sampled(t,
                                                   absolute_tolerance.to('s').value)
             if not is_evenly_sampled:
