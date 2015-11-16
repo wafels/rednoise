@@ -16,12 +16,13 @@ import details_plots as dp
 import details_analysis as da
 
 # Wavelengths we want to cross correlate
-waves = ['131', '171', '193', '211']
+waves = ['131', '171', '193', '211', '94', '335']
 
 # Regions we are interested in
 regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 regions = ['most_of_fov']
 regions = ['four_wavebands']
+regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']

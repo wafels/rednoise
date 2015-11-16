@@ -15,12 +15,12 @@ import details_analysis as da
 import details_plots as dp
 
 # Wavelengths we want to cross correlate
-waves = ['171', '193', '211', '131']
+waves = ['94', '335', '171', '193', '211', '131']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # regions = ['most_of_fov']
-regions = ['four_wavebands']
+regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']
@@ -29,7 +29,7 @@ windows = ['hanning']
 model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
 # Which limit to use
-limit_type = 'low_lognormal_width'
+limit_type = 'standard'
 
 
 #
@@ -94,7 +94,8 @@ for ic_type in ic_types:
                     ofilename = os.path.join(output, region_id + '.datacube')
 
                     # Get the region submap
-                    submaps = analysis_get_data.get_region_submap(output, region_id)
+                    if iwave == 0:
+                        submaps = analysis_get_data.get_region_submap(output, region_id)
 
                     # Get the data for this model
                     this = storage[wave][region][this_model]
@@ -150,9 +151,15 @@ for ic_type in ic_types:
                         my_map = analysis_get_data.make_map(submaps['reference region'], map_data)
 
                         # Get the sunspot
-                        sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date)
 
-                        # Make a spatial distribution map spectral model parameter
+                        # Get the sunspot
+                        sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
+                                                                                  sunspot_outline[1],
+                                                                                  my_map.date,
+                                                                                  edgecolors=[dp.spatial_plots['sunspot outline']])
+
+                        # Make a spatial distribution map spectral model
+                        # parameter
                         plt.close('all')
                         # Normalize the color table
                         norm = colors.Normalize(clip=False,
@@ -160,9 +167,9 @@ for ic_type in ic_types:
                                                 vmax=p1_limits[1].value)
 
                         # Set up the palette we will use
-                        palette = cm.Set2
+                        palette = dp.spatial_plots['color table']
                         # Bad values are those that are masked out
-                        palette.set_bad('white', 1.0)
+                        palette.set_bad(dp.spatial_plots['bad value'], 1.0)
                         #palette.set_under('green', 1.0)
                         #palette.set_over('red', 1.0)
 

@@ -3,6 +3,7 @@
 #
 import os
 import numpy as np
+import matplotlib.cm as cm
 import astropy.units as u
 import details_study as ds
 
@@ -48,6 +49,11 @@ linewidth = 3
 
 # Parameters which are frequencies
 frequency_parameters = ['lognormal position']
+
+# Color choices for the spatial plots
+spatial_plots = {'sunspot outline': 'w',
+                 'color table': cm.Set2,
+                 'bad value': 'black'}
 
 #
 # Useful strings for plots

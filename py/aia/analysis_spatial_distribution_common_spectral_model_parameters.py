@@ -4,16 +4,11 @@
 # selected by the information criterion is selected, and its value is plotted.
 #
 import os
-from copy import deepcopy
+import cPickle as pickle
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import matplotlib.colors as colors
-from scipy.stats import pearsonr, spearmanr
-from astroML.plotting import hist
-
-import sunpy.map
 
 import analysis_get_data
 import analysis_explore
@@ -23,12 +18,12 @@ import details_plots as dp
 
 
 # Wavelengths we want to cross correlate
-waves = ['131', '171', '193', '211']
+waves = ['131', '171', '193', '211', '335', '94']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # regions = ['most_of_fov']
-regions = ['four_wavebands']
+regions = ['six_euv']
 
 
 # Apodization windows
@@ -40,7 +35,7 @@ model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 #
 # Details of the analysis
 #
-limits = da.limits
+limits = da.limits['standard']
 ic_types = da.ic_details.keys()
 
 #
@@ -101,7 +96,7 @@ for ic_type in ic_types:
 
                 # Get the region submap
                 if iwave == 0:
-                    region_submap = analysis_get_data.get_region_submap(output, region_id)
+                    region_submap = analysis_get_data.get_region_submap(output, region_id)['reference region']
 
                 # Get preferred model index.  This is an index to the list of
                 # models used.  If the mask value is true, then the preferred
@@ -173,7 +168,10 @@ for ic_type in ic_types:
                     my_map = analysis_get_data.make_map(region_submap, map_data)
 
                     # Get the sunspot
-                    sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date)
+                    sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
+                                                                                  sunspot_outline[1],
+                                                                                  my_map.date,
+                                                                                  edgecolors=[dp.spatial_plots['sunspot outline']])
 
                     # Make a spatial distribution map spectral model parameter
                     plt.close('all')
@@ -183,9 +181,9 @@ for ic_type in ic_types:
                                             vmax=p1_limits[1].value)
 
                     # Set up the palette we will use
-                    palette = cm.Set2
+                    palette = dp.spatial_plots['color table']
                     # Bad values are those that are masked out
-                    palette.set_bad('white', 1.0)
+                    palette.set_bad(dp.spatial_plots['bad value'], 1.0)
                     #palette.set_under('green', 1.0)
                     #palette.set_over('red', 1.0)
 
@@ -205,7 +203,15 @@ for ic_type in ic_types:
                     # Dump to file
                     final_filename = dp.concat_string([plot_type,
                                                        plot_identity_filename,
-                                                       subtitle_filename]) + '.png'
-                    filepath = os.path.join(image, final_filename)
+                                                       subtitle_filename])
+                    filepath = os.path.join(image, final_filename + '.png')
                     print('Saving to ' + filepath)
                     plt.savefig(filepath)
+
+                    # Save the map to a file for later use
+                    final_pickle_filepath = os.path.join(output,
+                                                         final_filename + '.pkl')
+                    print('Saving map to %s' % final_pickle_filepath)
+                    f = open(final_pickle_filepath, 'wb')
+                    pickle.dump(my_map, f)
+                    f.close()

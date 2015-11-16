@@ -60,7 +60,7 @@ if study_type == 'paper2':
     cross_correlate = True
     derotate = True
 
-#"""
+"""
 if study_type == 'paper2':
     dataroot = '~/Data/ts/'
     corename = 'request4'
@@ -72,7 +72,7 @@ if study_type == 'paper2':
     wave = '211'
     cross_correlate = True
     derotate = True
-#"""
+"""
 
 
 
