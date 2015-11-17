@@ -22,6 +22,7 @@ from sklearn.cluster import KMeans
 
 # Wavelengths we want to cross correlate
 waves = ['131', '171', '193', '211', '335', '94']
+waves = ['131', '171', '193', '211', '335']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
@@ -72,12 +73,14 @@ plot_type = 'spatial.clustering'
 # Plot spatial distributions of the spectral model parameters.
 # Different information criteria
 for ic_type in ic_types:
+    kmeans_keep = {}
 
     # Get the IC limit
     ic_limits = da.ic_details[ic_type]
     for ic_limit in ic_limits:
         ic_limit_string = '%s>%f' % (ic_type, ic_limit)
 
+        kmeans_keep[ic_limit] = {}
         # Select a region
         for region in regions:
 
@@ -107,6 +110,7 @@ for ic_type in ic_types:
                     elif len(directory_listing) <1:
                         raise ValueError("No file selected.")
 
+                    print("Loading file %s" % directory_listing[0])
                     f = open(directory_listing[0], 'rb')
                     submap = pickle.load(f)
                     f.close()
@@ -118,13 +122,31 @@ for ic_type in ic_types:
                         nx = submap.data.shape[1]
                         x = np.arange(0, nx)
 
-                        all_data = np.zeros(shape=(2 + len(waves), ny*nx))
-                        all_data[0, :] = np.repeat(x, ny)
-                        all_data[1, :] = np.tile(y, nx)
+                        all_data = np.zeros(shape=(ny*nx, len(waves)))
+                        all_mask = np.zeros(shape=(ny*nx), dtype=bool)
+                        #all_data[0, :] = np.repeat(x, ny)
+                        #all_data[1, :] = np.tile(y, nx)
 
-                    all_data[2 + iwave, :] = submap.data.flatten()
+                    all_mask = np.logical_or(all_mask, submap.mask.flatten())
+                    all_data[:, iwave] = submap.data.flatten()
+
+                nleft = np.sum(np.logical_not(all_mask))
+                print("Number of data points is %i (%f%%)" % (nleft, 100*nleft/(1.0*nx*ny)))
+                all_masked_data = np.zeros((nleft, len(waves)))
+                for iwave in range(0, len(waves)):
+                    all_masked_data[:, iwave] = np.ma.array(all_data[:, iwave], mask=all_mask).compressed()
 
                 # Run the clustering algorithm
                 kmeans = KMeans()
-                kmeans.fit(all_data)
-                stop
+                kmeans.fit(all_masked_data)
+
+                all_data2 = np.zeros((nx*ny, len(waves)))
+                for iwave in range(0, len(waves)):
+                    all_data2[:, iwave] = all_data[:, iwave]
+                    all_data2[np.where(all_mask), iwave] = -1
+
+
+                # Run the clustering algorithm
+                kmeans2 = KMeans(n_clusters=5)
+                kmeans2.fit(all_data2)
+                kmeans_keep[ic_limit][parameter] = (kmeans2, all_data2)
