@@ -96,7 +96,8 @@ for ic_type in ic_types:
 
                 # Get the region submap
                 if iwave == 0:
-                    region_submap = analysis_get_data.get_region_submap(output, region_id)['reference region']
+                    all_submaps = analysis_get_data.get_region_submap(output, region_id)
+                    region_submap = all_submaps['reference region']
 
                 # Get preferred model index.  This is an index to the list of
                 # models used.  If the mask value is true, then the preferred
@@ -153,8 +154,6 @@ for ic_type in ic_types:
                     # on how much of the field of view is not masked,
                     # and the information criterion and limit used.
                     ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
-                    subtitle = dp.concat_string(['%s - %s' % (region, wave),
-                                                 ic_info_string], sep='\n')
                     subtitle_filename = dp.concat_string([region,
                                                           ic_info_string], sep='.')
 
@@ -167,51 +166,60 @@ for ic_type in ic_types:
                     # Make a SunPy map for nice spatially aware plotting.
                     my_map = analysis_get_data.make_map(region_submap, map_data)
 
-                    # Get the sunspot
-                    sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
+                    for submap_type in all_submaps.keys():
+
+                        # Get the sunspot
+                        sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
                                                                                   sunspot_outline[1],
                                                                                   my_map.date,
                                                                                   edgecolors=[dp.spatial_plots['sunspot outline']])
 
-                    # Make a spatial distribution map spectral model parameter
-                    plt.close('all')
-                    # Normalize the color table
-                    norm = colors.Normalize(clip=False,
-                                            vmin=p1_limits[0].value,
-                                            vmax=p1_limits[1].value)
+                        subtitle = dp.concat_string(['%s - %s' % (region, wave),
+                                                    ic_info_string,
+                                                    submap_type], sep='\n')
+                        # Make a spatial distribution map spectral model parameter
+                        plt.close('all')
+                        # Normalize the color table
+                        norm = colors.Normalize(clip=False,
+                                                vmin=p1_limits[0].value,
+                                                vmax=p1_limits[1].value)
 
-                    # Set up the palette we will use
-                    palette = dp.spatial_plots['color table']
-                    # Bad values are those that are masked out
-                    palette.set_bad(dp.spatial_plots['bad value'], 1.0)
-                    #palette.set_under('green', 1.0)
-                    #palette.set_over('red', 1.0)
+                        # Set up the palette we will use
+                        palette = dp.spatial_plots['color table']
+                        # Bad values are those that are masked out
+                        palette.set_bad(dp.spatial_plots['bad value'], 1.0)
+                        #palette.set_under('green', 1.0)
+                        #palette.set_over('red', 1.0)
 
-                    # Begin the plot
-                    fig, ax = plt.subplots()
-                    # Plot the map
-                    ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
-                                      norm=norm)
-                    ret.axes.set_title('%s\n%s' % (label, subtitle))
-                    ax.add_collection(sunspot_collection)
+                        # Begin the plot
+                        fig, ax = plt.subplots()
+                        # Plot the map
+                        ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
+                        ret.axes.set_title('%s\n%s' % (label, subtitle))
+                        X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
+                        Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
+                        ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,
+                                         colors=["#0088ff", "#0044ff", "#0000ff"],
+                                         linewidths=[2, 2, 2])
+                        ax.add_collection(sunspot_collection)
+                        cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
 
-                    cbar = fig.colorbar(ret, extend='both', orientation='vertical',
-                                        shrink=0.8, label=label)
-                    # Fit everything in.
-                    ax.autoscale_view()
+                        # Fit everything in.
+                        ax.autoscale_view()
 
-                    # Dump to file
-                    final_filename = dp.concat_string([plot_type,
-                                                       plot_identity_filename,
-                                                       subtitle_filename])
-                    filepath = os.path.join(image, final_filename + '.png')
-                    print('Saving to ' + filepath)
-                    plt.savefig(filepath)
+                        # Dump to file
+                        final_filename = dp.concat_string([plot_type,
+                                                           submap_type,
+                                                           plot_identity_filename,
+                                                           subtitle_filename])
+                        filepath = os.path.join(image, final_filename + '.png')
+                        print('Saving to ' + filepath)
+                        plt.savefig(filepath)
 
-                    # Save the map to a file for later use
-                    final_pickle_filepath = os.path.join(output,
-                                                         final_filename + '.pkl')
-                    print('Saving map to %s' % final_pickle_filepath)
-                    f = open(final_pickle_filepath, 'wb')
-                    pickle.dump(my_map, f)
-                    f.close()
+                        # Save the map to a file for later use
+                        final_pickle_filepath = os.path.join(output,
+                                                             final_filename + '.pkl')
+                        print('Saving map to %s' % final_pickle_filepath)
+                        f = open(final_pickle_filepath, 'wb')
+                        pickle.dump(my_map, f)
+                        f.close()

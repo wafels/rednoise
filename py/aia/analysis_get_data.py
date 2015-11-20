@@ -101,6 +101,7 @@ def get_region_submap(output, region_id, average_submap=False):
     meta = deepcopy(region_submap.meta)
     return {"reference region": region_submap,
             "mean": sunpy.map.Map(np.mean(data, axis=2), meta),
+            "mean of log": sunpy.map.Map(np.mean(np.log(data), axis=2), meta),
             "standard deviation": sunpy.map.Map(np.std(data, axis=2), meta),
             "minimum": sunpy.map.Map(np.min(data, axis=2), meta),
             "maximum": sunpy.map.Map(np.max(data, axis=2), meta),

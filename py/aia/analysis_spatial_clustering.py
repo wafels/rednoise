@@ -14,6 +14,7 @@ import matplotlib.cm as cm
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples, silhouette_score
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 import analysis_get_data
 import details_study as ds
@@ -24,11 +25,14 @@ import details_plots as dp
 # Wavelengths we want to cross correlate
 waves = ['131', '171', '193', '211', '335', '94']
 waves = ['131', '171', '193', '211', '335']
+#waves = ['171', '193']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # regions = ['most_of_fov']
 regions = ['six_euv']
+
+use_position_offset = 0
 
 
 # Apodization windows
@@ -99,9 +103,9 @@ for ic_type in ic_types:
                     glob_this = os.path.join(output, '*%s*%s*' % (parameter, ic_limit_string))
 
                     directory_listing = glob.glob(glob_this)
-                    if len(directory_listing) >=2:
+                    if len(directory_listing) >= 2:
                         raise ValueError("More than 1 file selected.")
-                    elif len(directory_listing) <1:
+                    elif len(directory_listing) < 1:
                         raise ValueError("No file selected.")
 
                     print("Loading file %s" % directory_listing[0])
@@ -116,28 +120,47 @@ for ic_type in ic_types:
                         nx = submap.data.shape[1]
                         x = np.arange(0, nx)
 
-                        all_data = np.zeros(shape=(ny*nx, len(waves)))
+                        all_data = np.zeros(shape=(ny*nx, use_position_offset + len(waves)))
                         all_mask = np.zeros(shape=(ny*nx), dtype=bool)
-                        #all_data[0, :] = np.repeat(x, ny)
-                        #all_data[1, :] = np.tile(y, nx)
 
+                        # Create the positional information
+                        all_data_x = np.zeros(shape=(ny, nx))
+                        for j in range(0, ny):
+                            all_data_x[j, :] = np.arange(0, nx)
+
+                        all_data_y = np.zeros_like(all_data_x)
+                        for i in range(0, nx):
+                            all_data_y[:, i] = np.arange(0, ny)
+
+                    # Update the mask
                     all_mask = np.logical_or(all_mask, submap.mask.flatten())
+
+                    # Update the data array
                     all_data[:, iwave] = submap.data.flatten()
 
+                #
+                if use_position_offset == 2:
+                    all_data[:, len(waves)] = all_data_x.flatten()
+                    all_data[:, len(waves) + 1] = all_data_y.flatten()
+
+                # Number of features
+                n_features = all_data.shape[1]
+
+                # Number of
                 nleft = np.sum(np.logical_not(all_mask))
                 print("Number of data points is %i (%f%%)" % (nleft, 100*nleft/(1.0*nx*ny)))
-                all_masked_data = np.zeros((nleft, len(waves)))
-                for iwave in range(0, len(waves)):
-                    all_masked_data[:, iwave] = np.ma.array(all_data[:, iwave], mask=all_mask).compressed()
+                all_masked_data = np.zeros((nleft, use_position_offset + len(waves)))
+                for n in range(0, n_features):
+                    all_masked_data[:, n] = np.ma.array(all_data[:, n], mask=all_mask).compressed()
 
                 # Run the clustering algorithm
                 kmeans = KMeans()
                 kmeans.fit(all_masked_data)
 
-                all_data2 = np.zeros((nx*ny, len(waves)))
-                for iwave in range(0, len(waves)):
-                    all_data2[:, iwave] = all_data[:, iwave]
-                    all_data2[np.where(all_mask), iwave] = -1
+                #all_data2 = np.zeros((nx*ny, len(waves)))
+                #for iwave in range(0, len(waves)):
+                #    all_data2[:, iwave] = all_data[:, iwave]
+                #    all_data2[np.where(all_mask), iwave] = -1
 
 
                 # Run the clustering algorithm
@@ -145,10 +168,9 @@ for ic_type in ic_types:
                 #kmeans2.fit(all_data2)
                 #kmeans_keep[ic_limit][parameter] = (kmeans2, all_data2)
 
-                use_this = deepcopy(all_masked_data)
+                use_this = StandardScaler().fit_transform(deepcopy(all_masked_data))
 
                 X_reduced = PCA(n_components=1).fit(use_this)
-
 
                 range_n_clusters = [2, 3, 4, 5, 6, 7, 8, 9, 10]
                 for n_clusters in range_n_clusters:
@@ -173,7 +195,7 @@ for ic_type in ic_types:
                     # The silhouette_score gives the average value for all the samples.
                     # This gives a perspective into the density and separation of the formed
                     # clusters
-                    n_select = 100
+                    n_select = 1
                     silhouette_avg_keep = []
                     for nrandom in range(0, n_select):
                         random_selection = np.random.random_integers(0, use_this.shape[0]-1, size=1000)
