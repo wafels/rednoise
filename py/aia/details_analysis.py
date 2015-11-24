@@ -42,8 +42,14 @@ limits = {"standard": {"power law index": [0., 7.] * u.dimensionless_unscaled,
 limits["low_lognormal_width"] = deepcopy(limits["standard"])
 limits["low_lognormal_width"]["ln(lognormal width)"] = [0.0, 0.1] * u.dimensionless_unscaled
 
+limits["low_lognormal_width_3_to_5_minutes"] = deepcopy(limits["low_lognormal_width"])
+limits["low_lognormal_width_3_to_5_minutes"]["lognormal position"] = [1.0/500.0, 1.0/160.0] * u.Hz
+
 limits["high_lognormal_width"] = deepcopy(limits["standard"])
 limits["high_lognormal_width"]["ln(lognormal width)"] = [0.1, 0.6] * u.dimensionless_unscaled
+
+limits["high_lognormal_width_freq_less_than_5_minutes"] = deepcopy(limits["standard"])
+limits["high_lognormal_width_freq_less_than_5_minutes"]["lognormal position"] = [1.0/(1800.0 * 12.0), 1.0/501.0] * u.Hz
 
 
 # Number of parameters

@@ -8,21 +8,28 @@ import os
 import details_study as ds
 import rnspectralmodels2
 
-# Wavelengths we want to analyze
+# Wavelengths and regions we want to analyze
 waves = ['131', '171', '193', '211', '335', '94']
+regions = ['six_euv']
+
+# Wavelengths and regions we want to analyze
+waves = ['171', '193']
+regions = ['sunspot', 'quiet Sun']
+
 
 # Regions we are interested in
 #regions = ['sunspot', 'quiet Sun']
 #regions = ['most_of_fov']
 #regions = ['four_wavebands']
-regions = ['six_euv']
+#regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']
 
 # Models to fit
 these_models = [rnspectralmodels2.PowerLawPlusConstantPlusLognormal(),
-                rnspectralmodels2.PowerLawPlusConstant()]
+                rnspectralmodels2.PowerLawPlusConstant(),
+                rnspectralmodels2.BrokenPowerLawPlusConstant()]
 n_models = len(these_models)
 
 #

@@ -68,6 +68,7 @@ def broken_power_law(a, f):
     power = np.zeros_like(f)
     less_than_break = f < a[2]
     above_break = f >= a[2]
+    print a
     power[less_than_break] = np.exp(a[0]) * f[less_than_break] ** (-a[1])
     power[above_break] = np.exp(a[0]) * (a[2]**(-a[1]+a[3])) * f[above_break] ** (-a[3])
     return power
@@ -372,7 +373,7 @@ class BrokenPowerLaw(Spectrum):
                            break_frequency, power_law_index_above_break])
 
     def power(self, a, f):
-        return power_law(a, f)
+        return broken_power_law(a, f)
 
     # A good enough guess that will allow a proper fitting algorithm to proceed.
     def guess(self, f, observed_power, amp_range=[0, 5],
@@ -505,49 +506,36 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
         return initial_guess
 
 
-class BrokenPowerLawPlusConstantPlusLognormal(CompoundSpectrum):
+class BrokenPowerLawPlusConstant(CompoundSpectrum):
     def __init__(self):
-        CompoundSpectrum.__init__(self, ((BrokenPowerLaw(), (0, 3)),
-                                         (Constant(), (3, 4)),
-                                         (Lognormal(), (4, 7))))
+        CompoundSpectrum.__init__(self, ((BrokenPowerLaw(), (0, 4)),
+                                         (Constant(), (4, 5))))
 
     def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
               background_range=[-50, -1], f_lower_limit=50.0,
-              f_upper_limit=200.0, sufficient_frequencies=10,
-              initial_log_width=0.1):
+              f_upper_limit=200.0, break_estimate=43):
 
-        log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
+
         #
-        # Should use the above guess to seed a fit for PowerLawPlusConstant
-        # based on the excluded estimated location of the lognormal
+        # Estimate the spectrum below the break estimate
         #
-        background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
+        below_log_amplitude, below_index_estimate, below_log_background = PowerLawPlusConstant().guess(f[0:break_estimate], power[0:break_estimate])
 
-        # Difference between the data and the model
-        diff0 = power - background_spectrum
+        #
+        # Estimate the spectrum above the break estimate
+        #
+        above_log_amplitude, above_index_estimate, above_log_background = PowerLawPlusConstant().guess(f[break_estimate:], power[break_estimate:])
 
-        # Keep the positive parts only
-        positive_index = diff0 > 0.0
+        #
+        #
+        #
+        below_spectrum = PowerLawPlusConstant().power([below_log_amplitude, below_index_estimate, below_log_background], f)
 
-        # Limit the fit to a specific frequency range
-        f_above = f > f_lower_limit
-        f_below = f < f_upper_limit
 
-        # Which data to fit
-        fit_here = positive_index * f_above * f_below
+        initial_guess = [below_log_amplitude, below_index_estimate,
+                         break_estimate,
+                         above_index_estimate, above_log_background]
 
-        # If there is sufficient positive data
-        if np.sum(fit_here) > sufficient_frequencies:
-            diff1 = diff0[fit_here]
-            f1 = f[fit_here]
-            amp = np.log(np.max(diff1))
-            pos = np.log(f1[np.argmax(diff1)])
-            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, initial_log_width]
-        else:
-            initial_guess = [log_amplitude, index_estimate, log_background,
-                             -100.0,
-                             0.5 * (f_lower_limit + f_upper_limit),
-                             initial_log_width]
         return initial_guess
 
 

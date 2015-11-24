@@ -30,6 +30,8 @@ model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
 # Which limit to use
 limit_type = 'standard'
+limit_type = "low_lognormal_width_3_to_5_minutes"
+limit_type = "high_lognormal_width_freq_less_than_5_minutes"
 
 
 #
@@ -126,7 +128,7 @@ for ic_type in ic_types:
                         # criterion was satisfied.
                         final_mask = np.logical_or(mask1, mask2)
 
-                        image = dp.get_image_model_location(ds.roots, b, [this_model, ic_type])
+                        image = dp.get_image_model_location(ds.roots, b, [this_model, ic_limit_string, limit_type])
 
                         # Create the subtitle - model, region, information
                         # on how much of the field of view is not masked,
