@@ -23,12 +23,20 @@ import details_analysis as da
 import details_plots as dp
 
 # Wavelengths we want to analyze
-waves = ['131', '171', '193', '211']
+#waves = ['131', '171', '193', '211']
+
+# Paper 2 choices
+waves = ['171', '131', '94', '193', '211', '335']
+regions = ['six_euv']
 
 # Regions we are interested in
-regions = ['sunspot', 'quiet Sun']
+#regions = ['sunspot', 'quiet Sun']
 #regions = ['most_of_fov']
-regions = ['four_wavebands']
+#regions = ['four_wavebands']
+
+# Paper3 choices
+#waves = ['171']
+#regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']
@@ -39,12 +47,7 @@ model_names = ('Power Law + Constant + Lognormal',)
 # Model results to examine
 model_comparison_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
-# Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves,
-                                         regions=regions,
-                                         model_names=model_comparison_names)
-
-masks = analysis_explore.MaskDefine(storage, da.limits)
+# Limit type
 limit_type = 'standard'
 
 #
@@ -52,6 +55,14 @@ limit_type = 'standard'
 #
 limits = da.limits[limit_type]
 ic_types = da.ic_details.keys()
+
+# Load in all the data
+storage = analysis_get_data.get_all_data(waves=waves,
+                                         regions=regions,
+                                         model_names=model_comparison_names)
+
+# Masks
+masks = analysis_explore.MaskDefine(storage, limits)
 
 #
 # Details of the plotting
@@ -87,9 +98,6 @@ for ic_type in ic_types:
 
                 for this_model in model_names:
                     for ic_type in ic_types:
-
-                        # Get the IC limit
-                        ic_limit = da.ic_details[ic_type]
 
                         # Next data set
                         this = storage[wave][region][this_model]

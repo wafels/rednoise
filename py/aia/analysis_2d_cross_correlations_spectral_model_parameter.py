@@ -15,14 +15,21 @@ import details_study as ds
 import details_plots as dp
 import details_analysis as da
 
-# Wavelengths we want to cross correlate
+# Paper 2 - Wavelengths we want to cross correlate
 waves = ['131', '171', '193', '211', '94', '335']
+waves = ['171']
+regions = ['six_euv']
+
+# Paper 3
+#waves = ['171']
+#regions = ['six_euv']
+
+
 #waves = ['171']
 # Regions we are interested in
 #regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 #regions = ['most_of_fov']
 #regions = ['four_wavebands']
-regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']
@@ -30,8 +37,8 @@ windows = ['hanning']
 # Model results to examine
 model_names = ('Power Law + Constant', 'Power Law + Constant + Lognormal')
 
-#limit_type = 'standard'
-#limit_type = "low_lognormal_width_3_to_5_minutes"
+limit_type = 'standard'
+limit_type = "low_lognormal_width_3_to_5_minutes"
 limit_type = "high_lognormal_width_freq_less_than_5_minutes"
 #
 # Details of the analysis
@@ -178,7 +185,7 @@ for ic_type in ic_types:
                                 plt.xlabel('%s %s' % (xlabel, xunit))
                                 plt.ylabel('%s %s' % (ylabel, yunit))
                                 if plot_function == 1:
-                                    plt.scatter(p1, p2)
+                                    plt.scatter(p1, p2, marker='.')
                                     plot_name = 'scatter'
                                 else:
                                     plt.hist2d(p1, p2, bins=bins,

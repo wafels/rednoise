@@ -11,18 +11,27 @@ import details_analysis as da
 import details_plots as dp
 import analysis_explore
 
-# Wavelengths we want to analyze
+# Paper 2: Wavelengths and regions
 waves = ['94', '335', '131', '171', '193', '211']
+regions = ['six_euv']
+
+# Paper 3: Wavelengths and regions
+waves = ['171']
+regions = ['six_euv']
+
+
 
 # Regions we are interested in
 #regions = ['sunspot', 'quiet Sun']
 #regions = ['most_of_fov']
-regions = ['six_euv']
+
+# Parameter limits
+limit_type = 'standard'
 
 #
-# Details of the analysis
+# Parameter limits and information criteria
 #
-limits = da.limits['standard']
+limits = da.limits[limit_type]
 ic_types = da.ic_details.keys()
 
 # Apodization windows
@@ -114,13 +123,16 @@ for ic_type in ic_types:
                             plot_identity = dp.concat_string([wave,
                                                               region,
                                                               p1_name,
-                                                              ic_limit_string])
+                                                              ic_limit_string,
+                                                              limit_type])
 
                             # Title of the plot
-                            title = '%s\n%s' % (plot_identity, dp.get_mask_info_string(mask))
+                            title = '%s\n%s\n%s\n%s' % (plot_identity,
+                                                        dp.get_mask_info_string(mask),
+                                                        ic_limit_string, limit_type)
 
                             # location of the image
-                            image = dp.get_image_model_location(ds.roots, b, [this_model, ic_type])
+                            image = dp.get_image_model_location(ds.roots, b, [this_model, ic_limit_string, limit_type])
 
                             # For what it is worth, plot the same data using all the bin
                             # choices.

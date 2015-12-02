@@ -39,7 +39,7 @@ def DefineWindow(window, nt):
 
 # Wavelengths we want to analyze
 waves = ['94', '131', '171', '193', '211', '335']
-
+waves = ['171']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 # regions = ['most_of_fov']

@@ -16,7 +16,7 @@ import details_plots as dp
 
 # Wavelengths we want to cross correlate
 waves = ['94', '335', '171', '193', '211', '131']
-
+waves = ['171']
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # regions = ['most_of_fov']
@@ -30,8 +30,8 @@ model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
 # Which limit to use
 limit_type = 'standard'
-limit_type = "low_lognormal_width_3_to_5_minutes"
-limit_type = "high_lognormal_width_freq_less_than_5_minutes"
+#limit_type = "low_lognormal_width_3_to_5_minutes"
+#limit_type = "high_lognormal_width_freq_less_than_5_minutes"
 
 
 #

@@ -6,6 +6,7 @@ import numpy as np
 import astropy.units as u
 import lnlike_model_fit
 import pstools
+import matplotlib.pyplot as plt
 
 
 #
@@ -497,7 +498,11 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
             f1 = f[fit_here]
             amp = np.log(np.max(diff1))
             pos = np.log(f1[np.argmax(diff1)])
-            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, initial_log_width]
+            pp = pos - np.log(f1)
+            log_width_estimate = np.sqrt(np.sum(diff1 * pp**2)/np.sum(diff1))
+            #log_width_estimate = np.sqrt(np.sum(diff1 * (pos - np.log(f1)) ** 2) / np.sum(diff1))
+
+            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, log_width_estimate]
         else:
             initial_guess = [log_amplitude, index_estimate, log_background,
                              -100.0,

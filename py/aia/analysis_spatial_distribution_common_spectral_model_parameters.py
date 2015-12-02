@@ -17,13 +17,19 @@ import details_analysis as da
 import details_plots as dp
 
 
+# Paper 2
 # Wavelengths we want to cross correlate
 waves = ['131', '171', '193', '211', '335', '94']
+regions = ['six_euv']
+
+# Paper 3
+waves = ['171']
+regions = ['six_euv']
+
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # regions = ['most_of_fov']
-regions = ['six_euv']
 
 
 # Apodization windows

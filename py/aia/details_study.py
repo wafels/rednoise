@@ -11,6 +11,8 @@ import astropy.units as u
 #study_type = 'debugpaper2'
 study_type = 'paper2'
 
+#study_type = 'paper3'
+
 # Target cadence
 target_cadence = 12
 
@@ -57,6 +59,15 @@ if study_type == 'paper2':
     wave = '193'
     wave = '211'
     wave = '335'
+    cross_correlate = True
+    derotate = True
+
+if study_type == 'paper3':
+    dataroot = '~/Data/ts/'
+    corename = 'paper3_BM3D'
+    sunlocation = 'disk'
+    fits_level = '1.5'
+    wave = '171'
     cross_correlate = True
     derotate = True
 
