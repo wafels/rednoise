@@ -50,9 +50,7 @@ n_models = len(these_models)
 
 # Load the model fits
 storage = analysis_get_data.get_all_data(waves=waves,
-                                         regions=regions,
-                                         model_names=('Power Law + Constant',
-                                                      'Power Law + Constant + Lognormal'))
+                                         regions=regions)
 
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)

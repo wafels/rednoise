@@ -532,30 +532,12 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
                                          (Constant(), (2, 3)),
                                          (Lognormal(), (3, 6))))
 
-
-    """
-    def acceptable_fit(self, a):
-        return self.f_lower_limit <= a[4] <= self.f_upper_limit
-
-    def vary_guess(self, a):
-        print a[4], self.f_lower_limit, self.f_upper_limit
-        new_a = deepcopy(a)
-        while not self.acceptable_fit(new_a):
-            acceptable_f_range = 0.1*(self.f_upper_limit - self.f_lower_limit)
-            if new_a[4] <= self.f_lower_limit:
-                new_a[4] = self.f_lower_limit + acceptable_f_range*np.abs(np.random.uniform())
-            if new_a[4] >= self.f_upper_limit:
-                new_a[4] = self.f_upper_limit - acceptable_f_range*np.abs(np.random.uniform())
-        print new_a[4]
-        return new_a
-    """
-
     def guess(self, f, power,
               amp_range=[0, 5],
               index_range=[0, 50],
               background_range=[-50, -1],
-              f_lower_limit=np.log(21.0),
-              f_upper_limit=np.log(200.0),
+              f_lower_limit=21.0,
+              f_upper_limit=200.0,
               sufficient_frequencies=10,
               initial_log_width=0.1):
 
@@ -579,7 +561,7 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
         fit_here = positive_index * f_above * f_below
 
         # If there is sufficient positive data
-        if np.sum(fit_here) >sufficient_frequencies:
+        if np.sum(fit_here) > sufficient_frequencies:
             diff1 = diff0[fit_here]
             f1 = f[fit_here]
             amp = np.log(np.max(diff1))
@@ -699,15 +681,6 @@ class Fit:
 
                 # Initial guess
                 guess = self.model.guess(self.fn, observed_power, **kwargs)
-                """
-                self.acceptable_fit_found = False
-                n_attempts = 0
-                this_guess = deepcopy(guess)
-
-                # Vary the initial guess until a good fit is found up to a
-                # limited number of attempts
-                #while (n_attempts <= self.attempt_limit) and not self.acceptable_fit_found:
-                """
                 result = lnlike_model_fit.go(self.fn,
                                              observed_power,
                                              self.model.power,
@@ -716,15 +689,6 @@ class Fit:
 
                 # Estimates of the quality of the fit to the data
                 parameter_estimate = result['x']
-
-                """
-                # Check if an
-                self.acceptable_fit_found = self.model.acceptable_fit(parameter_estimate)
-                if not self.acceptable_fit_found:
-                    this_guess = self.model.vary_guess(guess)
-                    n_attempts += 1
-                """
-
                 bestfit = self.model.power(parameter_estimate, self.fn)
                 rhoj = lnlike_model_fit.rhoj(observed_power, bestfit)
                 rchi2 = lnlike_model_fit.rchi2(1.0, self.dof, rhoj)
