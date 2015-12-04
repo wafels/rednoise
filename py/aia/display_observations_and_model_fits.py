@@ -25,6 +25,8 @@ regions = ['six_euv']
 # Paper 3: BM3D Wavelengths and regions we want to analyze
 waves = ['171']
 regions = ['six_euv']
+waves = ['171']
+regions = ['test_six_euv']
 
 # Number of locations to print out
 n_locations = 10
@@ -48,7 +50,9 @@ n_models = len(these_models)
 
 # Load the model fits
 storage = analysis_get_data.get_all_data(waves=waves,
-                                         regions=regions)
+                                         regions=regions,
+                                         model_names=('Power Law + Constant',
+                                                      'Power Law + Constant + Lognormal'))
 
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)
@@ -61,7 +65,7 @@ nx = storage[waves[0]][regions[0]][available_models[0]].nx
 these_locations = zip(np.random.randint(0, ny, size=n_locations),
                       np.random.randint(0, nx, size=n_locations))
 
-these_locations = ((12, 325), (31,29), (67,335), (85,565), (92, 499), (101, 98), (110, 287), (121, 35), (132, 461), (192, 388))
+#these_locations = ((12, 325), (31,29), (67,335), (85,565), (92, 499), (101, 98), (110, 287), (121, 35), (132, 461), (192, 388))
 
 #
 # Details of the plotting
@@ -155,8 +159,8 @@ for iwave, wave in enumerate(waves):
                             label=three_minutes.label,
                             linestyle=three_minutes.linestyle,
                             linewidth=three_minutes.linewidth)
-                plt.ylabel('frequency (%s)' % fz)
-                plt.xlabel('power (arb. units)')
+                plt.xlabel('frequency (%s)' % fz)
+                plt.ylabel('power (arb. units)')
                 plt.title(title)
                 plt.legend(fontsize=9, framealpha=0.5)
                 plt.tight_layout()

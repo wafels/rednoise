@@ -56,9 +56,9 @@ if study_type == 'paper2':
     wave = '94'
     wave = '131'
     wave = '171'
-    wave = '193'
-    wave = '211'
-    wave = '335'
+    #wave = '193'
+    #wave = '211'
+    #wave = '335'
     cross_correlate = True
     derotate = True
 

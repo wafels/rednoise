@@ -1,7 +1,7 @@
 """
 Power Spectrum Models
 """
-
+from copy import deepcopy
 import numpy as np
 import astropy.units as u
 import lnlike_model_fit
@@ -69,10 +69,50 @@ def broken_power_law(a, f):
     power = np.zeros_like(f)
     less_than_break = f < a[2]
     above_break = f >= a[2]
-    print a
     power[less_than_break] = np.exp(a[0]) * f[less_than_break] ** (-a[1])
     power[above_break] = np.exp(a[0]) * (a[2]**(-a[1]+a[3])) * f[above_break] ** (-a[3])
     return power
+
+
+# ----------------------------------------------------------------------------
+# Sum of Pulses
+#
+def sum_of_pulses(a, f):
+    """Sum of pulses.  This model is based on Aschwanden "Self Organized
+    Criticality in Astrophysics", Eq. 4.8.23.  Simulations implementing this
+    equation come up with a shape that is modeled below.
+
+    Parameters
+    ----------
+    a : ndarray[3]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the scale frequency
+        a[2] : the power law index
+    f : ndarray
+        frequencies
+    """
+    return np.exp(a[0])/(1.0 + (f/a[1]) ** a[2])
+
+
+# ----------------------------------------------------------------------------
+# Sum of Pulses Plus Constant
+#
+def sum_of_pulses_with_constant(a, f):
+    """Sum of pulses plus constant.  This model is based on Aschwanden "Self
+    Organized Criticality in Astrophysics", Eq. 4.8.23, with a constant
+    background to model detector noise.
+
+    Parameters
+    ----------
+    a : ndarray[3]
+        a[0] : the natural logarithm of the normalization constant
+        a[1] : the scale frequency
+        a[2] : the power law index
+        a[3] : natural logarithm of the background constant
+    f : ndarray
+        frequencies
+    """
+    return np.exp(a[0])/(1.0 + (f/a[1]) ** a[2]) + np.exp(a[3])
 
 
 # ----------------------------------------------------------------------------
@@ -336,8 +376,7 @@ class Constant(Spectrum):
 
 class PowerLaw(Spectrum):
     def __init__(self):
-        power_law_amplitude = LnVariable('power law amplitude',
-                                         'A_{P}')
+        power_law_amplitude = LnVariable('power law amplitude', 'A_{P}')
         power_law_index = Variable('power law index',
                                    no_conversion,
                                    r'$n$',
@@ -361,12 +400,12 @@ class BrokenPowerLaw(Spectrum):
         power_law_amplitude = LnVariable('power law amplitude', 'A_{P}')
         power_law_index_below_break = Variable('power law index below break',
                                                no_conversion,
-                                               r'$n_{below}',
+                                               r'$n_{below}$',
                                                u.dimensionless_unscaled)
         break_frequency = FrequencyVariable(r"$\nu_{break}$")
         power_law_index_above_break = Variable('power law index above break',
                                                no_conversion,
-                                               r'$n_{above}',
+                                               r'$n_{above}$',
                                                u.dimensionless_unscaled)
 
         Spectrum.__init__(self, 'broken power law',
@@ -397,6 +436,24 @@ class Lognormal(Spectrum):
         width = LnVariable('lognormal width', 'w_{L}')
 
         Spectrum.__init__(self, 'Lognormal', [amplitude, position, width])
+
+    def power(self, a, f):
+        return lognormal(a, f)
+
+
+class SumOfPulses(Spectrum):
+    def __init__(self):
+
+        pulse_power_amplitude = LnVariable('pulse power amplitude', 'A_{P}')
+        scale_frequency = FrequencyVariable(r"$\nu_{scale}$")
+        power_law_index = Variable('power law index',
+                                   no_conversion,
+                                   r'$n$',
+                                   u.dimensionless_unscaled)
+
+        Spectrum.__init__(self, 'Sum of pulses', [pulse_power_amplitude,
+                                                  scale_frequency,
+                                                  power_law_index])
 
     def power(self, a, f):
         return lognormal(a, f)
@@ -461,22 +518,51 @@ class PowerLawPlusConstant(CompoundSpectrum):
         return log_amplitude_estimate, index_estimate, log_background_estimate
 
 
+    def acceptable_fit(self, a):
+        return True
+
+
+    def vary_guess(self, a):
+        return a
+
+
 class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
     def __init__(self):
         CompoundSpectrum.__init__(self, ((PowerLaw(), (0, 2)),
                                          (Constant(), (2, 3)),
                                          (Lognormal(), (3, 6))))
 
-    def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
-              background_range=[-50, -1], f_lower_limit=50.0,
-              f_upper_limit=200.0, sufficient_frequencies=10,
+
+    """
+    def acceptable_fit(self, a):
+        return self.f_lower_limit <= a[4] <= self.f_upper_limit
+
+    def vary_guess(self, a):
+        print a[4], self.f_lower_limit, self.f_upper_limit
+        new_a = deepcopy(a)
+        while not self.acceptable_fit(new_a):
+            acceptable_f_range = 0.1*(self.f_upper_limit - self.f_lower_limit)
+            if new_a[4] <= self.f_lower_limit:
+                new_a[4] = self.f_lower_limit + acceptable_f_range*np.abs(np.random.uniform())
+            if new_a[4] >= self.f_upper_limit:
+                new_a[4] = self.f_upper_limit - acceptable_f_range*np.abs(np.random.uniform())
+        print new_a[4]
+        return new_a
+    """
+
+    def guess(self, f, power,
+              amp_range=[0, 5],
+              index_range=[0, 50],
+              background_range=[-50, -1],
+              f_lower_limit=np.log(21.0),
+              f_upper_limit=np.log(200.0),
+              sufficient_frequencies=10,
               initial_log_width=0.1):
 
         log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
-        #
+
         # Should use the above guess to seed a fit for PowerLawPlusConstant
         # based on the excluded estimated location of the lognormal
-        #
         background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
 
         # Difference between the data and the model
@@ -493,15 +579,13 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
         fit_here = positive_index * f_above * f_below
 
         # If there is sufficient positive data
-        if np.sum(fit_here) > sufficient_frequencies:
+        if np.sum(fit_here) >sufficient_frequencies:
             diff1 = diff0[fit_here]
             f1 = f[fit_here]
             amp = np.log(np.max(diff1))
             pos = np.log(f1[np.argmax(diff1)])
             pp = pos - np.log(f1)
             log_width_estimate = np.sqrt(np.sum(diff1 * pp**2)/np.sum(diff1))
-            #log_width_estimate = np.sqrt(np.sum(diff1 * (pos - np.log(f1)) ** 2) / np.sum(diff1))
-
             initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, log_width_estimate]
         else:
             initial_guess = [log_amplitude, index_estimate, log_background,
@@ -518,24 +602,15 @@ class BrokenPowerLawPlusConstant(CompoundSpectrum):
 
     def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
               background_range=[-50, -1], f_lower_limit=50.0,
-              f_upper_limit=200.0, break_estimate=43):
+              f_upper_limit=200.0, break_estimate=21):
 
-
-        #
         # Estimate the spectrum below the break estimate
-        #
-        below_log_amplitude, below_index_estimate, below_log_background = PowerLawPlusConstant().guess(f[0:break_estimate], power[0:break_estimate])
+        below_log_amplitude, below_index_estimate, below_log_background =\
+            PowerLawPlusConstant().guess(f[0:break_estimate], power[0:break_estimate])
 
-        #
         # Estimate the spectrum above the break estimate
-        #
-        above_log_amplitude, above_index_estimate, above_log_background = PowerLawPlusConstant().guess(f[break_estimate:], power[break_estimate:])
-
-        #
-        #
-        #
-        below_spectrum = PowerLawPlusConstant().power([below_log_amplitude, below_index_estimate, below_log_background], f)
-
+        above_log_amplitude, above_index_estimate, above_log_background =\
+            PowerLawPlusConstant().guess(f[break_estimate:], power[break_estimate:])
 
         initial_guess = [below_log_amplitude, below_index_estimate,
                          break_estimate,
@@ -544,6 +619,28 @@ class BrokenPowerLawPlusConstant(CompoundSpectrum):
         return initial_guess
 
 
+class SumOfPulsesPlusConstant(CompoundSpectrum):
+    def __init__(self):
+        CompoundSpectrum.__init__(self, ((SumOfPulses(), (0, 3)),
+                                         (Constant(), (3, 4))))
+
+    def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
+              background_range=[-50, -1], f_lower_limit=50.0,
+              f_upper_limit=200.0, break_estimate=21):
+
+        # Estimate the spectrum below the break estimate
+        below_log_amplitude, below_index_estimate, below_log_background =\
+            PowerLawPlusConstant().guess(f[0:break_estimate], power[0:break_estimate])
+
+        # Estimate the spectrum above the break estimate
+        above_log_amplitude, above_index_estimate, above_log_background =\
+            PowerLawPlusConstant().guess(f[break_estimate:], power[break_estimate:])
+
+        initial_guess = [below_log_amplitude, below_index_estimate,
+                         break_estimate,
+                         above_index_estimate, above_log_background]
+
+        return initial_guess
 
 
 #
@@ -552,6 +649,9 @@ class BrokenPowerLawPlusConstant(CompoundSpectrum):
 class Fit:
     def __init__(self, f, data, model, fit_method='Nelder-Mead',
                  **kwargs):
+
+        # Number of guesses to the fit
+        self.attempt_limit = 10
 
         # Frequencies
         self.f = f
@@ -596,7 +696,18 @@ class Fit:
         for i in range(0, self.nx):
             for j in range(0, self.ny):
                 observed_power = data[j, i, :]
+
+                # Initial guess
                 guess = self.model.guess(self.fn, observed_power, **kwargs)
+                """
+                self.acceptable_fit_found = False
+                n_attempts = 0
+                this_guess = deepcopy(guess)
+
+                # Vary the initial guess until a good fit is found up to a
+                # limited number of attempts
+                #while (n_attempts <= self.attempt_limit) and not self.acceptable_fit_found:
+                """
                 result = lnlike_model_fit.go(self.fn,
                                              observed_power,
                                              self.model.power,
@@ -605,6 +716,15 @@ class Fit:
 
                 # Estimates of the quality of the fit to the data
                 parameter_estimate = result['x']
+
+                """
+                # Check if an
+                self.acceptable_fit_found = self.model.acceptable_fit(parameter_estimate)
+                if not self.acceptable_fit_found:
+                    this_guess = self.model.vary_guess(guess)
+                    n_attempts += 1
+                """
+
                 bestfit = self.model.power(parameter_estimate, self.fn)
                 rhoj = lnlike_model_fit.rhoj(observed_power, bestfit)
                 rchi2 = lnlike_model_fit.rchi2(1.0, self.dof, rhoj)

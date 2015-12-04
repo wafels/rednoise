@@ -37,7 +37,10 @@ limits = {"standard": {"power law index": [0., 7.] * u.dimensionless_unscaled,
                        "ln(lognormal amplitude)": [0.0, 10.0] * u.dimensionless_unscaled,
                        "period": [24.0, 3000.0] * u.s,
                        "frequency": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
-                       "ratio": [-5.0, 5.0] * u.dimensionless_unscaled}}
+                       "ratio": [-5.0, 5.0] * u.dimensionless_unscaled,
+                       "power law index below break": [0., 7.] * u.dimensionless_unscaled,
+                       "power law index above break": [0., 7.] * u.dimensionless_unscaled,
+                       "dimensionless frequency": [1.0/(1800 * 12.0), 0.015] * u.Hz}}
 
 limits["low_lognormal_width"] = deepcopy(limits["standard"])
 limits["low_lognormal_width"]["ln(lognormal width)"] = [0.0, 0.1] * u.dimensionless_unscaled

@@ -38,7 +38,11 @@ ic_types = da.ic_details.keys()
 windows = ['hanning']
 
 # Load in all the data
-storage = analysis_get_data.get_all_data(waves=waves, regions=regions)
+storage = analysis_get_data.get_all_data(waves=waves,
+                                         regions=regions,
+                                         model_names=('Power Law + Constant',
+                                                      'Power Law + Constant + Lognormal',
+                                                      'broken power law + Constant'))
 
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)
@@ -90,7 +94,7 @@ for ic_type in ic_types:
                     for p1_name in parameters:
                         p1 = this.as_array(p1_name)
                         p1_index = parameters.index(p1_name)
-                        label1 = labels[p1_index] + ' (%s)'
+                        label1 = labels[p1_index] + ' (%s)' %
                         for ic_type in ic_types:
 
                             # Find out if this model is preferred

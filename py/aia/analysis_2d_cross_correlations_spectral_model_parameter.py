@@ -35,11 +35,13 @@ regions = ['six_euv']
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power Law + Constant', 'Power Law + Constant + Lognormal')
+model_names = ('Power Law + Constant',
+               'Power Law + Constant + Lognormal',
+               'broken power law + Constant')
 
 limit_type = 'standard'
-limit_type = "low_lognormal_width_3_to_5_minutes"
-limit_type = "high_lognormal_width_freq_less_than_5_minutes"
+#limit_type = "low_lognormal_width_3_to_5_minutes"
+#limit_type = "high_lognormal_width_freq_less_than_5_minutes"
 #
 # Details of the analysis
 #

@@ -106,8 +106,15 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
     # Most of field of view, good for large scale studies (Paper 2)
     #
 
+    """
     regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    """
+
+
+    regions = {"test_six_euv": {"llx": -470.0*u.arcsec, "lly": 0*u.arcsec,
+                           "width": 20*u.arcsec, "height": 25*u.arcsec}}
+
 
     """
     regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,

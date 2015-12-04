@@ -45,6 +45,7 @@ waves = ['171']
 # regions = ['most_of_fov']
 # regions = ['four_wavebands']
 regions = ['six_euv']
+regions = ['test_six_euv']
 
 # Apodization windows
 windows = ['hanning']

@@ -9,16 +9,20 @@ import details_study as ds
 import rnspectralmodels2
 
 # Wavelengths and regions we want to analyze
-waves = ['131', '171', '193', '211', '335', '94']
-regions = ['six_euv']
+waves = ['171']
+regions = ['test_six_euv']
+
+# Wavelengths and regions we want to analyze
+#waves = ['131', '171', '193', '211', '335', '94']
+#regions = ['six_euv']
 
 # Wavelengths and regions we want to analyze
 #waves = ['171', '193']
 #regions = ['sunspot', 'quiet Sun']
 
 # BM3D Wavelengths and regions we want to analyze
-waves = ['171']
-regions = ['six_euv']
+#waves = ['171']
+#regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']

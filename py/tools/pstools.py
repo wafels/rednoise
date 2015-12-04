@@ -163,3 +163,17 @@ def generate_initial_guess(model_name, finput, p,
     #plt.legend(framealpha=0.5, fontsize=10)
     #plt.show()
     return initial_guess
+
+
+def eqn4_8_23_summand(t, alpha_e, gamma, nu):
+    exponent = -alpha_e*(1 + gamma) + gamma + 1.0 + gamma
+    numerator = t ** exponent
+    denominator = 1.0 + (2.0 * np.pi * nu * t) ** 2.0
+    return numerator / denominator
+
+
+def eqn4_8_23(timescales, alpha_e, gamma, nu):
+    pwr = np.zeros_like(nu, dtype=float)
+    for t in timescales:
+        pwr += eqn4_8_23_summand(t, alpha_e, gamma, nu)
+    return pwr
