@@ -530,57 +530,6 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
                                          (Constant(), (2, 3)),
                                          (Lognormal(), (3, 6))))
 
-    def guess(self, f, power,
-              amp_range=[0, 5],
-              index_range=[0, 50],
-              background_range=[-50, -1],
-              f_lower_limit=21.0,
-              f_upper_limit=200.0,
-              sufficient_frequencies=10,
-              initial_log_width=0.1):
-
-        log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
-
-        # Should use the above guess to seed a fit for PowerLawPlusConstant
-        # based on the excluded estimated location of the lognormal
-        background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
-
-        # Difference between the data and the model
-        diff0 = power - background_spectrum
-
-        # Keep the positive parts only
-        positive_index = diff0 > 0.0
-
-        # Limit the fit to a specific frequency range
-        f_above = f > f_lower_limit
-        f_below = f < f_upper_limit
-
-        # Which data to fit
-        fit_here = positive_index * f_above * f_below
-
-        # If there is sufficient positive data
-        if np.sum(fit_here) > sufficient_frequencies:
-            diff1 = diff0[fit_here]
-            f1 = f[fit_here]
-            amp = np.log(np.max(diff1))
-            pos = np.log(f1[np.argmax(diff1)])
-            pp = pos - np.log(f1)
-            log_width_estimate = np.sqrt(np.sum(diff1 * pp**2)/np.sum(diff1))
-            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, log_width_estimate]
-        else:
-            initial_guess = [log_amplitude, index_estimate, log_background,
-                             -100.0,
-                             0.5 * (f_lower_limit + f_upper_limit),
-                             initial_log_width]
-        return initial_guess
-
-
-class PowerLawPlusConstantPlusLognormal2(CompoundSpectrum):
-    def __init__(self):
-        CompoundSpectrum.__init__(self, ((PowerLaw(), (0, 2)),
-                                         (Constant(), (2, 3)),
-                                         (Lognormal(), (3, 6))))
-
         self.amp_range=[0, 5],
         self.index_range=[0, 50],
         self.background_range=[-50, -1],
@@ -740,18 +689,33 @@ class Fit:
         self.result = [[None]*self.nx for i in range(self.ny)]
         for i in range(0, self.nx):
             for j in range(0, self.ny):
+                # Data to fit
                 observed_power = data[j, i, :]
 
                 # Initial guess
                 guess = self.model.guess(self.fn, observed_power, **kwargs)
-                result = lnlike_model_fit.go(self.fn,
-                                             observed_power,
-                                             self.model.power,
-                                             guess,
-                                             self.fit_method)
+                self.acceptable_fit_found = False
+                n_attempts = 0
+                this_guess = deepcopy(guess)
 
-                # Estimates of the quality of the fit to the data
-                parameter_estimate = result['x']
+                # Vary the initial guess until a good fit is found up to a
+                # limited number of attempts
+                while (n_attempts <= self.attempt_limit) and not self.acceptable_fit_found:
+                    result = lnlike_model_fit.go(self.fn,
+                                                 observed_power,
+                                                 self.model.power,
+                                                 this_guess,
+                                                 self.fit_method)
+
+                    # Estimates of the quality of the fit to the data
+                    parameter_estimate = result['x']
+
+                    # Check if an acceptable fit has been found
+                    self.acceptable_fit_found = self.model.acceptable_fit(parameter_estimate)
+                    if not self.acceptable_fit_found:
+                        this_guess = self.model.vary_guess(guess)
+                        n_attempts += 1
+
                 bestfit = self.model.power(parameter_estimate, self.fn)
                 rhoj = lnlike_model_fit.rhoj(observed_power, bestfit)
                 rchi2 = lnlike_model_fit.rchi2(1.0, self.dof, rhoj)
@@ -762,7 +726,7 @@ class Fit:
                                            self.n)
 
                 # Store the final results
-                self.result[j][i] = (guess, result, rchi2, aic, bic)
+                self.result[j][i] = (this_guess, result, rchi2, aic, bic, self.acceptable_fit_found)
 
     def as_array(self, quantity):
         """
