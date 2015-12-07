@@ -530,16 +530,19 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
                                          (Constant(), (2, 3)),
                                          (Lognormal(), (3, 6))))
 
-        self.amp_range=[0, 5],
-        self.index_range=[0, 50],
-        self.background_range=[-50, -1],
-        self.f_lower_limit=21.0,
-        self.f_upper_limit=200.0,
-        self.sufficient_frequencies=10,
-        self.initial_log_width=0.1
+        self.amp_range = [0, 5],
+        self.index_range = [0, 50],
+        self.background_range = [-50, -1],
+        self.f_lower_limit = 21.0,
+        self.f_upper_limit = 200.0,
+        self.sufficient_frequencies = 10,
+        self.initial_log_width = 0.1
 
     def acceptable_fit(self, a):
-        return np.log(self.f_lower_limit) <= a[4] <= np.log(self.f_upper_limit)
+        if (np.log(self.f_lower_limit) <= a[4]) and (np.log(self.f_upper_limit) >= a[4]):
+            return True
+        else:
+            return False
 
     def vary_guess(self, a):
         new_a = deepcopy(a)
@@ -584,7 +587,7 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
         else:
             initial_guess = [log_amplitude, index_estimate, log_background,
                              -100.0,
-                             0.5 * (self.f_lower_limit + self.f_upper_limit),
+                             0.5 * (np.log(self.f_lower_limit) + np.log(self.f_upper_limit)),
                              self.initial_log_width]
         return initial_guess
 
@@ -641,7 +644,7 @@ class SumOfPulsesPlusConstant(CompoundSpectrum):
 # A class that fits models to data and calculates various fit measures.
 #
 class Fit:
-    def __init__(self, f, data, model, fit_method='Nelder-Mead',
+    def __init__(self, f, data, model, fit_method='Nelder-Mead', verbose=0,
                  **kwargs):
 
         # Number of guesses to the fit
@@ -688,6 +691,8 @@ class Fit:
         # Get the fit results
         self.result = [[None]*self.nx for i in range(self.ny)]
         for i in range(0, self.nx):
+            if verbose == 1:
+                print "%s - now working on row %i out of %i" % (self.model.name, i, self.nx)
             for j in range(0, self.ny):
                 # Data to fit
                 observed_power = data[j, i, :]
@@ -713,7 +718,7 @@ class Fit:
                     # Check if an acceptable fit has been found
                     self.acceptable_fit_found = self.model.acceptable_fit(parameter_estimate)
                     if not self.acceptable_fit_found:
-                        this_guess = self.model.vary_guess(guess)
+                        this_guess = self.model.vary_guess(parameter_estimate)
                         n_attempts += 1
 
                 bestfit = self.model.power(parameter_estimate, self.fn)

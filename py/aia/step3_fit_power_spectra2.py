@@ -6,15 +6,21 @@ import cPickle as pickle
 import os
 
 import details_study as ds
-import rnspectralmodels2
+import rnspectralmodels3
 
 # Wavelengths and regions we want to analyze
-waves = ['171']
-regions = ['test_six_euv']
+#waves = ['171']
+#regions = ['test_six_euv']
 
 # Wavelengths and regions we want to analyze
 #waves = ['131', '171', '193', '211', '335', '94']
 #regions = ['six_euv']
+
+
+# Fall AGU 2015 Wavelengths and regions we want to analyze
+waves = ['171', '193']
+regions = ['six_euv']
+
 
 # Wavelengths and regions we want to analyze
 #waves = ['171', '193']
@@ -28,8 +34,8 @@ regions = ['test_six_euv']
 windows = ['hanning']
 
 # Models to fit
-these_models = [rnspectralmodels2.PowerLawPlusConstantPlusLognormal(),
-                rnspectralmodels2.PowerLawPlusConstant()]
+these_models = [rnspectralmodels3.PowerLawPlusConstantPlusLognormal(),
+                rnspectralmodels3.PowerLawPlusConstant()]
 n_models = len(these_models)
 
 #
@@ -79,7 +85,7 @@ for iwave, wave in enumerate(waves):
                 print('Fitting model: %s (%i out of %i)' % (this_model.name, itm+1, n_models))
 
                 # Do the fit and store the results for later analysis
-                results[this_model.name] = rnspectralmodels2.Fit(pfrequencies.value, pwr, this_model)
+                results[this_model.name] = rnspectralmodels3.Fit(pfrequencies.value, pwr, this_model, verbose=1)
 
             # Dump the results
             filepath = os.path.join(output, ofilename + '.lnlike_fit_results.pkl')

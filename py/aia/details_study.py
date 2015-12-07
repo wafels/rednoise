@@ -11,7 +11,7 @@ import astropy.units as u
 #study_type = 'debugpaper2'
 study_type = 'paper2'
 
-#study_type = 'paper3'
+#study_type = 'paper3_PSF'
 
 # Target cadence
 target_cadence = 12
@@ -62,9 +62,18 @@ if study_type == 'paper2':
     cross_correlate = True
     derotate = True
 
-if study_type == 'paper3':
+if study_type == 'paper3_BM3D':
     dataroot = '~/Data/ts/'
-    corename = 'paper3_BM3D'
+    corename = study_type
+    sunlocation = 'disk'
+    fits_level = '1.5'
+    wave = '171'
+    cross_correlate = True
+    derotate = True
+
+if study_type == 'paper3_PSF':
+    dataroot = '~/Data/ts/'
+    corename = study_type
     sunlocation = 'disk'
     fits_level = '1.5'
     wave = '171'
