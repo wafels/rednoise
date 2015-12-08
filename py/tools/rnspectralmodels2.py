@@ -517,12 +517,6 @@ class PowerLawPlusConstant(CompoundSpectrum):
         log_background_estimate = np.log(np.mean(power[background_range[0]:background_range[1]]))
         return log_amplitude_estimate, index_estimate, log_background_estimate
 
-    def acceptable_fit(self, a):
-        return True
-
-    def vary_guess(self, a):
-        return a
-
 
 class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
     def __init__(self):
@@ -564,79 +558,12 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
             f1 = f[fit_here]
             amp = np.log(np.max(diff1))
             pos = np.log(f1[np.argmax(diff1)])
-            pp = pos - np.log(f1)
-            log_width_estimate = np.sqrt(np.sum(diff1 * pp**2)/np.sum(diff1))
-            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, log_width_estimate]
+            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, initial_log_width]
         else:
             initial_guess = [log_amplitude, index_estimate, log_background,
                              -100.0,
                              0.5 * (f_lower_limit + f_upper_limit),
                              initial_log_width]
-        return initial_guess
-
-
-class PowerLawPlusConstantPlusLognormal2(CompoundSpectrum):
-    def __init__(self):
-        CompoundSpectrum.__init__(self, ((PowerLaw(), (0, 2)),
-                                         (Constant(), (2, 3)),
-                                         (Lognormal(), (3, 6))))
-
-        self.amp_range=[0, 5],
-        self.index_range=[0, 50],
-        self.background_range=[-50, -1],
-        self.f_lower_limit=21.0,
-        self.f_upper_limit=200.0,
-        self.sufficient_frequencies=10,
-        self.initial_log_width=0.1
-
-    def acceptable_fit(self, a):
-        return np.log(self.f_lower_limit) <= a[4] <= np.log(self.f_upper_limit)
-
-    def vary_guess(self, a):
-        new_a = deepcopy(a)
-        vary_range = 0.1 * (np.log(self.f_upper_limit) - np.log(self.f_lower_limit))
-        while not self.acceptable_fit(new_a):
-            if a[4] <= np.log(self.f_lower_limit):
-                new_a[4] = np.log(self.f_lower_limit) + vary_range*np.random.uniform()
-            if a[4] >= np.log(self.f_upper_limit):
-                new_a[4] = np.log(self.f_upper_limit) - vary_range*np.random.uniform()
-        return new_a
-
-    def guess(self, f, power):
-
-        log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
-
-        # Should use the above guess to seed a fit for PowerLawPlusConstant
-        # based on the excluded estimated location of the lognormal
-        background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
-
-        # Difference between the data and the model
-        diff0 = power - background_spectrum
-
-        # Keep the positive parts only
-        positive_index = diff0 > 0.0
-
-        # Limit the fit to a specific frequency range
-        f_above = f > self.f_lower_limit
-        f_below = f < self.f_upper_limit
-
-        # Which data to fit
-        fit_here = positive_index * f_above * f_below
-
-        # If there is sufficient positive data
-        if np.sum(fit_here) > self.sufficient_frequencies:
-            diff1 = diff0[fit_here]
-            f1 = f[fit_here]
-            amp = np.log(np.max(diff1))
-            pos = np.log(f1[np.argmax(diff1)])
-            pp = pos - np.log(f1)
-            log_width_estimate = np.sqrt(np.sum(diff1 * pp**2)/np.sum(diff1))
-            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, log_width_estimate]
-        else:
-            initial_guess = [log_amplitude, index_estimate, log_background,
-                             -100.0,
-                             0.5 * (self.f_lower_limit + self.f_upper_limit),
-                             self.initial_log_width]
         return initial_guess
 
 

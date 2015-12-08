@@ -139,6 +139,9 @@ for iwave, wave in enumerate(waves):
             # Storage - Fourier power
             pwr = np.zeros((ny, nx, nposfreq))
 
+            # Storage - sum of log of relative intensity
+            drel_power = np.zeros(nposfreq)
+
             # Storage - Fast Fourier transfrom
             n_fft_freq = len(tsdummy.FFTPowerSpectrum.frequencies.frequencies)
             all_fft = np.zeros((ny, nx, n_fft_freq), dtype=np.complex64)
@@ -204,7 +207,7 @@ for iwave, wave in enumerate(waves):
                     # ---
                     # Ireland et al (2015) summation
                     # Sum over the log(Fourier power of the relative intensities)
-
+                    drel_power += np.log10(this_power_relative_change_with_window)
                     # ---
                     # Sum over the log(Fourier power of the absolute intensities)
 
@@ -235,3 +238,8 @@ for iwave, wave in enumerate(waves):
             filepath = os.path.join(output, ofilename + '.summary_stats.npz')
             print('Saving summary statistics to ' + filepath)
             np.savez(filepath, dtotal=dtotal, dmax=dmax, dmin=dmin, dsd=dsd, dlnsd=dlnsd)
+
+            # Save the sum over the log(Fourier power of the relative intensities)
+            filepath = os.path.join(output, ofilename + '.sum_log_fft_power_relative_intensities.npz')
+            np.savez(filepath, drel_power=drel_power/(1.0 * nx * ny),
+                     pfrequencies=pfrequencies.to('Hz').value)

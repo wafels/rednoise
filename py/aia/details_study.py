@@ -12,6 +12,7 @@ import astropy.units as u
 study_type = 'paper2'
 
 #study_type = 'paper3_PSF'
+#study_type = 'paper3_BM3D'
 
 # Target cadence
 target_cadence = 12

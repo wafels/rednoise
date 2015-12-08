@@ -16,8 +16,8 @@ import details_plots as dp
 import details_analysis as da
 
 # Paper 2 - Wavelengths we want to cross correlate
-waves = ['131', '171', '193', '211', '94', '335']
-waves = ['171']
+#waves = ['131', '171', '193', '211', '94', '335']
+waves = ['171', '193']
 regions = ['six_euv']
 
 # Paper 3
@@ -36,10 +36,11 @@ windows = ['hanning']
 
 # Model results to examine
 model_names = ('Power Law + Constant',
-               'Power Law + Constant + Lognormal',
-               'broken power law + Constant')
+               'Power Law + Constant + Lognormal')
 
 limit_type = 'standard'
+appended_name = '_keep_incase_fallagu2015'
+
 #limit_type = "low_lognormal_width_3_to_5_minutes"
 #limit_type = "high_lognormal_width_freq_less_than_5_minutes"
 #
@@ -61,7 +62,8 @@ bins = 100
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
-                                         model_names=model_names)
+                                         model_names=model_names,
+                                         appended_name=appended_name)
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
 # Plot cross-correlations within the same AIA channel
@@ -213,7 +215,8 @@ for ic_type in ic_types:
                                 final_filename = dp.concat_string([plot_type,
                                                                    plot_identity_filename,
                                                                    subtitle_filename,
-                                                                   plot_name]) + '.png'
+                                                                   plot_name,
+                                                                   appended_name]) + '.png'
                                 plt.legend()
                                 plt.tight_layout()
                                 plt.savefig(os.path.join(image, final_filename))

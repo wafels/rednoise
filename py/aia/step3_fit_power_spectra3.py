@@ -2,15 +2,13 @@
 # Step 3.  Load in the FFT power spectra and fit models.  Decide which one
 # fits best.  Save the results.
 #
-# NOTE: USES VERSION 2 OF THE SPECTRAL MODELS
+# NOTE: USES VERSION 3 OF THE SPECTRAL MODELS
 #
-#
-
 import cPickle as pickle
 import os
 
 import details_study as ds
-import rnspectralmodels2
+import rnspectralmodels3
 
 # Wavelengths and regions we want to analyze
 #waves = ['171']
@@ -38,8 +36,8 @@ regions = ['six_euv']
 windows = ['hanning']
 
 # Models to fit
-these_models = [rnspectralmodels2.PowerLawPlusConstantPlusLognormal(),
-                rnspectralmodels2.PowerLawPlusConstant()]
+these_models = [rnspectralmodels3.PowerLawPlusConstantPlusLognormal(),
+                rnspectralmodels3.PowerLawPlusConstant()]
 n_models = len(these_models)
 
 #
@@ -86,14 +84,13 @@ for iwave, wave in enumerate(waves):
 
             # Go through the models
             for itm, this_model in enumerate(these_models):
-                print('Using version 2 of the spectral models: see rnspectralmodels2')
                 print('Fitting model: %s (%i out of %i)' % (this_model.name, itm+1, n_models))
 
                 # Do the fit and store the results for later analysis
-                results[this_model.name] = rnspectralmodels2.Fit(pfrequencies.value, pwr, this_model)
+                results[this_model.name] = rnspectralmodels3.Fit(pfrequencies.value, pwr, this_model, verbose=1)
 
             # Dump the results
-            filepath = os.path.join(output, ofilename + '.rnspectralmodels2.lnlike_fit_results.pkl')
+            filepath = os.path.join(output, ofilename + '.rnspectralmodels3.lnlike_fit_results.pkl')
             print('Saving results to ' + filepath)
             f = open(filepath, 'wb')
             pickle.dump(results, f)
