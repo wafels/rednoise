@@ -4,6 +4,7 @@
 # selected by the information criterion is selected, and its value is plotted.
 #
 import os
+import datetime
 import cPickle as pickle
 import numpy as np
 import numpy.ma as ma
@@ -20,17 +21,19 @@ import details_plots as dp
 # Paper 2
 # Wavelengths we want to cross correlate
 waves = ['131', '171', '193', '211', '335', '94']
+waves = ['131']
 regions = ['six_euv']
 
 # Paper 3
-waves = ['171']
-regions = ['six_euv']
+#waves = ['171']
+#regions = ['six_euv']
 
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # regions = ['most_of_fov']
 
+limit_type = 'standard'
 
 # Apodization windows
 windows = ['hanning']
@@ -41,7 +44,7 @@ model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 #
 # Details of the analysis
 #
-limits = da.limits['standard']
+limits = da.limits[limit_type]
 ic_types = da.ic_details.keys()
 
 #
@@ -53,7 +56,7 @@ five_minutes = dp.five_minutes
 hloc = dp.hloc
 linewidth = 3
 bins = 100
-
+fontsize = dp.fontsize
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves,
@@ -71,6 +74,7 @@ sunspot_outline = analysis_get_data.sunspot_outline()
 
 # Plot spatial distributions of the common parameters
 plot_type = 'spatial.common'
+
 
 # Plot spatial distributions of the spectral model parameters.
 # Different information criteria
@@ -154,14 +158,15 @@ for ic_type in ic_types:
                     parameter_index = fit_parameters.index(parameter)
                     label = this.model.variables[parameter_index].converted_label
 
-                    image = dp.get_image_model_location(ds.roots, b, [this_model, ic_type])
+                    image = dp.get_image_model_location(ds.roots, b, [this_model, ic_limit_string, limit_type])
 
                     # Create the subtitle - model, region, information
                     # on how much of the field of view is not masked,
                     # and the information criterion and limit used.
                     ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
                     subtitle_filename = dp.concat_string([region,
-                                                          ic_info_string], sep='.')
+                                                          ic_info_string,
+                                                          limit_type], sep='.')
 
                     # Plot identity
                     plot_identity_filename = dp.concat_string([wave, parameter])
@@ -172,60 +177,69 @@ for ic_type in ic_types:
                     # Make a SunPy map for nice spatially aware plotting.
                     my_map = analysis_get_data.make_map(region_submap, map_data)
 
-                    for submap_type in all_submaps.keys():
+                    #for submap_type in all_submaps.keys():
 
-                        # Get the sunspot
-                        sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
+
+
+                    # Get the sunspot
+                    sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
                                                                                   sunspot_outline[1],
                                                                                   my_map.date,
                                                                                   edgecolors=[dp.spatial_plots['sunspot outline']])
 
-                        subtitle = dp.concat_string(['%s - %s' % (region, wave),
-                                                    ic_info_string,
-                                                    submap_type], sep='\n')
-                        # Make a spatial distribution map spectral model parameter
-                        plt.close('all')
-                        # Normalize the color table
-                        norm = colors.Normalize(clip=False,
-                                                vmin=p1_limits[0].value,
-                                                vmax=p1_limits[1].value)
+                    #subtitle = dp.concat_string(['%s - %s' % (region, wave),
+                    #                            ic_info_string,
+                    #                            submap_type], sep='\n')
+                    subtitle = dp.concat_string(['%s - %s' % (region, wave),
+                                                ic_info_string], sep='\n')
+                    # Make a spatial distribution map spectral model parameter
+                    plt.close('all')
+                    # Normalize the color table
+                    norm = colors.Normalize(clip=False,
+                                            vmin=p1_limits[0].value,
+                                            vmax=p1_limits[1].value)
 
-                        # Set up the palette we will use
-                        palette = dp.spatial_plots['color table']
-                        # Bad values are those that are masked out
-                        palette.set_bad(dp.spatial_plots['bad value'], 1.0)
-                        #palette.set_under('green', 1.0)
-                        #palette.set_over('red', 1.0)
+                    # Set up the palette we will use
+                    palette = dp.spatial_plots['color table']
+                    # Bad values are those that are masked out
+                    palette.set_bad(dp.spatial_plots['bad value'], 1.0)
+                    #palette.set_under('green', 1.0)
+                    #palette.set_over('red', 1.0)
 
-                        # Begin the plot
-                        fig, ax = plt.subplots()
-                        # Plot the map
-                        ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
-                        ret.axes.set_title('%s\n%s' % (label, subtitle))
-                        X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
-                        Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
-                        ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,
-                                         colors=["#0088ff", "#0044ff", "#0000ff"],
-                                         linewidths=[2, 2, 2])
-                        ax.add_collection(sunspot_collection)
-                        cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
+                    # Begin the plot
+                    fig, ax = plt.subplots()
+                    # Plot the map
+                    ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
+                    #ret.axes.set_title('%s\n%s' % (label, subtitle))
+                    title = label + r'$_{%s}$' % wave
+                    ret.axes.set_title(title + '\n', fontsize=fontsize)
+                    #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
+                    #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
+                    #ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,
+                    #                 colors=["#0088ff", "#0044ff", "#0000ff"],
+                    #                 linewidths=[2, 2, 2])
+                    ax.add_collection(sunspot_collection)
+                    cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
 
-                        # Fit everything in.
-                        ax.autoscale_view()
+                    # Fit everything in.
+                    ax.autoscale_view()
 
-                        # Dump to file
-                        final_filename = dp.concat_string([plot_type,
-                                                           submap_type,
-                                                           plot_identity_filename,
-                                                           subtitle_filename])
-                        filepath = os.path.join(image, final_filename + '.png')
-                        print('Saving to ' + filepath)
-                        plt.savefig(filepath)
+                    # Dump to file
+                    #final_filename = dp.concat_string([plot_type,
+                    #                                   submap_type,
+                    #                                   plot_identity_filename,
+                    #                                   subtitle_filename])
+                    final_filename = dp.concat_string([plot_type,
+                                                       plot_identity_filename,
+                                                       subtitle_filename])
+                    filepath = os.path.join(image, final_filename + '.png')
+                    print('Saving to ' + filepath)
+                    plt.savefig(filepath)
 
-                        # Save the map to a file for later use
-                        final_pickle_filepath = os.path.join(output,
-                                                             final_filename + '.pkl')
-                        print('Saving map to %s' % final_pickle_filepath)
-                        f = open(final_pickle_filepath, 'wb')
-                        pickle.dump(my_map, f)
-                        f.close()
+                    # Save the map to a file for later use
+                    final_pickle_filepath = os.path.join(output,
+                                                         final_filename + '.pkl')
+                    print('Saving map to %s' % final_pickle_filepath)
+                    f = open(final_pickle_filepath, 'wb')
+                    pickle.dump(my_map, f)
+                    f.close()

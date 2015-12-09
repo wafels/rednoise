@@ -55,6 +55,8 @@ spatial_plots = {'sunspot outline': 'w',
                  'color table': cm.Set2,
                  'bad value': 'black'}
 
+fontsize = 20
+
 #
 # Useful strings for plots
 #
@@ -63,7 +65,7 @@ rchi2s = '$\chi^{2}_{r}$'
 rchi2string = '$<$' + rchi2s + '$<$'
 
 # Reduced chi-squared limit colors
-rchi2limitcolor = ['r', 'y']
+rchi2limitcolor = ['w', 'w']
 
 
 # Create a label which shows the limits of the reduced chi-squared value. Also

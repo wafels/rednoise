@@ -26,7 +26,8 @@ def get_all_data(waves=['171', '193'],
                  regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
                  windows=['hanning'],
                  model_names=('Power Law + Constant', 'Power Law + Constant + Lognormal'),
-                 appended_name=None):
+                 appended_name=None,
+                 spectral_model=''):
 
     # Create the storage across all models, AIA channels and regions
     storage = {}
@@ -71,7 +72,7 @@ def get_all_data(waves=['171', '193'],
                 print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
                 # Load in the fit results
-                filepath = os.path.join(output, ofilename + '.lnlike_fit_results.pkl')
+                filepath = os.path.join(output, ofilename + '%s.lnlike_fit_results.pkl' % spectral_model)
                 print('Loading results to ' + filepath)
                 f = open(filepath, 'rb')
                 results = pickle.load(f)

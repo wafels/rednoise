@@ -54,6 +54,9 @@ limits["high_lognormal_width"]["ln(lognormal width)"] = [0.1, 0.6] * u.dimension
 limits["high_lognormal_width_freq_less_than_5_minutes"] = deepcopy(limits["standard"])
 limits["high_lognormal_width_freq_less_than_5_minutes"]["lognormal position"] = [1.0/(1800.0 * 12.0), 1.0/501.0] * u.Hz
 
+limits["agu2015"] = deepcopy(limits["standard"])
+limits["agu2015"]["power law index"] = [1.0, 5.0] * u.dimensionless_unscaled
+
 
 # Number of parameters
 def nparameters(model_names):
@@ -199,3 +202,21 @@ def get_ic_location(this, this_model, model_names, ic_type=None, ic_limits=None)
 sqrt_two_pi = np.sqrt(2 * np.pi)
 def integrate_lognormal_parameters(amplitude, width):
     return sqrt_two_pi * width * 10.0 ** amplitude
+
+
+def mask_by_limiting_distribution(d, limits):
+    """
+    Return a mask indicating where the values of d exceed the bottom 100*limit[0]
+    percent of the data and exceed the top 100*limit[1] percent of the data
+
+    :param d: input data
+    :param limits: the fractional limits of the distribution
+    :return: a numpy mask where True means the corresponding value has exceeded
+    the limits
+    """
+    lower_limit = np.percentile(d, limits[0])
+    upper_limit = np.percentile(d, limits[1])
+    mask_lower_limit = d <= lower_limit
+    mask_upper_limit = d >= upper_limit
+
+    return lower_limit, upper_limit, np.logical_or(mask_lower_limit, mask_upper_limit)

@@ -17,14 +17,15 @@ import details_analysis as da
 
 
 # Paper 2
-#waves = ['94', '131', '171', '193', '211', '335']
-#regions = ['six_euv']
+waves = ['94', '131', '171', '193', '211', '335']
+#waves = ['171', '193']
+regions = ['six_euv']
 
 
 # Fall AGU 2015 (Paper 2)
-waves = ['131', '335']
-regions = ['six_euv']
-limit_type = 'standard'
+#waves = ['131', '335']
+#regions = ['six_euv']
+limit_type = 'agu2015'
 appended_name = None#'_keep_incase_fallagu2015'
 
 # Apodization windows
@@ -170,8 +171,16 @@ for ic_type in ic_types:
                                                              ])
 
                                 # Get the data using the final mask
-                                p1 = np.ma.array(p1_data, mask=final_mask).compressed()
-                                p2 = np.ma.array(p2_data, mask=final_mask).compressed()
+                                p1_compressed = np.ma.array(p1_data, mask=final_mask).compressed().value
+                                p2_compressed = np.ma.array(p2_data, mask=final_mask).compressed().value
+
+                                # Limit also by percentage
+                                p1_lower_limit, p1_upper_limit, p1_mbld_mask = da.mask_by_limiting_distribution(p1_compressed, [2.5, 97.5])
+                                p2_lower_limit, p2_upper_limit, p2_mbld_mask = da.mask_by_limiting_distribution(p2_compressed, [2.5, 97.5])
+                                final_mbld_mask = np.logical_or(p1_mbld_mask, p2_mbld_mask)
+
+                                p1 = np.ma.array(p1_compressed, mask=final_mbld_mask).compressed()
+                                p2 = np.ma.array(p2_compressed, mask=final_mbld_mask).compressed()
 
                                 # Cross correlation statistics
                                 r = [spearmanr(p1, p2), pearsonr(p1, p2)]
@@ -203,28 +212,33 @@ for ic_type in ic_types:
 
                                 # Make a scatter plot and the histogram
                                 # Make the plot title
-                                title = '%s vs. %s \n %s' % (xlabel, ylabel, subtitle)
+                                #title = '%s vs. %s \n %s' % (xlabel, ylabel, subtitle)
+                                title = '%s vs. %s\n' % (xlabel, ylabel)
 
-                                for plot_function in (1, 2):
+                                for plot_function in (2,):
                                     plt.close('all')
-                                    plt.title(title)
-                                    plt.xlabel('%s %s' % (xlabel, xunit))
-                                    plt.ylabel('%s %s' % (ylabel, yunit))
+                                    plt.title(title, fontsize=dp.fontsize)
+                                    plt.xlabel(xlabel, fontsize=dp.fontsize)
+                                    plt.ylabel(ylabel, fontsize=dp.fontsize)
+                                    #plt.xlabel('%s %s' % (xlabel, xunit), fontsize=dp.fontsize)
+                                    #plt.ylabel('%s %s' % (ylabel, yunit), fontsize=dp.fontsize)
                                     if plot_function == 1:
                                         plt.scatter(p1, p2)
                                         plot_name = 'scatter'
                                     else:
-                                        plt.hist2d(p1, p2, bins=bins,
+                                        plt.hist2d(p1_compressed, p2_compressed, bins=bins,
                                                    range=[p1_limits.value, p2_limits.value])
                                         plot_name = 'hist2d'
                                     plt.xlim(p1_limits.value)
                                     plt.ylim(p2_limits.value)
+                                    #plt.xlim([p1_lower_limit, p1_upper_limit])
+                                    #plt.ylim([p2_lower_limit, p2_upper_limit])
                                     x0 = plt.xlim()[0]
                                     ylim = plt.ylim()
-                                    y0 = ylim[0] + 0.3 * (ylim[1] - ylim[0])
-                                    y1 = ylim[0] + 0.6 * (ylim[1] - ylim[0])
-                                    plt.text(x0, y0, 'Pearson=%f' % r[0][0], bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.5))
-                                    plt.text(x0, y1, 'Spearman=%f' % r[1][0], bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.5))
+                                    y0 = ylim[0] + 0.7 * (ylim[1] - ylim[0])
+                                    y1 = ylim[0] + 0.9 * (ylim[1] - ylim[0])
+                                    plt.text(x0, y0, 'Pearson=%1.2f(%i%%)' % (r[0][0], np.rint(100*r[0][1])), bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.7))
+                                    plt.text(x0, y1, 'Spearman=%1.2f(%i%%)' % (r[1][0], np.rint(100*r[1][1])), bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.7))
                                     if p1_name == p2_name:
                                         plt.plot([p1_limits[0].value, p1_limits[1].value],
                                                  [p1_limits[0].value, p1_limits[1].value],
@@ -235,6 +249,7 @@ for ic_type in ic_types:
                                                                        subtitle_filename,
                                                                        plot_name,
                                                                        appended_name]) + '.png'
-                                    plt.legend(framealpha=0.5)
+                                    plt.legend(framealpha=0.7, fontsize=dp.fontsize, loc=4)
+                                    plt.colorbar()
                                     plt.tight_layout()
                                     plt.savefig(os.path.join(image, final_filename))
