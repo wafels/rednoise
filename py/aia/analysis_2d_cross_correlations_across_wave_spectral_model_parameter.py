@@ -48,7 +48,7 @@ three_minutes = dp.three_minutes
 five_minutes = dp.five_minutes
 hloc = dp.hloc
 linewidth = 3
-bins = 100
+bins = 50
 
 
 # Load in all the data
@@ -191,7 +191,8 @@ for ic_type in ic_types:
                                 # Create the subtitle - model, region, information
                                 # on how much of the field of view is not masked,
                                 # and the information criterion and limit used.
-                                ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
+                                number_pixel_string, percent_used_string, mask_info_string = dp.get_mask_info_string(final_mask)
+                                ic_info_string = '%s, %s' % (ic_limit_string, mask_info_string)
                                 subtitle = dp.concat_string([this_model,
                                                              '%s' % region,
                                                              ic_info_string,
@@ -213,43 +214,53 @@ for ic_type in ic_types:
                                 # Make a scatter plot and the histogram
                                 # Make the plot title
                                 #title = '%s vs. %s \n %s' % (xlabel, ylabel, subtitle)
-                                title = '%s vs. %s\n' % (xlabel, ylabel)
+                                title = '%s vs. %s\n%s of all pixels' % (xlabel, ylabel, percent_used_string)
 
                                 for plot_function in (2,):
                                     plt.close('all')
-                                    plt.title(title, fontsize=dp.fontsize)
-                                    plt.xlabel(xlabel, fontsize=dp.fontsize)
-                                    plt.ylabel(ylabel, fontsize=dp.fontsize)
+                                    #plt.title(title, fontsize=dp.fontsize)
+                                    #plt.xlabel(xlabel, fontsize=dp.fontsize)
+                                    #plt.ylabel(ylabel, fontsize=dp.fontsize)
                                     #plt.xlabel('%s %s' % (xlabel, xunit), fontsize=dp.fontsize)
                                     #plt.ylabel('%s %s' % (ylabel, yunit), fontsize=dp.fontsize)
                                     if plot_function == 1:
                                         plt.scatter(p1, p2)
                                         plot_name = 'scatter'
                                     else:
-                                        plt.hist2d(p1_compressed, p2_compressed, bins=bins,
-                                                   range=[p1_limits.value, p2_limits.value])
                                         plot_name = 'hist2d'
-                                    plt.xlim(p1_limits.value)
-                                    plt.ylim(p2_limits.value)
-                                    #plt.xlim([p1_lower_limit, p1_upper_limit])
-                                    #plt.ylim([p2_lower_limit, p2_upper_limit])
-                                    x0 = plt.xlim()[0]
-                                    ylim = plt.ylim()
-                                    y0 = ylim[0] + 0.7 * (ylim[1] - ylim[0])
-                                    y1 = ylim[0] + 0.9 * (ylim[1] - ylim[0])
-                                    plt.text(x0, y0, 'Pearson=%1.2f(%i%%)' % (r[0][0], np.rint(100*r[0][1])), bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.7))
-                                    plt.text(x0, y1, 'Spearman=%1.2f(%i%%)' % (r[1][0], np.rint(100*r[1][1])), bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.7))
-                                    if p1_name == p2_name:
-                                        plt.plot([p1_limits[0].value, p1_limits[1].value],
-                                                 [p1_limits[0].value, p1_limits[1].value],
-                                                 color='r', linewidth=3,
-                                                 label='%s=%s' % (xlabel, ylabel))
+                                        fig, ax = plt.subplots()
+                                        ax.set_title(title, fontsize=dp.fontsize)
+                                        ax.set_xlabel(xlabel, fontsize=dp.fontsize)
+                                        ax.set_ylabel(ylabel, fontsize=dp.fontsize)
+                                        counts, xedges, yedges, _image = ax.hist2d(p1_compressed, p2_compressed, bins=bins,
+                                                   range=[p1_limits.value, p2_limits.value])
+                                        ax.set_xlim(p1_limits.value)
+                                        ax.set_ylim(p2_limits.value)
+                                        #plt.xlim([p1_lower_limit, p1_upper_limit])
+                                        #plt.ylim([p2_lower_limit, p2_upper_limit])
+                                        x0 = plt.xlim()[0]
+                                        ylim = plt.ylim()
+                                        y0 = ylim[0] + 0.7 * (ylim[1] - ylim[0])
+                                        y1 = ylim[0] + 0.9 * (ylim[1] - ylim[0])
+                                        ax.text(x0, y0, 'Pearson=%1.2f(%i%%)' % (r[0][0], np.rint(100*r[0][1])), bbox=dict(facecolor=dp.rchi2limitcolor[1], alpha=0.7))
+                                        ax.text(x0, y1, 'Spearman=%1.2f(%i%%)' % (r[1][0], np.rint(100*r[1][1])), bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.7))
+                                        if p1_name == p2_name:
+                                            ax.plot([p1_limits[0].value, p1_limits[1].value],
+                                                     [p1_limits[0].value, p1_limits[1].value],
+                                                     color='r', linewidth=3,
+                                                     label='%s=%s' % (xlabel, ylabel))
+                                        # Colorbar
+                                        ticks = counts.min() + (counts.max() - counts.min())*np.arange(0, 5)/4.0
+                                        cbar_yticklabels = ['%3.1f%%' % (100*tick/counts.sum()) for tick in ticks]
+                                        cbar = fig.colorbar(_image, ticks=ticks)
+                                        cbar.ax.set_yticklabels(cbar_yticklabels)
+                                        cbar.set_label('percentage of population')
+
                                     final_filename = dp.concat_string([plot_type,
                                                                        plot_identity_filename,
                                                                        subtitle_filename,
                                                                        plot_name,
                                                                        appended_name]) + '.png'
-                                    plt.legend(framealpha=0.7, fontsize=dp.fontsize, loc=4)
-                                    plt.colorbar()
-                                    plt.tight_layout()
-                                    plt.savefig(os.path.join(image, final_filename))
+                                    ax.legend(framealpha=0.7, fontsize=dp.fontsize, loc=4)
+                                    fig.tight_layout()
+                                    fig.savefig(os.path.join(image, final_filename))

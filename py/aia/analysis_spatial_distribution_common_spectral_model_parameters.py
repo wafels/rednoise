@@ -21,7 +21,6 @@ import details_plots as dp
 # Paper 2
 # Wavelengths we want to cross correlate
 waves = ['131', '171', '193', '211', '335', '94']
-waves = ['131']
 regions = ['six_euv']
 
 # Paper 3
@@ -163,7 +162,8 @@ for ic_type in ic_types:
                     # Create the subtitle - model, region, information
                     # on how much of the field of view is not masked,
                     # and the information criterion and limit used.
-                    ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
+                    number_pixel_string, percent_used_string, mask_info_string = dp.get_mask_info_string(final_mask)
+                    ic_info_string = '%s, %s' % (ic_limit_string, mask_info_string)
                     subtitle_filename = dp.concat_string([region,
                                                           ic_info_string,
                                                           limit_type], sep='.')
@@ -212,7 +212,8 @@ for ic_type in ic_types:
                     ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
                     #ret.axes.set_title('%s\n%s' % (label, subtitle))
                     title = label + r'$_{%s}$' % wave
-                    ret.axes.set_title(title + '\n', fontsize=fontsize)
+                    #ret.axes.set_title(title + '\n[%s]' % percent_used_string, fontsize=fontsize)
+                    ret.axes.set_title(title + '\n%s of all pixels' % percent_used_string, fontsize=fontsize)
                     #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
                     #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
                     #ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,

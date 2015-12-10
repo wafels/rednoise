@@ -16,7 +16,6 @@ import details_plots as dp
 
 # Wavelengths we want to cross correlate
 waves = ['94', '335', '171', '193', '211', '131']
-waves = ['171']
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 # regions = ['most_of_fov']
@@ -27,8 +26,7 @@ windows = ['hanning']
 
 # Model results to examine
 model_names = ('Power Law + Constant',
-               'Power Law + Constant + Lognormal',
-               'broken power law + Constant')
+               'Power Law + Constant + Lognormal')
 # Which limit to use
 limit_type = 'standard'
 #limit_type = "low_lognormal_width_3_to_5_minutes"
@@ -49,7 +47,7 @@ three_minutes = dp.three_minutes
 five_minutes = dp.five_minutes
 linewidth = dp.linewidth
 bins = dp.histogram_1d_bins
-
+fontsize = dp.fontsize
 
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves,
@@ -119,7 +117,7 @@ for ic_type in ic_types:
                         p1_limits = limits[parameter]
 
                         # Label
-                        label = this.model.variables[i].converted_label
+                        label = this.model.variables[i].converted_label + r'$_{%s}$' % wave
 
                         # Find out if this model is preferred
                         mask2 = mdefine.is_this_model_preferred(ic_type, ic_limit, this_model)[wave][region]
@@ -134,7 +132,8 @@ for ic_type in ic_types:
                         # Create the subtitle - model, region, information
                         # on how much of the field of view is not masked,
                         # and the information criterion and limit used.
-                        ic_info_string = '%s, %s' % (ic_limit_string, dp.get_mask_info_string(final_mask))
+                        number_pixel_string, percent_used_string, mask_info_string = dp.get_mask_info_string(final_mask)
+                        ic_info_string = '%s, %s' % (ic_limit_string, mask_info_string)
                         subtitle = dp.concat_string([this_model,
                                                      '%s - %s' % (region, wave),
                                                      ic_info_string,
@@ -181,7 +180,8 @@ for ic_type in ic_types:
                         # Plot the map
                         ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                           norm=norm)
-                        ret.axes.set_title('%s\n%s' % (label, subtitle))
+                        #ret.axes.set_title('%s\n%s' % (label, subtitle))
+                        ret.axes.set_title('%s\n%s of all pixels' % (label, percent_used_string), fontsize=fontsize)
                         ax.add_collection(sunspot_collection)
 
                         cbar = fig.colorbar(ret, extend='both', orientation='vertical',

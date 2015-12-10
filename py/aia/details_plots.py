@@ -88,13 +88,16 @@ def percent_lo(pvalue):
 def percent_hi(pvalue):
     return '%s (p$>$%2.1f%%)' % (rchi2s, 100 - 100 * pvalue[1])
 
+
 #
 # Define a useful text string describing the number of masked entries.  It is
 # assumed that the input mask is a numpy mask where True means masked
 #
 def get_mask_info_string(mask):
     n_not_masked = np.sum(np.logical_not(mask))
-    return '(#px=%i, used=%3.1f%%)' % (n_not_masked, 100 * n_not_masked/np.float64(mask.size))
+    number_pixel_string = "%i" % n_not_masked
+    percent_used_string = '%3.1f%%' % (100 * n_not_masked/(1.0*mask.size))
+    return number_pixel_string, percent_used_string, '(#px=%s, used=%s)' % (number_pixel_string, percent_used_string)
 
 
 def get_image_model_location(roots, b, dirs):
