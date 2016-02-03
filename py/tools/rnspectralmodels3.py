@@ -514,7 +514,7 @@ class PowerLawPlusConstant(CompoundSpectrum):
         index_estimate = pstools.most_probable_power_law_index(f[index_range[0]:index_range[1]],
                                                        power[index_range[0]:index_range[1]],
                                                        0.0, np.arange(0.0, 4.0, 0.01))
-        log_background_estimate = np.log(np.mean(power[background_range[0]:background_range[1]]))
+        log_background_estimate = np.mean(np.log(power[background_range[0]:background_range[1]]))
         return log_amplitude_estimate, index_estimate, log_background_estimate
 
     def acceptable_fit(self, a):

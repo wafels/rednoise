@@ -13,6 +13,7 @@ from sunpy.time import parse_time
 import numpy as np
 from matplotlib.patches import Rectangle
 import astropy.units as u
+from astropy.io import fits
 
 import details_study as ds
 import step1_plots

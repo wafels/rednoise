@@ -11,7 +11,8 @@ plt.ion()
 
 data = {"regular 1.5": {"filepath": "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/171/six_euv/paper2_six_euv_disk_1.5_171_six_euv.datacube.hanning.sum_log_fft_power_relative_intensities.npz"},
         "PSF removed": {"filepath": "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_PSF/disk/1.5/171/six_euv/paper3_PSF_disk_1.5_171_six_euv.datacube.hanning.sum_log_fft_power_relative_intensities.npz"},
-        "PSF removed + BM3D": {"filepath": "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM3D/disk/1.5/171/six_euv/paper3_BM3D_disk_1.5_171_six_euv.datacube.hanning.sum_log_fft_power_relative_intensities.npz"}}
+        "PSF removed + BM3D": {"filepath": "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM3D/disk/1.5/171/six_euv/paper3_BM3D_disk_1.5_171_six_euv.datacube.hanning.sum_log_fft_power_relative_intensities.npz"},
+        "PSF removed + BLSGSM": {"filepath": "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BLSGSM/disk/1.5/171/six_euv/paper3_BLSGSM_disk_1.5_171_six_euv.datacube.hanning.sum_log_fft_power_relative_intensities.npz"}}
 keys = data.keys()
 
 plt.close('all')

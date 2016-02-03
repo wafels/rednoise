@@ -97,10 +97,11 @@ if ds.derotate:
 
     # Apply the solar rotation shifts
     print("Applying solar rotation shifts")
-    data = mapcube_solar_derotate(mc, layer_index=layer_index, shift=sr_shifts, clip=True)
+    data = mapcube_solar_derotate(mc,
+                                  layer_index=layer_index, shift=sr_shifts, clip=True,
+                                  order=1)
 else:
     data = Map(list_of_data, cube=True)
-
 #
 # Coalign images by cross correlation
 #

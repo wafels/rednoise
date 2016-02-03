@@ -46,7 +46,7 @@ def DefineWindow(window, nt):
 #regions = ['test_six_euv']
 
 
-waves = ['171', '193']
+waves = ['171']
 regions = ['six_euv']
 
 # Apodization windows

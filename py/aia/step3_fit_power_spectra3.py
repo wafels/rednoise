@@ -79,6 +79,8 @@ for iwave, wave in enumerate(waves):
             pwr = pickle.load(pkl_file)
             pkl_file.close()
 
+            stop
+
             # Storage for the results
             results = {}
 
