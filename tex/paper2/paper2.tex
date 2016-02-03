@@ -86,7 +86,7 @@
 %% head is a modified title of up to roughly 44 characters.
 %% Running heads will not print in the manuscript style.
 
-\shorttitle{Coronal Fourier power spectra}
+\shorttitle{Spatial variation of coronal Fourier power spectra}
 \shortauthors{Ireland et al.}
 
 %% This is the end of the preamble.  Indicate the beginning of the
@@ -122,26 +122,17 @@
 %% editorial office after submission.
 
 \begin{abstract}
+The dynamics of the solar corona are investigated using data from the
+six extreme ultraviolet channels (EUV) of the  Atmospheric Imaging
+Assembly (AIA) of the Solar Dynamics Observatory (SDO).
 
-  {\BF The dynamics of regions of the solar corona are investigated
-    using {\BF Atmospheric Imaging Assembly (AIA)} 171\AA\ and
-    193\AA\ data.  The coronal emission from the quiet Sun, coronal
-    loop footprints, coronal moss, and from above a sunspot is
-    studied.  It is shown that the \mFpa\ in these regions can be
-    described by a \PL\ at lower frequencies that tails to flat
-    spectrum at higher frequencies, plus a Gaussian-shaped
-    contribution that varies depending on the region studied. This
-    Fourier spectral shape is in contrast to the commonly-held
-    assumption that coronal time-series are well described by the sum
-    of a long time-scale background trend plus Gaussian-distributed
-    noise, with some specific locations also showing an oscillatory
-    signal.  The implications of this discovery to the field of
-    coronal seismology and the automated detections of oscillations
-    are discussed.  The \PL\ contribution to the shape of the Fourier
-    power spectrum is interpreted as being due to the summation of a
-    distribution of exponentially decaying emission events along the
-    line of sight.}  This is consistent with the idea that the solar
-  atmosphere is heated everywhere by small energy deposition events.
+
+It is shown that in almost all locations the \Fps\ are well be described by
+a \PL\ at lower frequencies that tails to flat spectrum at higher
+frequencies, plus a Gaussian-shaped contribution that varies depending
+on the region studied.
+
+
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. The uncommented
@@ -1136,21 +1127,72 @@ Section \ref{???} describes two models of the Fourier power spectrum.
 These models are fit to the observed Fourier power spectrum as
 described in Section \ref{}.
 
-Models are fit by first generating an estimate of the model
+\Fpa\ models are fit by first generating an estimate of the model
 parameters.  This estimate is used as an initial guess to a fitting
-routine.  Models were fit by varying model parameters to find the
-maximum of the log of likelihood of the data given the model.  The
+routine.  
+
+
+
+Models were fit by varying model parameters to find the
+maximum of the log of likelihood of the data given the model.  
+
+Fourier power components are exponentially distributed.  Let us assume
+that $I_{j}$ is the observed Fourier power at the frequency indexed by
+$j$, and $S_{j}$ is the model Fourier power at that same frequency.
+The probability of an observed power $I_{j}$ given a model power
+$S_{j}$ is given by
+\begin{equation}
+p_{j}\left(I_{j}|S_{j}\right) =
+\frac{1}{S_{j}}\exp\left[-\frac{I_{j}}{S_{j}}\right]
+\label{eqn:freqprob}
+\end{equation}
+If there are $N$ non-zero Fourier frequencies then the likelihood over
+all frequencies is
+\begin{equation}
+L=\prod_{j=1}^{N}p\left(I_{j}|S_{j}\right)
+\label{eqn:freqprob:all}
+\end{equation}
+The
 Nelder-Mead method was used to vary model parameters in search of the
-maximum of the log likelihood.
+maximum of the log likelihood.  
+
 
 The initial guess for model \ref{eqn:} is generated as follows.  An
-estimated power law index
+estimated power law index is 
 
 The initial guess for model \ref{eqn:} is generated as follows.
 
 
 The full code used (and the history of its development) is availble as
 a git repository at https://github.com/wafels/rednoise/tree/perpixel.
+
+\subsection{Estimating the power-law index in a power law power
+  spectrum}\sec{sec:app:est}
+Equation \ref{eqn:freqprob:all} describes the likelihood of the
+observed Fourier power given a model for that power.  We assume that
+the observed power law spectrum can be modeled by a simple power law
+over all frequencies
+\begin{equation}
+S_{j} = Af_{j}^{-n}
+\end{equation}
+where $A$ is a constant, $f_{j}$ is the $j$'th Fourier frequency, and
+$n$ is the power law index we wish to estimate.  An estimate can be
+derived using Bayes' theorem. Using the likelihood function derived
+above (\ref{eqn:freqprob:all}), and assuming the prior $p(A)\propto
+A^{m}$ for some value of $m$, then 
+\begin{equation}
+p(n) \propto \int_{0}^{\infty} p(A) L dA.
+\label{eqn:bayes}
+\end{equation}
+On integration,
+\begin{equation}
+\ln p(n) \propto n\sum_{j=1}^{N}\ln f_{j} - (N-m-1)\ln\left[\sum_{j=1}^{N}I_{j}f_{j}
+\label{eqn:pnlog}
+\end{equation}
+For the purposes of this investigation, $m=0$ and an estimate to $n$
+was found by finding calculating the value of $\ln p(n)$ in the range
+$n=0\rightarrow4$ with steps of 0.01 and finding the value of $n$ that
+maximized $\ln p(n)$.
 
 
 %% The reference list follows the main body and any appendices.
