@@ -452,7 +452,7 @@ results for the quiet Sun, loop footpoints and sunspot regions suggest
 a \PL\ \PS.  This can be modeled as
 \begin{equation}
 \label{eqn:pwrlaw}
-\mbox{Model $M_{1}$}: P_{1}(\nu) = A\nu^{-n} + C,
+\mbox{Model $M_{1}$}: P_{1}(\nu) = A_{p}\nu^{-n} + C,
 \end{equation}
 where $\nu$ is the frequency, $A>0$ is a proportionality constant and
 $n>0$ is the \PL\ index.  The quantity $C>0$ models the high-frequency
@@ -482,7 +482,7 @@ localized, $G(\nu)$.  The model is given by
 where the localized contribution is described by
 \begin{equation}
 \label{eqn:bump}
-G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\delta^{2}}\right].
+G(\nu) = A_{G}\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\delta^{2}}\right].
 \end{equation}
 Both these models are fit to the geometrically averaged Fourier power
 spectrum in both wavelengths and in all four regions (Figure
@@ -1125,22 +1125,57 @@ the template matching routine has corrected for the shift adequately.
 \subsection{Fitting the data}\label{sec:app:fit}
 Section \ref{???} describes two models of the Fourier power spectrum.
 These models are fit to the observed Fourier power spectrum as
-described in Section \ref{}.
+described in Section \ref{}.  \Fpa\ models are fit by first generating
+an estimate of the model parameters.  This estimate is used as an
+initial guess to a fitting routine.
 
-\Fpa\ models are fit by first generating an estimate of the model
-parameters.  This estimate is used as an initial guess to a fitting
-routine.  
+The initial guess for model \ref{eqn:pwrlaw} is generated as follows.
+A power law index $n$ is estimated using the observed Fourier power
+spectra at the fifty lowest non-zero frequencies using the estimation
+approach detailed in Section \ref{sec:app:est}.  For the six hours of
+data studied, this covers the frequency range $0.046\rightarrow2.36
+mHz$.  The fifty lowest non-zero frequencies are used as this is
+typically the frequency range where the observed \Fps\ is dominated by
+a power-law like behavior.  An estimate for the power law amplitude
+$A_{p}$ is found be averaging the observed power at the first five
+non-zero frequencies, covering the frequency range
+$0.046\rightarrow0.28 mHz$.  An estimate for the background constant
+value $C$ is defined by taking the exponential of the average of the
+logarithm of the observed power over the last fifty Fourier
+frequencies, covering the frequency range $39.35\rightarrow41.6 mHz$.
+Averaging over the logarithm of the power reduces the chance that the
+estimate of $C$ will be strongly biased by the largest power in the
+frequency range.
 
+The initial guess for model \ref{eqn:pwrlawbump} is generated as
+follows.  Estimates for $n$, $A_{p}$ and $C$ are generated as
+described in the previous paragraph.  An estimated power spectrum
+$P_{est}$ is then calculated using these estimates and model
+\ref{eqn:pwrlaw}.  If there at least ten positive differences between
+the observed Fourier power and estimated power spectrum $P_{est}$ in
+the frequency range $0.97 \rightarrow 9.31 mHz$, then these positive
+differences are used to estimate the parameters of the Gaussian,
+equation \ref{eqn:bump}.  The parameters $A_{G}$ and $\beta$ are
+estimated as the maximum value of the difference and the logarithm of
+the Fourier frequency at which this maximum value occurs,
+respectively.  The width $\sigma$ is estimated by calculating the
+standard deviation of the positive differences with respect to the
+logarithm of the frequency.  If there are less than ten positive
+differences in the required frequency range, it is assumed that there
+is a very small Gaussian contribution to the observed \Fps.  In this
+case, $\ln A_{G}=-100$, $\beta$ is fixed to be half way between the
+logarithm lower and upper estimated Gaussian frequency range $0.97
+\rightarrow 9.31 mHz$, and $\sigma = 0.1$.
 
-
-Models were fit by varying model parameters to find the
-maximum of the log of likelihood of the data given the model.  
-
-Fourier power components are exponentially distributed.  Let us assume
-that $I_{j}$ is the observed Fourier power at the frequency indexed by
-$j$, and $S_{j}$ is the model Fourier power at that same frequency.
-The probability of an observed power $I_{j}$ given a model power
-$S_{j}$ is given by
+Model fitting was initialized using the initial estimates described
+above.  Models were fit by varying the value of model parameters in
+order to find the maximum of the log of likelihood of the data given
+the model.  If the time-series data are subject to a Gaussian noise,
+then the Fourier power components are exponentially distributed.  Let
+us assume that $I_{j}$ is the observed Fourier power at the frequency
+indexed by $j$, and $S_{j}$ is the model Fourier power at that same
+frequency.  The probability of an observed power $I_{j}$ given a model
+power $S_{j}$ is given by
 \begin{equation}
 p_{j}\left(I_{j}|S_{j}\right) =
 \frac{1}{S_{j}}\exp\left[-\frac{I_{j}}{S_{j}}\right]
@@ -1152,19 +1187,10 @@ all frequencies is
 L=\prod_{j=1}^{N}p\left(I_{j}|S_{j}\right)
 \label{eqn:freqprob:all}
 \end{equation}
-The
-Nelder-Mead method was used to vary model parameters in search of the
-maximum of the log likelihood.  
-
-
-The initial guess for model \ref{eqn:} is generated as follows.  An
-estimated power law index is 
-
-The initial guess for model \ref{eqn:} is generated as follows.
-
-
-The full code used (and the history of its development) is availble as
-a git repository at https://github.com/wafels/rednoise/tree/perpixel.
+The Nelder-Mead method was used to vary model parameters in search of
+the maximum of the log likelihood.  The full code used (and the
+history of its development) is availble as a git repository at
+https://github.com/wafels/rednoise/tree/perpixel.
 
 \subsection{Estimating the power-law index in a power law power
   spectrum}\sec{sec:app:est}
