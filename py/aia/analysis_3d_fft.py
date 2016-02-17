@@ -5,6 +5,7 @@ from matplotlib import rc_file
 matplotlib_file = '~/ts/rednoise/py/matplotlibrc_paper1.rc'
 rc_file(os.path.expanduser(matplotlib_file))
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from astropy.io import fits
 import astropy.units as u
 
@@ -25,7 +26,7 @@ def nd_window(shape, filter_function):
            Function should accept one argument: the window length.
            Example: scipy.signal.hamming
     """
-    full_3d_window = np.ones_like(shape)
+    full_3d_window = np.ones(shape)
     for axis, axis_size in enumerate(shape):
         # set up shape for numpy broadcasting
         filter_shape = [1, ] * len(shape)
@@ -37,12 +38,21 @@ def nd_window(shape, filter_function):
 
 
 def k_omega(pwr, cx, cy, method='andres'):
-    nk = pwr.shape[0]
+    """
+    Calculate a k-omega plot from 3-d FFT results
+    :param pwr: an input three-dimensional FFT power array of the form (nk, nk, nf)
+     where nk is the
+    :param cx:
+    :param cy:
+    :param method:
+    :return:
+    """
+    nk_strictly_positive = pwr.shape[0] - cx - 1
     nf = pwr.shape[2]
-    answer = np.zeros((nf, nk-1))
-    for k in range(1, nk):
+    answer = np.zeros((nf, nk_strictly_positive))
+    for k in range(0, nk_strictly_positive):
         rr, cc = circle_perimeter(cx, cy, k, method=method)
-        answer[:, k-1] = np.sum(pwr[rr, cc, :], axis=(0, 1)) / len(rr)
+        answer[:, k] = np.sum(pwr[rr[:], cc[:], :], axis=0) / len(rr)
     return answer
 
 # Load the data
@@ -50,27 +60,47 @@ filename = 'paper2_six_euv_disk_1.5_171_six_euv.datacube.pkl.fits'
 
 directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/171/six_euv/"
 file_path = os.path.join(directory, filename)
-hdulist = fits.read(file_path)
+print('Reading %s' % file_path)
+hdulist = fits.open(file_path)
 emission_data = hdulist[0].data
 
 # Take the FFT of the windowed data, shift the results so that low frequencies
 # are in the centre of the array, and calculate the power
-pwr = np.abs(np.fft.fftshift(np.fft.nfft(emission_data * nd_window(emission_data.shape, np.hanning), axes=(0, 1, 2)))) ** 2
+nspace = 333
+pwr = np.abs(np.fft.fftshift(np.fft.fftn(emission_data[0:nspace, 0:nspace, :] * nd_window((nspace, nspace, emission_data.shape[2]), np.hanning), axes=(0, 1, 2)))) ** 2
 
 # Frequencies
 frequencies = np.fft.fftshift(np.fft.fftfreq(emission_data.shape[2], d=12.0))
-strictly_positive_frequencies = np.where(frequencies > 0.0)
+strictly_positive_frequencies = np.asarray(np.where(frequencies > 0.0))
+spm = (frequencies[strictly_positive_frequencies] / u.s).to('mHz')
 
 # Wavenumbers in pixels
-wavenumbers = np.fft.fftshift(np.fft.fftfreq(emission_data.shape[1], d=1.0))
+wavenumbers = np.fft.fftshift(np.fft.fftfreq(nspace, d=1.0))
 zero_wavenumber_index = np.argmin(np.abs(wavenumbers))
+wn = wavenumbers[zero_wavenumber_index + 1:] / u.pix
 
 
 # Calculate the k-omega diagram, assuming a square kx, ky plane.
-k_om = k_omega(pwr[:, :, strictly_positive_frequencies],
+k_om = k_omega(pwr[:, :, strictly_positive_frequencies[0, :]],
                zero_wavenumber_index,
                zero_wavenumber_index)
 
 # Plot of the k-omega diagram
+log10_power = np.log10(k_om)
+plt.imshow(log10_power, aspect='auto', cmap=cm.Set1, origin='lower',
+           extent=(np.log10(wn[0].value), np.log10(wn[-1].value), spm[0, 0].value, spm[0, -1].value))
+plt.xlabel('wavenumber (%s)' % str(wn.unit))
+plt.ylabel('frequency (%s)' % str(spm.unit))
+plt.colorbar()
+print(np.min(np.log10(k_om)), np.max(np.log10(k_om)))
 
-# Surface plot of the k-omega diagram
+# Plot of the k-omega diagram with logarithmic frequency.
+fig, ax = plt.subplots()
+ax.set_yscale('log')
+ax.pcolor(wn.value, spm[0, :].value, log10_power, cmap=cm.Set1)
+ax.set_xlabel('wavenumber (%s)' % str(wn.unit))
+ax.set_ylabel('frequency (%s)' % str(spm.unit))
+ax.set_xlim(wn[0].value, wn[-1].value)
+ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
+# Add a colorbar
+
