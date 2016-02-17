@@ -12,6 +12,10 @@ import astropy.units as u
 
 plt.ion()
 
+choice = 'BM4D'
+#choice = 'BM3D'
+#choice = 'no_denoise'
+
 
 def nd_window(shape, filter_function):
     """
@@ -56,18 +60,30 @@ def k_omega(pwr, cx, cy, method='andres'):
     return answer
 
 # Load the data
-filename = 'paper2_six_euv_disk_1.5_171_six_euv.datacube.pkl.fits'
+if choice == "no_denoise":
+    filename = 'paper2_six_euv_disk_1.5_171_six_euv.datacube.pkl.fits'
+    directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/171/six_euv/"
 
-directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/171/six_euv/"
+if choice == "BM3D":
+    filename = 'paper3_BM3D_disk_1.5_171_six_euv.datacube.pkl.fits'
+    directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM3D/disk/1.5/171/six_euv/'
+
+if choice == "BM4D":
+    filename = 'paper3_BM4D_disk_1.5_171_six_euv.datacube.pkl.fits'
+    directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM4D/disk/1.5/171/six_euv/'
+
 file_path = os.path.join(directory, filename)
 print('Reading %s' % file_path)
 hdulist = fits.open(file_path)
-emission_data = hdulist[0].data
+emission_data_shape = hdulist[0].data.shape
+nspace = np.min([emission_data_shape[0], emission_data_shape[1]])
+emission_data = hdulist[0].data[0:nspace, 0:nspace, :]
+emission_data_mean = np.mean(emission_data, axis=2, keepdims=True)
+emission_data = (emission_data - emission_data_mean)/emission_data_mean
 
 # Take the FFT of the windowed data, shift the results so that low frequencies
 # are in the centre of the array, and calculate the power
-nspace = 333
-pwr = np.abs(np.fft.fftshift(np.fft.fftn(emission_data[0:nspace, 0:nspace, :] * nd_window((nspace, nspace, emission_data.shape[2]), np.hanning), axes=(0, 1, 2)))) ** 2
+pwr = np.abs(np.fft.fftshift(np.fft.fftn(emission_data * nd_window((nspace, nspace, emission_data.shape[2]), np.hanning), axes=(0, 1, 2)))) ** 2
 
 # Frequencies
 frequencies = np.fft.fftshift(np.fft.fftfreq(emission_data.shape[2], d=12.0))
@@ -85,21 +101,27 @@ k_om = k_omega(pwr[:, :, strictly_positive_frequencies[0, :]],
                zero_wavenumber_index,
                zero_wavenumber_index)
 
-# Plot of the k-omega diagram
 log10_power = np.log10(k_om)
+
+"""
+# Plot of the k-omega diagram
 plt.imshow(log10_power, aspect='auto', cmap=cm.Set1, origin='lower',
            extent=(np.log10(wn[0].value), np.log10(wn[-1].value), spm[0, 0].value, spm[0, -1].value))
 plt.xlabel('wavenumber (%s)' % str(wn.unit))
 plt.ylabel('frequency (%s)' % str(spm.unit))
 plt.colorbar()
+"""
 print(np.min(np.log10(k_om)), np.max(np.log10(k_om)))
 
 # Plot of the k-omega diagram with logarithmic frequency.
+# lowest value = 6.848, highest value = 20.12
 fig, ax = plt.subplots()
 ax.set_yscale('log')
-cax = ax.pcolor(wn.value, spm[0, :].value, log10_power, cmap=cm.Set1)
+#ax.set_xscale('log')
+cax = ax.pcolor(wn.value, spm[0, :].value, log10_power, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
 ax.set_xlabel('wavenumber (%s)' % str(wn.unit))
 ax.set_ylabel('frequency (%s)' % str(spm.unit))
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
+ax.set_title("%s, min=%4.2f, max=%4.2f" % (choice, log10_power.min(), log10_power.max()))
 fig.colorbar(cax)
