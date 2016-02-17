@@ -16,7 +16,7 @@ import astropy.units as u
 import details_study as ds
 import sunpy.map
 import sunpy.net.hek as hek
-from sunpy.physics.transforms.solar_rotation import rot_hpc
+from sunpy.physics.solar_rotation import rot_hpc
 
 
 #
