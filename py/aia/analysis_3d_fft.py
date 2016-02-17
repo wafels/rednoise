@@ -97,10 +97,9 @@ print(np.min(np.log10(k_om)), np.max(np.log10(k_om)))
 # Plot of the k-omega diagram with logarithmic frequency.
 fig, ax = plt.subplots()
 ax.set_yscale('log')
-ax.pcolor(wn.value, spm[0, :].value, log10_power, cmap=cm.Set1)
+cax = ax.pcolor(wn.value, spm[0, :].value, log10_power, cmap=cm.Set1)
 ax.set_xlabel('wavenumber (%s)' % str(wn.unit))
 ax.set_ylabel('frequency (%s)' % str(spm.unit))
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
-# Add a colorbar
-
+fig.colorbar(cax)
