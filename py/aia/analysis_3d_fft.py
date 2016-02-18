@@ -9,10 +9,12 @@ import matplotlib.cm as cm
 from astropy.io import fits
 import astropy.units as u
 
+from details_plots import log_10_product
 
 plt.ion()
 
-choice = 'BM4D'
+choice = 'test'
+#choice = 'BM4D'
 #choice = 'BM3D'
 #choice = 'no_denoise'
 
@@ -68,7 +70,10 @@ def k_omega_pixel_circle(k0x_index, k0y_index, k, method='andres'):
     The x, y locations of pixels on the circle in the kx, ky plane.
 
     """
-    rr, cc = circle_perimeter(k0x_index, k0y_index, k, method=method)
+    rr, cc = circle_perimeter(int(k0x_index.to('pix').value),
+                              int(k0y_index.to('pix').value),
+                              int(k.to('pix').value),
+                              method=method)
     return rr*u.pix, cc*u.pix
 
 
@@ -103,11 +108,12 @@ def k_omega_pixel_circles(k0x_index, k0y_index, kmin, kmax, method='andres'):
 
     """
     answer = []
-    for k in range(kmin.to('pix').value, kmax.to('pix').value):
-        answer.append(k_omega_pixel_circle(k0x_index,
-                                           k0y_index,
-                                           k*u.pix,
-                                           method=method))
+    for k in range(int(kmin.to('pix').value), int(kmax.to('pix').value) + 1):
+        rr, cc = k_omega_pixel_circle(k0x_index,
+                                      k0y_index,
+                                      k*u.pix,
+                                      method=method)
+        answer.append([rr, cc])
     return answer
 
 
@@ -131,10 +137,10 @@ def k_omega_power(pwr, circles):
     answer : 2-d numpy.ndarray
         The k-omega diagram of the input three-dimensional FFT.
     """
-    answer = np.ones(pwr.shape[2], len(circles))
+    answer = np.zeros((pwr.shape[2], len(circles)))
     for k, px in enumerate(circles):
-        rr = px[0].to('pix').value
-        cc = px[1].to('pix').value
+        rr = np.asarray(px[0].to('pix').value, dtype=np.int)
+        cc = np.asarray(px[1].to('pix').value, dtype=np.int)
         answer[:, k] = np.sum(pwr[rr[:], cc[:], :], axis=0) / len(rr)
     return answer
 
@@ -152,17 +158,22 @@ if choice == "BM4D":
     filename = 'paper3_BM4D_disk_1.5_171_six_euv.datacube.pkl.fits'
     directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM4D/disk/1.5/171/six_euv/'
 
-file_path = os.path.join(directory, filename)
-print('Reading %s' % file_path)
-hdulist = fits.open(file_path)
-emission_data_shape = hdulist[0].data.shape
+if choice != "test":
+    file_path = os.path.join(directory, filename)
+    print('Reading %s' % file_path)
+    hdulist = fits.open(file_path)
+    emission_data = hdulist[0].data
+else:
+    emission_data = np.random.random((50, 60, 100))
+
 
 # Minimum spatial extent - this constrains the number of wavenumbers since
 # we are only dealing with square spatial extents
+emission_data_shape = emission_data.shape
 nspace = np.min([emission_data_shape[0], emission_data_shape[1]])
 
 # Emission data is analyzed as relative change intensity
-emission_data = hdulist[0].data[0:nspace, 0:nspace, :]
+emission_data = emission_data[0:nspace, 0:nspace, :]
 emission_data_mean = np.mean(emission_data, axis=2, keepdims=True)
 emission_data = (emission_data - emission_data_mean)/emission_data_mean
 
@@ -178,13 +189,12 @@ spm = (frequencies[strictly_positive_frequencies] / u.s).to('mHz')
 # Wavenumbers in pixels
 wavenumbers = np.fft.fftshift(np.fft.fftfreq(nspace, d=1.0))
 zero_wavenumber_index = np.argmin(np.abs(wavenumbers)) * u.pix
-wn = wavenumbers[zero_wavenumber_index + 1:] / u.pix
+wn = wavenumbers[zero_wavenumber_index.to('pix').value + 1:] / u.pix
 
 # Calculate the circles in the k-omega plane we will use to do the integrals
-kmin = 0 * u.pix
-kmax =
-circles = k_omega_pixel_circles(pwr.shape*u.pix,
-                                zero_wavenumber_index,
+kmin = 1 * u.pix
+kmax = pwr.shape[0]*u.pix - zero_wavenumber_index - 1*u.pix
+circles = k_omega_pixel_circles(zero_wavenumber_index,
                                 zero_wavenumber_index,
                                 kmin,
                                 kmax)
@@ -202,17 +212,24 @@ plt.ylabel('frequency (%s)' % str(spm.unit))
 plt.colorbar()
 """
 print(np.min(k_om), np.max(k_om))
+five_minutes = (1.0 / 300.0) / u.s
+three_minutes = (1.0 / 180.0) / u.s
 
 # Plot of the k-omega diagram with logarithmic frequency.
 # lowest value = 6.848, highest value = 20.12
 fig, ax = plt.subplots()
+yformatter = plt.FuncFormatter(log_10_product)
 ax.set_yscale('log')
+ax.yaxis.set_major_formatter(yformatter)
 #ax.set_xscale('log')
 cax = ax.pcolor(wn.value, spm[0, :].value, k_om, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
 ax.set_xlabel('wavenumber (%s)' % str(wn.unit))
 ax.set_ylabel('frequency (%s)' % str(spm.unit))
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
-ax.set_title("%s, min=%4.2f, max=%4.2f" % (choice, k_om.min(), k_om.max()))
+ax.set_title(r"%s [power=%4.2f$\rightarrow$%4.2f]" % (choice, k_om.min(), k_om.max()))
+f5 = ax.axhline(five_minutes.to('mHz').value, linestyle='--', color='k')
+f3 = ax.axhline(three_minutes.to('mHz').value, linestyle='-.', color='k')
 fig.colorbar(cax)
+ax.legend((f3, f5), ('three minutes', 'five minutes'), 'upper right', fontsize=8.0, framealpha=0.5)
 fig.tight_layout()
