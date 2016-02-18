@@ -41,23 +41,103 @@ def nd_window(shape, filter_function):
     return full_3d_window
 
 
-def k_omega(pwr, cx, cy, method='andres'):
+@u.quantity_input(k0x_index=u.pix, k0y_index=u.pix, k=u.pix)
+def k_omega_pixel_circle(k0x_index, k0y_index, k, method='andres'):
     """
-    Calculate a k-omega plot from 3-d FFT results
-    :param pwr: an input three-dimensional FFT power array of the form (nk, nk, nf)
-     where nk is the
-    :param cx:
-    :param cy:
-    :param method:
-    :return:
+    Calculate which pixels lie at on a circle of radius 'k' from the center
+    'cx, cy'.  This can be used to calculate
+
+    Parameters
+    ----------
+    k0x_index : integer
+        pixel index in the x direction of the (kx, ky, omega) array of where
+        the kx wavenumber equals zero
+
+    k0y_index : integer
+        pixel index in the y direction of the (kx, ky, omega) array of where
+        the ky wavenumber equals zero
+
+    k : integer
+        radius of the circle in pixels
+
+    method : 'andres' | 'bresenham'
+        the method used to calculate the which pixels
+
+    Returns
+    -------
+    The x, y locations of pixels on the circle in the kx, ky plane.
+
     """
-    nk_strictly_positive = pwr.shape[0] - cx - 1
-    nf = pwr.shape[2]
-    answer = np.zeros((nf, nk_strictly_positive))
-    for k in range(0, nk_strictly_positive):
-        rr, cc = circle_perimeter(cx, cy, k, method=method)
+    rr, cc = circle_perimeter(k0x_index, k0y_index, k, method=method)
+    return rr*u.pix, cc*u.pix
+
+
+@u.quantity_input(k0x_index=u.pix, k0y_index=u.pix, kmin=u.pix, kmax=u.pix)
+def k_omega_pixel_circles(k0x_index, k0y_index, kmin, kmax, method='andres'):
+    """
+    Calculate a list of circles centered at (k0x_index, k0y_index) in the
+    kx, ky plane that have radii in the (closed) range kmin to kmax.
+
+    Parameters
+    ----------
+    k0x_index : integer
+        index in the x direction of the (kx, ky, omega) array of where the
+        kx wavenumber equals zero
+
+    k0y_index : integer
+        index in the y direction of the (kx, ky, omega) array of where the
+        ky wavenumber equals zero
+
+    kmin : integer
+        minimum radius of the circle
+
+    kmax : integer
+        maximum radius of the circle
+
+    method : 'andres' | 'bresenham'
+        the method used to calculate the which pixels
+
+    Returns
+    -------
+    An ordered list of circles.
+
+    """
+    answer = []
+    for k in range(kmin.to('pix').value, kmax.to('pix').value):
+        answer.append(k_omega_pixel_circle(k0x_index,
+                                           k0y_index,
+                                           k*u.pix,
+                                           method=method))
+    return answer
+
+
+def k_omega_power(pwr, circles):
+    """
+    Calculate the k-omega plot for an input three dimensional FFT power of the
+    form (kx, ky, omega).
+
+    Parameters
+    ----------
+    pwr : 3-d numpy.ndarray
+        An array of FFT power of the form (nkx, nky, nf).
+
+    circles : list
+        A list of circles.  The k-omega plot is calculated by averaging the
+        power at the pixel locations in the kx, ky plane indicated by each
+        circle.  The same integral is performed for all frequencies.
+
+    Returns
+    -------
+    answer : 2-d numpy.ndarray
+        The k-omega diagram of the input three-dimensional FFT.
+    """
+    answer = np.ones(pwr.shape[2], len(circles))
+    for k, px in enumerate(circles):
+        rr = px[0].to('pix').value
+        cc = px[1].to('pix').value
         answer[:, k] = np.sum(pwr[rr[:], cc[:], :], axis=0) / len(rr)
     return answer
+
 
 # Load the data
 if choice == "no_denoise":
@@ -76,7 +156,12 @@ file_path = os.path.join(directory, filename)
 print('Reading %s' % file_path)
 hdulist = fits.open(file_path)
 emission_data_shape = hdulist[0].data.shape
+
+# Minimum spatial extent - this constrains the number of wavenumbers since
+# we are only dealing with square spatial extents
 nspace = np.min([emission_data_shape[0], emission_data_shape[1]])
+
+# Emission data is analyzed as relative change intensity
 emission_data = hdulist[0].data[0:nspace, 0:nspace, :]
 emission_data_mean = np.mean(emission_data, axis=2, keepdims=True)
 emission_data = (emission_data - emission_data_mean)/emission_data_mean
@@ -92,16 +177,21 @@ spm = (frequencies[strictly_positive_frequencies] / u.s).to('mHz')
 
 # Wavenumbers in pixels
 wavenumbers = np.fft.fftshift(np.fft.fftfreq(nspace, d=1.0))
-zero_wavenumber_index = np.argmin(np.abs(wavenumbers))
+zero_wavenumber_index = np.argmin(np.abs(wavenumbers)) * u.pix
 wn = wavenumbers[zero_wavenumber_index + 1:] / u.pix
 
+# Calculate the circles in the k-omega plane we will use to do the integrals
+kmin = 0 * u.pix
+kmax =
+circles = k_omega_pixel_circles(pwr.shape*u.pix,
+                                zero_wavenumber_index,
+                                zero_wavenumber_index,
+                                kmin,
+                                kmax)
 
 # Calculate the k-omega diagram, assuming a square kx, ky plane.
-k_om = k_omega(pwr[:, :, strictly_positive_frequencies[0, :]],
-               zero_wavenumber_index,
-               zero_wavenumber_index)
+k_om = np.log10(k_omega_power(pwr[:, :, strictly_positive_frequencies[0, :]], circles))
 
-log10_power = np.log10(k_om)
 
 """
 # Plot of the k-omega diagram
@@ -111,18 +201,18 @@ plt.xlabel('wavenumber (%s)' % str(wn.unit))
 plt.ylabel('frequency (%s)' % str(spm.unit))
 plt.colorbar()
 """
-print(np.min(np.log10(k_om)), np.max(np.log10(k_om)))
+print(np.min(k_om), np.max(k_om))
 
 # Plot of the k-omega diagram with logarithmic frequency.
 # lowest value = 6.848, highest value = 20.12
 fig, ax = plt.subplots()
 ax.set_yscale('log')
 #ax.set_xscale('log')
-cax = ax.pcolor(wn.value, spm[0, :].value, log10_power, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
+cax = ax.pcolor(wn.value, spm[0, :].value, k_om, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
 ax.set_xlabel('wavenumber (%s)' % str(wn.unit))
 ax.set_ylabel('frequency (%s)' % str(spm.unit))
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
-ax.set_title("%s, min=%4.2f, max=%4.2f" % (choice, log10_power.min(), log10_power.max()))
+ax.set_title("%s, min=%4.2f, max=%4.2f" % (choice, k_om.min(), k_om.max()))
 fig.colorbar(cax)
 fig.tight_layout()
