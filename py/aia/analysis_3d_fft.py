@@ -257,3 +257,6 @@ f3 = ax.axhline(three_minutes.to(frequency_unit).value, linestyle='-.', color='k
 fig.colorbar(cax, label=r'$\log_{10}(power)$')
 ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
 fig.tight_layout()
+
+# Sum over all frequencies
+spwr = np.log10(np.sum(pwr[:, :, strictly_positive_frequencies[0, :]], axis=2))
