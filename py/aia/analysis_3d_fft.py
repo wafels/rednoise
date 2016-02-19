@@ -16,8 +16,11 @@ plt.ion()
 #choice = 'test'
 choice = 'BM4D'
 choice = 'BM3D'
-choice = 'PSF_removed'
-choice = 'no_denoise'
+#choice = 'PSF_removed'
+#choice = 'no_denoise'
+
+log_x_axis = True  # Default is False
+log_y_axis = True  # Default is True
 
 
 def nd_window(shape, filter_function):
@@ -231,10 +234,14 @@ three_minutes = (1.0 / 180.0) / u.s
 # Plot of the k-omega diagram with logarithmic frequency.
 # lowest value = 6.848, highest value = 20.12
 fig, ax = plt.subplots()
-yformatter = plt.FuncFormatter(log_10_product)
-ax.set_yscale('log')
-ax.yaxis.set_major_formatter(yformatter)
-#ax.set_xscale('log')
+if log_y_axis:
+    yformatter = plt.FuncFormatter(log_10_product)
+    ax.set_yscale('log')
+    ax.yaxis.set_major_formatter(yformatter)
+if log_x_axis:
+    xformatter = plt.FuncFormatter(log_10_product)
+    ax.set_xscale('log')
+    ax.xaxis.set_major_formatter(xformatter)
 cax = ax.pcolormesh(wn.value, spm[0, :].value, k_om, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
 wn_min = '%7.4f' % wn[0].value
 wn_max = '%7.4f' % wn[-1].value
