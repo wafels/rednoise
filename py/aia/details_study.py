@@ -10,8 +10,8 @@ import astropy.units as u
 #
 #study_type = 'debugpaper2'
 #study_type = 'paper2'
-#study_type = 'paper3_PSF'
-study_type = 'paper3_BM3D'
+study_type = 'paper3_PSF'
+#study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
 
 # Target cadence

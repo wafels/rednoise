@@ -13,10 +13,11 @@ from details_plots import log_10_product
 
 plt.ion()
 
-choice = 'test'
-#choice = 'BM4D'
-#choice = 'BM3D'
-#choice = 'no_denoise'
+#choice = 'test'
+choice = 'BM4D'
+choice = 'BM3D'
+choice = 'PSF_removed'
+choice = 'no_denoise'
 
 
 def nd_window(shape, filter_function):
@@ -43,7 +44,7 @@ def nd_window(shape, filter_function):
     return full_3d_window
 
 
-@u.quantity_input(k0x_index=u.pix, k0y_index=u.pix, k=u.pix)
+@u.quantity_input(k0x_index=u.dimensionless_unscaled, k0y_index=u.dimensionless_unscaled, k=u.dimensionless_unscaled)
 def k_omega_pixel_circle(k0x_index, k0y_index, k, method='andres'):
     """
     Calculate which pixels lie at on a circle of radius 'k' from the center
@@ -70,14 +71,14 @@ def k_omega_pixel_circle(k0x_index, k0y_index, k, method='andres'):
     The x, y locations of pixels on the circle in the kx, ky plane.
 
     """
-    rr, cc = circle_perimeter(int(k0x_index.to('pix').value),
-                              int(k0y_index.to('pix').value),
-                              int(k.to('pix').value),
+    rr, cc = circle_perimeter(int(k0x_index.to(u.dimensionless_unscaled).value),
+                              int(k0y_index.to(u.dimensionless_unscaled).value),
+                              int(k.to(u.dimensionless_unscaled).value),
                               method=method)
-    return rr*u.pix, cc*u.pix
+    return rr*u.dimensionless_unscaled, cc*u.dimensionless_unscaled
 
 
-@u.quantity_input(k0x_index=u.pix, k0y_index=u.pix, kmin=u.pix, kmax=u.pix)
+@u.quantity_input(k0x_index=u.dimensionless_unscaled, k0y_index=u.dimensionless_unscaled, kmin=u.dimensionless_unscaled, kmax=u.dimensionless_unscaled)
 def k_omega_pixel_circles(k0x_index, k0y_index, kmin, kmax, method='andres'):
     """
     Calculate a list of circles centered at (k0x_index, k0y_index) in the
@@ -108,10 +109,10 @@ def k_omega_pixel_circles(k0x_index, k0y_index, kmin, kmax, method='andres'):
 
     """
     answer = []
-    for k in range(int(kmin.to('pix').value), int(kmax.to('pix').value) + 1):
+    for k in range(int(kmin.to(u.dimensionless_unscaled).value), int(kmax.to(u.dimensionless_unscaled).value) + 1):
         rr, cc = k_omega_pixel_circle(k0x_index,
                                       k0y_index,
-                                      k*u.pix,
+                                      k*u.dimensionless_unscaled,
                                       method=method)
         answer.append([rr, cc])
     return answer
@@ -139,8 +140,8 @@ def k_omega_power(pwr, circles):
     """
     answer = np.zeros((pwr.shape[2], len(circles)))
     for k, px in enumerate(circles):
-        rr = np.asarray(px[0].to('pix').value, dtype=np.int)
-        cc = np.asarray(px[1].to('pix').value, dtype=np.int)
+        rr = np.asarray(px[0].to(u.dimensionless_unscaled).value, dtype=np.int)
+        cc = np.asarray(px[1].to(u.dimensionless_unscaled).value, dtype=np.int)
         answer[:, k] = np.sum(pwr[rr[:], cc[:], :], axis=0) / len(rr)
     return answer
 
@@ -149,14 +150,22 @@ def k_omega_power(pwr, circles):
 if choice == "no_denoise":
     filename = 'paper2_six_euv_disk_1.5_171_six_euv.datacube.pkl.fits'
     directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/171/six_euv/"
+    scale = 0.6 * u.arcsec / u.pix
+
+if choice == "PSF_removed":
+    filename = 'paper3_PSF_disk_1.5_171_six_euv.datacube.pkl.fits'
+    directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_PSF/disk/1.5/171/six_euv/"
+    scale = 0.6 * u.arcsec / u.pix
 
 if choice == "BM3D":
     filename = 'paper3_BM3D_disk_1.5_171_six_euv.datacube.pkl.fits'
     directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM3D/disk/1.5/171/six_euv/'
+    scale = 0.6 * u.arcsec / u.pix
 
 if choice == "BM4D":
     filename = 'paper3_BM4D_disk_1.5_171_six_euv.datacube.pkl.fits'
     directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM4D/disk/1.5/171/six_euv/'
+    scale = 0.6 * u.arcsec / u.pix
 
 if choice != "test":
     file_path = os.path.join(directory, filename)
@@ -165,35 +174,39 @@ if choice != "test":
     emission_data = hdulist[0].data
 else:
     emission_data = np.random.random((50, 60, 100))
+    scale = 1 * u.dimensionless_unscaled
 
 
 # Minimum spatial extent - this constrains the number of wavenumbers since
 # we are only dealing with square spatial extents
-emission_data_shape = emission_data.shape
-nspace = np.min([emission_data_shape[0], emission_data_shape[1]])
+nspace = np.min([emission_data.shape[0], emission_data.shape[1]])
 
 # Emission data is analyzed as relative change intensity
 emission_data = emission_data[0:nspace, 0:nspace, :]
 emission_data_mean = np.mean(emission_data, axis=2, keepdims=True)
 emission_data = (emission_data - emission_data_mean)/emission_data_mean
+print('Emission data shape ', emission_data.shape)
 
 # Take the FFT of the windowed data, shift the results so that low frequencies
 # are in the centre of the array, and calculate the power
 pwr = np.abs(np.fft.fftshift(np.fft.fftn(emission_data * nd_window((nspace, nspace, emission_data.shape[2]), np.hanning), axes=(0, 1, 2)))) ** 2
 
 # Frequencies
+frequency_unit = 'mHz'
 frequencies = np.fft.fftshift(np.fft.fftfreq(emission_data.shape[2], d=12.0))
 strictly_positive_frequencies = np.asarray(np.where(frequencies > 0.0))
-spm = (frequencies[strictly_positive_frequencies] / u.s).to('mHz')
+spm = (frequencies[strictly_positive_frequencies] / u.s).to(frequency_unit)
 
 # Wavenumbers in pixels
-wavenumbers = np.fft.fftshift(np.fft.fftfreq(nspace, d=1.0))
-zero_wavenumber_index = np.argmin(np.abs(wavenumbers)) * u.pix
-wn = wavenumbers[zero_wavenumber_index.to('pix').value + 1:] / u.pix
+wavenumbers = np.fft.fftshift(np.fft.fftfreq(nspace, d=scale.value)) / (scale.unit * u.pix)
+zero_wavenumber_index = np.argmin(np.abs(wavenumbers.value)) * u.dimensionless_unscaled
+wn = wavenumbers[zero_wavenumber_index.to(u.dimensionless_unscaled).value + 1:]
 
 # Calculate the circles in the k-omega plane we will use to do the integrals
-kmin = 1 * u.pix
-kmax = pwr.shape[0]*u.pix - zero_wavenumber_index - 1*u.pix
+kmin = 1 * u.dimensionless_unscaled
+kmax = pwr.shape[0]*u.dimensionless_unscaled - zero_wavenumber_index - 1*u.dimensionless_unscaled
+print('Wavenumber index range ', kmin, kmax)
+print('Frequency range ', spm[0, 0], spm[0, -1])
 circles = k_omega_pixel_circles(zero_wavenumber_index,
                                 zero_wavenumber_index,
                                 kmin,
@@ -222,14 +235,18 @@ yformatter = plt.FuncFormatter(log_10_product)
 ax.set_yscale('log')
 ax.yaxis.set_major_formatter(yformatter)
 #ax.set_xscale('log')
-cax = ax.pcolor(wn.value, spm[0, :].value, k_om, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
-ax.set_xlabel('wavenumber (%s)' % str(wn.unit))
-ax.set_ylabel('frequency (%s)' % str(spm.unit))
+cax = ax.pcolormesh(wn.value, spm[0, :].value, k_om, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
+wn_min = '%7.4f' % wn[0].value
+wn_max = '%7.4f' % wn[-1].value
+f_min = '%7.4f' % spm[0, 0].to(frequency_unit).value
+f_max = '%7.4f' % spm[0, -1].to(frequency_unit).value
+ax.set_xlabel(r'wavenumber (%s) [range=%s$\rightarrow$%s]' % (str(wn.unit), wn_min, wn_max))
+ax.set_ylabel(r'frequency (%s) [range=%s$\rightarrow$%s]' % (str(spm.unit), f_min, f_max))
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
 ax.set_title(r"%s [power=%4.2f$\rightarrow$%4.2f]" % (choice, k_om.min(), k_om.max()))
-f5 = ax.axhline(five_minutes.to('mHz').value, linestyle='--', color='k')
-f3 = ax.axhline(three_minutes.to('mHz').value, linestyle='-.', color='k')
+f5 = ax.axhline(five_minutes.to(frequency_unit).value, linestyle='--', color='k')
+f3 = ax.axhline(three_minutes.to(frequency_unit).value, linestyle='-.', color='k')
 fig.colorbar(cax, label=r'$\log_{10}(power)$')
-ax.legend((f3, f5), ('three minutes', 'five minutes'), 'upper right', fontsize=8.0, framealpha=0.5)
+ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
 fig.tight_layout()
