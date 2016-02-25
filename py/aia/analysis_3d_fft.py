@@ -16,8 +16,8 @@ plt.ion()
 #choice = 'test'
 choice = 'BM4D'
 choice = 'BM3D'
-#choice = 'PSF_removed'
-#choice = 'no_denoise'
+choice = 'PSF_removed'
+choice = 'no_denoise'
 
 log_x_axis = True  # Default is False
 log_y_axis = True  # Default is True
@@ -242,7 +242,8 @@ if log_x_axis:
     xformatter = plt.FuncFormatter(log_10_product)
     ax.set_xscale('log')
     ax.xaxis.set_major_formatter(xformatter)
-cax = ax.pcolormesh(wn.value, spm[0, :].value, k_om, cmap=cm.nipy_spectral, vmin=0.84, vmax=11.96)
+cmap = cm.nipy_spectral
+cax = ax.pcolormesh(wn.value, spm[0, :].value, k_om, cmap=cmap, vmin=0.84, vmax=11.96)
 wn_min = '%7.4f' % wn[0].value
 wn_max = '%7.4f' % wn[-1].value
 f_min = '%7.4f' % spm[0, 0].to(frequency_unit).value
@@ -257,6 +258,14 @@ f3 = ax.axhline(three_minutes.to(frequency_unit).value, linestyle='-.', color='k
 fig.colorbar(cax, label=r'$\log_{10}(power)$')
 ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
 fig.tight_layout()
+
+output_filename = 'analysis_3d_fft.{:s}.logx={:s}.logy={:s}.{:s}.png'.format(choice,
+                                                             str(log_x_axis),
+                                                             str(log_y_axis),
+                                                             cmap.name)
+filepath = os.path.join(os.path.expanduser('~/'), output_filename)
+fig.set_size_inches(24, 16)
+fig.savefig(filepath)
 
 # Sum over all frequencies
 spwr = np.log10(np.sum(pwr[:, :, strictly_positive_frequencies[0, :]], axis=2))
