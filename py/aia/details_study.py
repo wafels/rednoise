@@ -10,9 +10,9 @@ import astropy.units as u
 #
 #study_type = 'debugpaper2'
 #study_type = 'paper2'
-study_type = 'paper3_PSF'
+#study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
-#study_type = 'paper3_BLSGSM'
+study_type = 'paper3_BLSGSM'
 
 # Target cadence
 target_cadence = 12
@@ -89,6 +89,7 @@ if study_type == 'paper3_BLSGSM':
     wave = '171'
     cross_correlate = True
     derotate = True
+    special_information = 'kirk=1-10'
 
 """
 if study_type == 'paper2':

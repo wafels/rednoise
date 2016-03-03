@@ -160,7 +160,7 @@ if ds.cross_correlate:
 # Save the full dataset
 #
 directory = save_locations['pickle']
-filename = ident + '.full_mapcube.pkl'
+filename = ident + '.full_mapcube.{:s}{:s}pkl'.format(ds.special_information, '_ireland=step0.')
 pfilepath = os.path.join(directory, filename)
 print('Saving data to ' + pfilepath)
 outputfile = open(pfilepath, 'wb')
