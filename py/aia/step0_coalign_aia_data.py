@@ -102,6 +102,7 @@ if ds.derotate:
                                   order=1)
 else:
     data = Map(list_of_data, cube=True)
+stop
 #
 # Coalign images by cross correlation
 #
@@ -138,7 +139,7 @@ if ds.cross_correlate:
         # data, i.e. flares.  This may be throwing the fits off.  Perhaps
         # better to apply something like a log?
         #
-        if ds.wave == '131':
+        if ds.wave == '131' or (ds.wave == '171' and ds.study_type == 'paper3_BLSGSM'):
             cc_func = np.sqrt
         else:
             cc_func = _default_fmap_function
@@ -160,7 +161,7 @@ if ds.cross_correlate:
 # Save the full dataset
 #
 directory = save_locations['pickle']
-filename = ident + '.full_mapcube.{:s}{:s}pkl'.format(ds.special_information, '_ireland=step0.')
+filename = ident + '.full_mapcube{:s}{:s}pkl'.format(ds.step0_output_information, '_ireland=step0.')
 pfilepath = os.path.join(directory, filename)
 print('Saving data to ' + pfilepath)
 outputfile = open(pfilepath, 'wb')

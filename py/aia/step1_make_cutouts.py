@@ -21,8 +21,7 @@ import step1_plots
 # Load in the derotated data into a datacube
 directory = ds.save_locations['pickle']
 output_information = '.1-11'
-input_information = ''
-filename = ds.ident + '.full_mapcube{:s}.pkl'.format(input_information)
+filename = ds.ident + '.full_mapcube{:s}.pkl'.format(ds.step1_input_information)
 print('Acquiring mapcube from ' + ds.save_locations['pickle'])
 print('Filename = ' + filename)
 outputfile = open(os.path.join(directory, filename), 'rb')
@@ -160,7 +159,7 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
         output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
         # Output filename
-        ofilename = os.path.join(output, region_id + '.datacube{:s}.pkl'.format(output_information))
+        ofilename = os.path.join(output, region_id + '.datacube{:s}.pkl'.format(ds.step1_output_information))
 
         # Open the file and write out the data we need for step 2
         outputfile = open(ofilename, 'wb')

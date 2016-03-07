@@ -62,6 +62,9 @@ if study_type == 'paper2':
     #wave = '335'
     cross_correlate = True
     derotate = True
+    step0_output_information = '.ireland=1-3'
+    step1_input_information = '.ireland=1-3_ireland=step0'
+    step1_output_information = '.1-4'
 
 if study_type == 'paper3_BM3D':
     dataroot = '~/Data/ts/'
@@ -71,6 +74,9 @@ if study_type == 'paper3_BM3D':
     wave = '171'
     cross_correlate = True
     derotate = True
+    step0_output_information = '.kirk=1-10'
+    step1_input_information = '.kirk=1-10_ireland=step0'
+    step1_output_information = '.1-11'
 
 if study_type == 'paper3_PSF':
     dataroot = '~/Data/ts/'
@@ -80,6 +86,10 @@ if study_type == 'paper3_PSF':
     wave = '171'
     cross_correlate = True
     derotate = True
+    step0_output_information = '.kirk=1-4'
+    step1_input_information = '.kirk=1-4_ireland=step0'
+    step1_output_information = '.1-5'
+
 
 if study_type == 'paper3_BLSGSM':
     dataroot = '~/Data/ts/'
@@ -89,7 +99,9 @@ if study_type == 'paper3_BLSGSM':
     wave = '171'
     cross_correlate = True
     derotate = True
-    special_information = 'kirk=1-10'
+    step0_output_information = '.kirk=1-10'
+    step1_input_information = '.kirk=1-10_ireland=step0'
+    step1_output_information = '.1-11'
 
 """
 if study_type == 'paper2':

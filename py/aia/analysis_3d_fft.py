@@ -151,17 +151,17 @@ def k_omega_power(pwr, circles):
 
 # Load the data
 if choice == "no_denoise":
-    filename = 'paper2_six_euv_disk_1.5_171_six_euv.datacube.pkl.fits'
+    filename = 'paper2_six_euv_disk_1.5_171_six_euv.datacube.1-4.pkl.fits'
     directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/171/six_euv/"
     scale = 0.6 * u.arcsec / u.pix
 
 if choice == "PSF_removed":
-    filename = 'paper3_PSF_disk_1.5_171_six_euv.datacube.pkl.fits'
+    filename = 'paper3_PSF_disk_1.5_171_six_euv.datacube.1-5.pkl.fits'
     directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_PSF/disk/1.5/171/six_euv/"
     scale = 0.6 * u.arcsec / u.pix
 
 if choice == "BM3D":
-    filename = 'paper3_BM3D_disk_1.5_171_six_euv.datacube.pkl.fits'
+    filename = 'paper3_BM3D_disk_1.5_171_six_euv.datacube.1-11.pkl.fits'
     directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM3D/disk/1.5/171/six_euv/'
     scale = 0.6 * u.arcsec / u.pix
 
