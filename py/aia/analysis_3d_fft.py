@@ -1,4 +1,5 @@
 import os
+import cPickle as pickle
 import numpy as np
 from skimage.draw import circle_perimeter
 from matplotlib import rc_file
@@ -21,6 +22,8 @@ choice = 'BM4D'
 
 log_x_axis = True  # Default is False
 log_y_axis = True  # Default is True
+
+root_directory = os.path.expanduser('~/')  # Where to dump the output
 
 
 def nd_window(shape, filter_function):
@@ -216,7 +219,7 @@ circles = k_omega_pixel_circles(zero_wavenumber_index,
                                 kmax)
 
 # Calculate the k-omega diagram, assuming a square kx, ky plane.
-k_om = np.log10(k_omega_power(pwr[:, :, strictly_positive_frequencies[0, :]], circles))
+log10_k_om = np.log10(k_omega_power(pwr[:, :, strictly_positive_frequencies[0, :]], circles))
 
 
 """
@@ -227,7 +230,7 @@ plt.xlabel('wavenumber (%s)' % str(wn.unit))
 plt.ylabel('frequency (%s)' % str(spm.unit))
 plt.colorbar()
 """
-print(np.min(k_om), np.max(k_om))
+print(np.min(log10_k_om), np.max(log10_k_om))
 five_minutes = (1.0 / 300.0) / u.s
 three_minutes = (1.0 / 180.0) / u.s
 
@@ -243,16 +246,18 @@ if log_x_axis:
     ax.set_xscale('log')
     ax.xaxis.set_major_formatter(xformatter)
 cmap = cm.nipy_spectral
-cax = ax.pcolormesh(wn.value, spm[0, :].value, k_om, cmap=cmap, vmin=0.84, vmax=11.96)
+cax = ax.pcolormesh(wn.value, spm[0, :].value, log10_k_om, cmap=cmap, vmin=0.84, vmax=11.96)
 wn_min = '%7.4f' % wn[0].value
 wn_max = '%7.4f' % wn[-1].value
 f_min = '%7.4f' % spm[0, 0].to(frequency_unit).value
 f_max = '%7.4f' % spm[0, -1].to(frequency_unit).value
-ax.set_xlabel(r'wavenumber (%s) [range=%s$\rightarrow$%s]' % (str(wn.unit), wn_min, wn_max))
-ax.set_ylabel(r'frequency (%s) [range=%s$\rightarrow$%s]' % (str(spm.unit), f_min, f_max))
+wavenumber_label = r'wavenumber (%s) [range=%s$\rightarrow$%s]' % (str(wn.unit), wn_min, wn_max)
+frequency_label = r'frequency (%s) [range=%s$\rightarrow$%s]' % (str(spm.unit), f_min, f_max)
+ax.set_xlabel(wavenumber_label)
+ax.set_ylabel(frequency_label)
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
-ax.set_title(r"%s [power=%4.2f$\rightarrow$%4.2f]" % (choice, k_om.min(), k_om.max()))
+ax.set_title(r"%s [power=%4.2f$\rightarrow$%4.2f]" % (choice, log10_k_om.min(), log10_k_om.max()))
 f5 = ax.axhline(five_minutes.to(frequency_unit).value, linestyle='--', color='k')
 f3 = ax.axhline(three_minutes.to(frequency_unit).value, linestyle='-.', color='k')
 fig.colorbar(cax, label=r'$\log_{10}(power)$')
@@ -263,9 +268,43 @@ output_filename = 'analysis_3d_fft.{:s}.logx={:s}.logy={:s}.{:s}.png'.format(cho
                                                              str(log_x_axis),
                                                              str(log_y_axis),
                                                              cmap.name)
-filepath = os.path.join(os.path.expanduser('~/'), output_filename)
+file_path = os.path.join(root_directory, output_filename)
 fig.set_size_inches(24, 16)
-fig.savefig(filepath)
+fig.savefig(file_path)
 
-# Sum over all frequencies
-spwr = np.log10(np.sum(pwr[:, :, strictly_positive_frequencies[0, :]], axis=2))
+# Save the k_omega data
+file_path = os.path.join(root_directory, output_filename + '.pkl')
+f = open(file_path, 'wb')
+pickle.dump(10.0**log10_k_om, f)
+f.close()
+
+
+# Sum over all frequencies to get power as a function of wavenumber
+k_pwr = np.sum(10.0**log10_k_om, axis=0)
+
+# Plot
+plt.close('all')
+fig, ax = plt.subplots()
+if log_y_axis:
+    yformatter = plt.FuncFormatter(log_10_product)
+    ax.set_yscale('log')
+    ax.yaxis.set_major_formatter(yformatter)
+if log_x_axis:
+    xformatter = plt.FuncFormatter(log_10_product)
+    ax.set_xscale('log')
+    ax.xaxis.set_major_formatter(xformatter)
+
+ax.loglog(wn.value, k_pwr)
+ax.set_xlabel(wavenumber_label)
+ax.set_ylabel('Fourier power')
+ax.set_title(choice)
+fig.tight_layout()
+fig.savefig(file_path + '.wavenumber_power.png')
+
+
+# Sum over all wavenumbers to get power as a function of frequency
+f_pwr = np.sum(10.0**log10_k_om, axis=1)
+
+# Plot
+plt.close('all')
+fig, ax = plt.subplots()
