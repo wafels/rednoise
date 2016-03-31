@@ -20,7 +20,6 @@ import step1_plots
 
 # Load in the derotated data into a datacube
 directory = ds.save_locations['pickle']
-output_information = '.1-11'
 filename = ds.ident + '.full_mapcube{:s}.pkl'.format(ds.step1_input_information)
 print('Acquiring mapcube from ' + ds.save_locations['pickle'])
 print('Filename = ' + filename)

@@ -102,7 +102,7 @@ if ds.derotate:
                                   order=1)
 else:
     data = Map(list_of_data, cube=True)
-stop
+
 #
 # Coalign images by cross correlation
 #

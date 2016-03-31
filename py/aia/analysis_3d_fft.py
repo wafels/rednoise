@@ -15,9 +15,9 @@ plt.ion()
 
 #choice = 'test'
 choice = 'BM4D'
-choice = 'BM3D'
-choice = 'PSF_removed'
-choice = 'no_denoise'
+#choice = 'BM3D'
+#choice = 'PSF_removed'
+#choice = 'no_denoise'
 
 log_x_axis = True  # Default is False
 log_y_axis = True  # Default is True
@@ -166,7 +166,7 @@ if choice == "BM3D":
     scale = 0.6 * u.arcsec / u.pix
 
 if choice == "BM4D":
-    filename = 'paper3_BM4D_disk_1.5_171_six_euv.datacube.pkl.fits'
+    filename = 'AIA.171.2012_09_23.BM4DProcess.1-11.fits'
     directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM4D/disk/1.5/171/six_euv/'
     scale = 0.6 * u.arcsec / u.pix
 
