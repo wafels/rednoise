@@ -1,4 +1,5 @@
 import os
+import cPickle as pickle
 import numpy as np
 from skimage.draw import circle_perimeter
 from matplotlib import rc_file
@@ -250,8 +251,10 @@ wn_min = '%7.4f' % wn[0].value
 wn_max = '%7.4f' % wn[-1].value
 f_min = '%7.4f' % spm[0, 0].to(frequency_unit).value
 f_max = '%7.4f' % spm[0, -1].to(frequency_unit).value
-ax.set_xlabel(r'wavenumber (%s) [range=%s$\rightarrow$%s]' % (str(wn.unit), wn_min, wn_max))
-ax.set_ylabel(r'frequency (%s) [range=%s$\rightarrow$%s]' % (str(spm.unit), f_min, f_max))
+wavenumber_label = r'wavenumber (%s) [range=%s$\rightarrow$%s]' % (str(wn.unit), wn_min, wn_max)
+frequency_label = r'frequency (%s) [range=%s$\rightarrow$%s]' % (str(spm.unit), f_min, f_max)
+ax.set_xlabel(wavenumber_label)
+ax.set_ylabel(frequency_label)
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
 ax.set_title(r"%s [power=%4.2f$\rightarrow$%4.2f]" % (choice, log10_k_om.min(), log10_k_om.max()))
@@ -272,12 +275,36 @@ fig.savefig(file_path)
 # Save the k_omega data
 file_path = os.path.join(root_directory, output_filename + '.pkl')
 f = open(file_path, 'wb')
+pickle.dump(10.0**log10_k_om, f)
+f.close()
+
 
 # Sum over all frequencies to get power as a function of wavenumber
-k_pwr = np.sum(np.exp(log10_k_om), axis=?)
+k_pwr = np.sum(10.0**log10_k_om, axis=0)
 
 # Plot
+plt.close('all')
+fig, ax = plt.subplots()
+if log_y_axis:
+    yformatter = plt.FuncFormatter(log_10_product)
+    ax.set_yscale('log')
+    ax.yaxis.set_major_formatter(yformatter)
+if log_x_axis:
+    xformatter = plt.FuncFormatter(log_10_product)
+    ax.set_xscale('log')
+    ax.xaxis.set_major_formatter(xformatter)
+
+ax.loglog(wn.value, k_pwr)
+ax.set_xlabel(wavenumber_label)
+ax.set_ylabel('Fourier power')
+ax.set_title(choice)
+fig.tight_layout()
+fig.savefig(file_path + '.wavenumber_power.png')
 
 
 # Sum over all wavenumbers to get power as a function of frequency
-f_pwr = np.sum(np.exp(log10_k_om), axis=?)
+f_pwr = np.sum(10.0**log10_k_om, axis=1)
+
+# Plot
+plt.close('all')
+fig, ax = plt.subplots()
