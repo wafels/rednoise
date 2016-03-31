@@ -23,7 +23,7 @@ choice = 'BM4D'
 log_x_axis = True  # Default is False
 log_y_axis = True  # Default is True
 
-root_directory = os.path.expanduser('~/')  # Where to dump the output
+root_directory = os.path.expanduser('~/ts/noise_reduction')  # Where to dump the output
 
 
 def nd_window(shape, filter_function):
@@ -278,33 +278,39 @@ f = open(file_path, 'wb')
 pickle.dump(10.0**log10_k_om, f)
 f.close()
 
+#
+# Mean powers
+#
+for axis, data_type in enumerate(('wavenumber', 'frequency')):
 
-# Sum over all frequencies to get power as a function of wavenumber
-k_pwr = np.sum(10.0**log10_k_om, axis=0)
+    if axis == 0:
+        xaxis = wn.value
+        xlabel = wavenumber_label
+    else:
+        xaxis = spm[0, :].to(frequency_unit).value
+        xlabel = frequency_label
 
-# Plot
-plt.close('all')
-fig, ax = plt.subplots()
-if log_y_axis:
-    yformatter = plt.FuncFormatter(log_10_product)
-    ax.set_yscale('log')
-    ax.yaxis.set_major_formatter(yformatter)
-if log_x_axis:
-    xformatter = plt.FuncFormatter(log_10_product)
-    ax.set_xscale('log')
-    ax.xaxis.set_major_formatter(xformatter)
+    for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10(Fourier power)')):
+        if mean_style == 0:
+            mean_power = np.mean(10.0**log10_k_om, axis=axis)
+        else:
+            mean_power = 10.00*np.mean(log10_k_om, axis=axis)
 
-ax.loglog(wn.value, k_pwr)
-ax.set_xlabel(wavenumber_label)
-ax.set_ylabel('Fourier power')
-ax.set_title(choice)
-fig.tight_layout()
-fig.savefig(file_path + '.wavenumber_power.png')
+        # Plot mean power
+        plt.close('all')
+        fig, ax = plt.subplots()
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(log_10_product))
+        ax.set_xscale('log')
+        ax.set_xlabel(xlabel)
+
+        ax.set_yscale('log')
+        ax.set_ylabel('Fourier power')
+
+        ax.plot(xaxis, mean_power)
+        ax.set_title(choice + '\n{:s}'.format(mean_style_label))
+        fig.tight_layout()
+        fig.savefig(file_path + '.mean_power_{:s}.{:s}.png'.format(mean_style_label, data_type))
 
 
-# Sum over all wavenumbers to get power as a function of frequency
-f_pwr = np.sum(10.0**log10_k_om, axis=1)
 
-# Plot
-plt.close('all')
-fig, ax = plt.subplots()
+
