@@ -16,7 +16,7 @@ plt.ion()
 
 #choice = 'test'
 choice = 'BM4D'
-#choice = 'BM3D'
+choice = 'BM3D'
 #choice = 'PSF_removed'
 #choice = 'no_denoise'
 
@@ -276,41 +276,6 @@ fig.savefig(file_path)
 file_path = os.path.join(root_directory, output_filename + '.pkl')
 f = open(file_path, 'wb')
 pickle.dump(10.0**log10_k_om, f)
+pickle.dump(wn, f)
+pickle.dump(spm, f)
 f.close()
-
-#
-# Mean powers
-#
-for axis, data_type in enumerate(('wavenumber', 'frequency')):
-
-    if axis == 0:
-        xaxis = wn.value
-        xlabel = wavenumber_label
-    else:
-        xaxis = spm[0, :].to(frequency_unit).value
-        xlabel = frequency_label
-
-    for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10(Fourier power)')):
-        if mean_style == 0:
-            mean_power = np.mean(10.0**log10_k_om, axis=axis)
-        else:
-            mean_power = 10.00*np.mean(log10_k_om, axis=axis)
-
-        # Plot mean power
-        plt.close('all')
-        fig, ax = plt.subplots()
-        ax.xaxis.set_major_formatter(plt.FuncFormatter(log_10_product))
-        ax.set_xscale('log')
-        ax.set_xlabel(xlabel)
-
-        ax.set_yscale('log')
-        ax.set_ylabel('Fourier power')
-
-        ax.plot(xaxis, mean_power)
-        ax.set_title(choice + '\n{:s}'.format(mean_style_label))
-        fig.tight_layout()
-        fig.savefig(file_path + '.mean_power_{:s}.{:s}.png'.format(mean_style_label, data_type))
-
-
-
-
