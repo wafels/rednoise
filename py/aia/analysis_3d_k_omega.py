@@ -6,23 +6,32 @@ import os
 import cPickle as pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+import details_plots as dp
 
 from details_plots import log_10_product
 
+# Frequency units
+frequency_unit = dp.fz
 
-frequency_unit = 'mHz'
-
-sources = {"BM4D": {"file_path": 0},
-           "BM3D": {"file_path": 0},
-           "PSF_removed": {"file_path": 0},
-           "no_denoise": {"file_path": 0}}
+# Where the k omega data is kept.
+sources = {"BM4D": {"file_path": os.path.expanduser('~/ts/')},
+           "BM3D": {"file_path": os.path.expanduser('~/ts/')},
+           "PSF_removed": {"file_path": os.path.expanduser('~/ts/')},
+           "no_denoise": {"file_path": os.path.expanduser('~/ts/')}}
 
 # Load data
-for source in sources:
+for source in sources.keys():
     file_path = sources[source]["file_path"]
+    f = open(file_path, 'rb')
+    sources[source]["k_om"] = pickle.load(f)
+    sources[source]["wn"] = pickle.load(f)
+    sources[source]["spn"] = pickle.load(f)
+    f.close()
 
 #
-# Compare mean powers
+# Compare mean powers across different image processing
 #
 
 # Pick how we are going to analyze the data
@@ -44,7 +53,7 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
         # Go through all the data sources
         for source in sources:
 
-            k_omega_power = sources[source]["k_omega_power"]
+            k_omega_power = sources[source]["k_om"]
             spm = sources[source]["spm"]
             wn = sources[source]["wn"]
 
@@ -62,10 +71,51 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
             ax.plot(xaxis, mean_power, label=source)
             ax.set_title(source + '\n{:s}'.format(mean_style_label))
 
-        fig.legend()
+        ax.legend(fontsize=8.0, framealpha=0.5)
         fig.tight_layout()
         fig.savefig(file_path + '.compare.{:s}.{:s}.png'.format(mean_style_label, data_type))
 
 
 
+def relative_power(source1, source2, log_y_axis=True, log_x_axis=True,
+                   frequency_unit='mHz', cmap=cm.nipy_spectral):
 
+    # Relative power
+    rel_power = sources[source1]["k_om"] / sources[source2]["k_om"]
+
+    # Axes
+    wn = sources[source1]["wn"]
+    spm = sources[source1]["spm"]
+
+    # Oscillations
+    five_minutes = dp.five_minutes.frequency.to(frequency_unit).value
+    three_minutes = dp.three_minutes.frequency.to(frequency_unit).value
+
+    # Plot of the relative power.
+    fig, ax = plt.subplots()
+    if log_y_axis:
+        yformatter = plt.FuncFormatter(log_10_product)
+        ax.set_yscale('log')
+        ax.yaxis.set_major_formatter(yformatter)
+    if log_x_axis:
+        xformatter = plt.FuncFormatter(log_10_product)
+        ax.set_xscale('log')
+        ax.xaxis.set_major_formatter(xformatter)
+    cax = ax.pcolormesh(wn.value, spm[0, :].value, rel_power, cmap=cmap)
+    wn_min = '%7.4f' % wn[0].value
+    wn_max = '%7.4f' % wn[-1].value
+    f_min = '%7.4f' % spm[0, 0].to(frequency_unit).value
+    f_max = '%7.4f' % spm[0, -1].to(frequency_unit).value
+    wavenumber_label = r'wavenumber (%s) [range=%s$\rightarrow$%s]' % (str(wn.unit), wn_min, wn_max)
+    frequency_label = r'frequency (%s) [range=%s$\rightarrow$%s]' % (str(spm.unit), f_min, f_max)
+    ax.set_xlabel(wavenumber_label)
+    ax.set_ylabel(frequency_label)
+    ax.set_xlim(wn[0].value, wn[-1].value)
+    ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
+    ax.set_title("relative power {:s}/{:s}".format(source1, source2))
+    f5 = ax.axhline(five_minutes, linestyle='--', color='k')
+    f3 = ax.axhline(three_minutes, linestyle='-.', color='k')
+    fig.colorbar(cax, label='relative power')
+    ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
+    fig.tight_layout()
+    return fig

@@ -19,6 +19,7 @@ class LineSelection:
         self.linestyle = linestyle
         self.linewidth = linewidth
         self.position = position
+        self.frequency = 1.0 / self.position
 
 three_minutes = LineSelection(color='k',
                               label='3 minutes',
