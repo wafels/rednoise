@@ -7,6 +7,7 @@ import cPickle as pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import astropy.units as u
 
 import details_plots as dp
 
@@ -77,21 +78,22 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
 
 
 
-def relative_power(source1, source2, log_y_axis=True, log_x_axis=True,
-                   frequency_unit='mHz', cmap=cm.nipy_spectral):
+def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
+                frequency_unit=u.mHz, wavenumber_unit=1.0/u.arcsec,
+                cmap=cm.nipy_spectral):
 
-    # Relative power
-    rel_power = sources[source1]["k_om"] / sources[source2]["k_om"]
+    # Ratio of  power
+    powers_ratio = sources[source1]["k_om"] / sources[source2]["k_om"]
 
     # Axes
-    wn = sources[source1]["wn"]
-    spm = sources[source1]["spm"]
+    wn = sources[source1]["wn"].to(frequency_unit).value
+    spm = sources[source1]["spm"][0, :].to(wavenumber_unit).value
 
     # Oscillations
     five_minutes = dp.five_minutes.frequency.to(frequency_unit).value
     three_minutes = dp.three_minutes.frequency.to(frequency_unit).value
 
-    # Plot of the relative power.
+    # Plot of the ratio power.
     fig, ax = plt.subplots()
     if log_y_axis:
         yformatter = plt.FuncFormatter(log_10_product)
@@ -101,21 +103,18 @@ def relative_power(source1, source2, log_y_axis=True, log_x_axis=True,
         xformatter = plt.FuncFormatter(log_10_product)
         ax.set_xscale('log')
         ax.xaxis.set_major_formatter(xformatter)
-    cax = ax.pcolormesh(wn.value, spm[0, :].value, rel_power, cmap=cmap)
-    wn_min = '%7.4f' % wn[0].value
-    wn_max = '%7.4f' % wn[-1].value
-    f_min = '%7.4f' % spm[0, 0].to(frequency_unit).value
-    f_max = '%7.4f' % spm[0, -1].to(frequency_unit).value
-    wavenumber_label = r'wavenumber (%s) [range=%s$\rightarrow$%s]' % (str(wn.unit), wn_min, wn_max)
-    frequency_label = r'frequency (%s) [range=%s$\rightarrow$%s]' % (str(spm.unit), f_min, f_max)
+    cax = ax.pcolormesh(wn, spm.value, powers_ratio, cmap=cmap)
+
+    wavenumber_label = r'wavenumber ({:s}) [range={:7.4f}$\rightarrow${:7.4f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
+    frequency_label = r'frequency ({:s}) [range={:7.4f}$\rightarrow${:7.4f}]' % (str(frequency_unit), spm[0], spm[-1])
     ax.set_xlabel(wavenumber_label)
     ax.set_ylabel(frequency_label)
-    ax.set_xlim(wn[0].value, wn[-1].value)
-    ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
-    ax.set_title("relative power {:s}/{:s}".format(source1, source2))
+    ax.set_xlim(wn[0], wn[-1])
+    ax.set_ylim(spm[0], spm[-1])
+    ax.set_title("power ratio {:s}/{:s}".format(source1, source2))
     f5 = ax.axhline(five_minutes, linestyle='--', color='k')
     f3 = ax.axhline(three_minutes, linestyle='-.', color='k')
-    fig.colorbar(cax, label='relative power')
+    fig.colorbar(cax, label='power ratio')
     ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
     fig.tight_layout()
     return fig
