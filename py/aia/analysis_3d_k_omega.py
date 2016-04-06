@@ -12,14 +12,19 @@ from details_plots import log_10_product
 
 frequency_unit = 'mHz'
 
-sources = {"BM4D": {"file_path": 0},
-           "BM3D": {"file_path": 0},
-           "PSF_removed": {"file_path": 0},
-           "no_denoise": {"file_path": 0}}
+sources = {"BM4D": {"file_path": os.path.expanduser("~/ts/noise_reduction/")},
+           "BM3D": {"file_path": os.path.expanduser("~/ts/noise_reduction/")},
+           "PSF_removed": {"file_path": os.path.expanduser("~/ts/noise_reduction/")},
+           "no_denoise": {"file_path": os.path.expanduser("~/ts/noise_reduction/")}}
 
 # Load data
 for source in sources:
     file_path = sources[source]["file_path"]
+    f = open(file_path, 'rb')
+    sources[source]["k_omega_power"] = pickle.load(f)
+    sources[source]["wn"] = pickle.load(f)
+    sources[source]["spm"] = pickle.load(f)
+    f.close()
 
 #
 # Compare mean powers
