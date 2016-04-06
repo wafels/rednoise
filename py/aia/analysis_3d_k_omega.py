@@ -6,19 +6,23 @@ import os
 import cPickle as pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import astropy.units as u
+
+import details_plots as dp
 
 from details_plots import log_10_product
 
+# Frequency units
+frequency_unit = dp.fz
 
-frequency_unit = 'mHz'
-
-sources = {"BM4D": {"file_path": os.path.expanduser("~/ts/noise_reduction/")},
-           "BM3D": {"file_path": os.path.expanduser("~/ts/noise_reduction/")},
-           "PSF_removed": {"file_path": os.path.expanduser("~/ts/noise_reduction/")},
-           "no_denoise": {"file_path": os.path.expanduser("~/ts/noise_reduction/")}}
+sources = {"BM4D": {"file_path": os.path.expanduser("~/ts/noise_reduction/analysis_3d_fft.BM4D.logx=True.logy=True.nipy_spectral.png.pkl")},
+           "BM3D": {"file_path": os.path.expanduser("~/ts/noise_reduction/analysis_3d_fft.BM3D.logx=True.logy=True.nipy_spectral.png.pkl")},
+           "PSF_removed": {"file_path": os.path.expanduser("~/ts/noise_reduction/analysis_3d_fft.PSF_removed.logx=True.logy=True.nipy_spectral.png.pkl")},
+           "no_denoise": {"file_path": os.path.expanduser("~/ts/noise_reduction/analysis_3d_fft.no_denoise.logx=True.logy=True.nipy_spectral.png.pkl")}}
 
 # Load data
-for source in sources:
+for source in sources.keys():
     file_path = sources[source]["file_path"]
     f = open(file_path, 'rb')
     sources[source]["k_omega_power"] = pickle.load(f)
@@ -27,7 +31,7 @@ for source in sources:
     f.close()
 
 #
-# Compare mean powers
+# Compare mean powers across different image processing
 #
 
 # Pick how we are going to analyze the data
@@ -49,7 +53,7 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
         # Go through all the data sources
         for source in sources:
 
-            k_omega_power = sources[source]["k_omega_power"]
+            k_omega_power = sources[source]["k_om"]
             spm = sources[source]["spm"]
             wn = sources[source]["wn"]
 
@@ -67,10 +71,48 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
             ax.plot(xaxis, mean_power, label=source)
             ax.set_title(source + '\n{:s}'.format(mean_style_label))
 
-        fig.legend()
+        ax.legend(fontsize=8.0, framealpha=0.5)
         fig.tight_layout()
         fig.savefig(file_path + '.compare.{:s}.{:s}.png'.format(mean_style_label, data_type))
 
 
+def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
+                frequency_unit=u.mHz, wavenumber_unit=1.0/u.arcsec,
+                cmap=cm.nipy_spectral):
 
+    # Ratio of  power
+    powers_ratio = sources[source1]["k_om"] / sources[source2]["k_om"]
 
+    # Axes
+    wn = sources[source1]["wn"].to(frequency_unit).value
+    spm = sources[source1]["spm"][0, :].to(wavenumber_unit).value
+
+    # Oscillations
+    five_minutes = dp.five_minutes.frequency.to(frequency_unit).value
+    three_minutes = dp.three_minutes.frequency.to(frequency_unit).value
+
+    # Plot of the ratio power.
+    fig, ax = plt.subplots()
+    if log_y_axis:
+        yformatter = plt.FuncFormatter(log_10_product)
+        ax.set_yscale('log')
+        ax.yaxis.set_major_formatter(yformatter)
+    if log_x_axis:
+        xformatter = plt.FuncFormatter(log_10_product)
+        ax.set_xscale('log')
+        ax.xaxis.set_major_formatter(xformatter)
+    cax = ax.pcolormesh(wn, spm.value, powers_ratio, cmap=cmap)
+
+    wavenumber_label = r'wavenumber ({:s}) [range={:7.4f}$\rightarrow${:7.4f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
+    frequency_label = r'frequency ({:s}) [range={:7.4f}$\rightarrow${:7.4f}]' % (str(frequency_unit), spm[0], spm[-1])
+    ax.set_xlabel(wavenumber_label)
+    ax.set_ylabel(frequency_label)
+    ax.set_xlim(wn[0], wn[-1])
+    ax.set_ylim(spm[0], spm[-1])
+    ax.set_title("power ratio {:s}/{:s}".format(source1, source2))
+    f5 = ax.axhline(five_minutes, linestyle='--', color='k')
+    f3 = ax.axhline(three_minutes, linestyle='-.', color='k')
+    fig.colorbar(cax, label='power ratio')
+    ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
+    fig.tight_layout()
+    return fig
