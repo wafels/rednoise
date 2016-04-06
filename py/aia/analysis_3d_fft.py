@@ -16,9 +16,9 @@ plt.ion()
 
 #choice = 'test'
 choice = 'BM4D'
-choice = 'BM3D'
-choice = 'PSF_removed'
-choice = 'no_denoise'
+#choice = 'BM3D'
+#choice = 'PSF_removed'
+#choice = 'no_denoise'
 
 log_x_axis = True  # Default is False
 log_y_axis = True  # Default is True

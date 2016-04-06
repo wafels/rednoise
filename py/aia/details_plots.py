@@ -11,9 +11,10 @@ import details_study as ds
 # Units that frequencies will be plotted in
 fz = 'mHz'
 
+
 class LineSelection:
     def __init__(self, color='k', label="", linestyle="-", linewidth=1,
-                 position=0.0):
+                 position=1.0*u.s):
         self.color = color
         self.label = label
         self.linestyle = linestyle

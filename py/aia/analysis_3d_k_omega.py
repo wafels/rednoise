@@ -24,6 +24,7 @@ sources = {"BM4D": {"file_path": os.path.expanduser("~/ts/noise_reduction/analys
 # Load data
 for source in sources.keys():
     file_path = sources[source]["file_path"]
+    print("loading {:s}".format(file_path))
     f = open(file_path, 'rb')
     sources[source]["k_omega_power"] = pickle.load(f)
     sources[source]["wn"] = pickle.load(f)
@@ -44,16 +45,30 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
         plt.close('all')
         fig, ax = plt.subplots()
         ax.set_xscale('log')
-        ax.set_xlabel(data_type)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(log_10_product))
 
         ax.set_yscale('log')
         ax.set_ylabel('Fourier power')
 
+        if data_type == 'frequency':
+            f5 = ax.axvline(dp.five_minutes.frequency.to(frequency_unit).value,
+                            linestyle=dp.five_minutes.linestyle,
+                            color=dp.five_minutes.color,
+                            label=dp.five_minutes.label)
+            f3 = ax.axvline(dp.three_minutes.frequency.to(frequency_unit).value,
+                            linestyle=dp.three_minutes.linestyle,
+                            color=dp.three_minutes.color,
+                            label=dp.three_minutes.label)
+            xlabel_unit = frequency_unit
+        else:
+            xlabel_unit = '1/arcsec'
+
+        ax.set_xlabel(data_type + " [{:s}]".format(xlabel_unit))
+
         # Go through all the data sources
         for source in sources:
 
-            k_omega_power = sources[source]["k_om"]
+            k_omega_power = sources[source]["k_omega_power"]
             spm = sources[source]["spm"]
             wn = sources[source]["wn"]
 
@@ -78,14 +93,15 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
 
 def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
                 frequency_unit=u.mHz, wavenumber_unit=1.0/u.arcsec,
-                cmap=cm.nipy_spectral):
+                cmap=cm.Set1, file_path=os.path.expanduser('~/ts/noise_reduction/ratio_power')):
 
     # Ratio of  power
-    powers_ratio = sources[source1]["k_om"] / sources[source2]["k_om"]
+    powers_ratio = np.log10(sources[source1]["k_omega_power"] / sources[source2]["k_omega_power"])
+    print(np.min(powers_ratio), np.max(powers_ratio))
 
     # Axes
-    wn = sources[source1]["wn"].to(frequency_unit).value
-    spm = sources[source1]["spm"][0, :].to(wavenumber_unit).value
+    wn = sources[source1]["wn"].to(wavenumber_unit).value
+    spm = sources[source1]["spm"][0, :].to(frequency_unit).value
 
     # Oscillations
     five_minutes = dp.five_minutes.frequency.to(frequency_unit).value
@@ -101,18 +117,26 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
         xformatter = plt.FuncFormatter(log_10_product)
         ax.set_xscale('log')
         ax.xaxis.set_major_formatter(xformatter)
-    cax = ax.pcolormesh(wn, spm.value, powers_ratio, cmap=cmap)
+    cax = ax.pcolormesh(wn, spm, powers_ratio, cmap=cmap)
 
-    wavenumber_label = r'wavenumber ({:s}) [range={:7.4f}$\rightarrow${:7.4f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
-    frequency_label = r'frequency ({:s}) [range={:7.4f}$\rightarrow${:7.4f}]' % (str(frequency_unit), spm[0], spm[-1])
+    wavenumber_label = r'wavenumber ({:s}) [range={:f}$\rightarrow${:f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
+    frequency_label = r'frequency ({:s}) [range={:f}$\rightarrow${:f}]'.format(str(frequency_unit), spm[0], spm[-1])
     ax.set_xlabel(wavenumber_label)
     ax.set_ylabel(frequency_label)
     ax.set_xlim(wn[0], wn[-1])
     ax.set_ylim(spm[0], spm[-1])
     ax.set_title("power ratio {:s}/{:s}".format(source1, source2))
-    f5 = ax.axhline(five_minutes, linestyle='--', color='k')
-    f3 = ax.axhline(three_minutes, linestyle='-.', color='k')
-    fig.colorbar(cax, label='power ratio')
+    f5 = ax.axhline(five_minutes,
+                            linestyle=dp.five_minutes.linestyle,
+                            color=dp.five_minutes.color,
+                            label=dp.five_minutes.label)
+    f3 = ax.axhline(three_minutes,
+                            linestyle=dp.three_minutes.linestyle,
+                            color=dp.three_minutes.color,
+                            label=dp.three_minutes.label)
+    cb = fig.colorbar(cax, label='log10(power ratio)')
+    cax.set_clim(vmin=-1.63, vmax=0.361)
     ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
     fig.tight_layout()
+    fig.savefig(file_path + '.ratio.{:s}.{:s}.png'.format(source1, source2))
     return fig
