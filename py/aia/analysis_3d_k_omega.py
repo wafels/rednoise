@@ -117,6 +117,11 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
         xformatter = plt.FuncFormatter(log_10_product)
         ax.set_xscale('log')
         ax.xaxis.set_major_formatter(xformatter)
+    #
+    # Should also include a contour at powers_ratio = 1.0 to guide the eye
+    # as to where the power ratio goes from above 1 (more power in the first
+    # source) to less power (more power in the second source).
+    #
     cax = ax.pcolormesh(wn, spm, powers_ratio, cmap=cmap)
 
     wavenumber_label = r'wavenumber ({:s}) [range={:f}$\rightarrow${:f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
@@ -135,6 +140,10 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
                             color=dp.three_minutes.color,
                             label=dp.three_minutes.label)
     cb = fig.colorbar(cax, label='log10(power ratio)')
+    #
+    # Should format the colorbar labels so that they show the power ratio, and
+    # not log10 of the power ratio.  This would be much easier to understand.
+    #
     cax.set_clim(vmin=-1.63, vmax=0.361)
     ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
     fig.tight_layout()
