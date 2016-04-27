@@ -7,6 +7,7 @@ import cPickle as pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 import astropy.units as u
 
 import details_plots as dp
@@ -93,10 +94,11 @@ for mean_style, mean_style_label in enumerate(('mean Fourier power', 'mean log10
 
 def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
                 frequency_unit=u.mHz, wavenumber_unit=1.0/u.arcsec,
+                alfven_speed=1000*u.km/u.s,
                 cmap=cm.Set1, file_path=os.path.expanduser('~/ts/noise_reduction/ratio_power')):
 
     # Ratio of  power
-    powers_ratio = np.log10(sources[source1]["k_omega_power"] / sources[source2]["k_omega_power"])
+    powers_ratio = sources[source1]["k_omega_power"] / sources[source2]["k_omega_power"]
     print(np.min(powers_ratio), np.max(powers_ratio))
 
     # Axes
@@ -122,7 +124,12 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     # as to where the power ratio goes from above 1 (more power in the first
     # source) to less power (more power in the second source).
     #
-    cax = ax.pcolormesh(wn, spm, powers_ratio, cmap=cmap)
+    norm = colors.LogNorm(vmin=10.00**-1.63, vmax=10.00**0.361)
+    cax = ax.pcolormesh(wn, spm, powers_ratio, cmap=cmap, norm=norm)
+
+    # Now overplot a contour
+    contour = ax.contour(wn, spm, powers_ratio, levels=[0.1, 0.5, 1.0], color='k', linestyle='--')
+    csl = ax.clabel(contour)
 
     wavenumber_label = r'wavenumber ({:s}) [range={:f}$\rightarrow${:f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
     frequency_label = r'frequency ({:s}) [range={:f}$\rightarrow${:f}]'.format(str(frequency_unit), spm[0], spm[-1])
@@ -139,13 +146,16 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
                             linestyle=dp.three_minutes.linestyle,
                             color=dp.three_minutes.color,
                             label=dp.three_minutes.label)
-    cb = fig.colorbar(cax, label='log10(power ratio)')
-    #
-    # Should format the colorbar labels so that they show the power ratio, and
-    # not log10 of the power ratio.  This would be much easier to understand.
-    #
-    cax.set_clim(vmin=-1.63, vmax=0.361)
-    ax.legend((f3, f5), ('three minutes', 'five minutes'), fontsize=8.0, framealpha=0.5)
+    cb = fig.colorbar(cax, label='power ratio')
+
+    # Put in the Alfven speed line
+    arcsec_per_km = (0.6 / 750.0) * u.arcsec/u.km
+    alfven_line = (alfven_speed * arcsec_per_km * sources[source1]["wn"].to(wavenumber_unit)).to(frequency_unit).value
+    alf = ax.plot(wn, alfven_line, color='g', linewidth=3, zorder=100)
+    ax.legend((f3, f5, alf),
+              ('three minutes', 'five minutes', 'Alfven speed={:s}'.format(str(alfven_speed))),
+              'lower left', fontsize=8.0, framealpha=0.5)
+
     fig.tight_layout()
     fig.savefig(file_path + '.ratio.{:s}.{:s}.png'.format(source1, source2))
     return fig

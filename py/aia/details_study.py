@@ -9,10 +9,10 @@ import astropy.units as u
 # Study type
 #
 #study_type = 'debugpaper2'
-#study_type = 'paper2'
+study_type = 'paper2'
 #study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
-study_type = 'paper3_BLSGSM'
+#study_type = 'paper3_BLSGSM'
 
 # Target cadence
 target_cadence = 12
@@ -54,17 +54,17 @@ if study_type == 'paper2':
     corename = 'paper2_six_euv'
     sunlocation = 'disk'
     fits_level = '1.5'
-    # wave = '94'
-    #wave = '131'
-    wave = '171'
-    #wave = '193'
-    #wave = '211'
-    #wave = '335'
+    wave = '94'
+    wave = '131'
+    #wave = '171'
+    wave = '193'
+    wave = '211'
+    wave = '335'
     cross_correlate = True
     derotate = True
-    step0_output_information = '.ireland=1-3'
-    step1_input_information = '.ireland=1-3_ireland=step0'
-    step1_output_information = '.1-4'
+    step0_output_information = ''
+    step1_input_information = ''
+    step1_output_information = ''
 
 if study_type == 'paper3_BM3D':
     dataroot = '~/Data/ts/'
