@@ -140,21 +140,25 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     ax.set_title("power ratio {:s}/{:s}".format(source1, source2))
     f5 = ax.axhline(five_minutes,
                             linestyle=dp.five_minutes.linestyle,
-                            color=dp.five_minutes.color,
-                            label=dp.five_minutes.label)
+                            color=dp.five_minutes.color, zorder=99)
     f3 = ax.axhline(three_minutes,
                             linestyle=dp.three_minutes.linestyle,
-                            color=dp.three_minutes.color,
-                            label=dp.three_minutes.label)
-    cb = fig.colorbar(cax, label='power ratio')
+                            color=dp.three_minutes.color, zorder=99)
+    cb = fig.colorbar(cax, ticks=[0.1, 0.5, 1.0], label='power ratio')
+    cb.ax.set_yticklabels(['0.1', '0.5', '1.0'])
 
     # Put in the Alfven speed line
     arcsec_per_km = (0.6 / 750.0) * u.arcsec/u.km
     alfven_line = (alfven_speed * arcsec_per_km * sources[source1]["wn"].to(wavenumber_unit)).to(frequency_unit).value
-    alf = ax.plot(wn, alfven_line, color='g', linewidth=3, zorder=100)
-    ax.legend((f3, f5, alf),
-              ('three minutes', 'five minutes', 'Alfven speed={:s}'.format(str(alfven_speed))),
-              'lower left', fontsize=8.0, framealpha=0.5)
+    alf, = ax.plot(wn, alfven_line, color='g', linewidth=3, zorder=100,
+                   label='Alfven speed={:s}'.format(str(alfven_speed)))
+    ax.legend((f3,
+               f5,
+               alf),
+              (dp.three_minutes.label,
+               dp.five_minutes.label,
+               'Alfven speed={:s}'.format(str(alfven_speed))),
+              'lower left', fontsize=10.0, framealpha=0.5)
 
     fig.tight_layout()
     fig.savefig(file_path + '.ratio.{:s}.{:s}.png'.format(source1, source2))
