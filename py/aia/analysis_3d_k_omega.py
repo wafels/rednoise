@@ -124,7 +124,9 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     # as to where the power ratio goes from above 1 (more power in the first
     # source) to less power (more power in the second source).
     #
-    norm = colors.LogNorm(vmin=10.00**-1.63, vmax=10.00**0.361)
+    vmin = 10.00**-1.63
+    vmax = 10.00**0.361
+    norm = colors.LogNorm(vmin=vmin, vmax=vmax)
     cax = ax.pcolormesh(wn, spm, powers_ratio, cmap=cmap, norm=norm)
 
     # Now overplot a contour
@@ -144,21 +146,34 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     f3 = ax.axhline(three_minutes,
                             linestyle=dp.three_minutes.linestyle,
                             color=dp.three_minutes.color, zorder=99)
-    cb = fig.colorbar(cax, ticks=[0.1, 0.5, 1.0], label='power ratio')
-    cb.ax.set_yticklabels(['0.1', '0.5', '1.0'])
+    cb = fig.colorbar(cax, ticks=[vmin, 0.1, 0.5, 1.0, vmax], label='power ratio')
+    cb.ax.set_yticklabels(['0.02', '0.1', '0.5', '1.0', '2.3'])
 
     # Put in the Alfven speed line
+    alfven_color = 'k'
     arcsec_per_km = (0.6 / 750.0) * u.arcsec/u.km
     alfven_line = (alfven_speed * arcsec_per_km * sources[source1]["wn"].to(wavenumber_unit)).to(frequency_unit).value
-    alf, = ax.plot(wn, alfven_line, color='g', linewidth=3, zorder=100,
-                   label='Alfven speed={:s}'.format(str(alfven_speed)))
+    alf, = ax.plot(wn, alfven_line, color=alfven_color, linewidth=5, zorder=100,
+                   label=r'Alfven speed $v_{A}=$' + '{:s}'.format(str(alfven_speed)))
+
+    # Alfven wave labels
+    max_alfven_freq_index = 0
+    while alfven_line[max_alfven_freq_index] < np.max(spm):
+        max_alfven_freq_index += 1
+    print wn[max_alfven_freq_index/2], alfven_line[max_alfven_freq_index/2]
+    ax.text(0.1, 1.0,
+            r'$<v_{A}$', color=alfven_color, zorder=100, fontsize=24, fontweight='bold', horizontalalignment='right')
+    ax.text(0.007, 15.0,
+            r'$>v_{A}$', color=alfven_color, zorder=100, fontsize=24, fontweight='bold', horizontalalignment='left')
+
     ax.legend((f3,
                f5,
                alf),
               (dp.three_minutes.label,
                dp.five_minutes.label,
                'Alfven speed={:s}'.format(str(alfven_speed))),
-              'lower left', fontsize=10.0, framealpha=0.5)
+              loc='lower left', fontsize=10.0, framealpha=0.5)
+
 
     fig.tight_layout()
     fig.savefig(file_path + '.ratio.{:s}.{:s}.png'.format(source1, source2))
