@@ -5,6 +5,7 @@
 import os
 import cPickle as pickle
 import numpy as np
+from scipy.ndimage.filters import gaussian_filter
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -13,6 +14,8 @@ import astropy.units as u
 import details_plots as dp
 
 from details_plots import log_10_product
+
+plt.ion()
 
 # Frequency units
 frequency_unit = dp.fz
@@ -130,7 +133,7 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     cax = ax.pcolormesh(wn, spm, powers_ratio, cmap=cmap, norm=norm)
 
     # Now overplot a contour
-    contour = ax.contour(wn, spm, powers_ratio, levels=[0.1, 0.5, 1.0], color='k', linestyle='--')
+    contour = ax.contour(wn, spm, gaussian_filter(powers_ratio, 2.0), levels=[0.1, 0.5, 1.0], color='k', linestyle='--')
     csl = ax.clabel(contour)
 
     wavenumber_label = r'wavenumber ({:s}) [range={:f}$\rightarrow${:f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
@@ -173,7 +176,6 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
                dp.five_minutes.label,
                'Alfven speed={:s}'.format(str(alfven_speed))),
               loc='lower left', fontsize=10.0, framealpha=0.5)
-
 
     fig.tight_layout()
     fig.savefig(file_path + '.ratio.{:s}.{:s}.png'.format(source1, source2))
