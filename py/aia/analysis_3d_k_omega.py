@@ -133,7 +133,8 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     cax = ax.pcolormesh(wn, spm, powers_ratio, cmap=cmap, norm=norm)
 
     # Now overplot a contour
-    contour = ax.contour(wn, spm, gaussian_filter(powers_ratio, 2.0), levels=[0.1, 0.5, 1.0], color='k', linestyle='--')
+    clevels = [0.125, 0.25, 0.5, 1.0]
+    contour = ax.contour(wn, spm, gaussian_filter(powers_ratio, 2.0), levels=clevels, color='k', linestyle='--')
     csl = ax.clabel(contour)
 
     wavenumber_label = r'wavenumber ({:s}) [range={:f}$\rightarrow${:f}]'.format(str(wavenumber_unit), wn[0], wn[-1])
@@ -149,8 +150,10 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     f3 = ax.axhline(three_minutes,
                             linestyle=dp.three_minutes.linestyle,
                             color=dp.three_minutes.color, zorder=99)
-    cb = fig.colorbar(cax, ticks=[vmin, 0.1, 0.5, 1.0, vmax], label='power ratio')
-    cb.ax.set_yticklabels(['0.02', '0.1', '0.5', '1.0', '2.3'])
+    clevels.insert(0, vmin)
+    clevels.append(vmax)
+    cb = fig.colorbar(cax, ticks=clevels, label='power ratio')
+    cb.ax.set_yticklabels(['0.02', '0.125', '0.25', '0.5', '1.0', '2.3'])
 
     # Put in the Alfven speed line
     alfven_color = 'k'
