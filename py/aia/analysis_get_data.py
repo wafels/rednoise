@@ -11,6 +11,7 @@ import collections
 import cPickle as pickle
 import numpy as np
 from matplotlib.collections import PolyCollection
+from matplotlib.patches import Polygon
 import astropy.units as u
 
 import details_study as ds
@@ -173,10 +174,14 @@ def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[2], edgecolor
                              date)
         rotated_polygon[0, i, 0] = new_coords[0].value
         rotated_polygon[0, i, 1] = new_coords[1].value
-    # Create the collection
-    return PolyCollection(rotated_polygon,
-                          alpha=1.0,
-                          edgecolors=edgecolors,
-                          facecolors=['none'],
-                          linewidth=linewidth)
+
+    # Create a matplotlib polygon
+    mpl_polygon = Polygon(rotated_polygon[0, :, :])
+
+    # Return the matplotlib polygon and the PolyCollection
+    return mpl_polygon, PolyCollection(rotated_polygon,
+                                       alpha=1.0,
+                                       edgecolors=edgecolors,
+                                       facecolors=['none'],
+                                       linewidth=linewidth)
 

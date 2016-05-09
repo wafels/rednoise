@@ -23,8 +23,7 @@ waves = ['131'] #, '171', '193', '211']
 
 # Regions we are interested in
 # regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-# regions = ['most_of_fov']
-regions = ['four_wavebands']
+regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']
