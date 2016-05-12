@@ -74,6 +74,9 @@ sunspot_outline = analysis_get_data.sunspot_outline()
 # Plot spatial distributions of the common parameters
 plot_type = 'spatial.common'
 
+# Storage for the file paths
+filepaths_root = ds.datalocationtools.save_location_calculator(ds.roots, [ds.corename, ds.sunlocation, ds.fits_level])['pickle']
+filepaths = []
 
 # Plot spatial distributions of the spectral model parameters.
 # Different information criteria
@@ -182,7 +185,7 @@ for ic_type in ic_types:
 
 
                     # Get the sunspot
-                    sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
+                    polygon, sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
                                                                                   sunspot_outline[1],
                                                                                   my_map.date,
                                                                                   edgecolors=[dp.spatial_plots['sunspot outline']])
@@ -213,7 +216,8 @@ for ic_type in ic_types:
                     #ret.axes.set_title('%s\n%s' % (label, subtitle))
                     title = label + r'$_{%s}$' % wave
                     #ret.axes.set_title(title + '\n[%s]' % percent_used_string, fontsize=fontsize)
-                    ret.axes.set_title(title + '\n%s of all pixels' % percent_used_string, fontsize=fontsize)
+                    map_title = title + '\n%s of all pixels' % percent_used_string
+                    ret.axes.set_title(map_title, fontsize=fontsize)
                     #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
                     #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
                     #ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,
@@ -242,5 +246,17 @@ for ic_type in ic_types:
                                                          final_filename + '.pkl')
                     print('Saving map to %s' % final_pickle_filepath)
                     f = open(final_pickle_filepath, 'wb')
+                    pickle.dump(map_title, f)
+                    pickle.dump(subtitle, f)
                     pickle.dump(my_map, f)
                     f.close()
+
+                    # Store the location and file name
+                    filepaths.append(filepath)
+
+# Save the location and file name data
+filepaths_filepath = os.path.join(filepaths_root, "analysis_spatial_distribution_common_spectral_model_parameters.filepaths.pkl")
+f = open(filepaths_filepath, 'wb')
+pickle.dump(filepaths, f)
+f.close()
+

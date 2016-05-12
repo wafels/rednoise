@@ -34,10 +34,11 @@ def plot_regions(image, regions, filepath):
 
     # Get the sunspot outline
     sunspot_outline = analysis_get_data.sunspot_outline()
-    ax.add_collection(analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], image.date))
+    _polygon, collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], image.date)
+    ax.add_collection(collection)
     ax.autoscale_view()
 
-    #plt.show()
+    # plt.show()
     if filepath is not None:
         plt.savefig(filepath)
     else:

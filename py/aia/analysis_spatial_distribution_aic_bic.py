@@ -3,6 +3,7 @@
 # the AIC and the BIC
 #
 import os
+import cPickle as pickle
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ import sunpy.map
 from copy import deepcopy
 
 import analysis_get_data
-import study_details as sd
+import details_study as ds
 
 # Wavelengths we want to analyze
 waves = ['193']
@@ -36,20 +37,24 @@ sunspot_outline = analysis_get_data.sunspot_outline()
 
 this_ic_limit = 0.0
 
+# Storage for the filepaths
+filepaths_root = os.path.join(ds.dataroot, 'pickle')
+filepaths = []
+
 # Plot spatial distributions of the AIC and BIC.  The AIC and BIC for each
 # model are subtracted, and the model with the lowest AIC or BIC is preferred.
 for wave in waves:
     for region in regions:
 
         # branch location
-        b = [sd.corename, sd.sunlocation, sd.fits_level, wave, region]
+        b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
 
         # Region identifier name
-        region_id = sd.datalocationtools.ident_creator(b)
+        region_id = ds.datalocationtools.ident_creator(b)
 
         # Output location
-        output = sd.datalocationtools.save_location_calculator(sd.roots, b)["pickle"]
-        image = sd.datalocationtools.save_location_calculator(sd.roots, b)["image"]
+        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
+        image = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
 
         # Output filename
         ofilename = os.path.join(output, region_id + '.datacube')
@@ -142,7 +147,22 @@ for wave in waves:
                 # Fit everything in.
                 ax.autoscale_view()
 
-                # Dump to file
-                filepath = os.path.join(image, 'spatial_distrib.' + region_id + '.%s.%s.png' % (measure, mask_status))
+                # Dump image to file
+                save_filename = 'spatial_distrib.' + region_id + '.%s.%s.png' % (measure, mask_status)
+                filepath = os.path.join(image, save_filename)
                 print('Saving to ' + filepath)
                 plt.savefig(filepath)
+
+                # Dump the data used to a pickle file
+                filepath = os.path.join(output, save_filename)
+                f = open(filepath, 'wb')
+                pickle.dump(my_map, f)
+
+                # Store the location and file name
+                filepaths.append(filepath)
+
+# Save the location and file name data
+filepaths_filepath = os.path.join(filepaths_root, "{:s}.filepaths.pkl".format(__name__))
+f = open(filepath, 'wb')
+pickle.dump(filepaths, f)
+f.close()

@@ -3,6 +3,8 @@
 #            plot spatial distributions of spectral model parameters
 #            plot histograms of the spectral model parameters
 #
+# Assumes that data has been collected and saved in to maps that can be
+# easily loaded.
 #
 import os
 import numpy as np
@@ -19,10 +21,8 @@ import details_plots as dp
 
 # Wavelengths we want to cross correlate
 waves = ['131'] #, '171', '193', '211']
-#waves = ['171', '193', '211']
 
 # Regions we are interested in
-# regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
 regions = ['six_euv']
 
 # Apodization windows
@@ -161,9 +161,8 @@ for ic_type in ic_types:
                         my_map = analysis_get_data.make_map(submaps['reference region'], map_data)
 
                         # Get the sunspot
-                        sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date)
+                        polygon, collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], my_map.date)
 
-                        stop
                         # Get the bounding box of the sunspot
                         sunspot_bounding_box = False
 
@@ -195,7 +194,7 @@ for ic_type in ic_types:
                         ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                           norm=norm)
                         ret.axes.set_title('%s\n%s' % (label, subtitle))
-                        ax.add_collection(sunspot_collection)
+                        ax.add_collection(collection)
 
                         cbar = fig.colorbar(ret, extend='both', orientation='vertical',
                                             shrink=0.8, label=label)

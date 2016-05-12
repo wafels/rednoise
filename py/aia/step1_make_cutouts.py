@@ -185,7 +185,7 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
         # Write out a FITS file
         hdu = fits.PrimaryHDU(subdata)
         hdulist = fits.HDUList([hdu])
-        hdulist.writeto(ofilename + '.fits')
+        hdulist.writeto(ofilename + '.fits', clobber=True)
 
 #
 # Save the regions

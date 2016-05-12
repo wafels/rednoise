@@ -72,6 +72,7 @@ if study_type == 'paper3_BM3D':
     sunlocation = 'disk'
     fits_level = '1.5'
     wave = '171'
+    wave = '211'
     cross_correlate = True
     derotate = True
     step0_output_information = '.kirk=1-10'
@@ -84,6 +85,7 @@ if study_type == 'paper3_PSF':
     sunlocation = 'disk'
     fits_level = '1.5'
     wave = '171'
+    wave = '211'
     cross_correlate = True
     derotate = True
     step0_output_information = '.kirk=1-4'

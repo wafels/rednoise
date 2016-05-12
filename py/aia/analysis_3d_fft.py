@@ -20,6 +20,8 @@ choice = 'BM4D'
 #choice = 'PSF_removed'
 #choice = 'no_denoise'
 
+wave = '171'
+
 log_x_axis = True  # Default is False
 log_y_axis = True  # Default is True
 
@@ -154,23 +156,27 @@ def k_omega_power(pwr, circles):
 
 # Load the data
 if choice == "no_denoise":
-    filename = 'paper2_six_euv_disk_1.5_171_six_euv.datacube.1-4.pkl.fits'
-    directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/171/six_euv/"
+    if wave == '171':
+        filename = 'paper2_six_euv_disk_1.5_{:s}_six_euv.datacube.1-4.pkl.fits'.format(wave)
+        directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/{:s}/six_euv/".format(wave)
+    if wave == '211':
+        filename = 'paper2_six_euv_disk_1.5_{:s}_six_euv.datacube.pkl.fits'.format(wave)
+        directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper2_six_euv/disk/1.5/{:s}/six_euv/".format(wave)
     scale = 0.6 * u.arcsec / u.pix
 
 if choice == "PSF_removed":
-    filename = 'paper3_PSF_disk_1.5_171_six_euv.datacube.1-5.pkl.fits'
-    directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_PSF/disk/1.5/171/six_euv/"
+    filename = 'paper3_PSF_disk_1.5_{:s}_six_euv.datacube.1-5.pkl.fits'.format(wave)
+    directory = "/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_PSF/disk/1.5/{:s}/six_euv/".format(wave)
     scale = 0.6 * u.arcsec / u.pix
 
 if choice == "BM3D":
-    filename = 'paper3_BM3D_disk_1.5_171_six_euv.datacube.1-11.pkl.fits'
-    directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM3D/disk/1.5/171/six_euv/'
+    filename = 'paper3_BM3D_disk_1.5_{:s}_six_euv.datacube.1-11.pkl.fits'.format(wave)
+    directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM3D/disk/1.5/{:s}/six_euv/'.format(wave)
     scale = 0.6 * u.arcsec / u.pix
 
 if choice == "BM4D":
-    filename = 'AIA.171.2012_09_23.BM4DProcess.1-11.fits'
-    directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM4D/disk/1.5/171/six_euv/'
+    filename = 'AIA.{:s}.2012_09_23.BM4DProcess.1-11.fits'.format(wave)
+    directory = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/paper3_BM4D/disk/1.5/{:s}/six_euv/'.format(wave)
     scale = 0.6 * u.arcsec / u.pix
 
 if choice != "test":
@@ -257,7 +263,7 @@ ax.set_xlabel(wavenumber_label)
 ax.set_ylabel(frequency_label)
 ax.set_xlim(wn[0].value, wn[-1].value)
 ax.set_ylim(spm[0, 0].value, spm[0, -1].value)
-ax.set_title(r"%s [power=%4.2f$\rightarrow$%4.2f]" % (choice, log10_k_om.min(), log10_k_om.max()))
+ax.set_title(r"%s %s [power=%4.2f$\rightarrow$%4.2f]" % (wave, choice, log10_k_om.min(), log10_k_om.max()))
 f5 = ax.axhline(five_minutes.to(frequency_unit).value, linestyle='--', color='k')
 f3 = ax.axhline(three_minutes.to(frequency_unit).value, linestyle='-.', color='k')
 fig.colorbar(cax, label=r'$\log_{10}(power)$')
