@@ -93,22 +93,22 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
                "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
                "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
     """
-    """
+
     #
-    # Regions are difficult to recreate since the code has changed substantially.
-    # The plots are meant to be illustrative, so
+    # Regions are difficult to recreate since the code has changed
+    # substantially. The plots are meant to be illustrative, so
     #
-    regions = {"loop footpoints": {"llx": -460*u.arcsec, "lly": -10*u.arcsec, "width": 23*u.arcsec, "height": 32*u.arcsec},
-               "moss": {"llx": -390*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 22*u.arcsec}}
-    region_most_of_fov = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
-    """
+    regions = {"loop footpoints": {"llx": -470*u.arcsec, "lly": -10*u.arcsec, "width": 23*u.arcsec, "height": 32*u.arcsec},
+               "moss": {"llx": -380*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 22*u.arcsec}}
+    #region_most_of_fov = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
+
     #
     # Most of field of view, good for large scale studies (Paper 2)
     #
 
 
-    regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
-                           "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    #regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
+    #                       "width": 340*u.arcsec, "height": 200*u.arcsec}}
 
 
     """

@@ -252,7 +252,8 @@ for ic_type in ic_types:
                     f.close()
 
                     # Store the location and file name
-                    filepaths.append(filepath)
+                    print('Adding %s' % final_pickle_filepath)
+                    filepaths.append(final_pickle_filepath)
 
 # Save the location and file name data
 filepaths_filepath = os.path.join(filepaths_root, "analysis_spatial_distribution_common_spectral_model_parameters.filepaths.pkl")
