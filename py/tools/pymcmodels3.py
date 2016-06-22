@@ -18,6 +18,7 @@ Notes
 import pymc
 import rnspectralmodels
 
+
 # -----------------------------------------------------------------------------
 # Power law with a constant
 #
@@ -26,7 +27,7 @@ def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
     spectrum is made up of a power law and a constant background.  At high
     frequencies the power spectrum is dominated by the constant background.
     """
-    if init == None:
+    if init is None:
         power_law_index = pymc.Uniform('power_law_index',
                                        lower=-1.0,
                                        upper=6.0,
@@ -71,7 +72,7 @@ def Log_splwc(analysis_frequencies, analysis_power, sigma, init=None):
                                a=power_law_norm,
                                b=background,
                                f=analysis_frequencies):
-        #A pure and simple power law model#
+        # A pure and simple power law model
         out = rnspectralmodels.Log_splwc(f, [a, p, b])
         return out
 

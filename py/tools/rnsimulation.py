@@ -3,7 +3,6 @@ Red noise simulation objects and functions
 """
 
 import numpy as np
-import copy
 from scipy.stats import chi2, uniform
 
 
@@ -25,7 +24,7 @@ class SimulatedPowerSpectrum:
 
     def power(self, f):
         """
-        Return the power spectrum.  placeholder for the methods defined below
+        Return the power spectrum.  Placeholder for the methods defined below
         f : ndarray
             The frequencies at which to calculate the power
         """
@@ -39,7 +38,7 @@ class SimulatedPowerSpectrum:
         return noisy_power_spectrum(self.power(f))
 
 
-class TimeSeriesFromSimulatedPowerSpectrum():
+class TimeSeriesFromSimulatedPowerSpectrum:
     def __init__(self, powerspectrum, f, fft_zero=0.0, **kwargs):
         """
         Create a time series with a given type of power spectrum.  This object
@@ -95,12 +94,12 @@ class TimeSeriesFromSimulatedPowerSpectrum():
         self.nlts = len(self.longtimeseries)
 
         # get a sample of the desired length nt from the middle of the long time series
-        self.sample = self.longtimeseries[nlts / 2 - self.nt / 2: nlts / 2 - self.nt / 2 + self.nt]
+        self.sample = self.longtimeseries[self.nlts / 2 - self.nt / 2: self.nlts / 2 - self.nt / 2 + self.nt]
 
 
 def oversamplefrequencies(nt, dt, V, W):
     K = V * W * nt / 2
-    frequencies = np.arange(1, K + 1) / (1.0 * (V * nt * dt))
+    return np.arange(1, K + 1) / (1.0 * (V * nt * dt))
 
 
 def equally_spaced_nonzero_frequencies(n, dt):
