@@ -8,9 +8,7 @@ from scipy.stats import chi2, uniform
 
 
 class TimeSeriesFromModelSpectrum:
-    def __init__(self, spectrum_model, a,
-                 nt=1800, dt=12.0, v=1, w=1, fft_zero=0.0,
-                 phase_noise=True, power_noise=True):
+    def __init__(self, spectrum_model, a, nt=1800, dt=12.0, v=5, w=7):
         """
         Create a time series with a given type of power spectrum.  This object
         can be used to generate time series that have a given power spectrum.
@@ -38,25 +36,13 @@ class TimeSeriesFromModelSpectrum:
         dt : float
             sample cadence (nominally in seconds)
 
-        V : scalar >= 1
+        v : scalar >= 1
             oversampling parameter mimicking increasing the time series duration
             from N*dt to V*N*dt
 
-        W : scalar >= 1
+        w : scalar >= 1
             oversampling parameter mimicking increasing the cadence from dt to
             dt/W
-
-        fft_zero : scalar number
-            The value at the zero Fourier frequency.
-
-        phase_noise : bool
-            if True, the phase of each Fourier component is uniformly randomly
-            chosen.
-
-        power_noise : bool
-            if True, the power of each Fourier component is sampled from an
-            exponential distribution with mean given by the input power
-            spectrum.
 
         Examples
         --------
@@ -79,42 +65,45 @@ class TimeSeriesFromModelSpectrum:
         self.v = v
         self.w = w
 
-        # Power at the zero frequency
-        self.fft_zero = fft_zero
-
-        # Does the time series have phase noise?
-        self.phase_noise = phase_noise
-
-        # Does the time series have power noise?
-        self.power_noise = power_noise
-
         #
         self.k = self.v * self.w * self.nt / 2
 
         # Frequencies that we are calculating the power spectrum at
         self.frequencies = np.arange(1, self.k + 1) / (1.0*(self.v * self.nt * self.dt))
 
-        #
-        self.input_power = self.spectrum_model.power(self.a, self.frequencies)
+        # Non-noisy power at the frequencies we are interested in
+        self.power = self.spectrum_model(self.a, self.frequencies)
+
+    def sample(self, fft_zero=0.0, phase_noise=True, power_noise=True):
+        """
+        Return a time-series with the given properties
+
+        :param fft_zero:
+        :param phase_noise:
+        :param power_noise:
+        :return:
+        """
 
         # The fully over-sampled timeseries, with a sampling cadence of dt/W,
         # and a duration of V*N*dt.
-        self.oversampled = time_series_from_power_spectrum(self.input_power,
-                                                           fft_zero=self.fft_zero,
-                                                           phase_noise=self.phase_noise,
-                                                           power_noise=self.power_noise)
+        oversampled = time_series_from_power_spectrum(self.power,
+                                                      fft_zero=fft_zero,
+                                                      phase_noise=phase_noise,
+                                                      power_noise=power_noise)
 
         # Subsample the time-series back down to the requested cadence of dt
-        self.long_timeseries = self.oversampled[0:len(self.oversampled):self.w]
-        self.nlts = len(self.long_timeseries)
+        long_timeseries = oversampled[0:len(oversampled):self.w]
+        nlts = len(long_timeseries)
 
         # Get a sample of the desired length nt from the middle of the long
         # time series.
-        self.sample = self.long_timeseries[self.nlts//2 - self.nt//2:
-                                           self.nlts//2 - self.nt//2 + self.nt]
+        return self.dt * np.arange(0, self.nt),\
+               long_timeseries[nlts//2 - self.nt//2:
+                               nlts//2 - self.nt//2 + self.nt]
 
 
-def time_series_from_power_spectrum(power_spectrum, fft_zero=0.0, phase_noise=True, power_noise=True):
+def time_series_from_power_spectrum(power_spectrum, fft_zero=0.0,
+                                    phase_noise=True, power_noise=True):
     """Create a time series with power law noise, following the recipe
     of Vaughan (2010), MNRAS, 402, 307, appendix B
 

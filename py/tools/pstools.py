@@ -2,16 +2,18 @@
 # Power spectrum tools
 #
 import numpy as np
-import rnspectralmodels
-import details_study as ds
-import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+#import rnspectralmodels
+#import details_study as ds
+#import matplotlib.pyplot as plt
+#from scipy.optimize import curve_fit
 
 #
 # Assume a power law in power spectrum - Use a Bayesian marginal distribution
 # to calculate the probability that the power spectrum has a power law index
 # 'n'
 #
+
+
 def bayeslogprob(f, I, n, m):
     """
     Return the log of the marginalized Bayesian posterior of an observed
@@ -45,6 +47,7 @@ def most_probable_power_law_index(f, I, m, n):
     return n[np.argmax(blp)]
 
 
+"""
 #
 # Implement what to do with the isolated structure limits
 #
@@ -70,6 +73,9 @@ def background_spectrum_estimate(finput, p,
                                                    0.0, np.arange(0.0, 4.0, 0.01))
     log_background_estimate = np.log(np.mean(p[background_range[0]:background_range[1]]))
     return log_amplitude_estimate, index_estimate, log_background_estimate
+"""
+
+"""
 #
 # Generate an initial guess to the log likelihood fit
 #
@@ -91,16 +97,14 @@ def generate_initial_guess(model_name, finput, p,
                                  background_range=background_range)
     background_spectrum = rnspectralmodels.power_law_with_constant([log_amplitude, index_estimate, log_background], f)
 
-    """
-    plt.loglog(f, p, label='data')
-    plt.loglog(f, background_spectrum, label='background spectrum estimate', linestyle='--')
-    plt.axvline(f[amp_range[0]], linestyle=':')
-    plt.axvline(f[amp_range[1]], linestyle=':', label='amplitude range')
-    plt.axvline(f[index_range[0]], linestyle=':', color='k')
-    plt.axvline(f[index_range[1]], linestyle=':', color='k', label='index range')
-    plt.axvline(f[background_range[0]], linestyle=':', color='g')
-    plt.axvline(f[background_range[1]], linestyle=':', color='g', label='background range')
-    """
+    #plt.loglog(f, p, label='data')
+    #plt.loglog(f, background_spectrum, label='background spectrum estimate', linestyle='--')
+    #plt.axvline(f[amp_range[0]], linestyle=':')
+    #plt.axvline(f[amp_range[1]], linestyle=':', label='amplitude range')
+    #plt.axvline(f[index_range[0]], linestyle=':', color='k')
+    #plt.axvline(f[index_range[1]], linestyle=':', color='k', label='index range')
+    #plt.axvline(f[background_range[0]], linestyle=':', color='g')
+    #plt.axvline(f[background_range[1]], linestyle=':', color='g', label='background range')
 
     if model_name == 'power law':
         initial_guess = [log_amplitude, index_estimate]
@@ -177,3 +181,4 @@ def eqn4_8_23(timescales, alpha_e, gamma, nu):
     for t in timescales:
         pwr += eqn4_8_23_summand(t, alpha_e, gamma, nu)
     return pwr
+"""
