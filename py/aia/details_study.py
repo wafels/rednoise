@@ -13,6 +13,8 @@ study_type = 'paper2'
 #study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
+#study_type = 'papern_bradford_simulation'
+
 
 # Target cadence
 target_cadence = 12
@@ -104,6 +106,19 @@ if study_type == 'paper3_BLSGSM':
     step0_output_information = '.kirk=1-10'
     step1_input_information = '.kirk=1-10_ireland=step0'
     step1_output_information = '.1-11'
+
+
+if study_type == 'bradford_simulation':
+    dataroot = '~/Data/ts/'
+    corename = study_type
+    sunlocation = 'disk'
+    fits_level = '1.5'
+    wave = '171'
+    cross_correlate = True
+    derotate = True
+    step0_output_information = ''
+    step1_input_information = ''
+    step1_output_information = ''
 
 """
 if study_type == 'paper2':
