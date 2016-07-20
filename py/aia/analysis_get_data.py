@@ -185,3 +185,77 @@ def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[2], edgecolor
                                        facecolors=['none'],
                                        linewidth=linewidth)
 
+
+def estimated_aia94_warm_component_ugarte_warren_2014(aia171, aia193):
+    """
+    Wrapper around the Ugarte & Warren 2014 function that estimates the warm
+    component of the AIA 94 data, returning a SunPy map from the input.
+
+    :param aia171: an AIA 171 Angstrom map
+    :param aia193: an AIA 193 Angstrom map
+    :return: a SunPy map with the same meta data as the AIA 171 data.  The
+    image is an estimate of the warm component of the AIA 94 bandpass.
+
+    Reference
+    -----
+    Ugarte-Urra & Warren, ApJ, 783, 12, 2014.
+
+    """
+    if aia171.waveength.to(u.AA).value != 171:
+        raise ValueError('First function argument must be an AIA 171 Angstrom SunPy map')
+    elif aia193.waveength.to(u.AA).value != 193:
+        raise ValueError('Second function argument must be an AIA 193 Angstrom SunPy map')
+
+    # Calculate the warm data (using Equation 1 from the reference above) and
+    # return a SunPy map.
+    return sunpy.map.Map(_estimated_aia94_warm_component_ugarte_warren_2014(aia171.data, aia193.data),
+                         aia171.meta)
+
+
+def _estimated_aia94_warm_component_ugarte_warren_2014(data171, data193):
+    """
+    :param data171: AIA 171 data
+    :param data193: AIA 193 data
+    :return: an estimate of the warm component of the AIA 94 bandpass.
+
+    Reference
+    -----
+    Ugarte-Urra & Warren, ApJ, 783, 12, 2014.
+
+    """
+    # Parameter values (from the reference above.
+    A = 0.39
+    B = 116.32
+    f = 0.31
+    I_max = 27.5
+
+    # The c array in this function needs to be reversed (compared to how it is
+    # listed in the paper since we are choosing to use the np.polyval function
+    # to evaluate the polynomial
+    c = np.asarray([-7.19/100.0, 9.75/1.0, 9.79/100.0, -2.81/1000.0])[::-1]
+
+    # First order contribution (Equation 2 from the reference above)
+    x = (f * data171 + (1.0 - f)*data193.data)/B
+    x[x > I_max] = I_max
+
+    # Calculate the warm component (using Equation 1 from the reference above)
+    return A*np.polyval(c, x)
+
+
+def estimated_fe_xviii(aia94, aia171, aia193):
+    """
+    :param aia94: an AIA 94 Angstrom map
+    :param aia171: an AIA 171 Angstrom map
+    :param aia193: an AIA 193 Angstrom map
+    :return: a SunPy map with the same meta data as the AIA 171 data.  The
+    map is an estimate of the Fe XVIII emission.
+    """
+    if aia94.wavelength.to(u.AA).value != 94:
+        raise ValueError('First function argument must be an AIA 94 Angstrom SunPy map')
+    elif aia171.waveength.to(u.AA).value != 171:
+        raise ValueError('Second function argument must be an AIA 171 Angstrom SunPy map')
+    elif aia193.waveength.to(u.AA).value != 193:
+        raise ValueError('Third function argument must be an AIA 193 Angstrom SunPy map')
+
+    return sunpy.map.Map(aia94.data - _estimated_aia94_warm_component_ugarte_warren_2014(aia171.data, aia193.data),
+                         aia94.meta)
