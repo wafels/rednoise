@@ -223,7 +223,7 @@ def _estimated_aia94_warm_component_ugarte_warren_2014(data171, data193):
     Ugarte-Urra & Warren, ApJ, 783, 12, 2014.
 
     """
-    # Parameter values (from the reference above.
+    # Parameter values (from the reference above).
     A = 0.39
     B = 116.32
     f = 0.31
@@ -235,7 +235,7 @@ def _estimated_aia94_warm_component_ugarte_warren_2014(data171, data193):
     c = np.asarray([-7.19/100.0, 9.75/1.0, 9.79/100.0, -2.81/1000.0])[::-1]
 
     # First order contribution (Equation 2 from the reference above)
-    x = (f * data171 + (1.0 - f)*data193.data)/B
+    x = (f * data171 + (1.0 - f)*data193)/B
     x[x > I_max] = I_max
 
     # Calculate the warm component (using Equation 1 from the reference above)
