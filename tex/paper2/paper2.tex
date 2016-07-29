@@ -214,11 +214,8 @@ very similar spectral index of approximately 2.28, whereas AIA 171\AA\
 and 193\AA\ had spectral indices of 1.76 and 2.05 respectively.  It is
 therefore clear that different regions exhibit different evolutionary
 behavior.  This paper extends that work by fitting models of power
-spectra arising from time-series in all six EUV channels (\allaiaeuv).
-This will result in more detailed infomation on the spatial
-distribution of Fourier power in the AIA EUV channels.
-
-
+spectra arising from time-series in all six EUV channels (\allaiaeuv)
+at all available pixels in the field of view.
 
 Section \ref{sec:obs} describes the observations used, while Section
 \ref{sec:anal} describes the method of analysis employed and presents
@@ -238,217 +235,93 @@ eruptions or rearrangments of long bright coronal loops) over the
 spatial extent of the cutout within the time range.
 \cite{ireland2015} note the power spectra
 
-
 {\BF AIA} observes images of the Sun in multiple channels
 simultaneously and continuously, at high cadence (12 seconds) and at
 high spatial resolution (0.6 arcseconds per pixel).  {\BF AIA} data
 was acquired using the Lockheed Martin Solar Astrophysics cutout
 service at {\it http://lmsal.com/get\_aia\_data/}.  Six hours of image
 data in the time range 2012-09-23 00:00 - 06:00 UT, at the full 12
-second cadence, in EUV wavebands \allaiaeuv\ are used.  The data in
-each AIA channel are co-aligned to remove solar rotation using the
-process as described in Appendix \ref{sec:app:data}.  The result are a
-set of datacubes that show the same portion of the Sun for the
-duration of the data.
+second cadence, in EUV wavebands \allaiaeuv\ are used.  
 
 
 \section{Analysis}\label{sec:anal}
-We wish to analyze the frequency content of these resulting datacubes
-as a function of spatial location.  Figure \ref{fig:loc171193} shows
-the location of the region considered. This region was chosen because
-it contains many examples of commonly observed structures in the
-corona - moss, quiet Sun, sunpots and loop footpoints.
-\begin{figure}
-\centerline{
-\plottwo{shutdownfun3_6hr_disk_1.5_171.eps}{shutdownfun3_6hr_disk_1.5_193.eps}
-}
-\caption{Locations of the regions analyzed in each of AIA 171\AA\ and
-  193\AA, overlaid on sample images taken halfway through the six hour
-  span used to form the time-series analyzed.  The spatial extent of
-  the data is (-501'', -138'') in the x-direction, and (-80'', 107'')
-  in the y-direction, in heliocentric cartesian co-ordinates.  The
-  images show NOAA AR 11575 and some surrounding area.}
-\label{fig:loc171193}
-\end{figure}
+The data in each AIA channel are co-aligned to remove solar rotation
+using the process as described in Appendix \ref{sec:app:data}.  The
+result are a set of datacubes that show the same portion of the Sun
+for the duration of the data.  The time-series of emission $I(t)$ from
+a single pixel is apodized using the Hanning window, reducing ringing
+effects in the \PS.  The full 12 second cadence is used, yielding time
+series of 1800 samples.  The full spatial resolution is also retained
+in order to obtain fine detail on the variation of frequency content
+as a function of location.  This yields $???\times???=???$ spectra per
+AIA channel for analysis.  
 
-Consider the emission from a single pixel, $I(t)$.  The Fourier power
-spectrum for this emission was calculated as follows.  First, the
-time-series was normalized by calculating $(I(t) - \langle I(t)
-\rangle)/\langle I(t) \rangle$. Secondly, the normalized time-series
-was apodized using the Hanning window, reducing ringing effects in the
-\PS.  The full 12 second cadence is used, yielding time series of 1800
-samples.  The full spatial resolution is also retained in order to
-obtain fine detail on the variation of frequency content as a function
-of location.  Figure \ref{fig:compare171193} show example power
-spectra, plotted using a log-log scale, from a single location inside
-each of the regions shown in Figure \ref{fig:loc171193}.  The shape of
-the power spectra indicate that the Fourier power approximately
-follows a \PL\ at lower frequencies, and flattens out at higher
-frequencies.
+Figure \ref{fig:compare171193} show example power spectra, plotted
+using a log-log scale, from a single location inside each of the
+regions shown in Figure \ref{fig:exampleFpa}.  The shape of the power
+spectra indicate that the Fourier power approximately follows a
+\PL\ at lower frequencies, and flattens out at higher frequencies, as
+expected from \citet{ireland2015}. 
 
-There is evidence that these \PLs\ extend to much longer
-frequencies than those considered here, down to approximately 0.01
-mHz. \cite{2014AA...563A...8A} integrate emission over small portions
-of active regions and the quiet Sun as observed in the 195\AA\ passband
-images from EIT and show that the resulting time-series has an
-approximate \PL\ \Fps\ over the frequency range 0.01 - 1 mHz.
+Following \citet{ireland2015}, two models for the \Fps\ are
+considered. Model $M_{1}$ is
+\begin{equation}
+\label{eqn:pwrlaw}
+P_{1}(\nu) = A\nu^{-n} + C,
+\end{equation}
+where $\nu$ is the frequency, $A>0$ is a proportionality constant and
+$n>0$ is the \PL\ index.  The quantity $C>0$ models the high-frequency
+/ low power end of the spectrum where the detection properties of the
+detector apparatus are assumed to dominate the observations. The
+second model $M_{2}$ has two contributions to the overall \Fps; a
+background power-law of the form of $P_{1}$, and a contribution that
+is more localized, $G(\nu)$.  The model is given by
+\begin{equation}
+\label{eqn:pwrlawbump}
+P_{2}(\nu) = P_{1}(\nu) + G(\nu)
+\end{equation}
+where the localized contribution is described by
+\begin{equation}
+\label{eqn:bump}
+G(\nu) = \alpha\exp\left[-\frac{(\ln(\nu)-\beta)^{2}}{2\delta^{2}}\right].
+\end{equation}
 
-\begin{figure}
-\centerline{
-\plottwo{loopfootpoints.centralpower.eps}{moss.centralpower.eps}
-}
-\centerline{
-\plottwo{qs.centralpower.eps}{sunspot.centralpower.eps}
-}
-\caption{Log-log plot of the Fourier power of a time-series at the AIA
-  pixel overlying a randomly chosen pixel in each of the regions
-  considered (see Figure \protect\ref{fig:loc171193}).  The vertical
-  black lines indicate the 3 and 5 minute frequencies.}
-\label{fig:compare171193}
-\end{figure}
-
-\begin{figure}
-\centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_loopfootpoints.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_loopfootpoints.hanning.relative.power_spectra_distributions.eps}
-}
-\centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_moss.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_moss.hanning.relative.power_spectra_distributions.eps}
-}
-\centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_qs.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_qs.hanning.relative.power_spectra_distributions.eps}
-}
-\centerline{
-\epsscale{0.8}\plottwo{shutdownfun3_6hr_disk_1.5_171_sunspot.hanning.relative.power_spectra_distributions.eps}{shutdownfun3_6hr_disk_1.5_193_sunspot.hanning.relative.power_spectra_distributions.eps}
-}
-\caption{{\BF The proportion of the number of pixels in each image
-    that have a given Fourier power at some sample Fourier
-    frequencies.  The left hand column gives results for AIA 171\AA,
-    and the right hand column, AIA 193\AA.  Regions are indicated in
-    each plot title.}}
-\label{fig:dist171193}
-\end{figure}
-Figure \ref{fig:dist171193} shows the probability distribution of the
-Fourier power of the pixels in each region at five selected
-frequencies, for all the pixels in each region.  These distributions
-are centrally peaked, show a slightly heavier tail towards lower
-Fourier powers (negative skew), are slightly broader when compared to
-a Gaussian distribution, and are all unimodal.  These observations
-guide the choice of how to average the \PS\ over each of the selected
-region.  The nature of these distributions suggest that the arithmetic
-mean of the Fourier power is biased by the very largest powers.
-Therefore, the mean value of the logarithm of the Fourier power is a
-better description of the range of values in the data (this is
-equivalent to the geometric mean of the Fourier power).  The \PA\ used
-below are calculated from the mean value of the logarithm of the
-Fourier power
-
-\subsection{Results}\label{ssec:results}
 Each Fourier power spectrum is fit using both models $M_{1}$ and
-$M_{2}$.  The $\chi^{2}$-analog is calculated for the best fit to each
-observed power spectrum.
-
-A good fit is found if (a) the fitting routine does not report an
+$M_{2}$.  A two-stage filtering process is used to find which model
+best describes the Fourier power spectrum of time-series of emission
+at each pixel.  The first stage determines if a model fit to the data
+is 'good' or not.  A model fit is labeled a 'good fit' if the
+following criteria are met: (a) the fitting routine does not report an
 error, (b) the $\chi^{2}$-analog lies within the 95\% confidence
 interval (see Appendix \ref{sec:app:chi}) and (c) all the parameters
 found by the fitting process lie inside acceptable limits (see
-Appendix \ref{sec:app:parlimits}).  This qualifies model fits as
-worthy of further consideration.  The Bayesian Information Criterion
-(BIC) is used to express a preference of one model over another.
+Appendix \ref{sec:app:parlimits}).  This qualifies the fit of the
+model to the data as worthy of further consideration.
 
-The model $M_{k}$ is preferred if
+The second stage determines which model is preferred.  Firstly, we
+restrict attention to \Fpa\ that have good fits (as defined above) for
+all the models considered.  Then, we use the Bayesian Information
+Criterion (BIC) determine which model is substabtially preferred to
+another.  The model $M_{k}$ is preferred if
 \begin{equation}
+\label{eqn:bic}
 BIC_{k} - BIC_{j} \le -6, \forall j\ne k.
 \end{equation}
-
-This process selects decides which model and
-
-
-Figure \ref{fig:fit171193} show the fit results of each model to the
-data.  For details on the fitting procedure, see Appendix
-\ref{sec:app:ind}.
-{\BF The two models are assessed for how well they describe the data in two
-different ways. Model selection is implemented using the Akaike Information Criterion
-(AIC; \citealp*{akaike}).  The AIC measures the amount of information
-lost when fitting a model to data \citep{2000Ap&SS.271..213T}.  The
-AIC is defined as
-\begin{equation}\label{eqn:aic}
-AIC \equiv 2k -2 \ln L_{max}
-\end{equation}
-where $L_{max}$ is the maximum likelihood achievable by the model, and
-$k$ is the number of parameters in the model ($k=3$ for Model 1, and
-$k=6$ for Model 2).  Model selection is guided by calculating
-$\triangle AIC = AIC_{1} - AIC_{2}$.  Positive values of $\triangle
-AIC$ indicate that Model 2 loses less information compared to Model 1,
-leading to a preference for Model 2 over Model 1
-\citep{2007MNRAS.377L..74L}.  The AIC indicates that Model 2 is
-overwhelmingly preferred to Model 1 (see Figure \ref{fig:fit171193}).}
-{\BF The AIC reveals which (out of a set of models) is preferred.  It
-  does not give an assessment of the goodness-of-fit of each model.
-  Goodness-of-fit is estimated by calculating reduced-$\chi^{2}$,
-  $\chi^{2}_{r}=\sum_{j=1}^{N}\left[(P_{i}(\nu_{j})-D_{j})/\sigma_{j}^{2}\right]/(N-k-1)$,
-  where $N=899$ is the number of frequencies, $P_{i}(\nu_{j})$ is the
-  model power $P_{i}$ at frequency $\nu_{j}$, $D_{j}$ is the \mFpa\ at
-  $\nu_{j}$, and $\sigma_{j}$ is the estimated standard deviation of
-  the data $D_{j}$ (see Appendix \ref{sec:app:ind} for more details of
-  the estimation of $\sigma_{j}$).  The value of $\chi^{2}_{r}$ is
-  calculated for both models.  Note that the \mFpa\ are only
-  approximately normally distributed, and so caution must be used in
-  interpreting $\chi^{2}_{r}$. Since $N>>k$, $\chi^{2}_{r}$ is
-  understood as a measure of the average scaled variance of the model
-  fit to the data. Within the approximations of the analysis, the
-  $\chi^{2}_{r}$ measures show that reasonable fits are obtained for
-  Model $M_{2}$ in all cases, excepting the loop footpoints.  The
-  relatively low value of $\chi^{2}_{r}$ for these locations indicate
-  that probably the size of $\sigma_{i}$ are over-estimated.}
-
-Table \ref{tab:parameters} gives the parameter estimates and 68\%
-credible intervals of the parameter values for model $M_{2}$, {\BF the
-  maximum value of the ratio $G(\nu)/P_{1}(\nu)$ and its location}.
-The \PL\ indices for all regions and both wavebands lie in the
-range 1.8 to 2.3, although there is no consistency between one
-waveband and another.  For example, the 171\AA\ and 193\AA\ loop
-footpoint results both have the same \PL\ index, but the other
-regions do not.  However, it should be noted that there is no {\it a
-  priori} reason why the \PL\ indices for a region observed in two
-different wavebands should be the same.  This is because each waveband
-is designed to examine different features on the Sun in broadly
-different temperature ranges, and may be imaging {\BF different parts
-  of the same temperature-dependent physical process.  Also,
-  line-of-sight effects may be different in different wavebands (and
-  locations).}  Hence, the emission observed in one waveband need not have
-the same statistical properties as any other.
-
-The ratio of the two components $G(\nu)/P_{1}(\nu)$ measures the
-relative contribution of the ``excess'' emission over the
-\PL\ component.  The frequency $\nu_{max}$ is the frequency at which
-this ratio is a maximum, and indicates the most likely frequency at
-which the signal of the $G(\nu)$ contribution is strongest.  The
-ratios maximize in the range $1.90 \le \nu_{max} \le 4.72$ mHz.  This
-is in the frequency range suggested by the moss observations of
-\cite{2003ApJ...595L..63D}.  If Model 2 is indeed a reasonable model
-of the \Fpa\ in the regions studied, then the $G(\nu)$ contribution is
-consistent with previous observations.
+This selection criterion picks the model that is substantially better
+descriptions of the data compared to the other models used.  If no
+model passes the selection criterion, then the \Fps\ arising from the
+time-series at this pixel fails this criterion and is not retained in
+the results below.  Only \Fpa\ that pass this two stage filter process
+are retained for further analysis.
 
 
-
-Note that neither models $M_{1}$ nor $M_{2}$ feature any narrow-band
-oscillatory signals that may be present in the regions studied.  Such
-features were not modeled in this study as their contribution to the
-overall signal is relatively small and localized to specific
-frequencies when compared to the general shape of the power spectra
-over the approximately three orders of magnitude (in frequency)
-studied here.  The question of how best to determine the presence or
-otherwise of narrow-band oscillatory power in \Fps\ is of importance
-to the study of coronal seismology, and is addressed in Sections
-\ref{ssec:corseis} and \ref{sec:oscdetect}.
-
-
+\subsection{Results}\label{ssec:results}
 
 
 \begin{figure}
 \label{fig:spatialdistribution:preference}
 
-\caption{Spatial distribution of model preference}
+\caption{Spatial distribution of model preference.}
 \end{figure}
 
 
@@ -457,22 +330,21 @@ to the study of coronal seismology, and is addressed in Sections
 \label{fig:spatialdistribution:powerlawindex}
 
 \caption{Spatial distribution of the power law indices.  Power law
-  indices are taken from either model $M_{1}$ or $M_{2}$.  Models are}
+  indices are taken from either model $M_{1}$ or $M_{2}$, whichever
+  model is preferred at each pixel (see Section \ref{sec:anal})}
 \end{figure}
-
-
 
 \begin{figure}
 \label{fig:spatialdistribution:gaussianposition}
 
-\caption{Spatial distribution of the Gaussian position}
+\caption{Spatial distribution of the Gaussian position,}
 \end{figure}
 
 
 \begin{figure}
 \label{fig:spatialdistribution:gaussianwidth}
 
-\caption{Spatial distribution of the Gaussian width}
+\caption{Spatial distribution of the Gaussian width.}
 \end{figure}
 
 
@@ -509,134 +381,6 @@ hypothesis regarding the formation of this \PL\ spectrum is
 presented in Section \ref{ssec:nplps}.
 
 
-\subsection{Nature of the \protect\PL\ \protect\PS}\label{ssec:nplps}
-{\BF Power-law \PS\ have been
-  observed in other solar phenomena.  As was mentioned above,
-  \cite{2014AA...563A...8A} observe \PLs\ in the integrated
-  emission of small portions of active regions and the quiet Sun as
-  observed in the 195\AA\ passband images from EIT over the frequency
-  range 0.01 - 1 mHz. Also, \citet{gupta2014} showed \PL\ \PA\ in the
-  intensity at six single points in AIA 171\AA\ coronal plumes extending
-  over the frequency range $0.3\rightarrow 4.0$ mHz.  Lower in the
-  solar atmosphere, \cite{2008ApJ...683L.207R} show the presence of
-  \PL\ Fourier \PA, in the range 7-20 mHz, in the Doppler velocity of
-  the chromospheric Ca II 854.2 nm line as observed by the
-  Interferometric Bidimensional Spectrometer (IBIS).  Further out in
-  the solar atmosphere at 2.1 $R_{sun}$, \cite{2008ApJ...677L.137B}
-  show the presence of \PL\ \PA\ in Ultraviolet Coronagraph
-  Spectrometer observations of the intensity of Lyman-$\alpha$ in the
-  frequency range $2.6\times10^{-6}\rightarrow1.3\times10^{-4}$ Hz.}
-
-{\BF The coronal regions studied here also exhibit \PL-like \PA\ in the
-approximate frequency range $0.05\rightarrow 10$ mHz.  Under the
-modeling assumptions of models $M_{1}$ and $M_{2}$, the first
-contribution to the observed power spectrum is a \PL\ (which is
-detectable in all regions up to about 2 mHz)}.  It is present in both
-wavebands studied and in all the regions, and so parsimony suggests
-that the mechanism of its creation is both similar and ubiquitous in
-all {\BF similar} parts of the solar atmosphere {\BF , that is quiet
-  Sun, moss, loop footpoints and above sunspots}.  Further,
-\cite{2014AA...563A...8A} show that a \PL\ \PS\ is present in
-time-series of coronal active region and quiet Sun emission over the
-frequency range 0.01 - 1 mHz, overlapping with the frequency studied
-in this paper.  We hypothesize that the \PL\ \PS\ in the coronal
-171\AA\ and 193\AA\ emission is due to the sum of a distribution of a
-large number of events having different amounts of emission.
-\cite{2011soca.book.....A} describes how a \PL\ \PS\ may obtained from
-such a distribution, and that argument is outlined below.
-
-
-The derivation of the \PL\ \PS\ Equation \ref{eqn:finalfps} shares
-many similar features with the nanoflare model of {\it energy}
-deposition in the solar atmosphere. In the nanoflare model advanced by
-\cite{1988ApJ...330..474P}, large numbers of small magnetic
-reconnection events convert the energy in the magnetic field into
-energy that heats the corona.  Nanoflares are hypothesized to be small
-($10^{24}-10^{27}$ ergs) yet ubiquitous in the corona.
-\cite{2013ApJ...771...21W} and \cite{2013ApJ...770L...1T} analyzing
-narrowband 193\AA\ images taken by the Hi-C instrument on board a
-sounding rocket demonstrate the heating of small scale coronal
-structures that appear to be consistent with scenarios of nanoflare
-heating due to reconnecting magnetic loops.  However, the nanoflare
-occurence rate, or their energy distribution for the entire solar
-atmosphere is as yet unknown.
-
-Any modeling or theoretical effort to infer the occurence rate and
-energy distribution of energy deposition events from the observed
-emission \PL\ \PS\ depends strongly on three factors that influence
-the observation.  Firstly, many different loops lie along the
-line-of-sight in the corona.  Each of these may have different
-emission measures, temperatures and densities.  The location of energy
-deposition may not be the same for each loop
-\citep{2003A&ARv..12....1W, 2006SoPh..234...41K}.  This implies that
-attempts to work back from the observed emission to the underlying
-energy deposition must properly account for these line-of-sight
-effects.
-
-Secondly, the amount of energy and the wavelengths at which it is
-radiated is a highly nonlinear function of the energy deposited in
-each event, depending on the existing plasma properties and the
-location of the energy deposition in the loop structure.  This must
-all be consistently modeled on each loop and summed over multiple
-loops to mimic the line-of-sight effects, as noted above.  For
-example, \cite{2011ApJ...743...23M} use a full three-dimensional MHD
-model to simulate an evolving solar atmosphere and its emission
-\citep{2011AA...531A.154G}.  \cite{2008ApJ...682.1351K,
-  0004-637X-752-2-161} have developed a zero-dimensional model of
-individual strands in a coronal loop that describes the strand's
-average temperature, pressure, and density.  Such models can be run
-quickly and so can be used to model hundreds of coronal loops.
-
-Finally, the AIA instrument filter response at the time of the
-observation must also be understood and modeled {\BF in} order to
-understand which emission lines contribute to the final observed
-image, and ultimately the \Fps\ for each region.
-\cite{2010AA...521A..21O} assume differential emission measure curves
-for different regions on the Sun (active region, quiet Sun, coronal
-hole, flaring flasma) and calculate synthetic spectra.  These
-synthetic spectra were convolved with the effective area of each
-channel, in order to determine the dominant contribution in different
-regions of the solar atmosphere.  However, as noted by
-\cite{2011ApJ...743...23M}, the differential emission measure curves
-selected by \cite{2010AA...521A..21O} are not guaranteed to
-accurately describe the conditions actually present, and so the
-fractional contributions of each line in the AIA waveband are
-estimates only.
-
-These three factors will all have an effect on the inferred properties
-of the energy deposition rate.  The observed \PL\ \PS\ here, coupled
-with the emission event hypothesis and a modeling effort that takes
-account of the factors above, offers a new way to constrain the energy
-deposition rate in the solar corona.  Under the hypothesis, the energy
-deposition rate can be explored through the distribution of the number
-of events along the line-of-sight and their temporal dependence,
-expressed through the parameters $\alpha_{E}$ and $\gamma$ in Equation
-\ref{eqn:energydistrib}.
-
-
-
-\section{Conclusions}\label{sec:conc}
-Time series of AIA EUV images show approximately power
-law like properties at longer frequencies, tailing off to a constant
-value at higher frequencies.  A small fraction of time series also
-exhibit a narrow band Gaussian contribution over and above the
-background power law plus constant \Fps\ 
-
-.  {\BF It has been shown that the detection of narrow band
-  oscillatory power in the practice of coronal seismology must take in
-  to account the presence of the \PL\ like \PS.  Detection thresholds
-  should also increase in order to reduce the number of false positive
-  detections in the presence of \PL\ like \PS.} The power spectra have
-been modelled using three components: a \PL\ \PS, a lognormal
-component, and a constant background.  It is hypothesized that the
-\PL\ component is due to the sum along the line of sight of a
-large number of statistically similar energy deposition events.  It is
-also hypothesized that the lognormal component is due a combination of
-the channeling of oscillatory power from lower to higher levels of the
-solar atmosphere and lower temperature emission lines in the AIA
-171\AA\ and 193\AA\ bandpasses.
-
-
 
 %% If you wish to include an acknowledgments section in your paper,
 %% separate it off from the body of the text using the \acknowledgments
@@ -652,8 +396,7 @@ solar atmosphere and lower temperature emission lines in the AIA
 
 We are grateful to the developers of SSWIDL
 \citep{1998SoPh..182..497F}, IPython \citep{ipython}, SunPy
-\citep{mumford-proc-scipy-2013}, PyMC
-\citep{Patil:Huard:Fonnesbeck:2010:JSSOBK:v35i04}, matplotlib
+\citep{mumford-proc-scipy-2013}, matplotlib
 \citep{Hunter:2007} and the Scientific Python stack for providing data
 preparation, manipulation, analysis and display packages.  This work
 was supported by NASA award NNX13AE03G S01 funded through NASA ROSES
@@ -685,13 +428,15 @@ NNH12ZDA001N-SHP, and by a NSF Career grant 1255024 (JMA).
 %% The equation counter will reset when it encounters the \appendix
 %% command and will number appendix equations (A1), (A2), etc.
 
-\appendix\section{Data preparation and model fitting}\label{sec:app:data}
+\appendix\section{Data preparation and model
+  fitting}\label{sec:app:data}
+
 The data was prepared for analysis using the SolarSoft / IDL routines
 READ\_SDO and AIA\_PREP.  These procedures convert the downloaded
 level 1.0 FITS cutout files to level 1.5 FITS files.  This involves
 translating, scaling and rotating the images so they have the same
 sun-center, image scale with solar north in the same direction.  All
-further processing from this point was performed in the SunPy 0.6
+further processing from this point was performed in the SunPy 0.7.???
 (http://www.sunpy.org) data analysis environment.  Images were
 de-rotated to compensate for solar rotation, based on the center of
 the field of view of each image.  After de-rotation, each image layer
@@ -717,16 +462,16 @@ small, localized intense brightening at time ??? - ??? that caused the
 template matching technique to fail in 131\AA\ when using the measured
 intensity.
 
-The image shifts caused by the co-alignment routine are shown in
-Figure \ref{fig:coalignment}.  Note that there is rapid and sudden
-change in the shifts around ???-???, corresponding to ??? frames in
-each channel's data cube.  Examination by eye of the movies of the
-data cubes before this co-alignment step shows that there is a
-noticeable shift in all features in the field of view as suggested by
-the image shift plot Figure \ref{fig:coalignment}.  Examination by eye
-of the movies of the data cubes after the co-alignment shifts have
-been applied shows no noticeable shift, leading to the conclusion that
-the template matching routine has corrected for the shift adequately.
+%% The image shifts caused by the co-alignment routine are shown in
+%% Figure \ref{fig:coalignment}.  Note that there is rapid and sudden
+%% change in the shifts around ???-???, corresponding to ??? frames in
+%% each channel's data cube.  Examination by eye of the movies of the
+%% data cubes before this co-alignment step shows that there is a
+%% noticeable shift in all features in the field of view as suggested by
+%% the image shift plot Figure \ref{fig:coalignment}.  Examination by eye
+%% of the movies of the data cubes after the co-alignment shifts have
+%% been applied shows no noticeable shift, leading to the conclusion that
+%% the template matching routine has corrected for the shift adequately.
 %% As a final check, the analysis detailed in Section \ref{???}  was
 %% applied to the co-aligned datacubes with the final ??? frames removed.
 %% Excluding these frames did not significantly affect the final results
@@ -774,8 +519,8 @@ logarithm of the frequency.  If there are less than ten positive
 differences in the required frequency range, it is assumed that there
 is a very small Gaussian contribution to the observed \Fps.  In this
 case, $\ln A_{G}=-100$, $\beta$ is fixed to be half way between the
-logarithm lower and upper estimated Gaussian frequency range $0.97
-\rightarrow 9.31 mHz$, and $\sigma = 0.1$.
+logarithm lower and upper estimated Gaussian frequency range
+$0.97 \rightarrow 9.31 mHz$, and $\sigma = 0.1$.
 
 Model fitting was initialized using the initial estimates described
 above.  Models were fit by varying the value of model parameters in
@@ -832,6 +577,8 @@ maximized $\ln p(n)$.
 
 \subsection{Calculating the 95\% confidence level using the $\chi^{2}$
 analog}\label{sec:app:chi}
+
+
 
 \subsection{Acceptable parameter limits}\label{sec:app:limit}
 
