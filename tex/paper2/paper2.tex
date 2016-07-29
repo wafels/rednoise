@@ -436,8 +436,10 @@ READ\_SDO and AIA\_PREP.  These procedures convert the downloaded
 level 1.0 FITS cutout files to level 1.5 FITS files.  This involves
 translating, scaling and rotating the images so they have the same
 sun-center, image scale with solar north in the same direction.  All
-further processing from this point was performed in the SunPy 0.7.???
-(http://www.sunpy.org) data analysis environment.  Images were
+further processing from this point was performed using SunPy 0.7
+(http://www.sunpy.org) running under Python 3.5.  
+
+Images were
 de-rotated to compensate for solar rotation, based on the center of
 the field of view of each image.  After de-rotation, each image layer
 was coaligned with a reference layer, defined to be half way through
@@ -478,11 +480,11 @@ intensity.
 %% or conclusions.
 
 \subsection{Fitting the data}\label{sec:app:fit}
-Section \ref{???} describes two models of the Fourier power spectrum.
-These models are fit to the observed Fourier power spectrum as
-described in Section \ref{}.  \Fpa\ models are fit by first generating
-an estimate of the model parameters.  This estimate is used as an
-initial guess to a fitting routine.
+Section \ref{sec:anal} describes two models of the Fourier power
+spectrum that are fit to the observed Fourier power spectrum
+\Fpa\ models are fit by first generating an estimate of the model
+parameters.  This estimate is used as an initial guess to a fitting
+routine.
 
 The initial guess for model \ref{eqn:pwrlaw} is generated as follows.
 A power law index $n$ is estimated using the observed Fourier power
@@ -544,7 +546,8 @@ L=\prod_{j=1}^{N}p\left(I_{j}|S_{j}\right)
 \end{equation}
 The Nelder-Mead method was used to vary model parameters in search of
 the maximum of the log likelihood.  The full code used (and the
-history of its development) is availble as a git repository at
+history of its development) to generate the results in this paper is
+available as a git repository at
 https://github.com/wafels/rednoise/tree/perpixel.
 
 \subsection{Estimating the power-law index in a power law power
@@ -575,12 +578,53 @@ was found by finding calculating the value of $\ln p(n)$ in the range
 $n=0\rightarrow4$ with steps of 0.01 and finding the value of $n$ that
 maximized $\ln p(n)$.
 
-\subsection{Calculating the 95\% confidence level using the $\chi^{2}$
-analog}\label{sec:app:chi}
-
-
+\subsection{Calculating the 95\% confidence interval using the $\chi^{2}$
+analog}\label{sec:app:chi} The fitting process finds model parameter
+values that approximate the shape of the \Fps.  Noise in \Fps\ is
+exponentially distributed, and so the reduced-$\chi^{2}$ measure
+cannot be used to assess how well the model fits the
+data. \citet{2014ApJ...789..152N} derive an analogous
+reduced-$\chi^{2}$ for exponentially distributed data such as \Fpa.
+Expected values of the reduced-$\chi^{2}$ analogue are calculated by
+inverting Equation 18 of \citet{2014ApJ...789..152N} to make the
+reduced-$\chi^{2}$ analogue the subject of the equation.  The 95\%
+confidence interval is found by calculating the values of the
+reduced-$\chi^{2}$ analogue that exclude the top and bottom 2.5\% of
+the probability density function (Equation 18,
+\citet{2014ApJ...789..152N}).
 
 \subsection{Acceptable parameter limits}\label{sec:app:limit}
+Even after the filtering process described in Section \ref{sec:anal},
+the fitting algorithm still finds values which are probably outliers.
+In order to present the vast majority of the results, limits are set
+to the model parameters.  If any of the model parameters violate these
+limits, the model fit to the data is classed as a bad fit and is not
+considered further.  The table below lists the range of parameter
+values, and gives the percentage of the model fits which violate these
+limits as a function of AIA channel.  The fraction is calculated as
+the number of model fits that violate these limits divided by the
+total number of model fits.
+
+\begin{deluxetable}{cccccccc}
+\tabletypesize{\scriptsize} \tablecolumns{5} \tablewidth{0pt}
+\tablecaption{Acceptable parameter ranges and the fraction of model
+  fits that exceed the parameter ranges.  Section \ref{sec:anal} describe the meaning of each parameter value\label{tab:acceptable}}
+\tablehead{
+  \multicolumn{1}{c}{Parameter} & \multicolumn{1}{c}{Range} & \multicolumn{6}{c}{AIA channel}\\
+  \colhead{ } & \colhead{ } & \colhead{94\AA} & \colhead{131\AA} & \colhead{171\AA} & \colhead{193\AA}  & \colhead{211\AA} & \colhead{335\AA} \\ }
+\startdata 
+$A$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
+$n$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
+$C$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
+$\alpha$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
+$\log_{10}(\beta)$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
+$\log_{10}(\delta)$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
+\enddata
+%% Text for table notes should follow after the \enddata but before
+%% the \end{deluxetable}. Make sure there is at least one \tablenotemark
+%% in the table for each \tablenotetext.
+
+\end{deluxetable}
 
 
 

@@ -790,7 +790,7 @@ class Fit:
         """
         Find out where the good fits are.  Good fits are defined as those that
         have a reduced-chi-squared within the range defined by the input
-        p values, and a successful fit as defined by the fitting algorithm/
+        p values, and a successful fit as defined by the fitting algorithm.
 
         :param p_value: Two element object that has the lower and upper p values
         which are used to calculate corresponding reduced chi-squared values.
@@ -798,7 +798,10 @@ class Fit:
         mask = True indicates a BAD fit.  This can be passed directly into
         numpy's masked array.
         """
-        return self.good_rchi2_mask(p_value) * self.as_array("success")
+        return self.good_rchi2_mask(p_value) * self.fitting_algorithm_success()
+
+    def fitting_algorithm_success(self):
+        return self.as_array("success")
 
     def best_fit(self):
         """

@@ -7,7 +7,7 @@ focus on specific regions of interest.
 
 import os
 
-import cPickle as pickle
+import pickle
 
 from sunpy.time import parse_time
 import numpy as np
@@ -83,53 +83,7 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
     # co-ordinates.  These co-ordinates should be chosen in reference to the
     # time of the reference layer (layer_index).
     #
-
-    #
-    # Smaller cutouts, good for testing
-    #
-    """
-    regions = {"sunspot": {"llx": -335.0*u.arcsec, "lly": 0*u.arcsec, "width": 40*u.arcsec, "height": 32*u.arcsec},
-               "loop footpoints": {"llx": -492*u.arcsec, "lly": 0*u.arcsec, "width": 23*u.arcsec, "height": 22*u.arcsec},
-               "quiet Sun": {"llx": -200*u.arcsec, "lly": -45*u.arcsec, "width": 15*u.arcsec, "height": 26*u.arcsec},
-               "moss": {"llx": -400*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 25*u.arcsec}}
-    """
-
-    #
-    # Regions are difficult to recreate since the code has changed
-    # substantially. The plots are meant to be illustrative, so
-    #
-    regions = {"loop footpoints": {"llx": -470*u.arcsec, "lly": -10*u.arcsec, "width": 23*u.arcsec, "height": 32*u.arcsec},
-               "moss": {"llx": -380*u.arcsec, "lly": 25*u.arcsec, "width": 45*u.arcsec, "height": 22*u.arcsec}}
-    #region_most_of_fov = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec, "width": 340*u.arcsec, "height": 200*u.arcsec}}
-
-    #
-    # Most of field of view, good for large scale studies (Paper 2)
-    #
-
-
-    #regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
-    #                       "width": 340*u.arcsec, "height": 200*u.arcsec}}
-
-
-    """
-    regions = {"test_six_euv": {"llx": -470.0*u.arcsec, "lly": 0*u.arcsec,
-                           "width": 20*u.arcsec, "height": 25*u.arcsec}}
-    """
-
-    """
-    regions = {"most_of_fov": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
-                               "width": 340*u.arcsec, "height": 200*u.arcsec}}
-
-    regions = {"most_of_fov": {"llx": -460.0*u.arcsec, "lly": -70*u.arcsec,
-                               "width": 340*u.arcsec, "height": 150*u.arcsec}}
-
-    regions = {"four_wavebands": {"llx": -470.0*u.arcsec, "lly": -75*u.arcsec,
-                                  "width": 310*u.arcsec, "height": 180*u.arcsec}}
-    """
-
-
-    regions = calculate_region_information(regions)
-    #region_most_of_fov = calculate_region_information(region_most_of_fov)
+    regions = calculate_region_information(ds.regions)
 
     for region in regions:
         # Next region
@@ -200,34 +154,3 @@ for region in regions.keys():
 filepath = filepath + '.png'
 step1_plots.plot_regions(mc_layer, regions, filepath)
 
-
-"""
-#
-# HSR 2015 oscillations nanoflares
-#
-filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions')
-for region in regions.keys():
-    filepath = filepath + '.nanoflares.' + region
-filepath = filepath + '.png'
-mc_layer_submap = mc_layer.submap(region_most_of_fov['most_of_fov']['xrange'] * u.arcsec,
-                                  region_most_of_fov['most_of_fov']['yrange'] * u.arcsec)
-step1_plots.plot_regions_hsr2015_nanoflares(mc_layer_submap,
-                                            regions,
-                                            filepath)
-
-
-#
-# HSR 2015 oscillations
-#
-for region in regions.keys():
-    R = regions[region]
-    mc_layer_submap = mc_layer.submap(R['xrange'] * u.arcsec, R['yrange'] * u.arcsec)
-    step1_plots.plot_regions_hsr2015(mc_layer_submap, filepath + '.submap.png')
-
-#
-# Plot an average emission over the duration of the time-series.
-#
-    av_emission = np.mean(subdata, axis=2)
-    av_map = sunpy.map.Map(deepcopy(mc_layer_submap.meta), av_emission)
-    step1_plots.plot_regions_hsr2015(av_map, filepath + '.average_submap.png')
-"""
