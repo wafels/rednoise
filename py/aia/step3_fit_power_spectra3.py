@@ -4,24 +4,24 @@
 #
 # NOTE: USES VERSION 3 OF THE SPECTRAL MODELS
 #
-import cPickle as pickle
+import pickle
 import os
 
 import details_study as ds
-import rnspectralmodels3
+from tools import rnspectralmodels3
 
 # Wavelengths and regions we want to analyze
 #waves = ['171']
 #regions = ['test_six_euv']
 
 # Wavelengths and regions we want to analyze
-#waves = ['131', '171', '193', '211', '335', '94']
-#regions = ['six_euv']
+waves = ['131', '171', '193', '211', '335', '94']
+regions = ['six_euv']
 
 
 # Fall AGU 2015 Wavelengths and regions we want to analyze
-waves = ['171', '193']
-regions = ['six_euv']
+#waves = ['171', '193']
+#regions = ['six_euv']
 
 
 # Wavelengths and regions we want to analyze

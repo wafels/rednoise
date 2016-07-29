@@ -57,16 +57,17 @@ if study_type == 'paper2':
     sunlocation = 'disk'
     fits_level = '1.5'
     wave = '94'
-    #wave = '131'
-    #wave = '171'
-    #wave = '193'
-    #wave = '211'
-    #wave = '335'
+    wave = '131'
+    wave = '171'
+    wave = '193'
+    wave = '211'
+    wave = '335'
     cross_correlate = True
     derotate = True
     step0_output_information = ''
     step1_input_information = ''
     step1_output_information = ''
+    rn_processing = ''
     regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
 

@@ -4,8 +4,8 @@ Power Spectrum Models
 from copy import deepcopy
 import numpy as np
 import astropy.units as u
-import lnlike_model_fit
-import pstools
+from tools import lnlike_model_fit
+from tools import pstools
 import matplotlib.pyplot as plt
 
 
@@ -692,7 +692,7 @@ class Fit:
         self.result = [[None]*self.nx for i in range(self.ny)]
         for i in range(0, self.nx):
             if verbose == 1:
-                print "%s - now working on row %i out of %i" % (self.model.name, i, self.nx)
+                print("%s - now working on row %i out of %i" % (self.model.name, i, self.nx))
             for j in range(0, self.ny):
                 # Data to fit
                 observed_power = data[j, i, :]

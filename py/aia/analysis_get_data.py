@@ -8,7 +8,7 @@
 import os
 from copy import deepcopy
 import collections
-import cPickle as pickle
+import pickle
 import numpy as np
 from matplotlib.collections import PolyCollection
 from matplotlib.patches import Polygon
@@ -101,7 +101,7 @@ def get_region_submap(output, region_id, average_submap=False):
     region_submap = pickle.load(get_map_data)
     # Specific region information
     get_map_data.close()
-    print region_id + " region_submap: ",  region_submap.data.shape
+    print(region_id + " region_submap: ",  region_submap.data.shape)
 
     # Return the maps using the input data
     meta = deepcopy(region_submap.meta)

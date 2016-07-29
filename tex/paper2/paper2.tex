@@ -253,8 +253,8 @@ a single pixel is apodized using the Hanning window, reducing ringing
 effects in the \PS.  The full 12 second cadence is used, yielding time
 series of 1800 samples.  The full spatial resolution is also retained
 in order to obtain fine detail on the variation of frequency content
-as a function of location.  This yields $???\times???=???$ spectra per
-AIA channel for analysis.  
+as a function of location.  This yields $333\times566=188478$ spectra
+per AIA channel for analysis.
 
 Figure \ref{fig:compare171193} show example power spectra, plotted
 using a log-log scale, from a single location inside each of the
@@ -393,7 +393,6 @@ presented in Section \ref{ssec:nplps}.
 %% text to be printed in the second.
 
 \acknowledgments
-
 We are grateful to the developers of SSWIDL
 \citep{1998SoPh..182..497F}, IPython \citep{ipython}, SunPy
 \citep{mumford-proc-scipy-2013}, matplotlib
@@ -439,13 +438,12 @@ sun-center, image scale with solar north in the same direction.  All
 further processing from this point was performed using SunPy 0.7
 (http://www.sunpy.org) running under Python 3.5.  
 
-Images were
-de-rotated to compensate for solar rotation, based on the center of
-the field of view of each image.  After de-rotation, each image layer
-was coaligned with a reference layer, defined to be half way through
-the dataset, in this case at approximately 03:00 UT.  This process is
-required since the solar de-rotation function used does not fully
-compensate for all the solar rotation. Image coalignment was
+Images were de-rotated to compensate for solar rotation, based on the
+center of the field of view of each image.  After de-rotation, each
+image layer was coaligned with a reference layer, defined to be half
+way through the dataset, in this case at approximately 03:00 UT.  This
+process is required since the solar de-rotation function used does not
+fully compensate for all the solar rotation. Image coalignment was
 implemented using a template matching technique \citep{lewis1995fast}
 implemented by the {\it scikit-image} \citep{Vanderwalt2014} routine
 {\it match\_template}.  A rectangular template sub-image with sides

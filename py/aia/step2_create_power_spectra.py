@@ -4,20 +4,15 @@ Create power spectra and other summary statistics of the time-series at each
 pixel in each region.
 """
 import os
-
-import numpy as np
-import tsutils
-from timeseries import TimeSeries
-
-import cPickle as pickle
+import pickle
 from scipy.interpolate import interp1d
-
+import numpy as np
 import astropy.units as u
 
-from tstools import is_evenly_sampled
-from timeseries import TimeSeries
-
-import details_study as ds
+from tools import tsutils
+from tools.tstools import is_evenly_sampled
+from tools.timeseries import TimeSeries
+from aia import details_study as ds
 
 
 # Apply the window
@@ -38,17 +33,16 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['94', '131', '171', '193', '211', '335']
-regions = ['loop footpoints', 'moss']
+waves = ['94', '131', '193', '211', '335']
+# regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
 # regions = ['most_of_fov']
 # regions = ['four_wavebands']
-#regions = ['test_six_euv']
+# regions = ['test_six_euv']
 
-
-#waves = ['171']
-#regions = ['six_euv']
+# waves = ['171']
+regions = ['six_euv']
 
 # Apodization windows
 windows = ['hanning']

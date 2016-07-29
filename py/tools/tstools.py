@@ -5,7 +5,7 @@
 import numpy as np
 from astropy import units as u
 
-from timeseries import SampleTimes, Frequencies
+from tools.timeseries import TimeSeries
 
 
 # Normalized dimensionless times
@@ -14,7 +14,7 @@ def normalized_times(times, norm=None):
         normalization = times.dt.value
     else:
         normalization = norm.value
-    return SampleTimes(times.t.value / normalization * u.dimensionless_unscaled)
+    return Timeseries.SampleTimes(times.t.value / normalization * u.dimensionless_unscaled)
 
 
 # Get cadences
@@ -98,4 +98,4 @@ def normalized_freqs(f, norm=None):
         normalization = np.min(f.pf.value)
     else:
         normalization = norm.value
-    return Frequencies(f.value / normalization * u.dimensionless_unscaled)
+    return Timeseries.Frequencies(f.value / normalization * u.dimensionless_unscaled)
