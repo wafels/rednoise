@@ -17,14 +17,14 @@ in each channel.  This assumes that the original images in each AIA channel
 """
 
 import os
-import cPickle as pickle
+import pickle
 
 import numpy as np
 
 from sunpy.time import parse_time
 from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift, _default_fmap_function
-from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
+from sunpy.physics.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 import step0_plots
 import details_study as ds
 
@@ -73,7 +73,7 @@ times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 
 # Solar de-rotation and cross-correlation operations will be performed relative
 # to the map at this index.
-layer_index = len(mc) / 2
+layer_index = len(mc) // 2
 t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_index]
 filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
 #
