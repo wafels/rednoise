@@ -242,7 +242,19 @@ was acquired using the Lockheed Martin Solar Astrophysics cutout
 service at {\it http://lmsal.com/get\_aia\_data/}.  Six hours of image
 data in the time range 2012-09-23 00:00 - 06:00 UT, at the full 12
 second cadence, in EUV wavebands \allaiaeuv\ are used.  
-
+\begin{figure}
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_94.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_131.exact_map.six_euv.eps}
+}
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_171.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_193.exact_map.six_euv.eps}
+}
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_211.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_335.exact_map.six_euv.eps}
+}
+\caption{Example images from each of the AIA channels studied.}
+\label{fig:allimages}
+\end{figure}
 
 \section{Analysis}\label{sec:anal}
 The data in each AIA channel are co-aligned to remove solar rotation
@@ -305,7 +317,7 @@ Criterion (BIC) determine which model is substabtially preferred to
 another.  The model $M_{k}$ is preferred if
 \begin{equation}
 \label{eqn:bic}
-BIC_{k} - BIC_{j} \le -6, \forall j\ne k.
+BIC_{k} - BIC_{j} \le -6, \forall j \neq k.
 \end{equation}
 This selection criterion picks the model that is substantially better
 descriptions of the data compared to the other models used.  If no
@@ -320,7 +332,15 @@ are retained for further analysis.
 
 \begin{figure}
 \label{fig:spatialdistribution:preference}
-
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_94.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_131.exact_map.six_euv.eps}
+}
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_171.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_193.exact_map.six_euv.eps}
+}
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_211.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_335.exact_map.six_euv.eps}
+}
 \caption{Spatial distribution of model preference.}
 \end{figure}
 
@@ -328,7 +348,15 @@ are retained for further analysis.
 
 \begin{figure}
 \label{fig:spatialdistribution:powerlawindex}
-
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_94.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_131.exact_map.six_euv.eps}
+}
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_171.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_193.exact_map.six_euv.eps}
+}
+\centerline{
+\epsscale{0.8}\plottwo{paper2_six_euv_disk_1.5_211.exact_map.six_euv.eps}{paper2_six_euv_disk_1.5_335.exact_map.six_euv.eps}
+}
 \caption{Spatial distribution of the power law indices.  Power law
   indices are taken from either model $M_{1}$ or $M_{2}$, whichever
   model is preferred at each pixel (see Section \ref{sec:anal})}
@@ -351,7 +379,13 @@ are retained for further analysis.
 \begin{figure}
 \label{fig:spatialdistribution:gaussianamplitude}
 
-\caption{Spatial distribution of the Gaussian amplitude}
+\caption{Spatial distribution of the ratio $\max[P_{1}(\nu)/G(\nu)]$.}
+\end{figure}
+
+\begin{figure}
+\label{fig:spatialdistribution:gaussianamplitude}
+
+\caption{Spatial distribution of $\arg\max[P_{1}(\nu)/G(\nu)]$.}
 \end{figure}
 
 
@@ -380,6 +414,9 @@ reasons for the localized contribution component $G(\nu)$.  A
 hypothesis regarding the formation of this \PL\ spectrum is
 presented in Section \ref{ssec:nplps}.
 
+PSF removal
+
+De noising algorithms
 
 
 %% If you wish to include an acknowledgments section in your paper,
