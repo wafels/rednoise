@@ -548,8 +548,7 @@ history of its development) to generate the results in this paper is
 available as a git repository at
 https://github.com/wafels/rednoise/tree/perpixel.
 
-\subsection{Estimating the power-law index in a power law power
-  spectrum}\sec{sec:app:est}
+\subsection{Estimating the power-law index in a power law power spectrum}\label{sec:app:est}
 Equation \ref{eqn:freqprob:all} describes the likelihood of the
 observed Fourier power given a model for that power.  We assume that
 the observed power law spectrum can be modeled by a simple power law
@@ -569,6 +568,7 @@ p(n) \propto \int_{0}^{\infty} p(A) L dA.
 On integration,
 \begin{equation}
 \ln p(n) \propto n\sum_{j=1}^{N}\ln f_{j} - (N-m-1)\ln\left[\sum_{j=1}^{N}I_{j}f_{j}
+\right]
 \label{eqn:pnlog}
 \end{equation}
 For the purposes of this investigation, $m=0$ and an estimate to $n$
@@ -604,19 +604,19 @@ the number of model fits that violate these limits divided by the
 total number of model fits.
 
 \begin{deluxetable}{cccccccc}
-\tabletypesize{\scriptsize} \tablecolumns{5} \tablewidth{0pt}
+\tabletypesize{\scriptsize} \tablecolumns{8} \tablewidth{0pt}
 \tablecaption{Acceptable parameter ranges and the fraction of model
   fits that exceed the parameter ranges.  Section \ref{sec:anal} describe the meaning of each parameter value\label{tab:acceptable}}
 \tablehead{
   \multicolumn{1}{c}{Parameter} & \multicolumn{1}{c}{Range} & \multicolumn{6}{c}{AIA channel}\\
   \colhead{ } & \colhead{ } & \colhead{94\AA} & \colhead{131\AA} & \colhead{171\AA} & \colhead{193\AA}  & \colhead{211\AA} & \colhead{335\AA} \\ }
 \startdata 
-$A$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
-$n$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
-$C$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
-$\alpha$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
-$\log_{10}(\beta)$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
-$\log_{10}(\delta)$ & ???$\rightarrow$??? & 94 & 131 & 131 & 171 & 193 & 211 & 335 \\
+$A$ & ???$\rightarrow$??? & 94 & 131 & 171 & 193 & 211 & 335 \\
+$n$ & ???$\rightarrow$??? & 94 & 131 & 171 & 193 & 211 & 335 \\
+$C$ & ???$\rightarrow$??? & 94 & 131 & 171 & 193 & 211 & 335 \\
+$\alpha$ & ???$\rightarrow$??? & 94 & 131 & 171 & 193 & 211 & 335 \\
+$\log_{10}(\beta)$ & ???$\rightarrow$??? & 94 & 131 & 171 & 193 & 211 & 335 \\
+$\log_{10}(\delta)$ & ???$\rightarrow$??? & 94 & 131 & 171 & 193 & 211 & 335 \\
 \enddata
 %% Text for table notes should follow after the \enddata but before
 %% the \end{deluxetable}. Make sure there is at least one \tablenotemark
