@@ -24,7 +24,7 @@ def plot_exact_map(image, filepath, colorbar=True):
 
     print('Saving to {:s}'.format(filepath))
     if filepath is not None:
-        plt.savefig(filepath)
+        plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
     else:
         plt.show()
     return None

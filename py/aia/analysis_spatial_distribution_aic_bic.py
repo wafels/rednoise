@@ -19,7 +19,7 @@ import details_study as ds
 import details_analysis as da
 
 # Wavelengths we want to analyze
-waves = ['131']
+waves = ['171']
 
 # Regions we are interested in
 regions = ['six_euv']
@@ -195,7 +195,7 @@ for wave in waves:
                     save_filename = 'spatial_distrib.' + region_id + '.%s.%s.%s.eps' % (measure, str(this_ic_limit), mask_status)
                     filepath = os.path.join(image, save_filename)
                     print('Saving to ' + filepath)
-                    plt.savefig(filepath)
+                    plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
                     plt.close('all')
 
                     # Dump the data used to a pickle file
