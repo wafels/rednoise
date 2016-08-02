@@ -5,7 +5,7 @@ from copy import deepcopy
 import numpy as np
 import astropy
 import astropy.units as u
-import lnlike_model_fit
+from tools import lnlike_model_fit
 
 
 # Information criterion limit

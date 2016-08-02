@@ -16,11 +16,11 @@ class MaskDefine:
         #
 
         # Waves
-        self.waves = storage.keys()
+        self.waves = list(storage.keys())
         w0 = self.waves[0]
 
         # Regions
-        self.regions = storage[w0].keys()
+        self.regions = list(storage[w0].keys())
         r0 = self.regions[0]
 
         # Available models.  For the IC limit stuff to work the code is much

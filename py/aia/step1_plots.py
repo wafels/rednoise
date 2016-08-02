@@ -6,6 +6,30 @@ import analysis_get_data
 
 
 #
+#
+#
+def plot_exact_map(image, filepath, colorbar=True):
+
+    plt.close('all')
+    fig, ax = plt.subplots()
+    ret = image.plot()
+
+    # Get the sunspot outline
+    sunspot_outline = analysis_get_data.sunspot_outline()
+    _polygon, collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], image.date)
+    ax.add_collection(collection)
+    ax.autoscale_view()
+    if colorbar:
+        plt.colorbar()
+
+    print('Saving to {:s}'.format(filepath))
+    if filepath is not None:
+        plt.savefig(filepath)
+    else:
+        plt.show()
+    return None
+
+#
 # Make a plot with the locations of the regions
 #
 def plot_regions(image, regions, filepath):

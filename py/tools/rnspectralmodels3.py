@@ -7,7 +7,7 @@ import astropy.units as u
 from tools import lnlike_model_fit
 from tools import pstools
 import matplotlib.pyplot as plt
-
+import datetime
 
 #
 # Normalize the frequency
@@ -648,7 +648,7 @@ class Fit:
                  **kwargs):
 
         # Number of guesses to the fit
-        self.attempt_limit = 10
+        self.attempt_limit = 1
 
         # Frequencies
         self.f = f
@@ -692,7 +692,7 @@ class Fit:
         self.result = [[None]*self.nx for i in range(self.ny)]
         for i in range(0, self.nx):
             if verbose == 1:
-                print("%s - now working on row %i out of %i" % (self.model.name, i, self.nx))
+                print("%s: %s - now working on row %i out of %i" % (str(datetime.datetime.now()), self.model.name, i, self.nx))
             for j in range(0, self.ny):
                 # Data to fit
                 observed_power = data[j, i, :]

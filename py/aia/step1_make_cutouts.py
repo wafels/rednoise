@@ -142,10 +142,6 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
         hdulist.writeto(ofilename + '.fits', clobber=True)
 
 #
-# Save the regions
-#
-
-#
 # Plot where the regions are
 #
 filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions')
@@ -154,3 +150,16 @@ for region in regions.keys():
 filepath = filepath + '.png'
 step1_plots.plot_regions(mc_layer, regions, filepath)
 
+#
+# Plot a map of the extracted region
+#
+for region in ds.regions:
+    region_data = ds.regions[region]
+    range_x = (region_data['llx'].value, region_data['llx'].value + region_data['width'].value) * u.arcsec
+    range_y = (region_data['lly'].value, region_data['lly'].value + region_data['height'].value) * u.arcsec
+    exact_map = mc_layer.submap(range_x, range_y)
+    filepath = os.path.join(ds.save_locations['image'], ds.ident + '.exact_map')
+    for region in regions.keys():
+        filepath = filepath + '.' + region
+    filepath = filepath + '.eps'
+    step1_plots.plot_exact_map(exact_map, filepath)

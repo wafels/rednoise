@@ -15,7 +15,8 @@ from tools import rnspectralmodels3
 #regions = ['test_six_euv']
 
 # Wavelengths and regions we want to analyze
-waves = ['131', '171', '193', '211', '335', '94']
+# waves = ['131', '171', '193', '211', '335', '94']
+waves = ['171']
 regions = ['six_euv']
 
 
