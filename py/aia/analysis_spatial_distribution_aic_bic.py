@@ -19,7 +19,7 @@ import details_study as ds
 import details_analysis as da
 
 # Wavelengths we want to analyze
-waves = ['171']
+waves = ['131']
 
 # Regions we are interested in
 regions = ['six_euv']
