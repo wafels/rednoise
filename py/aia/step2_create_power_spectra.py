@@ -14,6 +14,8 @@ from tools.tstools import is_evenly_sampled
 from tools.timeseries import TimeSeries
 from aia import details_study as ds
 
+import matplotlib.pyplot as plt
+
 
 # Apply the window
 def apply_window(d, win):
@@ -33,7 +35,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['94', '131', '193', '211', '335']
+waves = ['171', '94', '131', '193', '211', '335']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -179,6 +181,10 @@ for iwave, wave in enumerate(waves):
                     # Multiply the data by the apodization window
                     d_with_window = apply_window(d, win)
 
+                    #plt.plot(d, label='original data')
+                    #plt.plot(d_with_window, label='with window')
+                    #plt.show()
+
                     # Get the Fourier transform
                     this_fft = np.fft.fft(d_with_window)
 
@@ -187,6 +193,10 @@ for iwave, wave in enumerate(waves):
 
                     # Store the individual Fourier power
                     pwr[j, i, :] = this_power
+
+                    #plt.plot(tsdummy.FFTPowerSpectrum.frequencies.frequencies.value, ((np.abs(this_fft) ** 2) / (1.0 * nt)))
+                    #plt.plot(pfrequencies.value, this_power)
+                    #plt.show()
 
                     # Store the full FFT
                     all_fft[j, i, :] = this_fft

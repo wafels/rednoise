@@ -54,7 +54,7 @@ frequency_parameters = ['lognormal position']
 
 # Color choices for the spatial plots
 spatial_plots = {'sunspot outline': 'w',
-                 'color table': cm.Set2,
+                 'color table': cm.Set2,  # cm.viridis,
                  'bad value': 'black'}
 
 fontsize = 20

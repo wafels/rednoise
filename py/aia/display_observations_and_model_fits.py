@@ -2,12 +2,12 @@
 # Step 3.  Load in the FFT power spectra and fit models.  Decide which one
 # fits best.  Save the results.
 #
-import cPickle as pickle
+import pickle
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-import rnspectralmodels2
+from tools import rnspectralmodels3
 import analysis_get_data
 import details_study as ds
 import details_analysis as da
@@ -15,7 +15,7 @@ import details_plots as dp
 import analysis_explore
 
 # Paper 2: Wavelengths and regions we want to analyze
-waves = ['131', '171', '193', '211', '335', '94']
+waves = ['193'] #, '193', '211', '335', '94']
 regions = ['six_euv']
 
 # Wavelengths and regions we want to analyze
@@ -23,10 +23,10 @@ regions = ['six_euv']
 #regions = ['sunspot', 'quiet Sun']
 
 # Paper 3: BM3D Wavelengths and regions we want to analyze
-waves = ['171']
-regions = ['six_euv']
-waves = ['171']
-regions = ['test_six_euv']
+#waves = ['171']
+#regions = ['six_euv']
+#waves = ['171']
+#regions = ['test_six_euv']
 
 # Number of locations to print out
 n_locations = 10
@@ -44,13 +44,14 @@ ic_types = da.ic_details.keys()
 windows = ['hanning']
 
 # Models to fit
-these_models = [rnspectralmodels2.PowerLawPlusConstantPlusLognormal(),
-                rnspectralmodels2.PowerLawPlusConstant()]
+these_models = [rnspectralmodels3.PowerLawPlusConstantPlusLognormal(),
+                rnspectralmodels3.PowerLawPlusConstant()]
 n_models = len(these_models)
 
 # Load the model fits
 storage = analysis_get_data.get_all_data(waves=waves,
-                                         regions=regions)
+                                         regions=regions,
+                                         spectral_model='.rnspectralmodels3')
 
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)
@@ -139,12 +140,34 @@ for iwave, wave in enumerate(waves):
 
                 # Set up the plot
                 plt.close('all')
-                plt.loglog(f, pwr[this_y, this_x, :], label='observed power spectrum')
+                this_pwr = pwr[this_y, this_x, :]
+                plt.loglog(f, this_pwr, label='observed power spectrum', color='k')
 
                 # Go through each model and plot its components, and its sum
-                for model in available_models:
+                this_linestyle = ['dotted', 'dashed']
+                for this_model, model in enumerate(available_models):
+                    # Best fit for each model
                     plt.loglog(f, best_fits[model][this_y, this_x],
-                               label='%s, BIC=%f' % (model, bics[model][this_y, this_x]))
+                               label='%s, BIC=%f' % (model, bics[model][this_y, this_x]),
+                               linestyle=this_linestyle[this_model])
+
+                    # Plot the individual components
+                    fn = storage[wave][region][model].fn
+                    fit_parameters = storage[wave][region][model].result[this_y][this_x][1]['x']
+                    spectral_components = storage[wave][region][model].model.components
+                    for component in spectral_components:
+                        component_model = component[0]
+                        component_model_parameter_indices = component[1]
+                        component_fit_parameters = fit_parameters[component_model_parameter_indices[0]:component_model_parameter_indices[1]]
+                        print('Component name = ', component_model.name)
+                        print('Component fit parameters = ', component_fit_parameters)
+                        component_power = component_model.power(component_fit_parameters, fn)
+                        if component_model.name == 'Constant':
+                            plt.loglog(f, component_power*np.ones(len(f)), label='%s:%s:%s' % (model, component_model.name, str(component_fit_parameters)),
+                                       linestyle=this_linestyle[this_model])
+                        else:
+                            plt.loglog(f, component_power, label='%s:%s:%s' % (model, component_model.name, str(component_fit_parameters)),
+                                       linestyle=this_linestyle[this_model])
 
                 plt.axvline((1.0/five_minutes.position).to(fz).value,
                             color=five_minutes.color,
@@ -160,11 +183,12 @@ for iwave, wave in enumerate(waves):
                 plt.xlabel('frequency (%s)' % fz)
                 plt.ylabel('power (arb. units)')
                 plt.title(title)
-                plt.legend(fontsize=9, framealpha=0.5)
+                plt.legend(fontsize=9, framealpha=0.5, loc=3)
+                plt.ylim(np.min(this_pwr)/100.0, np.max(this_pwr)*100.0)
                 plt.tight_layout()
 
                 final_filename = dp.concat_string([plot_type, title]) + '.png'
                 # Dump the results as an image file
                 final_filepath = os.path.join(image, final_filename)
-                print 'Saving to %s' % final_filepath
-                plt.savefig(final_filepath)
+                print('Saving to %s' % final_filepath)
+                plt.savefig(final_filepath, bbox_inches='tight', pad_inches=0)

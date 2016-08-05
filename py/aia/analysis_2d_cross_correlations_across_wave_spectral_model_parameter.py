@@ -17,16 +17,12 @@ import details_analysis as da
 
 
 # Paper 2
-waves = ['94', '131', '171', '193', '211', '335']
-#waves = ['171', '193']
+# waves = ['94', '131', '171', '193', '211', '335']
+waves = ['171', '193']
 regions = ['six_euv']
 
-
-# Fall AGU 2015 (Paper 2)
-#waves = ['131', '335']
-#regions = ['six_euv']
-limit_type = 'agu2015'
-appended_name = None#'_keep_incase_fallagu2015'
+limit_type = 'standard'
+appended_name = None
 
 # Apodization windows
 windows = ['hanning']
@@ -55,7 +51,8 @@ bins = 50
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=model_names,
-                                         appended_name=appended_name)
+                                         appended_name=appended_name,
+                                         spectral_model='.rnspectralmodels3')
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
 # Plot cross-correlations across different AIA channels

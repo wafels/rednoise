@@ -25,7 +25,7 @@ class MaskDefine:
 
         # Available models.  For the IC limit stuff to work the code is much
         # easier if the results at the model level are stored as OrderedDict.
-        self.available_models = storage[w0][r0].keys()
+        self.available_models = list(storage[w0][r0].keys())
 
         # Common parameters in all models
 

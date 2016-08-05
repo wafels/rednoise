@@ -3,7 +3,7 @@
 # analysis_3d_fft.py
 #
 import os
-import cPickle as pickle
+import pickle
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 import matplotlib.pyplot as plt
@@ -166,7 +166,7 @@ def ratio_power(source1, source2, log_y_axis=True, log_x_axis=True,
     max_alfven_freq_index = 0
     while alfven_line[max_alfven_freq_index] < np.max(spm):
         max_alfven_freq_index += 1
-    print wn[max_alfven_freq_index/2], alfven_line[max_alfven_freq_index/2]
+    print(wn[max_alfven_freq_index/2], alfven_line[max_alfven_freq_index/2])
     ax.text(0.1, 1.0,
             r'$<v_{A}$', color=alfven_color, zorder=100, fontsize=24, fontweight='bold', horizontalalignment='right')
     ax.text(0.007, 15.0,

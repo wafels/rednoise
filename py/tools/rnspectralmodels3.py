@@ -2,12 +2,27 @@
 Power Spectrum Models
 """
 from copy import deepcopy
+import datetime
 import numpy as np
+from scipy.optimize import curve_fit
 import astropy.units as u
 from tools import lnlike_model_fit
 from tools import pstools
-import matplotlib.pyplot as plt
-import datetime
+
+#
+# Magic numbers.  These frequency limits correspond to
+# 0.1 mHz to 10 mHz when we use 6 hours of AIA data, corresponding
+# to 1800 frames at 12 second cadence.
+#
+magic_number_lognormal_position_normalized_frequency_lower_limit = 21.0
+magic_number_lognormal_position_normalized_frequency_upper_limit = 215.0
+
+#
+# These magic numbers cover the width of the lognormal.
+#
+magic_number_lognormal_width_lower_limit = 0.01
+magic_number_lognormal_width_upper_limit = 0.5
+
 
 #
 # Normalize the frequency
@@ -323,6 +338,7 @@ class Variable:
         # Astropy unit of the variable after conversion
         self.converted_unit = converted_unit
 
+
 #
 # Specific variable types.
 #
@@ -360,6 +376,49 @@ class Spectrum:
         pass
 
     def guess(self, a, f):
+        pass
+
+
+class CompoundSpectrum:
+    def __init__(self, components):
+        self.name = ''
+        self.variables = []
+        self.components = components
+
+        for component in self.components:
+            # Get the spectrum model
+            spectrum = component[0]
+
+            # Update the name
+            self.name = self.name + spectrum.name + ' + '
+
+            # Update the variable list
+            for variable in spectrum.variables:
+                self.variables.append(variable)
+
+        # Remove the last ' + '
+        self.name = self.name[:-3]
+
+    # Calculate the power in each component.  Useful for plotting out the
+    # individual components, ratios, etc
+    def power_per_component(self, a, f):
+        ppc = []
+        for component in self.components:
+            spectrum = component[0]
+            variables = a[component[1][0]: component[1][1]]
+            ppc.append(spectrum.power(variables, f))
+        return ppc
+
+    # Return the total power
+    def power(self, a, f):
+        ppc = self.power_per_component(a, f)
+        total_power = np.zeros_like(f)
+        for power in range(0, len(self.components)):
+            total_power += ppc[power]
+        return total_power
+
+    # Subclassed for any particular power law
+    def guess(self, f, data):
         pass
 
 
@@ -441,67 +500,6 @@ class Lognormal(Spectrum):
         return lognormal(a, f)
 
 
-class SumOfPulses(Spectrum):
-    def __init__(self):
-
-        pulse_power_amplitude = LnVariable('pulse power amplitude', 'A_{P}')
-        scale_frequency = FrequencyVariable(r"$\nu_{scale}$")
-        power_law_index = Variable('power law index',
-                                   no_conversion,
-                                   r'$n$',
-                                   u.dimensionless_unscaled)
-
-        Spectrum.__init__(self, 'Sum of pulses', [pulse_power_amplitude,
-                                                  scale_frequency,
-                                                  power_law_index])
-
-    def power(self, a, f):
-        return lognormal(a, f)
-
-
-class CompoundSpectrum:
-    def __init__(self, components):
-        self.name = ''
-        self.variables = []
-        self.components = components
-
-        for component in self.components:
-            # Get the spectrum model
-            spectrum = component[0]
-
-            # Update the name
-            self.name = self.name + spectrum.name + ' + '
-
-            # Update the variable list
-            for variable in spectrum.variables:
-                self.variables.append(variable)
-
-        # Remove the last ' + '
-        self.name = self.name[:-3]
-
-    # Calculate the power in each component.  Useful for plotting out the
-    # individual components, ratios, etc
-    def power_per_component(self, a, f):
-        ppc = []
-        for component in self.components:
-            spectrum = component[0]
-            variables = a[component[1][0]: component[1][1]]
-            ppc.append(spectrum.power(variables, f))
-        return ppc
-
-    # Return the total power
-    def power(self, a, f):
-        ppc = self.power_per_component(a, f)
-        total_power = np.zeros_like(f)
-        for power in range(0, len(self.components)):
-            total_power += ppc[power]
-        return total_power
-
-    # Subclassed for any particular power law
-    def guess(self, f, data):
-        pass
-
-
 class PowerLawPlusConstant(CompoundSpectrum):
     def __init__(self):
         CompoundSpectrum.__init__(self, ((PowerLaw(), (0, 2)),
@@ -530,19 +528,20 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
                                          (Constant(), (2, 3)),
                                          (Lognormal(), (3, 6))))
 
-        self.amp_range = [0, 5],
-        self.index_range = [0, 50],
-        self.background_range = [-50, -1],
-        self.f_lower_limit = 21.0,
-        self.f_upper_limit = 200.0,
-        self.sufficient_frequencies = 10,
+        self.amp_range = [0, 5]
+        self.index_range = [0, 50]
+        self.background_range = [-50, -1]
+        self.f_lower_limit = magic_number_lognormal_position_normalized_frequency_lower_limit
+        self.f_upper_limit = magic_number_lognormal_position_normalized_frequency_upper_limit
+        self.width_lower_limit = magic_number_lognormal_width_lower_limit
+        self.width_upper_limit = magic_number_lognormal_width_upper_limit
+        self.sufficient_frequencies = 10
         self.initial_log_width = 0.1
 
     def acceptable_fit(self, a):
-        if (np.log(self.f_lower_limit) <= a[4]) and (np.log(self.f_upper_limit) >= a[4]):
-            return True
-        else:
-            return False
+        center_condition = (np.log(self.f_lower_limit) <= a[4]) and (np.log(self.f_upper_limit) >= a[4])
+        width_condition = (self.width_lower_limit <= a[5]) and (self.width_lower_limit >= a[5])
+        return center_condition and width_condition
 
     def vary_guess(self, a):
         new_a = deepcopy(a)
@@ -556,12 +555,24 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
 
     def guess(self, f, power):
 
+        # Initial estimate for the background power law power spectrum
         log_amplitude, index_estimate, log_background = PowerLawPlusConstant().guess(f, power)
 
         # Should use the above guess to seed a fit for PowerLawPlusConstant
         # based on the excluded estimated location of the lognormal
         background_spectrum = PowerLawPlusConstant().power([log_amplitude, index_estimate, log_background], f)
 
+        # Define a default guess if we can't fit a lognormal
+        default_guess = [log_amplitude, index_estimate, log_background,
+                         -100.0,
+                         0.5 * (np.log(self.f_lower_limit) + np.log(self.f_upper_limit)),
+                         self.initial_log_width]
+
+        # Sanity check on the default guess
+        if not self.acceptable_fit(default_guess):
+            return ValueError('The default guess does not satisfy the acceptable fit criterion.')
+
+        # Let's see if we can fit a lognormal
         # Difference between the data and the model
         diff0 = power - background_spectrum
 
@@ -575,69 +586,24 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
         # Which data to fit
         fit_here = positive_index * f_above * f_below
 
-        # If there is sufficient positive data
+        # If there is sufficient positive data indicating a bump, try fitting a lognormal distribution.
+        # If the fit is not acceptable, return the default guess.
+        # If there is insufficient positive data, return the default guess.
+        # If the fit fails
         if np.sum(fit_here) > self.sufficient_frequencies:
-            diff1 = diff0[fit_here]
-            f1 = f[fit_here]
-            amp = np.log(np.max(diff1))
-            pos = np.log(f1[np.argmax(diff1)])
-            pp = pos - np.log(f1)
-            log_width_estimate = np.sqrt(np.sum(diff1 * pp**2)/np.sum(diff1))
-            initial_guess = [log_amplitude, index_estimate, log_background, amp, pos, log_width_estimate]
+            positive_data = np.log(diff0[fit_here])
+            frequencies_of_positive_data = np.log(f[fit_here])
+            try:
+                popt, pcov = curve_fit(lognormal_CF, frequencies_of_positive_data, positive_data)
+                initial_guess = [log_amplitude, index_estimate, log_background, popt[0], popt[1], popt[2]]
+                if not self.acceptable_fit(initial_guess):
+                    return default_guess
+                else:
+                    return initial_guess
+            except ValueError or RuntimeError:
+                    return default_guess
         else:
-            initial_guess = [log_amplitude, index_estimate, log_background,
-                             -100.0,
-                             0.5 * (np.log(self.f_lower_limit) + np.log(self.f_upper_limit)),
-                             self.initial_log_width]
-        return initial_guess
-
-
-class BrokenPowerLawPlusConstant(CompoundSpectrum):
-    def __init__(self):
-        CompoundSpectrum.__init__(self, ((BrokenPowerLaw(), (0, 4)),
-                                         (Constant(), (4, 5))))
-
-    def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
-              background_range=[-50, -1], f_lower_limit=50.0,
-              f_upper_limit=200.0, break_estimate=21):
-
-        # Estimate the spectrum below the break estimate
-        below_log_amplitude, below_index_estimate, below_log_background =\
-            PowerLawPlusConstant().guess(f[0:break_estimate], power[0:break_estimate])
-
-        # Estimate the spectrum above the break estimate
-        above_log_amplitude, above_index_estimate, above_log_background =\
-            PowerLawPlusConstant().guess(f[break_estimate:], power[break_estimate:])
-
-        initial_guess = [below_log_amplitude, below_index_estimate,
-                         break_estimate,
-                         above_index_estimate, above_log_background]
-
-        return initial_guess
-
-
-class SumOfPulsesPlusConstant(CompoundSpectrum):
-    def __init__(self):
-        CompoundSpectrum.__init__(self, ((SumOfPulses(), (0, 3)),
-                                         (Constant(), (3, 4))))
-
-    def guess(self, f, power, amp_range=[0, 5], index_range=[0, 50],
-              background_range=[-50, -1], f_lower_limit=50.0,
-              f_upper_limit=200.0, break_estimate=21):
-
-        # Estimate the spectrum below the break estimate
-        below_log_amplitude, below_index_estimate, below_log_background =\
-            PowerLawPlusConstant().guess(f[0:break_estimate], power[0:break_estimate])
-
-        # Estimate the spectrum above the break estimate
-        above_log_amplitude, above_index_estimate, above_log_background =\
-            PowerLawPlusConstant().guess(f[break_estimate:], power[break_estimate:])
-
-        initial_guess = [below_log_amplitude, below_index_estimate,
-                         break_estimate,
-                         above_index_estimate, above_log_background]
-
-        return initial_guess
+            return default_guess
 
 
 #
@@ -697,14 +663,21 @@ class Fit:
                 # Data to fit
                 observed_power = data[j, i, :]
 
-                # Initial guess
+                # Initial guess should always satisfy the acceptable fit criterion
+                # as defined in the model.
                 guess = self.model.guess(self.fn, observed_power, **kwargs)
+
+                # We want to ensure that at least one fit is attempted using the
+                # initial guess.  To do this, the acceptable fit property is set
+                # to False.
                 self.acceptable_fit_found = False
-                n_attempts = 0
                 this_guess = deepcopy(guess)
 
+                # Number of attempts to fit the model to the spectrum
+                n_attempts = 0
+
                 # Vary the initial guess until a good fit is found up to a
-                # limited number of attempts
+                # limited number of attempts.
                 while (n_attempts <= self.attempt_limit) and not self.acceptable_fit_found:
                     result = lnlike_model_fit.go(self.fn,
                                                  observed_power,

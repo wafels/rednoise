@@ -57,6 +57,9 @@ limits["high_lognormal_width_freq_less_than_5_minutes"]["lognormal position"] = 
 limits["agu2015"] = deepcopy(limits["standard"])
 limits["agu2015"]["power law index"] = [1.0, 5.0] * u.dimensionless_unscaled
 
+limits["low_n"] = deepcopy(limits["standard"])
+limits["low_n"]["power law index"] = [0.0, 2.5] * u.dimensionless_unscaled
+
 
 # Number of parameters
 def nparameters(model_names):

@@ -4,8 +4,7 @@
 # selected by the information criterion is selected, and its value is plotted.
 #
 import os
-import datetime
-import cPickle as pickle
+import pickle
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
@@ -20,7 +19,8 @@ import details_plots as dp
 
 # Paper 2
 # Wavelengths we want to cross correlate
-waves = ['131', '171', '193', '211', '335', '94']
+# waves = ['131', '171', '193', '211', '335', '94']
+waves = ['171', '193']
 regions = ['six_euv']
 
 # Paper 3
@@ -33,6 +33,7 @@ regions = ['six_euv']
 # regions = ['most_of_fov']
 
 limit_type = 'standard'
+limit_type = 'low_n'
 
 # Apodization windows
 windows = ['hanning']
@@ -60,7 +61,8 @@ fontsize = dp.fontsize
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
-                                         model_names=model_names)
+                                         model_names=model_names,
+                                         spectral_model='.rnspectralmodels3')
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
@@ -216,7 +218,8 @@ for ic_type in ic_types:
                     #ret.axes.set_title('%s\n%s' % (label, subtitle))
                     title = label + r'$_{%s}$' % wave
                     #ret.axes.set_title(title + '\n[%s]' % percent_used_string, fontsize=fontsize)
-                    map_title = title + '\n%s of all pixels' % percent_used_string
+                    #map_title = title + '\n%s of all pixels' % percent_used_string
+                    map_title = 'AIA ' + wave + ' Angstrom\n' + label
                     ret.axes.set_title(map_title, fontsize=fontsize)
                     #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
                     #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
@@ -237,9 +240,9 @@ for ic_type in ic_types:
                     final_filename = dp.concat_string([plot_type,
                                                        plot_identity_filename,
                                                        subtitle_filename])
-                    filepath = os.path.join(image, final_filename + '.png')
+                    filepath = os.path.join(image, final_filename + '.eps')
                     print('Saving to ' + filepath)
-                    plt.savefig(filepath)
+                    plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
 
                     # Save the map to a file for later use
                     final_pickle_filepath = os.path.join(output,

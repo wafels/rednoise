@@ -17,7 +17,7 @@ import details_analysis as da
 
 # Paper 2 - Wavelengths we want to cross correlate
 #waves = ['131', '171', '193', '211', '94', '335']
-waves = ['171']
+waves = ['335']
 regions = ['six_euv']
 
 # Paper 3
@@ -38,7 +38,7 @@ windows = ['hanning']
 model_names = ('Power Law + Constant',
                'Power Law + Constant + Lognormal')
 
-limit_type = 'standard'
+limit_type = 'fallagu2015'
 appended_name = None#'_keep_incase_fallagu2015'
 spectral_model = '.rnspectralmodels3'
 
