@@ -131,59 +131,63 @@ for iwave, wave in enumerate(waves):
             log10_pwr_mean = np.zeros((nf,))
             log10_pwr_median = np.zeros_like(log10_pwr_mean)
             log10_pwr_mode = np.zeros_like(log10_pwr_mean)
-            for this_f_index in range(0, nf):
-                log10_pwr = np.log10(pwr[:, :, this_f_index])
-                log10_pwr_mean[this_f_index] = np.nanmean(log10_pwr)
-                log10_pwr_median[this_f_index] = np.nanmedian(log10_pwr)
-                hist, bin_edges = np.histogram(log10_pwr,
-                                               bins=hist_bins,
-                                               range=hist_range)
-                log10_pwr_mode[this_f_index] = 0.5*(bin_edges[np.argmax(hist[:])] + bin_edges[np.argmax(hist[:]+1)] )
-                pwr_hist[:, this_f_index] = hist[:] / np.max(hist[:])
-            spm = bin_edges[0:hist_bins]
-            fig, ax = plt.subplots()
-            if log_y_axis:
-                yformatter = plt.FuncFormatter(dp.log_10_product)
-                ax.set_yscale('log')
-                ax.yaxis.set_major_formatter(yformatter)
-            if log_x_axis:
-                xformatter = plt.FuncFormatter(dp.log_10_product)
-                ax.set_xscale('log')
-                ax.xaxis.set_major_formatter(xformatter)
-            #
-            # Should also include a contour at powers_ratio = 1.0 to guide the eye
-            # as to where the power ratio goes from above 1 (more power in the first
-            # source) to less power (more power in the second source).
-            #
-            vmin = hist_range[0]
-            vmax = hist_range[1]
-            cax = ax.pcolormesh(f, spm, pwr_hist, cmap=cm.viridis)
+            for regular_subregion in regular_subregions:
+                x_regular_subregion =regular_subregion['x']
+                y_regular_subregion =regular_subregion['y']
 
-            log10_pwr_mean_line = ax.plot(f, log10_pwr_mean, color='r', label='mean(log10(power))')
-            log10_pwr_median_line = ax.plot(f, log10_pwr_median, color='r', linestyle='dashed', label='median(log10(power))')
-            log10_pwr_mode_line = ax.plot(f, log10_pwr_mode, color='r', linestyle='dashdot', label='mode(log10(power))')
+                for this_f_index in range(0, nf):
+                    log10_pwr = np.log10(pwr[y_regular_subregion, x_regular_subregion, this_f_index])
+                    log10_pwr_mean[this_f_index] = np.nanmean(log10_pwr)
+                    log10_pwr_median[this_f_index] = np.nanmedian(log10_pwr)
+                    hist, bin_edges = np.histogram(log10_pwr,
+                                                   bins=hist_bins,
+                                                   range=hist_range)
+                    log10_pwr_mode[this_f_index] = 0.5*(bin_edges[np.argmax(hist[:])] + bin_edges[np.argmax(hist[:]+1)] )
+                    pwr_hist[:, this_f_index] = hist[:] / np.max(hist[:])
+                spm = bin_edges[0:hist_bins]
+                fig, ax = plt.subplots()
+                if log_y_axis:
+                    yformatter = plt.FuncFormatter(dp.log_10_product)
+                    ax.set_yscale('log')
+                    ax.yaxis.set_major_formatter(yformatter)
+                if log_x_axis:
+                    xformatter = plt.FuncFormatter(dp.log_10_product)
+                    ax.set_xscale('log')
+                    ax.xaxis.set_major_formatter(xformatter)
+                #
+                # Should also include a contour at powers_ratio = 1.0 to guide the eye
+                # as to where the power ratio goes from above 1 (more power in the first
+                # source) to less power (more power in the second source).
+                #
+                vmin = hist_range[0]
+                vmax = hist_range[1]
+                cax = ax.pcolormesh(f, spm, pwr_hist, cmap=cm.viridis)
 
-            power_label = r'log10(power) [range={:f}$\rightarrow${:f}]'.format(spm[0], spm[-1])
-            frequency_label = r'frequency ({:s}) [range={:f}$\rightarrow${:f}]'.format(dp.fz, f[0], f[-1])
-            ax.set_ylabel(power_label)
-            ax.set_xlabel(frequency_label)
-            ax.set_xlim(f[0], f[-1])
-            ax.set_ylim(spm[0], spm[-1])
-            ax.set_title("All power")
-            f5 = ax.axvline(dp.five_minutes.frequency.to(dp.fz).value,
-                            linestyle=dp.five_minutes.linestyle,
-                            color=dp.five_minutes.color, zorder=99,
-                            label=dp.five_minutes.label)
-            f3 = ax.axvline(dp.three_minutes.frequency.to(dp.fz).value,
-                            linestyle=dp.three_minutes.linestyle,
-                            color=dp.three_minutes.color, zorder=99,
-                            label=dp.three_minutes.label)
-            cb = fig.colorbar(cax, label='relative number')
-            legend = ax.legend(loc='lower left', fontsize=10.0, framealpha=0.9)
+                log10_pwr_mean_line = ax.plot(f, log10_pwr_mean, color='r', label='mean(log10(power))')
+                log10_pwr_median_line = ax.plot(f, log10_pwr_median, color='r', linestyle='dashed', label='median(log10(power))')
+                log10_pwr_mode_line = ax.plot(f, log10_pwr_mode, color='r', linestyle='dashdot', label='mode(log10(power))')
 
-            final_filename = dp.concat_string([plot_type, wave]) + '.png'
-            # Dump the results as an image file
-            final_filepath = os.path.join(image, final_filename)
-            print('Saving to %s' % final_filepath)
-            #plt.show()
-            plt.savefig(final_filepath, bbox_inches='tight', pad_inches=0)
+                power_label = r'log10(power) [range={:f}$\rightarrow${:f}]'.format(spm[0], spm[-1])
+                frequency_label = r'frequency ({:s}) [range={:f}$\rightarrow${:f}]'.format(dp.fz, f[0], f[-1])
+                ax.set_ylabel(power_label)
+                ax.set_xlabel(frequency_label)
+                ax.set_xlim(f[0], f[-1])
+                ax.set_ylim(spm[0], spm[-1])
+                ax.set_title("All power")
+                f5 = ax.axvline(dp.five_minutes.frequency.to(dp.fz).value,
+                                linestyle=dp.five_minutes.linestyle,
+                                color=dp.five_minutes.color, zorder=99,
+                                label=dp.five_minutes.label)
+                f3 = ax.axvline(dp.three_minutes.frequency.to(dp.fz).value,
+                                linestyle=dp.three_minutes.linestyle,
+                                color=dp.three_minutes.color, zorder=99,
+                                label=dp.three_minutes.label)
+                cb = fig.colorbar(cax, label='relative number')
+                legend = ax.legend(loc='lower left', fontsize=10.0, framealpha=0.9)
+
+                final_filename = dp.concat_string([plot_type, wave]) + '.png'
+                # Dump the results as an image file
+                final_filepath = os.path.join(image, final_filename)
+                print('Saving to %s' % final_filepath)
+                #plt.show()
+                plt.savefig(final_filepath, bbox_inches='tight', pad_inches=0)

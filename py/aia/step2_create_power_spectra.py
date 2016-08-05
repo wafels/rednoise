@@ -35,7 +35,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['171', '94', '131', '193', '211', '335']
+waves = ['94', '131', '171', '193', '211', '335']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -136,6 +136,9 @@ for iwave, wave in enumerate(waves):
             # Storage - Fourier power
             pwr = np.zeros((ny, nx, nposfreq))
 
+            # Storage - Fourier power
+            pwr_rel = np.zeros_like(pwr)
+
             # Storage - sum of log of relative intensity
             drel_power = np.zeros(nposfreq)
 
@@ -208,6 +211,7 @@ for iwave, wave in enumerate(waves):
                     d_relative_change_with_window = apply_window(d_relative_change, win)
                     this_fft_relative_change_with_window = np.fft.fft(d_relative_change_with_window)
                     this_power_relative_change_with_window = ((np.abs(this_fft_relative_change_with_window) ** 2) / (1.0 * nt))[pindex]
+                    pwr_rel[j, i, :] = this_power_relative_change_with_window[:]
 
                     # ---
                     # Ireland et al (2015) summation
@@ -229,6 +233,15 @@ for iwave, wave in enumerate(waves):
             f = open(filepath, 'wb')
             pickle.dump(pfrequencies, f)
             pickle.dump(pwr, f)
+            f.close()
+
+            # Save the Fourier power of the relative intensities
+            ofilename = ofilename + '.' + window
+            filepath = os.path.join(output, ofilename + '.fourier_power_relative.pkl')
+            print('Saving power spectra to ' + filepath)
+            f = open(filepath, 'wb')
+            pickle.dump(pfrequencies, f)
+            pickle.dump(pwr_rel, f)
             f.close()
 
             # Save the FFT of the analyzed time-series
