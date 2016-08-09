@@ -43,6 +43,9 @@ save_locations = ds.save_locations
 # Identity of the data
 ident = ds.ident
 
+# Which files in particular to put in to the mapcube
+file_list_index = ds.file_list_index
+
 # Load in the derotated data into a datacube
 print('Acquiring data from ' + aia_data_location)
 
@@ -55,12 +58,19 @@ for f in directory_listing:
     else:
         print('File that does not end in ".fits" detected, and not included in list = %s ' %f)
 
-print("Number of files = %i" % len(list_of_data))
+print("Number of files found = %i" % len(list_of_data))
+start_index = file_list_index[0]
+if file_list_index[1] == -1:
+    end_index = len(list_of_data)-1
+else:
+    end_index = file_list_index[1]
+index_string = str(start_index) + '_' + str(end_index)
+print("Number of files used = %s" % str(end_index - start_index + 1))
 #
 # Start manipulating the data
 #
 print("Loading data")
-mc = Map(list_of_data, cube=True)
+mc = Map(list_of_data[file_list_index[0]:file_list_index[1]], cube=True)
 
 # Get the date and times from the original mapcube
 date_obs = []
@@ -87,10 +97,10 @@ if ds.derotate:
     sr_shifts = calculate_solar_rotate_shift(mc, layer_index=layer_index)
 
     # Plot out the solar rotation shifts
-    filepath = os.path.join(save_locations['image'], ident + '.solar_derotation.png')
+    filepath = os.path.join(save_locations['image'], ident + '.solar_derotation.%s.png' % index_string)
     step0_plots.plot_shifts(sr_shifts, 'shifts due to solar de-rotation',
                             layer_index, filepath=filepath)
-    filepath = os.path.join(save_locations['image'], ident + '.time.solar_derotation.png')
+    filepath = os.path.join(save_locations['image'], ident + '.time.solar_derotation.%s.png' % index_string)
     step0_plots.plot_shifts(sr_shifts, 'shifts due to solar de-rotation',
                             layer_index, filepath=filepath,
                             x=t_since_layer_index, xlabel='time relative to reference layer (s)')
@@ -149,11 +159,11 @@ if ds.cross_correlate:
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
 
     # Plot out the cross correlation shifts
-    filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
+    filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.%s.png' % index_string)
     step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s' % cc_func.__name__,
                             layer_index, filepath=filepath)
 
-    filepath = os.path.join(save_locations['image'], ident + '.time.cross_correlation.png')
+    filepath = os.path.join(save_locations['image'], ident + '.time.cross_correlation.%s.png' % index_string)
     step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s'  % cc_func.__name__,
                             layer_index, filepath=filepath,
                             x=t_since_layer_index, xlabel='time relative to reference layer (s)')
@@ -161,7 +171,7 @@ if ds.cross_correlate:
 # Save the full dataset
 #
 directory = save_locations['pickle']
-filename = ident + '.full_mapcube{:s}{:s}.pkl'.format(ds.step0_output_information, ds.rn_processing)
+filename = ident + '.full_mapcube{:s}{:s}.i{:s}.pkl'.format(ds.step0_output_information, ds.rn_processing, index_string)
 pfilepath = os.path.join(directory, filename)
 print('Saving data to ' + pfilepath)
 outputfile = open(pfilepath, 'wb')

@@ -14,8 +14,6 @@ from tools.tstools import is_evenly_sampled
 from tools.timeseries import TimeSeries
 from aia import details_study as ds
 
-import matplotlib.pyplot as plt
-
 
 # Apply the window
 def apply_window(d, win):
@@ -35,7 +33,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['94', '335']#'131', '171', '193', '211', '335']
+waves = ['94', '335', '131', '171', '193', '211']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -47,7 +45,7 @@ waves = ['94', '335']#'131', '171', '193', '211', '335']
 regions = ['six_euv']
 
 # Apodization windows
-windows = ['hanning']
+windows = ['hamming']
 
 # Absolute tolerance in seconds when deciding if data is evenly sampled
 absolute_tolerance = ds.absolute_tolerance
@@ -236,7 +234,6 @@ for iwave, wave in enumerate(waves):
             f.close()
 
             # Save the Fourier power of the relative intensities
-            ofilename = ofilename + '.' + window
             filepath = os.path.join(output, ofilename + '.fourier_power_relative.pkl')
             print('Saving power spectra to ' + filepath)
             f = open(filepath, 'wb')

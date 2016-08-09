@@ -10,6 +10,7 @@ import astropy.units as u
 #
 #study_type = 'debugpaper2'
 study_type = 'paper2'
+#study_type = 'paper2_shorter_ts'
 #study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
@@ -70,6 +71,29 @@ if study_type == 'paper2':
     rn_processing = ''
     regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    file_list_index = [0, -1]
+
+if study_type == 'paper2_shorter_ts':
+    dataroot = '~/Data/ts/'
+    corename = 'paper2_six_euv'
+    sunlocation = 'disk'
+    fits_level = '1.5'
+    wave = '94'
+    #wave = '131'
+    #wave = '171'
+    #wave = '193'
+    #wave = '211'
+    #wave = '335'
+    cross_correlate = True
+    derotate = True
+    step0_output_information = ''
+    step1_input_information = ''
+    step1_output_information = ''
+    rn_processing = ''
+    regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
+                           "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    file_list_index = [0, 1749]
+
 
 if study_type == 'paper3_BM3D':
     dataroot = '~/Data/ts/'
@@ -136,7 +160,6 @@ if study_type == 'paper2':
     cross_correlate = True
     derotate = True
 """
-
 
 
 # Create the branches in order
