@@ -9,6 +9,7 @@ import astropy.units as u
 from tools import lnlike_model_fit
 from tools import pstools
 
+import matplotlib.pyplot as plt
 #
 # Magic numbers.  These frequency limits correspond to
 # 0.1 mHz to 10 mHz when we use 6 hours of AIA data, corresponding
@@ -540,7 +541,7 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
 
     def acceptable_fit(self, a):
         center_condition = (np.log(self.f_lower_limit) <= a[4]) and (np.log(self.f_upper_limit) >= a[4])
-        width_condition = (self.width_lower_limit <= a[5]) and (self.width_lower_limit >= a[5])
+        width_condition = (self.width_lower_limit <= a[5]) and (self.width_upper_limit >= a[5])
         return center_condition and width_condition
 
     def vary_guess(self, a):
@@ -570,7 +571,8 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
 
         # Sanity check on the default guess
         if not self.acceptable_fit(default_guess):
-            return ValueError('The default guess does not satisfy the acceptable fit criterion.')
+            print(default_guess)
+            raise ValueError('The default guess does not satisfy the acceptable fit criterion.')
 
         # Let's see if we can fit a lognormal
         # Difference between the data and the model
@@ -591,17 +593,19 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
         # If there is insufficient positive data, return the default guess.
         # If the fit fails
         if np.sum(fit_here) > self.sufficient_frequencies:
-            positive_data = np.log(diff0[fit_here])
-            frequencies_of_positive_data = np.log(f[fit_here])
+            positive_data = diff0[fit_here]
+            frequencies_of_positive_data = f[fit_here]
             try:
                 popt, pcov = curve_fit(lognormal_CF, frequencies_of_positive_data, positive_data)
-                initial_guess = [log_amplitude, index_estimate, log_background, popt[0], popt[1], popt[2]]
-                if not self.acceptable_fit(initial_guess):
-                    return default_guess
-                else:
-                    return initial_guess
-            except ValueError or RuntimeError:
-                    return default_guess
+            except RuntimeError:
+                return default_guess
+            except ValueError:
+                return default_guess
+            initial_guess = [log_amplitude, index_estimate, log_background, popt[0], popt[1], abs(popt[2])]
+            if not self.acceptable_fit(initial_guess):
+                return default_guess
+            else:
+                return initial_guess
         else:
             return default_guess
 
@@ -673,26 +677,15 @@ class Fit:
                 self.acceptable_fit_found = False
                 this_guess = deepcopy(guess)
 
-                # Number of attempts to fit the model to the spectrum
-                n_attempts = 0
-
                 # Vary the initial guess until a good fit is found up to a
-                # limited number of attempts.
-                while (n_attempts <= self.attempt_limit) and not self.acceptable_fit_found:
-                    result = lnlike_model_fit.go(self.fn,
-                                                 observed_power,
-                                                 self.model.power,
-                                                 this_guess,
-                                                 self.fit_method)
+                result = lnlike_model_fit.go(self.fn,
+                                             observed_power,
+                                             self.model.power,
+                                             this_guess,
+                                             self.fit_method)
 
-                    # Estimates of the quality of the fit to the data
-                    parameter_estimate = result['x']
-
-                    # Check if an acceptable fit has been found
-                    self.acceptable_fit_found = self.model.acceptable_fit(parameter_estimate)
-                    if not self.acceptable_fit_found:
-                        this_guess = self.model.vary_guess(parameter_estimate)
-                        n_attempts += 1
+                # Estimates of the quality of the fit to the data
+                parameter_estimate = result['x']
 
                 bestfit = self.model.power(parameter_estimate, self.fn)
                 rhoj = lnlike_model_fit.rhoj(observed_power, bestfit)

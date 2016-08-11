@@ -33,7 +33,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['94', '335', '131', '171', '193', '211']
+waves = ['171', '335', '131', '171', '193', '211']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -41,11 +41,11 @@ waves = ['94', '335', '131', '171', '193', '211']
 # regions = ['four_wavebands']
 # regions = ['test_six_euv']
 
-# waves = ['171']
+waves = ['171']
 regions = ['six_euv']
 
 # Apodization windows
-windows = ['hamming']
+windows = ['hanning']
 
 # Absolute tolerance in seconds when deciding if data is evenly sampled
 absolute_tolerance = ds.absolute_tolerance
@@ -67,7 +67,7 @@ for iwave, wave in enumerate(waves):
         output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
         # Output filename
-        ofilename = os.path.join(output, region_id + '.datacube')
+        ofilename = os.path.join(output, region_id + '.datacube.{:s}'.format(ds.index_string))
 
         # Go through all the windows
         for iwindow, window in enumerate(windows):

@@ -39,7 +39,7 @@ limits = da.limits[limit_type]
 ic_types = da.ic_details.keys()
 
 # Apodization windows
-windows = ['hamming']
+windows = ['hanning']
 
 # Models to fit
 these_models = [rnspectralmodels3.PowerLawPlusConstantPlusLognormal(),
@@ -56,8 +56,8 @@ mdefine = analysis_explore.MaskDefine(storage, limits)
 available_models = mdefine.available_models
 
 # Which power to load
-plot_type = 'fourier_power'
-# plot_type = 'fourier_power_relative'
+power_type = 'fourier_power'
+# power_type = 'fourier_power_relative'
 
 # Split each axis in to this number of sub-regions
 nsr = 1
@@ -80,11 +80,11 @@ linewidth = 3
 log_x_axis = True
 log_y_axis = False
 
-if plot_type == 'fourier_power_relative':
-    ylim_plot_type = [-4.0, 2.0]
+if power_type == 'fourier_power_relative':
+    ylim_power_type = [-4.0, 2.0]
 
-if plot_type == 'fourier_power':
-    ylim_plot_type = None
+if power_type == 'fourier_power':
+    ylim_power_type = None
 
 
 #
@@ -107,7 +107,7 @@ for iwave, wave in enumerate(waves):
         for iwindow, window in enumerate(windows):
 
             # Output filename
-            ofilename = os.path.join(output, region_id + '.datacube.' + window)
+            ofilename = os.path.join(output, region_id + '.datacube.{:s}.'.format(ds.index_string) + window)
 
             # branch location
             b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
@@ -116,7 +116,7 @@ for iwave, wave in enumerate(waves):
             region_id = ds.datalocationtools.ident_creator(b)
 
             # Different information criteria
-            image = dp.get_image_model_location(ds.roots, b, [plot_type, ])
+            image = dp.get_image_model_location(ds.roots, b, [power_type, ])
 
             # General notification that we have a new data-set
             print('\nLoading New Data')
@@ -128,7 +128,7 @@ for iwave, wave in enumerate(waves):
             print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
             # Load the observed power spectra
-            pkl_file_location = os.path.join(output, ofilename + '.%s.pkl' % plot_type)
+            pkl_file_location = os.path.join(output, ofilename + '.%s.pkl' % power_type)
             print('Loading observed power spectra from ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
             pfrequencies = pickle.load(pkl_file)
@@ -191,11 +191,11 @@ for iwave, wave in enumerate(waves):
                 ax.set_ylabel(power_label)
                 ax.set_xlabel(frequency_label)
                 ax.set_xlim(f[0], f[-1])
-                if ylim_plot_type is None:
+                if ylim_power_type is None:
                     ax.set_ylim(spm[0], spm[-1])
                 else:
-                    ax.set_ylim(ylim_plot_type[0], ylim_plot_type[1])
-                ax.set_title(plot_type)
+                    ax.set_ylim(ylim_power_type[0], ylim_power_type[1])
+                ax.set_title(power_type)
                 f5 = ax.axvline(dp.five_minutes.frequency.to(dp.fz).value,
                                 linestyle=dp.five_minutes.linestyle,
                                 color=dp.five_minutes.color, zorder=99,
@@ -208,7 +208,7 @@ for iwave, wave in enumerate(waves):
                 legend = ax.legend(loc='lower left', fontsize=10.0, framealpha=0.9)
 
                 subregion = 'n=%s.N=%s.y0=%s.y1=%s.x0=%s.x1=%s' % (str(nsr), str(ir+1), str(y_start), str(y_end), str(x_start), str(x_end))
-                final_filename = dp.concat_string([plot_type, wave]) + '.%s.png' % str(subregion)
+                final_filename = dp.concat_string([power_type, wave]) + '.%s.png' % str(subregion)
                 # Dump the results as an image file
                 final_filepath = os.path.join(image, final_filename)
                 print('Saving to %s' % final_filepath)

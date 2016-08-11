@@ -27,6 +27,7 @@ def get_all_data(waves=['171', '193'],
                  regions=['sunspot', 'moss', 'quiet Sun', 'loop footpoints'],
                  windows=['hanning'],
                  model_names=('Power Law + Constant', 'Power Law + Constant + Lognormal'),
+                 index_string='t0_None',
                  appended_name=None,
                  spectral_model=''):
 
@@ -61,7 +62,7 @@ def get_all_data(waves=['171', '193'],
             for iwindow, window in enumerate(windows):
 
                 # Output filename
-                ofilename = os.path.join(output, region_id + '.datacube.' + window)
+                ofilename = os.path.join(output, region_id + '.datacube.{:s}.'.format(index_string) + window)
 
                 # General notification that we have a new data-set
                 print('Loading New Data')

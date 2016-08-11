@@ -57,9 +57,9 @@ if study_type == 'paper2':
     corename = 'paper2_six_euv'
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '94'
+    #wave = '94'
     #wave = '131'
-    #wave = '171'
+    wave = '171'
     #wave = '193'
     #wave = '211'
     #wave = '335'
@@ -71,7 +71,7 @@ if study_type == 'paper2':
     rn_processing = ''
     regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
-    file_list_index = [0, -1]
+    file_list_index = [0, None]
 
 if study_type == 'paper2_shorter_ts':
     dataroot = '~/Data/ts/'
@@ -161,6 +161,11 @@ if study_type == 'paper2':
     derotate = True
 """
 
+# Index string
+index_string = 't' + str(file_list_index[0]) + '_' + str(file_list_index[1])
+
+# Processing information
+processing_info = '{:s}.{:s}'.format(step1_input_information, index_string)
 
 # Create the branches in order
 branches = [corename, sunlocation, fits_level, wave]

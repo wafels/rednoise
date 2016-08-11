@@ -20,7 +20,7 @@ import step1_plots
 
 # Load in the derotated data into a datacube
 directory = ds.save_locations['pickle']
-filename = ds.ident + '.full_mapcube{:s}.pkl'.format(ds.step1_input_information)
+filename = ds.ident + '.full_mapcube{:s}.pkl'.format(ds.processing_info)
 print('Acquiring mapcube from ' + ds.save_locations['pickle'])
 print('Filename = ' + filename)
 outputfile = open(os.path.join(directory, filename), 'rb')
@@ -65,14 +65,14 @@ def calculate_region_information(regions):
         R['xrange'] = [R['llx'].value, R['llx'].value + R['width'].value]
         R['yrange'] = [R['lly'].value, R['lly'].value + R['height'].value]
         llxy_pixel = mc_layer.data_to_pixel(R['llx'], R['lly'])
-        R['llxy_pixel'] = np.floor([llxy_pixel[0].value, llxy_pixel[1].value])
+        R['llxy_pixel'] = [np.int(np.floor(llxy_pixel[0].value)), np.int(np.floor(llxy_pixel[1].value))]
 
         # Small changes in the plate scale in each AIA channel can mean that
         # the height and widths of each region depend on the data. To mitigate
         # against this we fix the size of the plate scale.
         fixed_aia_scale = ds.fixed_aia_scale#{'x': 0.6, 'y': 0.6}
-        R['width_pixel'] = np.floor(R['width'] / fixed_aia_scale['x']).value
-        R['height_pixel'] = np.floor(R['height'] / fixed_aia_scale['y']).value
+        R['width_pixel'] = np.int(np.floor(R['width'] / fixed_aia_scale['x']).value)
+        R['height_pixel'] = np.int(np.floor(R['height'] / fixed_aia_scale['y']).value)
     return regions
 #
 # Create some time-series for further analysis
@@ -112,7 +112,7 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
         output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
 
         # Output filename
-        ofilename = os.path.join(output, region_id + '.datacube{:s}.pkl'.format(ds.step1_output_information))
+        ofilename = os.path.join(output, region_id + '.datacube{:s}.pkl'.format(ds.processing_info))
 
         # Open the file and write out the data we need for step 2
         outputfile = open(ofilename, 'wb')
@@ -144,7 +144,7 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
 #
 # Plot where the regions are
 #
-filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions')
+filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions{:s}'.format(ds.processing_info))
 for region in regions.keys():
     filepath = filepath + '.' + region
 filepath = filepath + '.png'
@@ -158,7 +158,7 @@ for region in ds.regions:
     range_x = (region_data['llx'].value, region_data['llx'].value + region_data['width'].value) * u.arcsec
     range_y = (region_data['lly'].value, region_data['lly'].value + region_data['height'].value) * u.arcsec
     exact_map = mc_layer.submap(range_x, range_y)
-    filepath = os.path.join(ds.save_locations['image'], ds.ident + '.exact_map')
+    filepath = os.path.join(ds.save_locations['image'], ds.ident + '.exact_map{:s}'.format(ds.processing_info))
     for region in regions.keys():
         filepath = filepath + '.' + region
     filepath = filepath + '.eps'

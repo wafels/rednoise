@@ -15,8 +15,9 @@ import details_plots as dp
 import analysis_explore
 
 # Paper 2: Wavelengths and regions we want to analyze
-waves = ['193'] #, '193', '211', '335', '94']
+waves = ['171'] #, '193', '211', '335', '94']
 regions = ['six_euv']
+power_type = 'fourier_power_relative'
 
 # Wavelengths and regions we want to analyze
 #waves = ['171', '193']
@@ -58,12 +59,6 @@ mdefine = analysis_explore.MaskDefine(storage, limits)
 available_models = mdefine.available_models
 
 
-# Define some pixel locations
-ny = storage[waves[0]][regions[0]][available_models[0]].ny
-nx = storage[waves[0]][regions[0]][available_models[0]].nx
-these_locations = zip(np.random.randint(0, ny, size=n_locations),
-                      np.random.randint(0, nx, size=n_locations))
-
 #these_locations = ((12, 325), (31,29), (67,335), (85,565), (92, 499), (101, 98), (110, 287), (121, 35), (132, 461), (192, 388))
 
 #
@@ -96,7 +91,7 @@ for iwave, wave in enumerate(waves):
         for iwindow, window in enumerate(windows):
 
             # Output filename
-            ofilename = os.path.join(output, region_id + '.datacube.' + window)
+            ofilename = os.path.join(output, region_id + '.datacube.{:s}.'.format(ds.index_string) + window)
 
             # branch location
             b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
@@ -117,7 +112,7 @@ for iwave, wave in enumerate(waves):
             print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
             # Load the observed power spectra
-            pkl_file_location = os.path.join(output, ofilename + '.fourier_power.pkl')
+            pkl_file_location = os.path.join(output, ofilename + '.{:s}.pkl'.format(power_type))
             print('Loading observed power spectra from ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
             pfrequencies = pickle.load(pkl_file)
@@ -132,6 +127,12 @@ for iwave, wave in enumerate(waves):
             for model in available_models:
                 best_fits[model] = storage[wave][region][model].best_fit()
                 bics[model] = storage[wave][region][model].as_array('BIC')
+
+            # Define some pixel locations
+            ny = storage[wave][region][model].as_array('BIC').shape[0]
+            nx = storage[wave][region][model].as_array('BIC').shape[1]
+            these_locations = zip(np.random.randint(0, ny, size=n_locations),
+                                  np.random.randint(0, nx, size=n_locations))
 
             # Go through the pixel locations
             for this_y, this_x in these_locations:

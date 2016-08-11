@@ -16,9 +16,9 @@ from tools import rnspectralmodels3
 
 # Wavelengths and regions we want to analyze
 # waves = ['131', '171', '193', '211', '335', '94']
-waves = ['193', '211', '335', '94']
+waves = ['171', '193', '211', '335', '94', '131']
 regions = ['six_euv']
-
+power_type = 'fourier_power_relative'
 
 # Fall AGU 2015 Wavelengths and regions we want to analyze
 #waves = ['171', '193']
@@ -61,7 +61,7 @@ for iwave, wave in enumerate(waves):
         for iwindow, window in enumerate(windows):
 
             # Output filename
-            ofilename = os.path.join(output, region_id + '.datacube.' + window)
+            ofilename = os.path.join(output, region_id + '.datacube.{:s}.'.format(ds.index_string) + window)
 
             # General notification that we have a new data-set
             print('\nLoading New Data')
@@ -73,7 +73,7 @@ for iwave, wave in enumerate(waves):
             print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
             # Load the data
-            pkl_file_location = os.path.join(output, ofilename + '.fourier_power.pkl')
+            pkl_file_location = os.path.join(output, ofilename + '.{:s}.pkl'.format(power_type))
             print('Loading ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
             pfrequencies = pickle.load(pkl_file)
