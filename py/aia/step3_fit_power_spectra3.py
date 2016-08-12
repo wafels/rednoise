@@ -16,7 +16,7 @@ from tools import rnspectralmodels3
 
 # Wavelengths and regions we want to analyze
 # waves = ['131', '171', '193', '211', '335', '94']
-waves = ['171', '193', '211', '335', '94', '131']
+waves = ['94', '193', '211', '335', '131', '171']
 regions = ['six_euv']
 power_type = 'fourier_power_relative'
 

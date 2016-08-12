@@ -43,7 +43,7 @@ if study_type == 'debugpaper2':
     corename = 'paper2_six_euv'
     sunlocation = 'debug'
     fits_level = '1.5'
-    wave = '94'
+    #wave = '94'
     #wave = '131'
     #wave = '171'
     #wave = '193'
@@ -57,12 +57,12 @@ if study_type == 'paper2':
     corename = 'paper2_six_euv'
     sunlocation = 'disk'
     fits_level = '1.5'
-    #wave = '94'
+    wave = '94'
     #wave = '131'
     #wave = '171'
     #wave = '193'
     #wave = '211'
-    wave = '335'
+    #wave = '335'
     cross_correlate = True
     derotate = True
     step0_output_information = ''
