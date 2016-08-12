@@ -33,7 +33,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['171', '335', '131', '171', '193', '211']
+waves = ['94', '131', '193', '211', '335']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -41,7 +41,6 @@ waves = ['171', '335', '131', '171', '193', '211']
 # regions = ['four_wavebands']
 # regions = ['test_six_euv']
 
-waves = ['171']
 regions = ['six_euv']
 
 # Apodization windows

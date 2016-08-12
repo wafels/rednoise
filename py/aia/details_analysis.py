@@ -30,11 +30,11 @@ success = [1, 'success']
 #
 
 limits = {"standard": {"power law index": [0., 7.] * u.dimensionless_unscaled,
-                       "ln(constant)": [0., 10.] * u.dimensionless_unscaled,
-                       "ln(power law amplitude)": [0.0, 10.0] * u.dimensionless_unscaled,
+                       "ln(constant)": [-10., 10.] * u.dimensionless_unscaled,
+                       "ln(power law amplitude)": [-10.0, 10.0] * u.dimensionless_unscaled,
                        "ln(lognormal width)": [0.0, 0.6] * u.dimensionless_unscaled,
                        "lognormal position": [1.0/(1800 * 12.0), 0.015] * u.Hz,
-                       "ln(lognormal amplitude)": [0.0, 10.0] * u.dimensionless_unscaled,
+                       "ln(lognormal amplitude)": [-10.0, 10.0] * u.dimensionless_unscaled,
                        "period": [24.0, 3000.0] * u.s,
                        "frequency": [1.0/(1800 * 12.0), 1.0/(2 * 12.0)] * u.Hz,
                        "ratio": [-5.0, 5.0] * u.dimensionless_unscaled,

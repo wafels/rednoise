@@ -17,33 +17,20 @@ import details_analysis as da
 
 # Paper 2 - Wavelengths we want to cross correlate
 #waves = ['131', '171', '193', '211', '94', '335']
-waves = ['335']
+waves = ['171']
 regions = ['six_euv']
+power_type = 'fourier_power_relative'
+limit_type = 'standard'
 
-# Paper 3
-#waves = ['171']
-#regions = ['six_euv']
-
-
-#waves = ['171']
-# Regions we are interested in
-#regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-#regions = ['most_of_fov']
-#regions = ['four_wavebands']
 
 # Apodization windows
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power Law + Constant',
-               'Power Law + Constant + Lognormal')
+model_names = ('Power Law + Constant', 'Power Law + Constant + Lognormal')
 
-limit_type = 'fallagu2015'
-appended_name = None#'_keep_incase_fallagu2015'
-spectral_model = '.rnspectralmodels3'
+appended_name = None
 
-#limit_type = "low_lognormal_width_3_to_5_minutes"
-#limit_type = "high_lognormal_width_freq_less_than_5_minutes"
 #
 # Details of the analysis
 #
@@ -65,7 +52,7 @@ storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=model_names,
                                          appended_name=appended_name,
-                                         spectral_model=spectral_model)
+                                         spectral_model='.rnspectralmodels3')
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
 # Plot cross-correlations within the same AIA channel
@@ -222,3 +209,4 @@ for ic_type in ic_types:
                                 plt.legend()
                                 plt.tight_layout()
                                 plt.savefig(os.path.join(image, final_filename))
+                                plt.close('all')

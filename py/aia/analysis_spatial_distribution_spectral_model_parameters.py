@@ -15,22 +15,16 @@ import details_analysis as da
 import details_plots as dp
 
 # Wavelengths we want to cross correlate
-waves = ['94', '335', '171', '193', '211', '131']
-# Regions we are interested in
-# regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-# regions = ['most_of_fov']
+waves = ['171']
 regions = ['six_euv']
+power_type = 'fourier_power_relative'
+limit_type = 'standard'
 
 # Apodization windows
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power Law + Constant',
-               'Power Law + Constant + Lognormal')
-# Which limit to use
-limit_type = 'standard'
-#limit_type = "low_lognormal_width_3_to_5_minutes"
-#limit_type = "high_lognormal_width_freq_less_than_5_minutes"
+model_names = ('Power Law + Constant', 'Power Law + Constant + Lognormal')
 
 
 #
@@ -52,7 +46,8 @@ fontsize = dp.fontsize
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
-                                         model_names=model_names)
+                                         model_names=model_names,
+                                         spectral_model='.rnspectralmodels3')
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
 
@@ -155,7 +150,7 @@ for ic_type in ic_types:
                         # Get the sunspot
 
                         # Get the sunspot
-                        sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
+                        polygon, sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
                                                                                   sunspot_outline[1],
                                                                                   my_map.date,
                                                                                   edgecolors=[dp.spatial_plots['sunspot outline']])
@@ -196,3 +191,4 @@ for ic_type in ic_types:
                         filepath = os.path.join(image, final_filename)
                         print('Saving to ' + filepath)
                         plt.savefig(filepath)
+                        plt.close('all')

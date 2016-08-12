@@ -20,20 +20,10 @@ import details_plots as dp
 # Paper 2
 # Wavelengths we want to cross correlate
 # waves = ['131', '171', '193', '211', '335', '94']
-waves = ['171', '193']
+waves = ['171']
 regions = ['six_euv']
-
-# Paper 3
-#waves = ['171']
-#regions = ['six_euv']
-
-
-# Regions we are interested in
-# regions = ['sunspot', 'moss', 'quiet Sun', 'loop footpoints']
-# regions = ['most_of_fov']
-
+power_type = 'fourier_power_relative'
 limit_type = 'standard'
-limit_type = 'low_n'
 
 # Apodization windows
 windows = ['hanning']
@@ -179,12 +169,11 @@ for ic_type in ic_types:
                     # Create the masked numpy array
                     map_data = ma.array(final_data, mask=final_mask)
 
+                    # Maximum
+                    print('{:s}: {:n}->{:n}'.format(parameter, np.nanmin(map_data), np.nanmax(map_data)))
+
                     # Make a SunPy map for nice spatially aware plotting.
                     my_map = analysis_get_data.make_map(region_submap, map_data)
-
-                    #for submap_type in all_submaps.keys():
-
-
 
                     # Get the sunspot
                     polygon, sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
@@ -192,9 +181,6 @@ for ic_type in ic_types:
                                                                                   my_map.date,
                                                                                   edgecolors=[dp.spatial_plots['sunspot outline']])
 
-                    #subtitle = dp.concat_string(['%s - %s' % (region, wave),
-                    #                            ic_info_string,
-                    #                            submap_type], sep='\n')
                     subtitle = dp.concat_string(['%s - %s' % (region, wave),
                                                 ic_info_string], sep='\n')
                     # Make a spatial distribution map spectral model parameter
@@ -242,7 +228,22 @@ for ic_type in ic_types:
                                                        subtitle_filename])
                     filepath = os.path.join(image, final_filename + '.eps')
                     print('Saving to ' + filepath)
-                    plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
+                    plt.savefig(filepath, bbox_inches='tight')
+                    plt.close('all')
+
+                    #
+                    # Distributions
+                    #
+                    bins = 50
+                    plt.hist(map_data.compressed(), bins=bins)
+                    plt.title(title)
+                    plt.xlabel(parameter)
+                    plt.ylabel('number')
+                    filepath = os.path.join(image, final_filename + '.distribution.eps')
+                    print('Saving to ' + filepath)
+                    plt.savefig(filepath, bbox_inches='tight')
+                    plt.close('all')
+
 
                     # Save the map to a file for later use
                     final_pickle_filepath = os.path.join(output,
