@@ -11,8 +11,17 @@ import details_study as ds
 # Units that frequencies will be plotted in
 fz = 'mHz'
 
+# Which major color style for maps
+map_color_style = 'w'
+
+# General fontsize
+fontsize = 20
+
 
 class LineSelection:
+    """
+    Storage class for lines across multiple plots.
+    """
     def __init__(self, color='k', label="", linestyle="-", linewidth=1,
                  position=1.0*u.s):
         self.color = color
@@ -22,6 +31,20 @@ class LineSelection:
         self.position = position
         self.frequency = 1.0 / self.position
 
+
+class MapPlots:
+    """
+    Storage class for map styles across multiple plots.
+    """
+    def __init__(self, cm=cm.Set2, bad='white', upper='blue', lower='cyan'):
+        self.cm = cm
+        self.bad = bad
+        self.upper = upper
+        self.lower = lower
+
+#
+# Lines
+#
 three_minutes = LineSelection(color='k',
                               label='3 minutes',
                               linestyle=":",
@@ -36,28 +59,28 @@ five_minutes = LineSelection(color='k',
                              position=300*u.s)
 
 
-meanline = LineSelection(color='r',
-                         linewidth=3)
-
-
-modeline = LineSelection(color='g',
-                         linewidth=3)
+mean = LineSelection(color='r', linewidth=3, linestyle='solid')
+median = LineSelection(color='r', linewidth=3, linestyle='dashed')
+percentile0 = LineSelection(color='g', linewidth=3, linestyle='dashdot')
+percentile1 = LineSelection(color='g', linewidth=3, linestyle='dotted')
+modeline = LineSelection(color='g', linewidth=3)
 
 # Histograms have the following type
 hloc = (100,)  # 'scott', 'knuth', 'freedman')
 histogram_1d_bins = 100
 
-linewidth = 3
+# Map plot styles
+map_plot_colors = {"w": {"sunspot": "white", "bad": "black"},
+                   "k": {"sunspot": "black", "bad": "white"}}
 
 # Parameters which are frequencies
 frequency_parameters = ['lognormal position']
 
-# Color choices for the spatial plots
-spatial_plots = {'sunspot outline': 'w',
-                 'color table': cm.Set2,  # cm.viridis,
-                 'bad value': 'black'}
+# Sunspot outline details
+sunspot_outline = LineSelection(color=map_plot_colors[map_color_style]["sunspot"], linewidth=3, linestyle='solid')
 
-fontsize = 20
+# Color tables
+map_ic = MapPlots(bad=map_plot_colors[map_color_style]["bad"])
 
 #
 # Useful strings for plots

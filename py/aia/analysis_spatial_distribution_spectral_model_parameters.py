@@ -13,9 +13,10 @@ import analysis_explore
 import details_study as ds
 import details_analysis as da
 import details_plots as dp
+from tools import statistics_tools
 
 # Wavelengths we want to cross correlate
-waves = ['171']
+waves = ['94', '131', '171', '193', '211', '335']
 regions = ['six_euv']
 power_type = 'fourier_power_relative'
 limit_type = 'standard'
@@ -65,7 +66,7 @@ for ic_type in ic_types:
     # Get the IC limit
     ic_limits = da.ic_details[ic_type]
     for ic_limit in ic_limits:
-        ic_limit_string = '%s>%f' % (ic_type, ic_limit)
+        ic_limit_string = '%s.ge.%f' % (ic_type, ic_limit)
 
         # Model name
         for this_model in model_names:
@@ -112,7 +113,7 @@ for ic_type in ic_types:
                         p1_limits = limits[parameter]
 
                         # Label
-                        label = this.model.variables[i].converted_label + r'$_{%s}$' % wave
+                        label = this.model.variables[i].converted_label  # + r'$_{%s}$' % wave
 
                         # Find out if this model is preferred
                         mask2 = mdefine.is_this_model_preferred(ic_type, ic_limit, this_model)[wave][region]
@@ -135,7 +136,7 @@ for ic_type in ic_types:
                                                      limit_type], sep='\n')
                         subtitle_filename = dp.concat_string([this_model,
                                                               region,
-                                                              ic_info_string,
+                                                              ic_limit_string,
                                                               limit_type], sep='.')
 
                         # Plot identity
@@ -176,7 +177,9 @@ for ic_type in ic_types:
                         ret = my_map.plot(cmap=palette, axes=ax, interpolation='none',
                                           norm=norm)
                         #ret.axes.set_title('%s\n%s' % (label, subtitle))
-                        ret.axes.set_title('%s\n%s of all pixels' % (label, percent_used_string), fontsize=fontsize)
+                        title = '%s\n%s of all pixels' % (label, percent_used_string)
+                        title = label + '\n' + 'AIA ' + wave + ' Angstrom, {:s} fit'.format(percent_used_string)
+                        ret.axes.set_title(title, fontsize=fontsize)
                         ax.add_collection(sunspot_collection)
 
                         cbar = fig.colorbar(ret, extend='both', orientation='vertical',
@@ -187,8 +190,39 @@ for ic_type in ic_types:
                         # Dump to file
                         final_filename = dp.concat_string([plot_type,
                                                            plot_identity_filename,
-                                                           subtitle_filename]) + '.png'
+                                                           subtitle_filename]).replace(' ', '') + '.eps'
                         filepath = os.path.join(image, final_filename)
                         print('Saving to ' + filepath)
-                        plt.savefig(filepath)
+                        plt.savefig(filepath, bbox_inches='tight')
+                        plt.close(fig)
+
+                        #
+                        # Distributions
+                        #
+                        bins = 50
+                        ss = statistics_tools.Summary(map_data.compressed())
+                        plt.hist(map_data.compressed(), bins=bins)
+                        plt.title(title)
+                        plt.xlabel(parameter)
+                        plt.ylabel('number')
+                        plt.axvline(ss.mean,
+                                    label='mean [{:n}]'.format(ss.mean),
+                                    linestyle=dp.mean.linestyle,
+                                    color=dp.mean.color)
+                        plt.axvline(ss.median,
+                                    label='median [{:n}]'.format(ss.median),
+                                    linestyle=dp.median.linestyle,
+                                    color=dp.median.color)
+                        plt.axvline(ss.percentile[0],
+                                    label='2.5% [{:n}]'.format(ss.percentile[0]),
+                                    linestyle=dp.percentile0.linestyle,
+                                    color=dp.percentile0.color)
+                        plt.axvline(ss.percentile[1],
+                                    label='97.5% [{:n}]'.format(ss.percentile[1]),
+                                    linestyle=dp.percentile1.linestyle,
+                                    color=dp.percentile1.color)
+                        plt.legend(loc=1, framealpha=0.5)
+                        filepath = os.path.join(image, final_filename + '.distribution.eps')
+                        print('Saving to ' + filepath)
+                        plt.savefig(filepath, bbox_inches='tight')
                         plt.close('all')

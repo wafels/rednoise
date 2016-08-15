@@ -89,6 +89,7 @@ def is_evenly_sampled(t, absolute_tolerance):
     else:
         return False
 
+
 #
 # Frequency tools
 #
