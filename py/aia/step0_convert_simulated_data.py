@@ -27,9 +27,12 @@ been de-rotated and co-aligned.
 """
 
 import os
-import cPickle as pickle
+from datetime import timedelta
+import pickle
 
 import numpy as np
+
+import astropy.units as u
 
 from sunpy.time import parse_time
 from sunpy.map import Map
@@ -37,7 +40,7 @@ from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 import step0_plots
 import details_study as ds
-import details_simulation as dsim
+import details_simulated as dsim
 
 from astropy.io import fits
 
@@ -67,9 +70,32 @@ for f in directory_listing:
         print('File that does not end in ".fits" detected, and not included in list = %s ' %f)
 print("Number of files = %i" % len(list_of_data))
 hdulist = fits.open(list_of_data[0])  # check this!
-sda = hdulist[0].data  # check this!
+sda = np.swapaxes(np.swapaxes(hdulist[0].data, 0, 1), 1, 2)  # check this!
+hdulist.close()
 
 
+times = {"date_obs": "2016-08-15 01:23:45", "time_in_seconds": dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])}
+#
+# Step 2 has data shaped like (ny, nx, nt)
+#
+a = list()
+a.append('papern_bradshaw_simulation')
+a.append('disk')
+a.append('sim0')
+a.append('{:s}'.format(ds.wave))
+z = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/{:s}/{:s}/{:s}/{:s}/six_euv'.format(a[0], a[1], a[2], a[3])
+filename = '{:s}_{:s}_{:s}_{:s}'.format(a[0], a[1], a[2], a[3])
+
+pfilepath = '{:s}/{:s}'.format(z, filename)
+
+# data = np.swapaxes(np.swapaxes(sda, 0, 1), 1, 2)
+outputfile = open(pfilepath, 'wb')
+pickle.dump(sda, outputfile)
+pickle.dump(times, outputfile)
+outputfile.close()
+
+
+"""
 if dsim.method == 'simple':
     pass
 
@@ -185,3 +211,4 @@ outputfile = open(pfilepath, 'wb')
 pickle.dump(data, outputfile)
 pickle.dump(layer_index, outputfile)
 outputfile.close()
+"""

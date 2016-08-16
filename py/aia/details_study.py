@@ -14,7 +14,7 @@ study_type = 'paper2'
 #study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
-#study_type = 'papern_bradford_simulation'
+study_type = 'papern_bradshaw_simulation'
 
 
 # Target cadence
@@ -33,6 +33,10 @@ use_base_cross_correlation_channel = False
 arcsec_per_pixel_unit = u.arcsec / u.pix
 fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
                    'y': 0.6*arcsec_per_pixel_unit}
+
+# Standard index range of files to read in
+file_list_index = [0, None]
+
 
 #
 # Setup the details given the study type
@@ -71,7 +75,6 @@ if study_type == 'paper2':
     rn_processing = ''
     regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
-    file_list_index = [0, None]
 
 if study_type == 'paper2_shorter_ts':
     dataroot = '~/Data/ts/'
@@ -135,11 +138,12 @@ if study_type == 'paper3_BLSGSM':
     step1_output_information = '.1-11'
 
 
-if study_type == 'bradford_simulation':
+if study_type == 'papern_bradshaw_simulation':
+    conversion_style = 'simple'
     dataroot = '~/Data/ts/'
     corename = study_type
     sunlocation = 'disk'
-    fits_level = '1.5'
+    fits_level = 'sim0'
     wave = '171'
     cross_correlate = True
     derotate = True

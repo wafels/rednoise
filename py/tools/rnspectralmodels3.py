@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 magic_number_lognormal_position_normalized_frequency_lower_limit = 21.0
 magic_number_lognormal_position_normalized_frequency_upper_limit = 215.0
 
+magic_number_lognormal_position_frequency_lower_limit = 0.1 * u.mHz
+magic_number_lognormal_position_frequency_lower_limit = 10.0 * u.mHz
+
 #
 # These magic numbers cover the width of the lognormal.
 #
