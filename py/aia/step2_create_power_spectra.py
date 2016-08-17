@@ -33,7 +33,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['94']  # '131', '193', '211']
+waves = ['171']  # '131', '193', '211']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -91,7 +91,6 @@ for iwave, wave in enumerate(waves):
             ny = dc.shape[0]
             nx = dc.shape[1]
             nt = dc.shape[2]
-
             # Should be evenly sampled data.  It not, then resample to get
             # evenly sampled data
             t = time_information["time_in_seconds"]

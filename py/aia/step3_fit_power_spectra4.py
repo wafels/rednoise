@@ -2,13 +2,13 @@
 # Step 3.  Load in the FFT power spectra and fit models.  Decide which one
 # fits best.  Save the results.
 #
-# NOTE: USES VERSION 3 OF THE SPECTRAL MODELS
+# NOTE: USES VERSION 4 OF THE SPECTRAL MODELS
 #
 import pickle
 import os
 
 import details_study as ds
-from tools import rnspectralmodels3
+from tools import rnspectralmodels4
 
 # Wavelengths and regions we want to analyze
 #waves = ['171']
@@ -36,11 +36,6 @@ power_type = 'fourier_power_relative'
 
 # Apodization windows
 windows = ['hanning']
-
-# Models to fit
-these_models = [rnspectralmodels3.PowerLawPlusConstantPlusLognormal(),
-                rnspectralmodels3.PowerLawPlusConstant()]
-n_models = len(these_models)
 
 #
 # Main analysis loops
@@ -77,19 +72,23 @@ for iwave, wave in enumerate(waves):
             pkl_file_location = os.path.join(output, ofilename + '.{:s}.pkl'.format(power_type))
             print('Loading ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
-            pfrequencies = pickle.load(pkl_file)
+            pfrequencies = (pickle.load(pkl_file)).to('Hz')
             pwr = pickle.load(pkl_file)
             pkl_file.close()
-            stop
             # Storage for the results
             results = {}
+
+            # Models to fit
+            these_models = [rnspectralmodels4.PowerLawPlusConstantPlusLognormal(f_norm=pfrequencies[0]),
+                            rnspectralmodels4.PowerLawPlusConstant(f_norm=pfrequencies[0])]
+            n_models = len(these_models)
 
             # Go through the models
             for itm, this_model in enumerate(these_models):
                 print('Fitting model: %s (%i out of %i)' % (this_model.name, itm+1, n_models))
 
                 # Do the fit and store the results for later analysis
-                results[this_model.name] = rnspectralmodels3.Fit(pfrequencies.value, pwr, this_model, verbose=1)
+                results[this_model.name] = rnspectralmodels4.Fit(pfrequencies, pwr, this_model, verbose=1)
 
             # Dump the results
             filepath = os.path.join(output, ofilename + '.rnspectralmodels3.lnlike_fit_results.pkl')

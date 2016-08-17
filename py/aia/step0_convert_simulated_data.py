@@ -70,9 +70,8 @@ for f in directory_listing:
         print('File that does not end in ".fits" detected, and not included in list = %s ' %f)
 print("Number of files = %i" % len(list_of_data))
 hdulist = fits.open(list_of_data[0])  # check this!
-sda = np.swapaxes(np.swapaxes(hdulist[0].data, 0, 1), 1, 2)  # check this!
+sda = hdulist[0].data  # check this!
 hdulist.close()
-
 
 times = {"date_obs": "2016-08-15 01:23:45", "time_in_seconds": dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])}
 #
@@ -84,13 +83,12 @@ a.append('disk')
 a.append('sim0')
 a.append('{:s}'.format(ds.wave))
 z = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/{:s}/{:s}/{:s}/{:s}/six_euv'.format(a[0], a[1], a[2], a[3])
-filename = '{:s}_{:s}_{:s}_{:s}'.format(a[0], a[1], a[2], a[3])
+filename = '{:s}_{:s}_{:s}_{:s}_six_euv.datacube.t0_None.pkl'.format(a[0], a[1], a[2], a[3])
 
 pfilepath = '{:s}/{:s}'.format(z, filename)
-
-# data = np.swapaxes(np.swapaxes(sda, 0, 1), 1, 2)
+print('Saving to {:s}'.format(pfilepath))
 outputfile = open(pfilepath, 'wb')
-pickle.dump(sda, outputfile)
+pickle.dump(np.swapaxes(sda, 0, 2), outputfile)
 pickle.dump(times, outputfile)
 outputfile.close()
 
