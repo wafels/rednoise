@@ -9,7 +9,8 @@ import astropy.units as u
 
 class Study:
     """
-    Defines all the major parameters used to study a data set.
+    Defines all the major parameters used to study a single region in an
+    input data set.
     """
     def __init__(self,
                  # Overall study name.
@@ -25,8 +26,7 @@ class Study:
                  base_cross_correlation_channel='171',
                  use_base_cross_correlation=False,
                  # Spatial information
-                 regions={"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
-                                      "width": 340*u.arcsec, "height": 200*u.arcsec}},
+                 region=None,
                  # Temporal information
                  file_list_index=[0, None],
                  # Additional input file processing information
@@ -64,20 +64,24 @@ class Study:
         self.file_list_index = file_list_index
 
         # Specific spatial subregions in the data
-        self.regions = regions
+        if len(region) > 1:
+            raise ValueError('Only one region allowed.')
+        self.region = region
 
     def output_branches(self):
         """ Calculate the output branches. """
-        # Overall study name
+        # Overall study name.
         a = [self.study_type]
-        # Copy the structure of the input data
+        # Copy the structure of the input data.
         for branch in self.input_branches:
             a.append(branch)
-        # Copy the information about the procedures applied
+        # Copy the information about the procedures applied.
         for procedure in self.procedures_applied():
             a.append(procedure)
         # The wavelength used.
         a.append(self.wave)
+        # Calculate an output branch for each region.
+        a.append(list(self.region.keys())[0])
         return a
 
     def output_filepaths(self):
@@ -180,7 +184,7 @@ if study_type == 'paper2':
     step1_input_information = ''
     step1_output_information = ''
     rn_processing = ''
-    regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
+    region = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
 
     study = Study(wave=wave,
@@ -188,7 +192,8 @@ if study_type == 'paper2':
                   input_branches=['paper2_six_euv', 'disk', '1.5'],
                   additional_processing=[step0_output_information +
                                          step1_input_information +
-                                         step1_output_information])
+                                         step1_output_information],
+                  region=region)
 
 
 if study_type == 'paper2_shorter_ts':
