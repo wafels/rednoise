@@ -2,8 +2,117 @@
 # study details in one handy place.
 #
 
+import os
 import datalocationtools
 import astropy.units as u
+
+
+class Study:
+    """
+    Defines all the major parameters used to study a data set.
+    """
+    def __init__(self,
+                 # Overall study name.
+                 study_type='paper2',
+                 # Which AIA channel to study
+                 wave='171',
+                 # Where the input data is
+                 input_root=os.path.expanduser('~/Data/ts'),
+                 input_branches=None,
+                 # Cross correlation and de-rotation parameters
+                 cross_correlate=True,
+                 derotate=True,
+                 base_cross_correlation_channel='171',
+                 use_base_cross_correlation=False,
+                 # Spatial information
+                 regions={"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
+                                      "width": 340*u.arcsec, "height": 200*u.arcsec}},
+                 # Temporal information
+                 file_list_index=[0, None],
+                 # Additional input file processing information
+                 additional_processing=[],
+                 # Output information
+                 output_root=os.path.expanduser('~/ts'),
+                 output_types=['pickle', 'images', 'movies']):
+
+        # Overall study name
+        self.study_type = study_type
+
+        # Which (AIA) channel to study
+        self.wave = wave
+
+        # Where the input data is
+        self.input_root = input_root
+        self.input_branches = input_branches
+
+        # Output information
+        self.output_root = output_root
+        self.output_types = output_types
+
+        # Information about procedures applied to the set of files in the
+        # input directory.
+        # Cross correlation and solar de-rotation parameters
+        self.cross_correlate = cross_correlate
+        self.base_cross_correlation_channel = base_cross_correlation_channel
+        self.use_base_cross_correlation = use_base_cross_correlation
+        self.derotate = derotate
+
+        # Additional file processing information
+        self.additional_processing = additional_processing
+
+        # Specific file indices that will be examined.
+        self.file_list_index = file_list_index
+
+        # Specific spatial subregions in the data
+        self.regions = regions
+
+    def output_branches(self):
+        """ Calculate the output branches. """
+        # Overall study name
+        a = [self.study_type]
+        # Copy the structure of the input data
+        for branch in self.input_branches:
+            a.append(branch)
+        # Copy the information about the procedures applied
+        for procedure in self.procedures_applied():
+            a.append(procedure)
+        # The wavelength used.
+        a.append(self.wave)
+        return a
+
+    def output_filepaths(self):
+        """ Calculate the path for all the outputs."""
+        a = dict()
+        for output_type in self.output_types:
+            root = datalocationtools.path([output_type], root=self.output_root)
+            a[output_type] = datalocationtools.path(self.output_branches(),
+                                                    root=root)
+        return a
+
+    def output_filename(self):
+        """ Calculate a filename based on the input root and branches, and
+        the procedures applied to that input data."""
+        return datalocationtools.filename(self.output_branches())
+
+    def info_file_list(self):
+        # File list information as a string.
+        return 't{:s}_{:s}'.format(str(self.file_list_index[0]),
+                                   str(self.file_list_index[1]))
+
+    def info_cc_and_dr(self):
+        # Cross-correlation and solar de-rotation information as a string.
+        return 'cc_{:s}_dr_{:s}_bcc_{:s}'.format(str(self.cross_correlate),
+                                                 str(self.derotate),
+                                                 str(self.use_base_cross_correlation))
+
+    def procedures_applied(self):
+        # Procedures applied to the data.
+        a = list()
+        a.append(self.info_file_list())
+        a.append(self.info_cc_and_dr())
+        return a
+
+
 
 #
 # Study type
@@ -16,6 +125,15 @@ study_type = 'paper2'
 #study_type = 'paper3_BLSGSM'
 study_type = 'papern_bradshaw_simulation'
 
+
+wave = '94'
+wave = '131'
+wave = '171'
+wave = '193'
+wave = '211'
+wave = '335'
+
+input_root = '~/Data/ts'
 
 # Target cadence
 target_cadence = 12
@@ -47,26 +165,15 @@ if study_type == 'debugpaper2':
     corename = 'paper2_six_euv'
     sunlocation = 'debug'
     fits_level = '1.5'
-    #wave = '94'
-    #wave = '131'
-    #wave = '171'
-    #wave = '193'
-    #wave = '211'
-    #wave = '335'
     cross_correlate = True
     derotate = True
 
 if study_type == 'paper2':
+
     dataroot = '~/Data/ts/'
     corename = 'paper2_six_euv'
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '94'
-    #wave = '131'
-    #wave = '171'
-    #wave = '193'
-    #wave = '211'
-    #wave = '335'
     cross_correlate = True
     derotate = True
     step0_output_information = ''
@@ -76,17 +183,19 @@ if study_type == 'paper2':
     regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
 
+    study = Study(wave=wave,
+                  input_root=input_root,
+                  input_branches=['paper2_six_euv', 'disk', '1.5'],
+                  additional_processing=[step0_output_information +
+                                         step1_input_information +
+                                         step1_output_information])
+
+
 if study_type == 'paper2_shorter_ts':
     dataroot = '~/Data/ts/'
     corename = 'paper2_six_euv'
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '94'
-    #wave = '131'
-    #wave = '171'
-    #wave = '193'
-    #wave = '211'
-    #wave = '335'
     cross_correlate = True
     derotate = True
     step0_output_information = ''
@@ -103,8 +212,6 @@ if study_type == 'paper3_BM3D':
     corename = study_type
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '171'
-    wave = '211'
     cross_correlate = True
     derotate = True
     step0_output_information = '.kirk=1-10'
@@ -116,8 +223,6 @@ if study_type == 'paper3_PSF':
     corename = study_type
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '171'
-    wave = '211'
     cross_correlate = True
     derotate = True
     step0_output_information = '.kirk=1-4'
@@ -130,7 +235,6 @@ if study_type == 'paper3_BLSGSM':
     corename = study_type
     sunlocation = 'disk'
     fits_level = '1.5'
-    wave = '171'
     cross_correlate = True
     derotate = True
     step0_output_information = '.kirk=1-10'
@@ -144,7 +248,6 @@ if study_type == 'papern_bradshaw_simulation':
     corename = study_type
     sunlocation = 'disk'
     fits_level = 'sim0'
-    wave = '171'
     cross_correlate = True
     derotate = True
     step0_output_information = ''
