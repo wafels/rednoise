@@ -20,6 +20,9 @@ class Study:
                  # Where the input data is
                  input_root=os.path.expanduser('~/Data/ts'),
                  input_branches=None,
+                 # Output information
+                 output_root=os.path.expanduser('~/ts'),
+                 output_types=['pickle', 'images', 'movies'],
                  # Cross correlation and de-rotation parameters
                  cross_correlate=True,
                  derotate=True,
@@ -28,12 +31,7 @@ class Study:
                  # Spatial information
                  region=None,
                  # Temporal information
-                 file_list_index=[0, None],
-                 # Additional input file processing information
-                 additional_processing=[],
-                 # Output information
-                 output_root=os.path.expanduser('~/ts'),
-                 output_types=['pickle', 'images', 'movies']):
+                 file_list_index=[0, None]):
 
         # Overall study name
         self.study_type = study_type
@@ -56,9 +54,6 @@ class Study:
         self.base_cross_correlation_channel = base_cross_correlation_channel
         self.use_base_cross_correlation = use_base_cross_correlation
         self.derotate = derotate
-
-        # Additional file processing information
-        self.additional_processing = additional_processing
 
         # Specific file indices that will be examined.
         self.file_list_index = file_list_index
@@ -189,10 +184,10 @@ if study_type == 'paper2':
 
     study = Study(wave=wave,
                   input_root=input_root,
-                  input_branches=['paper2_six_euv', 'disk', '1.5'],
-                  additional_processing=[step0_output_information +
-                                         step1_input_information +
-                                         step1_output_information],
+                  input_branches=['paper2_six_euv',
+                                  'disk',
+                                  '1.5',
+                                  step0_output_information + step1_input_information +step1_output_information],
                   region=region)
 
 
