@@ -15,9 +15,6 @@ import matplotlib.pyplot as plt
 # 0.1 mHz to 10 mHz when we use 6 hours of AIA data, corresponding
 # to 1800 frames at 12 second cadence.
 #
-magic_number_lognormal_position_normalized_frequency_lower_limit = 21.0
-magic_number_lognormal_position_normalized_frequency_upper_limit = 215.0
-
 magic_number_lognormal_position_frequency_lower_limit = 1 * u.Hz / 1000.0
 magic_number_lognormal_position_frequency_upper_limit = 10.0 * u.Hz / 1000.0
 

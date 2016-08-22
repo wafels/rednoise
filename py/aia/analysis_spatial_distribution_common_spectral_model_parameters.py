@@ -3,6 +3,11 @@
 # across a number of models, as defined by the user.  At each pixel the model
 # selected by the information criterion is selected, and its value is plotted.
 #
+#
+# TODO: Nverplot the simulated data power law index histograms for all 3 simulations.
+# TODO: Note the number of pixels that were fit in the plot.
+# TODO: Normalize the histograms to the number of pixels that were fit.
+#
 import os
 import pickle
 import numpy as np
@@ -17,11 +22,13 @@ import details_analysis as da
 import details_plots as dp
 from tools import statistics_tools
 
+import matplotlib.cm as cm
+
 
 # Paper 2
 # Wavelengths we want to cross correlate
 waves = ['94', '131', '171', '193', '211', '335', ]
-#waves = ['171']
+waves = ['171']
 regions = ['six_euv']
 power_type = 'fourier_power_relative'
 limit_type = 'standard'
@@ -100,7 +107,7 @@ for ic_type in ic_types:
                 ofilename = os.path.join(output, region_id + '.datacube')
 
                 # Get the region submap
-                if iwave == 0:
+                if iwave == 0 and not (ds.corename in ds.bradshaw):
                     all_submaps = analysis_get_data.get_region_submap(output, region_id)
                     region_submap = all_submaps['reference region']
 
@@ -169,113 +176,126 @@ for ic_type in ic_types:
                     # Create the masked numpy array
                     map_data = ma.array(final_data, mask=final_mask)
 
-                    # Maximum
+                    # Range
                     print('{:s}: {:n}->{:n}'.format(parameter, np.nanmin(map_data), np.nanmax(map_data)))
 
-                    # Make a SunPy map for nice spatially aware plotting.
-                    my_map = analysis_get_data.make_map(region_submap, map_data)
+                    if ds.corename in ds.bradshaw:
+                        plt.imshow(np.transpose(map_data)[::-1, :], cmap=cm.Set2)
+                        plt.colorbar()
+                        plt.title(ds.corename + '\n' + label)
+                        plt.show()
+                        bins = 50
+                        ss = statistics_tools.Summary(map_data.compressed())
+                        plt.hist(map_data.compressed(), bins=bins)
+                        plt.title(ds.corename + '\n' + label)
+                        plt.xlabel(label)
+                        plt.ylabel('number')
+                        plt.show()
+                    else:
+                        # Make a SunPy map for nice spatially aware plotting.
+                        my_map = analysis_get_data.make_map(region_submap, map_data)
 
-                    # Get the sunspot
-                    polygon, sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
-                                                                                  sunspot_outline[1],
-                                                                                  my_map.date,
-                                                                                  edgecolors=[dp.spatial_plots['sunspot outline']])
+                        # Get the sunspot
+                        polygon, sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
+                                                                                      sunspot_outline[1],
+                                                                                      my_map.date,
+                                                                                      edgecolors=[dp.spatial_plots['sunspot outline']])
 
-                    subtitle = dp.concat_string(['%s - %s' % (region, wave),
-                                                percent_used_string], sep='\n')
-                    # Make a spatial distribution map spectral model parameter
-                    plt.close('all')
-                    # Normalize the color table
-                    norm = colors.Normalize(clip=False,
-                                            vmin=p1_limits[0].value,
-                                            vmax=p1_limits[1].value)
+                        subtitle = dp.concat_string(['%s - %s' % (region, wave),
+                                                    percent_used_string], sep='\n')
+                        # Make a spatial distribution map spectral model parameter
+                        plt.close('all')
+                        # Normalize the color table
+                        norm = colors.Normalize(clip=False,
+                                                vmin=p1_limits[0].value,
+                                                vmax=p1_limits[1].value)
 
-                    # Set up the palette we will use
-                    palette = dp.spatial_plots['color table']
-                    # Bad values are those that are masked out
-                    palette.set_bad(dp.spatial_plots['bad value'], 1.0)
-                    #palette.set_under('green', 1.0)
-                    #palette.set_over('red', 1.0)
+                        # Set up the palette we will use
+                        palette = dp.spatial_plots['color table']
+                        # Bad values are those that are masked out
+                        palette.set_bad(dp.spatial_plots['bad value'], 1.0)
+                        #palette.set_under('green', 1.0)
+                        #palette.set_over('red', 1.0)
 
-                    # Begin the plot
-                    fig, ax = plt.subplots()
-                    # Plot the map
-                    ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
-                    #ret.axes.set_title('%s\n%s' % (label, subtitle))
-                    title = label + r'$_{%s}$' % wave
-                    #ret.axes.set_title(title + '\n[%s]' % percent_used_string, fontsize=fontsize)
-                    #map_title = title + '\n%s of all pixels' % percent_used_string
-                    map_title = label + '\n' + 'AIA ' + wave + ' Angstrom, {:s} fit'.format(percent_used_string)
-                    ret.axes.set_title(map_title, fontsize=fontsize)
-                    #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
-                    #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
-                    #ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,
-                    #                 colors=["#0088ff", "#0044ff", "#0000ff"],
-                    #                 linewidths=[2, 2, 2])
-                    ax.add_collection(sunspot_collection)
-                    cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
+                        # Begin the plot
+                        fig, ax = plt.subplots()
+                        # Plot the map
+                        ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
+                        #ret.axes.set_title('%s\n%s' % (label, subtitle))
+                        title = label + r'$_{%s}$' % wave
+                        #ret.axes.set_title(title + '\n[%s]' % percent_used_string, fontsize=fontsize)
+                        #map_title = title + '\n%s of all pixels' % percent_used_string
+                        map_title = label + '\n' + 'AIA ' + wave + ' Angstrom, {:s} fit'.format(percent_used_string)
+                        ret.axes.set_title(map_title, fontsize=fontsize)
+                        #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
+                        #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
+                        #ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,
+                        #                 colors=["#0088ff", "#0044ff", "#0000ff"],
+                        #                 linewidths=[2, 2, 2])
+                        ax.add_collection(sunspot_collection)
+                        cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
 
-                    # Fit everything in.
-                    ax.autoscale_view()
+                        # Fit everything in.
+                        ax.autoscale_view()
 
-                    # Dump to file
-                    #final_filename = dp.concat_string([plot_type,
-                    #                                   submap_type,
-                    #                                   plot_identity_filename,
-                    #                                   subtitle_filename])
-                    final_filename = dp.concat_string([plot_type,
-                                                       plot_identity_filename,
-                                                       subtitle_filename]).replace(' ', '')
-                    filepath = os.path.join(image, final_filename + '.eps')
-                    print('Saving to ' + filepath)
-                    plt.savefig(filepath, bbox_inches='tight')
-                    plt.close('all')
+                        # Dump to file
+                        #final_filename = dp.concat_string([plot_type,
+                        #                                   submap_type,
+                        #                                   plot_identity_filename,
+                        #                                   subtitle_filename])
+                        final_filename = dp.concat_string([plot_type,
+                                                           plot_identity_filename,
+                                                           subtitle_filename]).replace(' ', '')
+                        filepath = os.path.join(image, final_filename + '.eps')
+                        print('Saving to ' + filepath)
+                        plt.savefig(filepath, bbox_inches='tight')
+                        plt.close('all')
 
-                    #
-                    # Distributions
-                    #
-                    bins = 50
-                    ss = statistics_tools.Summary(map_data.compressed())
-                    plt.hist(map_data.compressed(), bins=bins)
-                    plt.title(title)
-                    plt.xlabel(parameter)
-                    plt.ylabel('number')
-                    plt.axvline(ss.mean,
-                                label='mean [{:n}]'.format(ss.mean),
-                                linestyle=dp.mean.linestyle,
-                                color=dp.mean.color)
-                    plt.axvline(ss.median,
-                                label='median [{:n}]'.format(ss.median),
-                                linestyle=dp.median.linestyle,
-                                color=dp.median.color)
-                    plt.axvline(ss.percentile[0],
-                                label='2.5% [{:n}]'.format(ss.percentile[0]),
-                                linestyle=dp.percentile0.linestyle,
-                                color=dp.percentile0.color)
-                    plt.axvline(ss.percentile[1],
-                                label='97.5% [{:n}]'.format(ss.percentile[1]),
-                                linestyle=dp.percentile1.linestyle,
-                                color=dp.percentile1.color)
-                    plt.legend(loc=1, framealpha=0.5)
-                    filepath = os.path.join(image, final_filename + '.distribution.eps')
-                    print('Saving to ' + filepath)
-                    plt.savefig(filepath, bbox_inches='tight')
-                    plt.close('all')
+                        #
+                        # Distributions
+                        #
+                        bins = 50
+                        ss = statistics_tools.Summary(map_data.compressed())
+                        plt.hist(map_data.compressed(), bins=bins)
+                        plt.title(title)
+                        plt.xlabel(parameter)
+                        plt.ylabel('number')
+                        plt.axvline(ss.mean,
+                                    label='mean [{:n}]'.format(ss.mean),
+                                    linestyle=dp.mean.linestyle,
+                                    color=dp.mean.color)
+                        plt.axvline(ss.median,
+                                    label='median [{:n}]'.format(ss.median),
+                                    linestyle=dp.median.linestyle,
+                                    color=dp.median.color)
+                        plt.axvline(ss.percentile[0],
+                                    label='2.5% [{:n}]'.format(ss.percentile[0]),
+                                    linestyle=dp.percentile0.linestyle,
+                                    color=dp.percentile0.color)
+                        plt.axvline(ss.percentile[1],
+                                    label='97.5% [{:n}]'.format(ss.percentile[1]),
+                                    linestyle=dp.percentile1.linestyle,
+                                    color=dp.percentile1.color)
+                        plt.legend(loc=1, framealpha=0.5)
+                        filepath = os.path.join(image, final_filename + '.distribution.eps')
+                        print('Saving to ' + filepath)
+                        plt.savefig(filepath, bbox_inches='tight')
+                        plt.close('all')
 
 
-                    # Save the map to a file for later use
-                    final_pickle_filepath = os.path.join(output,
-                                                         final_filename + '.pkl')
-                    print('Saving map to %s' % final_pickle_filepath)
-                    f = open(final_pickle_filepath, 'wb')
-                    pickle.dump(map_title, f)
-                    pickle.dump(subtitle, f)
-                    pickle.dump(my_map, f)
-                    f.close()
+                        # Save the map to a file for later use
+                        final_pickle_filepath = os.path.join(output,
+                                                             final_filename + '.pkl')
+                        print('Saving map to %s' % final_pickle_filepath)
+                        f = open(final_pickle_filepath, 'wb')
+                        pickle.dump(map_title, f)
+                        pickle.dump(subtitle, f)
+                        pickle.dump(my_map, f)
+                        f.close()
 
-                    # Store the location and file name
-                    print('Adding %s' % final_pickle_filepath)
-                    filepaths.append(final_pickle_filepath)
+                        # Store the location and file name
+                        print('Adding %s' % final_pickle_filepath)
+                        filepaths.append(final_pickle_filepath)
 
 # Save the location and file name data
 filepaths_filepath = os.path.join(filepaths_root, "analysis_spatial_distribution_common_spectral_model_parameters.filepaths.pkl")

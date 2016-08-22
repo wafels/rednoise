@@ -22,7 +22,7 @@ observation time.
 1. Load in the full 3d simulated data set.
 2. Assume that the simulated data represents real observational data that has
 been de-rotated and co-aligned.
-3. Save the data in the same format as the output of step0_coalign_aia_data.py.
+3. Save the data in the same format that is used by step2_create_power_spectra.
 
 """
 
@@ -78,12 +78,16 @@ times = {"date_obs": "2016-08-15 01:23:45", "time_in_seconds": dsim.cadence.to(u
 # Step 2 has data shaped like (ny, nx, nt)
 #
 a = list()
-a.append('papern_bradshaw_simulation')
+a.append(ds.study_type)
 a.append('disk')
 a.append('sim0')
 a.append('{:s}'.format(ds.wave))
 z = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/{:s}/{:s}/{:s}/{:s}/six_euv'.format(a[0], a[1], a[2], a[3])
+
 filename = '{:s}_{:s}_{:s}_{:s}_six_euv.datacube.t0_None.pkl'.format(a[0], a[1], a[2], a[3])
+if not os.path.exists(z):
+    print('Creating {:s}'.format(z))
+    os.makedirs(z)
 
 pfilepath = '{:s}/{:s}'.format(z, filename)
 print('Saving to {:s}'.format(pfilepath))

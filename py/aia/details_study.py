@@ -9,13 +9,15 @@ import astropy.units as u
 # Study type
 #
 #study_type = 'debugpaper2'
-study_type = 'paper2'
+#study_type = 'paper2'
 #study_type = 'paper2_shorter_ts'
 #study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
-study_type = 'papern_bradshaw_simulation'
-
+#study_type = 'papern_bradshaw_simulation'
+#study_type = 'papern_bradshaw_simulation_low_fn'
+#study_type = 'papern_bradshaw_simulation_intermediate_fn'
+study_type = 'papern_bradshaw_simulation_high_fn'
 
 # Target cadence
 target_cadence = 12
@@ -37,6 +39,10 @@ fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
 # Standard index range of files to read in
 file_list_index = [0, None]
 
+
+bradshaw = ('papern_bradshaw_simulation_low_fn',
+            'papern_bradshaw_simulation_intermediate_fn',
+            'papern_bradshaw_simulation_high_fn')
 
 #
 # Setup the details given the study type
@@ -138,7 +144,7 @@ if study_type == 'paper3_BLSGSM':
     step1_output_information = '.1-11'
 
 
-if study_type == 'papern_bradshaw_simulation':
+if study_type in bradshaw:
     conversion_style = 'simple'
     dataroot = '~/Data/ts/'
     corename = study_type

@@ -17,10 +17,9 @@ import details_analysis as da
 
 
 # Paper 2
-# waves = ['94', '131', '171', '193', '211', '335']
-waves = ['171', '193']
+waves = ['94', '131', '171', '193', '211', '335']
 regions = ['six_euv']
-
+power_type = 'fourier_power_relative'
 limit_type = 'standard'
 appended_name = None
 
@@ -260,4 +259,6 @@ for ic_type in ic_types:
                                                                        appended_name]) + '.png'
                                     ax.legend(framealpha=0.7, fontsize=dp.fontsize, loc=4)
                                     fig.tight_layout()
+                                    print(os.path.join(image, final_filename))
                                     fig.savefig(os.path.join(image, final_filename))
+                                    plt.close(fig)
