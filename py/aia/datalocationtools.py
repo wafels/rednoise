@@ -23,3 +23,47 @@ def save_location_calculator(roots, branches):
 def ident_creator(branches):
     return '_'.join(branches)
 
+
+def filename(branches, separator='_'):
+    """
+    Creates a filename from a list of input strings.
+
+    :param branches: a list of strings
+    :param separator: string that separates the components strings
+    :return: a single string with the list entries separated by the separator
+    """
+    return separator.join(branches)
+
+
+def path(branches, root=''):
+    """
+    Creates a directory path from a list of input strings.
+
+    :param branches: a list of strings.
+    :param root: the root of directory path.
+    :return: a single string with the list entries by the directory separator.
+    """
+    return os.path.join(root, os.path.sep.join(branches))
+
+
+def filepath(branches, root='', separator='_'):
+    """
+    Creates a full filepath based on the input branches.
+
+    :param branches:  a list of strings.
+    :param root: the root of directory path.
+    :return: a single string that defines a file path for a single file.
+    """
+    return os.path.join(path(branches, root=root),
+                        filename(branches, separator=separator))
+
+
+class FilePath:
+    def __init__(self, branches, separator='_', root=''):
+        self.branches = branches
+        self.separator = separator
+        self.root = root
+
+        self.filename = filename(self.branches, separator=self.separator)
+        self.path = path(self.branches, root=self.root)
+        self.filepath = filepath(self.branches, root=self.root, separator=self.separator)
