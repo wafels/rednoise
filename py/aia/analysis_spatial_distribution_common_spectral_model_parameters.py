@@ -78,6 +78,8 @@ plot_type = 'spatial.common'
 filepaths_root = ds.datalocationtools.save_location_calculator(ds.roots, [ds.corename, ds.sunlocation, ds.fits_level])['pickle']
 filepaths = []
 
+
+
 # Plot spatial distributions of the spectral model parameters.
 # Different information criteria
 for ic_type in ic_types:
@@ -107,7 +109,7 @@ for ic_type in ic_types:
                 ofilename = os.path.join(output, region_id + '.datacube')
 
                 # Get the region submap
-                if iwave == 0 and not (ds.corename in ds.bradshaw):
+                if iwave == 0 and not (ds.corename in ds.simulation):
                     all_submaps = analysis_get_data.get_region_submap(output, region_id)
                     region_submap = all_submaps['reference region']
 
@@ -159,6 +161,7 @@ for ic_type in ic_types:
                     fit_parameters = [v.fit_parameter for v in this.model.variables]
                     parameter_index = fit_parameters.index(parameter)
                     label = this.model.variables[parameter_index].converted_label
+                    fit_parameter = this.model.variables[parameter_index].fit_parameter
 
                     image = dp.get_image_model_location(ds.roots, b, [this_model, ic_limit_string, limit_type])
 
@@ -179,18 +182,41 @@ for ic_type in ic_types:
                     # Range
                     print('{:s}: {:n}->{:n}'.format(parameter, np.nanmin(map_data), np.nanmax(map_data)))
 
-                    if ds.corename in ds.bradshaw:
-                        plt.imshow(np.transpose(map_data)[::-1, :], cmap=cm.Set2)
-                        plt.colorbar()
-                        plt.title(ds.corename + '\n' + label)
-                        plt.show()
+                    if ds.corename in ds.simulation:
+                        plt.imshow(np.transpose(map_data), cmap=cm.Set2, origin='lower')
+                        plt.xlabel('x (pixels)')
+                        plt.ylabel('y (pixels')
+                        cbar = plt.colorbar()
+                        cbar.ax.set_ylabel(label)
+                        map_title1 = ds.sim_name[ds.corename]
+                        map_title2 = 'simulated AIA ' + wave + ' Angstrom, {:s} fit'.format(percent_used_string)
+                        map_title3 = fit_parameter + ' ' + label
+                        map_title = map_title1 + '\n' + map_title2 + '\n' + map_title3
+                        plt.title(map_title)
+                        final_filename = dp.concat_string([plot_type,
+                                                           plot_identity_filename,
+                                                           subtitle_filename]).replace(' ', '')
+                        filepath = os.path.join(image, final_filename + '.{:s}.png'.format(ds.corename))
+                        print('Saving to ' + filepath)
+                        plt.savefig(filepath, bbox_inches='tight')
+                        plt.close('all')
+
                         bins = 50
                         ss = statistics_tools.Summary(map_data.compressed())
-                        plt.hist(map_data.compressed(), bins=bins)
-                        plt.title(ds.corename + '\n' + label)
+                        md = map_data.compressed()
+                        weights = np.ones_like(md)/len(md)
+                        plt.hist(md, bins=bins, weights=weights)
+                        plt.title(map_title)
                         plt.xlabel(label)
                         plt.ylabel('number')
-                        plt.show()
+                        filepath = os.path.join(image, final_filename + '.{:s}.distribution.png'.format(ds.corename))
+                        print('Saving to ' + filepath)
+                        plt.savefig(filepath, bbox_inches='tight')
+                        plt.close('all')
+
+                        subtitle = dp.concat_string(['%s - %s' % (region, wave),
+                                                    percent_used_string], sep='\n')
+                        my_map = map_data
                     else:
                         # Make a SunPy map for nice spatially aware plotting.
                         my_map = analysis_get_data.make_map(region_submap, map_data)
@@ -283,19 +309,19 @@ for ic_type in ic_types:
                         plt.close('all')
 
 
-                        # Save the map to a file for later use
-                        final_pickle_filepath = os.path.join(output,
-                                                             final_filename + '.pkl')
-                        print('Saving map to %s' % final_pickle_filepath)
-                        f = open(final_pickle_filepath, 'wb')
-                        pickle.dump(map_title, f)
-                        pickle.dump(subtitle, f)
-                        pickle.dump(my_map, f)
-                        f.close()
+                    # Save the map to a file for later use
+                    final_pickle_filepath = os.path.join(output,
+                                                         final_filename + '.pkl')
+                    print('Saving map to %s' % final_pickle_filepath)
+                    f = open(final_pickle_filepath, 'wb')
+                    pickle.dump(map_title, f)
+                    pickle.dump(subtitle, f)
+                    pickle.dump(my_map, f)
+                    f.close()
 
-                        # Store the location and file name
-                        print('Adding %s' % final_pickle_filepath)
-                        filepaths.append(final_pickle_filepath)
+                    # Store the location and file name
+                    print('Adding %s' % final_pickle_filepath)
+                    filepaths.append(final_pickle_filepath)
 
 # Save the location and file name data
 filepaths_filepath = os.path.join(filepaths_root, "analysis_spatial_distribution_common_spectral_model_parameters.filepaths.pkl")

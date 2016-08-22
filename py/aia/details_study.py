@@ -127,12 +127,12 @@ class Study:
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
 study_type = 'papern_bradshaw_simulation_high_fn'
 
-wave = '94'
-wave = '131'
+#wave = '94'
+#wave = '131'
 wave = '171'
-wave = '193'
-wave = '211'
-wave = '335'
+#wave = '193'
+#wave = '211'
+#wave = '335'
 
 input_root = '~/Data/ts'
 
@@ -157,9 +157,13 @@ fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
 file_list_index = [0, None]
 
 
-bradshaw = ('papern_bradshaw_simulation_low_fn',
-            'papern_bradshaw_simulation_intermediate_fn',
-            'papern_bradshaw_simulation_high_fn')
+simulation = ('papern_bradshaw_simulation_low_fn',
+              'papern_bradshaw_simulation_high_fn',
+              'papern_bradshaw_simulation_intermediate_fn')
+
+sim_name = {'papern_bradshaw_simulation_low_fn': 'low frequency nanoflares',
+            'papern_bradshaw_simulation_intermediate_fn': 'intermediate frequency nanoflares',
+            'papern_bradshaw_simulation_high_fn': 'high frequency nanoflares'}
 
 #
 # Setup the details given the study type
@@ -248,7 +252,7 @@ if study_type == 'paper3_BLSGSM':
     step1_output_information = '.1-11'
 
 
-if study_type in bradshaw:
+if study_type in simulation:
     conversion_style = 'simple'
     dataroot = '~/Data/ts/'
     corename = study_type

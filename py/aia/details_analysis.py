@@ -16,6 +16,7 @@ from tools import lnlike_model_fit
 
 # Information criteria we want to examine
 ic_details = {'BIC': [6.0, 0.0]}
+ic_details = {'BIC': [6.0]}  # , 0.0]}
 
 
 # Where in the main output from step3 is everything
