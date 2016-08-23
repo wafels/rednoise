@@ -124,8 +124,8 @@ class Study:
 #study_type = 'paper3_BLSGSM'
 #study_type = 'papern_bradshaw_simulation'
 #study_type = 'papern_bradshaw_simulation_low_fn'
-#study_type = 'papern_bradshaw_simulation_intermediate_fn'
-study_type = 'papern_bradshaw_simulation_high_fn'
+study_type = 'papern_bradshaw_simulation_intermediate_fn'
+#study_type = 'papern_bradshaw_simulation_high_fn'
 
 #wave = '94'
 #wave = '131'
@@ -158,8 +158,8 @@ file_list_index = [0, None]
 
 
 simulation = ('papern_bradshaw_simulation_low_fn',
-              'papern_bradshaw_simulation_high_fn',
-              'papern_bradshaw_simulation_intermediate_fn')
+              'papern_bradshaw_simulation_intermediate_fn',
+              'papern_bradshaw_simulation_high_fn')
 
 sim_name = {'papern_bradshaw_simulation_low_fn': 'low frequency nanoflares',
             'papern_bradshaw_simulation_intermediate_fn': 'intermediate frequency nanoflares',
