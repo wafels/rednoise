@@ -2,6 +2,7 @@
 # Power spectrum tools
 #
 import numpy as np
+from scipy.stats import norm
 #import rnspectralmodels
 #import details_study as ds
 #import matplotlib.pyplot as plt
@@ -45,3 +46,42 @@ def most_probable_power_law_index(f, I, m, n):
     for inn, nn in enumerate(n):
         blp[inn] = bayeslogprob(f, I, nn, m)
     return n[np.argmax(blp)]
+
+
+#
+# Some integrals
+#
+def gaussian_component(b, sigma, c, mu0):
+    """
+    The integral from mu0 to infinity of the gaussian component used
+    in the power spectral analysis.
+
+    :param b: amplitude of the gaussian component used in the power spectral
+    analysis
+    :param sigma: width of the gaussian component used in the power spectral
+    analysis
+    :param c: center of the gaussian component used in the power spectral
+    analysis
+    :param mu0: lower end of normalized frequency range over which the
+    integral is calculated.  The upper limit is set to infinity.
+    :return: the integral from mu0 to infinity of the gaussian component used
+    in the power spectral analysis
+    """
+    x = (np.log(mu0) - c) / sigma
+    cdf = norm.cdf(x)
+    return b * np.sqrt(2*np.pi) * sigma * (1.0 - cdf)
+
+
+def power_law_component(a, n, mu0):
+    """
+    The integral from mu0 to infinity of the power law component used
+    in the power spectral analysis.
+
+    :param a: amplitude of the power law component
+    :param n: power law index
+    :param mu0: lower end of normalized frequency range over which the
+    integral is calculated.  The upper limit is set to infinity.
+    :return: the integral from mu0 to infinity of the power law component used
+    in the power spectral analysis.
+    """
+    return (a / (n + 1.0)) * mu0 ** (1.0-n)
