@@ -24,6 +24,24 @@ def normalized_dot_product(a, b):
     """
     return np.sum(a*b)**2/(np.sum(a**2)*np.sum(b**2))
 
+
+def normalized_square_error(a, b, norm=np.nanmean):
+    diff = np.square(a-b)
+    if norm is None:
+        normalization = 1.0
+    elif isinstance(norm, int):
+        normalization = norm
+    else:
+        normalization = norm(diff)
+    return diff / normalization
+
+
+compare_types = ['SSIM',
+                 'mean normalized mean square error',
+                 'median normalized mean square error']
+
+compare_type = 'mean normalized mean square error'
+
 plt.close('all')
 for simulation in ds.simulation:
 
@@ -58,7 +76,15 @@ ad = anderson_ksamp([a1, a2])
 sig_string = "intermediate vs. high\n\n"
 sig_string += "Anderson-Darling k-sample test\n"
 sig_string += "  significance level = %3.3f%%\n" % (100*ad.significance_level)
-sig_string += "SSIM (global) = %3.2f" % compare_ssim(my_map[sim1], my_map[sim2])
+
+if compare_type == 'SSIM':
+    measure = compare_ssim(my_map[sim1], my_map[sim2])
+if compare_type == 'mean normalized mean square error':
+    measure == np.nanmean(normalized_square_error(my_map[sim1], my_map[sim2], norm=np.nanmean))
+if compare_type == 'median normalized mean square error':
+    measure == np.nanmedian(normalized_square_error(my_map[sim1], my_map[sim2], norm=np.nanmean))
+
+sig_string += "%s (global) = %3.2f" % (compare_type, measure)
 print(ad)
 plt.text(3.2, 0.12, sig_string, fontstyle='italic', bbox=dict(facecolor='yellow', alpha=0.1))
 
@@ -100,18 +126,24 @@ for j in range(0, n):
         i2 = (i + 1) * dx - 1
         smap1 = np.transpose(my_map[sim1].data)[j1:j2, i1:i2]
         smap2 = np.transpose(my_map[sim2].data)[j1:j2, i1:i2]
-        ssim[j, i] = compare_ssim(smap1, smap2)
+        if compare_type == 'SSIM':
+            ssim[j, i] = compare_ssim(smap1, smap2)
+        if compare_type == 'mean normalized mean square error':
+            ssim[j, i] == np.nanmean(normalized_square_error(smap1, smap2, norm=np.nanmean))
+        if compare_type == 'median normalized mean square error':
+            ssim[j, i] == np.nanmedian(normalized_square_error(smap1, smap2, norm=np.nanmean))
+
 
 plt.imshow(ssim, interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1], vmin=-1, vmax=1)
 plt.xlabel('pixels')
 plt.ylabel('pixels')
-title = "local SSIM\n"
+title = "local {:s}\n".format(compare_type)
 title += "intermediate vs. high\n"
 title += "calculated on {:n}$\\times${:n} superpixels".format(dy, dx)
 plt.title(title)
 cb = plt.colorbar()
-cb.set_label('SSIM')
-filepath = os.path.join('/home/ireland/Desktop', 'SSIM_power_index_comparison_across_simulations.png')
+cb.set_label(compare_type)
+filepath = os.path.join('/home/ireland/Desktop', '{:s}_power_index_comparison_across_simulations.png'.format(compare_type))
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
 plt.close('all')
