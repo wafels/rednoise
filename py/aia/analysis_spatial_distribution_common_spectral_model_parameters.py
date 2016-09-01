@@ -29,6 +29,7 @@ import matplotlib.cm as cm
 # Wavelengths we want to cross correlate
 waves = ['94', '131', '171', '193', '211', '335', ]
 waves = ['171', '193']
+waves = ['171']
 regions = ['six_euv']
 power_type = 'fourier_power_relative'
 limit_type = 'standard'
@@ -184,15 +185,15 @@ for ic_type in ic_types:
 
                     if ds.corename in ds.simulation:
                         plt.imshow(np.transpose(map_data), cmap=cm.Set2, origin='lower')
-                        plt.xlabel('x (pixels)')
-                        plt.ylabel('y (pixels)')
+                        plt.xlabel('x (pixels)', fontsize=fontsize)
+                        plt.ylabel('y (pixels)', fontsize=fontsize)
                         cbar = plt.colorbar()
-                        cbar.ax.set_ylabel(label)
+                        cbar.ax.set_ylabel(label, fontsize=fontsize)
                         map_title1 = ds.sim_name[ds.corename]
                         map_title2 = 'simulated AIA ' + wave + ' Angstrom, {:s} fit'.format(percent_used_string)
                         map_title3 = fit_parameter + ' ' + label
                         map_title = map_title1 + '\n' + map_title2 + '\n' + map_title3
-                        plt.title(map_title)
+                        plt.title(map_title, fontsize=fontsize)
                         final_filename = dp.concat_string([plot_type,
                                                            plot_identity_filename,
                                                            subtitle_filename]).replace(' ', '')
@@ -207,8 +208,8 @@ for ic_type in ic_types:
                         weights = np.ones_like(md)/len(md)
                         plt.hist(md, bins=bins, weights=weights)
                         plt.title(map_title)
-                        plt.xlabel(label)
-                        plt.ylabel('number')
+                        plt.xlabel(label, fontsize=fontsize)
+                        plt.ylabel('number', fontsize=fontsize)
                         filepath = os.path.join(image, final_filename + '.{:s}.distribution.png'.format(ds.corename))
                         print('Saving to ' + filepath)
                         plt.savefig(filepath, bbox_inches='tight')

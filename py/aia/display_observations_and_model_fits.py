@@ -13,6 +13,7 @@ import details_study as ds
 import details_analysis as da
 import details_plots as dp
 import analysis_explore
+from tools import rnspectralmodels4
 
 # Paper 2: Wavelengths and regions we want to analyze
 waves = ['171'] #, '193', '211', '335', '94']
@@ -30,7 +31,7 @@ power_type = 'fourier_power_relative'
 #regions = ['test_six_euv']
 
 # Number of locations to print out
-n_locations = 10
+n_locations = 1
 
 # Parameter limits
 limit_type = 'standard'
@@ -70,7 +71,18 @@ five_minutes = dp.five_minutes
 hloc = dp.hloc
 linewidth = 3
 plot_type = 'observations_vs_model_fits'
+nsample = 30
 
+
+def monte_carlo(pwr, pfrequencies, nx, ny):
+    spwr = np.zeros((nx, ny, len(pwr)))
+    for i in range(0, nx):
+        for j in range(0, ny):
+            for k in range(0, len(pwr)):
+                spwr[i, j, k] = np.random.exponential(scale=pwr[k])
+
+    this_model = rnspectralmodels4.PowerLawPlusConstant(f_norm=pfrequencies[0])
+    return rnspectralmodels4.Fit(pfrequencies, spwr, this_model, verbose=1)
 #
 # Main analysis loops
 #
@@ -131,8 +143,9 @@ for iwave, wave in enumerate(waves):
             # Define some pixel locations
             ny = storage[wave][region][model].as_array('BIC').shape[0]
             nx = storage[wave][region][model].as_array('BIC').shape[1]
-            these_locations = zip(np.random.randint(0, ny, size=n_locations),
-                                  np.random.randint(0, nx, size=n_locations))
+            these_locations = list(zip(np.random.randint(0, ny, size=n_locations),
+                                  np.random.randint(0, nx, size=n_locations)))
+            these_locations.append((105, 107))
 
             # Go through the pixel locations
             for this_y, this_x in these_locations:
@@ -193,3 +206,23 @@ for iwave, wave in enumerate(waves):
                 final_filepath = os.path.join(image, final_filename)
                 print('Saving to %s' % final_filepath)
                 plt.savefig(final_filepath, bbox_inches='tight', pad_inches=0)
+
+            if this_y == 105 and this_x == 107:
+                print('Monte Carlo')
+                mc = monte_carlo(this_pwr, pfrequencies.to('Hz'), 20, 50)
+                print(' ')
+                print(ds.study_type)
+                print('Standard deviation: ', np.std(mc.as_array('power law index')))
+                final_filename = dp.concat_string(['display_obs_and_model', plot_type, title]) + '.pkl'
+                final_filepath = os.path.join(output, final_filename)
+                print('Dumping data to ' + final_filepath)
+                file_out = open(final_filepath, 'wb')
+                pickle.dump(ds.study_type, file_out)
+                pickle.dump(best_fits['Power Law + Constant'][this_y, this_x], file_out)
+                pickle.dump(f, file_out)
+                pickle.dump(this_pwr, file_out)
+                pickle.dump(fn, file_out)
+                pickle.dump(fit_parameters, file_out)
+                pickle.dump(spectral_components, file_out)
+                pickle.dump(mc, file_out)
+                file_out.close()

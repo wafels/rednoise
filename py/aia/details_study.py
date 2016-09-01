@@ -117,14 +117,14 @@ class Study:
 # Study type
 #
 #study_type = 'debugpaper2'
-study_type = 'paper2'
+#study_type = 'paper2'
 #study_type = 'paper2_shorter_ts'
 #study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
 #study_type = 'papern_bradshaw_simulation'
 #study_type = 'papern_bradshaw_simulation_low_fn'
-#study_type = 'papern_bradshaw_simulation_intermediate_fn'
+study_type = 'papern_bradshaw_simulation_intermediate_fn'
 #study_type = 'papern_bradshaw_simulation_high_fn'
 
 #wave = '94'

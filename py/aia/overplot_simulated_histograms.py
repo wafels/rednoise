@@ -17,6 +17,8 @@ map_title = {}
 subtitle = {}
 my_map = {}
 
+reduction = 0.9
+
 
 def normalized_dot_product(a, b):
     """
@@ -94,8 +96,8 @@ else:
 
 #sig_string += "%s (global) = %3.2f" % (compare_type, measure)
 print(ad)
-plt.text(0.1, 0.1, sig_string, fontstyle='italic', fontsize=dp.fontsize, bbox=dict(facecolor='yellow', alpha=0.1))
-plt.legend(fontsize=dp.fontsize)
+plt.text(0.5, 0.13, sig_string, fontstyle='italic', fontsize=reduction*dp.fontsize, bbox=dict(facecolor='yellow', alpha=0.1))
+plt.legend(fontsize=reduction*dp.fontsize)
 filepath = os.path.join('/home/ireland/Desktop', 'power_index_comparison_across_simulations.png')
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
@@ -156,15 +158,15 @@ plt.close('all')
 
 aaa = ImageError(my_map[sim1].data, my_map[sim2].data)
 plt.imshow(np.transpose(aaa.diff), interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1])
-plt.xlabel('x (pixels)')
-plt.ylabel('y (pixels)')
-t = "power law index differences"
+plt.xlabel('x (pixels)', fontsize=dp.fontsize)
+plt.ylabel('y (pixels)', fontsize=dp.fontsize)
+t = "power law index (n) differences"
 title = "{:s}\n".format(t)
 title += "intermediate - high".format(sim1, sim2)
 #plt.text(60, 10, "mean absolute difference = %3.2f" % measure, bbox=dict(facecolor='white', alpha=0.8))
-plt.title(title)
+plt.title(title, fontsize=dp.fontsize)
 cb = plt.colorbar()
-cb.set_label(t)
+cb.set_label(t, fontsize=dp.fontsize)
 filepath = os.path.join('/home/ireland/Desktop', 'power_index_difference_across_simulations.png')
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
