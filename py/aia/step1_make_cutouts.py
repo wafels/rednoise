@@ -161,5 +161,5 @@ for region in ds.regions:
     filepath = os.path.join(ds.save_locations['image'], ds.ident + '.exact_map{:s}'.format(ds.processing_info))
     for region in regions.keys():
         filepath = filepath + '.' + region
-    filepath = filepath + '.eps'
+    filepath = filepath + '.png'
     step1_plots.plot_exact_map(exact_map, filepath)

@@ -8,7 +8,7 @@ import analysis_get_data
 #
 #
 #
-def plot_exact_map(image, filepath, colorbar=True):
+def plot_exact_map(image, filepath, colorbar=False):
 
     plt.close('all')
     fig, ax = plt.subplots()
@@ -24,7 +24,7 @@ def plot_exact_map(image, filepath, colorbar=True):
 
     print('Saving to {:s}'.format(filepath))
     if filepath is not None:
-        plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
+        plt.savefig(filepath, bbox_inches='tight')
     else:
         plt.show()
     return None

@@ -82,6 +82,8 @@ sunspot_outline = LineSelection(color=map_plot_colors[map_color_style]["sunspot"
 # Color tables
 map_ic = MapPlots(bad=map_plot_colors[map_color_style]["bad"])
 
+spectral_parameters = MapPlots(bad=map_plot_colors[map_color_style]["bad"])
+
 #
 # Useful strings for plots
 #

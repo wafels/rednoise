@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import details_study as ds
+import details_plots as dp
 
 from scipy.stats import anderson_ksamp
 from skimage.measure import compare_ssim, compare_nrmse
@@ -25,22 +26,28 @@ def normalized_dot_product(a, b):
     return np.sum(a*b)**2/(np.sum(a**2)*np.sum(b**2))
 
 
-def normalized_square_error(a, b, norm=np.nanmean):
-    diff = np.square(a-b)
-    if norm is None:
-        normalization = 1.0
-    elif isinstance(norm, int):
-        normalization = norm
-    else:
-        normalization = norm(diff)
-    return diff / normalization
+class ImageError:
+    def __init__(self, a, b):
+        self.diff = a-b
+        self.abs_diff = np.abs(self.diff)
+        self.se = self.abs_diff ** 2
+
+    def square_error(self, norm, summary):
+        if norm is None:
+            normalization = 1.0
+        elif isinstance(norm, float):
+            print('Using float')
+            normalization = norm
+        else:
+            normalization = norm(self.se)
+
+        # Summarize
+        return summary(self.se / normalization)
 
 
-compare_types = ['SSIM',
-                 'mean normalized mean square error',
-                 'median normalized mean square error']
+compare_types = ['SSIM', 'absolute value']
 
-compare_type = 'mean normalized mean square error'
+compare_type = 'absolute value'
 
 plt.close('all')
 for simulation in ds.simulation:
@@ -58,11 +65,11 @@ for simulation in ds.simulation:
     bins = 50
     weights = np.ones_like(md)/len(md)
     plt.hist(md, bins=bins, weights=weights, label=ds.sim_name[simulation], alpha=0.35)
-    plt.xlabel('power law index (n)')
-    plt.ylabel('fraction in bin')
-    plt.title('comparison across simulations')
+    plt.xlabel('power law index (n)', fontsize=dp.fontsize)
+    plt.ylabel('fraction in bin', fontsize=dp.fontsize)
+    plt.title('comparison across simulations', fontsize=dp.fontsize)
 
-subsample = 10
+subsample =10
 sim1 = "papern_bradshaw_simulation_intermediate_fn"
 sim2 = "papern_bradshaw_simulation_high_fn"
 a1 = my_map[sim1].compressed()[0::subsample]
@@ -73,22 +80,22 @@ a2 = my_map[sim2].compressed()[0::subsample]
 print(' ')
 print('Anderson-Darling k-sample test between {:s} and {:s}'.format(sim1, sim2))
 ad = anderson_ksamp([a1, a2])
-sig_string = "intermediate vs. high\n\n"
-sig_string += "Anderson-Darling k-sample test\n"
-sig_string += "  significance level = %3.3f%%\n" % (100*ad.significance_level)
+sig_string = "intermediate vs. high\n"
+sig_string += "Anderson-Darling two-sided k-sample test\n"
+sig_string += "  significance level = %3.3f%%" % (100*ad.significance_level)
 
 if compare_type == 'SSIM':
-    measure = compare_ssim(my_map[sim1], my_map[sim2])
-if compare_type == 'mean normalized mean square error':
-    measure == np.nanmean(normalized_square_error(my_map[sim1], my_map[sim2], norm=np.nanmean))
-if compare_type == 'median normalized mean square error':
-    measure == np.nanmedian(normalized_square_error(my_map[sim1], my_map[sim2], norm=np.nanmean))
+    measure = compare_ssim(my_map[sim1].data, my_map[sim2].data)
+    vmin, vmax = -1.0, 1.0
+else:
+    zzz = ImageError(my_map[sim1].data, my_map[sim2].data)
+    measure = np.mean(zzz.abs_diff)
+    vmin, vmax = None, None
 
-sig_string += "%s (global) = %3.2f" % (compare_type, measure)
+#sig_string += "%s (global) = %3.2f" % (compare_type, measure)
 print(ad)
-plt.text(3.2, 0.12, sig_string, fontstyle='italic', bbox=dict(facecolor='yellow', alpha=0.1))
-
-plt.legend()
+plt.text(0.1, 0.1, sig_string, fontstyle='italic', fontsize=dp.fontsize, bbox=dict(facecolor='yellow', alpha=0.1))
+plt.legend(fontsize=dp.fontsize)
 filepath = os.path.join('/home/ireland/Desktop', 'power_index_comparison_across_simulations.png')
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
@@ -128,13 +135,12 @@ for j in range(0, n):
         smap2 = np.transpose(my_map[sim2].data)[j1:j2, i1:i2]
         if compare_type == 'SSIM':
             ssim[j, i] = compare_ssim(smap1, smap2)
-        if compare_type == 'mean normalized mean square error':
-            ssim[j, i] == np.nanmean(normalized_square_error(smap1, smap2, norm=np.nanmean))
-        if compare_type == 'median normalized mean square error':
-            ssim[j, i] == np.nanmedian(normalized_square_error(smap1, smap2, norm=np.nanmean))
+        else:
+            qqq = ImageError(smap1, smap2)
+            ssim[j, i] = np.mean(qqq.abs_diff)
 
 
-plt.imshow(ssim, interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1], vmin=-1, vmax=1)
+plt.imshow(ssim, interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1], vmin=vmin, vmax=vmax)
 plt.xlabel('pixels')
 plt.ylabel('pixels')
 title = "local {:s}\n".format(compare_type)
@@ -147,4 +153,21 @@ filepath = os.path.join('/home/ireland/Desktop', '{:s}_power_index_comparison_ac
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
 plt.close('all')
+
+aaa = ImageError(my_map[sim1].data, my_map[sim2].data)
+plt.imshow(np.transpose(aaa.diff), interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1])
+plt.xlabel('x (pixels)')
+plt.ylabel('y (pixels)')
+t = "power law index differences"
+title = "{:s}\n".format(t)
+title += "intermediate - high".format(sim1, sim2)
+#plt.text(60, 10, "mean absolute difference = %3.2f" % measure, bbox=dict(facecolor='white', alpha=0.8))
+plt.title(title)
+cb = plt.colorbar()
+cb.set_label(t)
+filepath = os.path.join('/home/ireland/Desktop', 'power_index_difference_across_simulations.png')
+print('Saving to ' + filepath)
+plt.savefig(filepath, bbox_inches='tight')
+plt.close('all')
+
 

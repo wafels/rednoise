@@ -28,7 +28,7 @@ import matplotlib.cm as cm
 # Paper 2
 # Wavelengths we want to cross correlate
 waves = ['94', '131', '171', '193', '211', '335', ]
-waves = ['171']
+waves = ['171', '193']
 regions = ['six_euv']
 power_type = 'fourier_power_relative'
 limit_type = 'standard'
@@ -185,7 +185,7 @@ for ic_type in ic_types:
                     if ds.corename in ds.simulation:
                         plt.imshow(np.transpose(map_data), cmap=cm.Set2, origin='lower')
                         plt.xlabel('x (pixels)')
-                        plt.ylabel('y (pixels')
+                        plt.ylabel('y (pixels)')
                         cbar = plt.colorbar()
                         cbar.ax.set_ylabel(label)
                         map_title1 = ds.sim_name[ds.corename]
@@ -225,7 +225,7 @@ for ic_type in ic_types:
                         polygon, sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
                                                                                       sunspot_outline[1],
                                                                                       my_map.date,
-                                                                                      edgecolors=[dp.spatial_plots['sunspot outline']])
+                                                                                      edgecolors=[dp.sunspot_outline.color])
 
                         subtitle = dp.concat_string(['%s - %s' % (region, wave),
                                                     percent_used_string], sep='\n')
@@ -237,9 +237,9 @@ for ic_type in ic_types:
                                                 vmax=p1_limits[1].value)
 
                         # Set up the palette we will use
-                        palette = dp.spatial_plots['color table']
+                        palette = dp.spectral_parameters.cm
                         # Bad values are those that are masked out
-                        palette.set_bad(dp.spatial_plots['bad value'], 1.0)
+                        palette.set_bad(dp.spectral_parameters.bad, 1.0)
                         #palette.set_under('green', 1.0)
                         #palette.set_over('red', 1.0)
 
@@ -251,7 +251,8 @@ for ic_type in ic_types:
                         title = label + r'$_{%s}$' % wave
                         #ret.axes.set_title(title + '\n[%s]' % percent_used_string, fontsize=fontsize)
                         #map_title = title + '\n%s of all pixels' % percent_used_string
-                        map_title = label + '\n' + 'AIA ' + wave + ' Angstrom, {:s} fit'.format(percent_used_string)
+                        map_title = 'power law index ' + label
+                        map_title += '\nAIA ' + wave + r'$\mathrm{\AA}$' + ', {:s} fit'.format(percent_used_string)
                         ret.axes.set_title(map_title, fontsize=fontsize)
                         #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
                         #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
@@ -272,7 +273,7 @@ for ic_type in ic_types:
                         final_filename = dp.concat_string([plot_type,
                                                            plot_identity_filename,
                                                            subtitle_filename]).replace(' ', '')
-                        filepath = os.path.join(image, final_filename + '.eps')
+                        filepath = os.path.join(image, final_filename + '.png')
                         print('Saving to ' + filepath)
                         plt.savefig(filepath, bbox_inches='tight')
                         plt.close('all')
@@ -303,7 +304,7 @@ for ic_type in ic_types:
                                     linestyle=dp.percentile1.linestyle,
                                     color=dp.percentile1.color)
                         plt.legend(loc=1, framealpha=0.5)
-                        filepath = os.path.join(image, final_filename + '.distribution.eps')
+                        filepath = os.path.join(image, final_filename + '.distribution.png')
                         print('Saving to ' + filepath)
                         plt.savefig(filepath, bbox_inches='tight')
                         plt.close('all')
