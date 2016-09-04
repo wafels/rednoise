@@ -165,6 +165,11 @@ sim_name = {'papern_bradshaw_simulation_low_fn': 'low frequency nanoflares',
             'papern_bradshaw_simulation_intermediate_fn': 'intermediate frequency nanoflares',
             'papern_bradshaw_simulation_high_fn': 'high frequency nanoflares'}
 
+
+sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares',
+            'papern_bradshaw_simulation_intermediate_fn': 'intermediate occurrence rate nanoflares',
+            'papern_bradshaw_simulation_high_fn': 'high occurrence rate nanoflares'}
+
 #
 # Setup the details given the study type
 #
