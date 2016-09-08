@@ -157,7 +157,11 @@ plt.savefig(filepath, bbox_inches='tight')
 plt.close('all')
 
 aaa = ImageError(my_map[sim1].data, my_map[sim2].data)
-plt.imshow(np.transpose(aaa.diff), interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1])
+umask = np.logical_or(my_map[sim1].mask, my_map[sim2].mask)
+final_diff = np.ma.array(np.transpose(aaa.diff), mask=np.transpose(umask))
+palette = cm.Spectral
+palette.set_bad('k', 1.0)
+plt.imshow(final_diff, interpolation='none', cmap=palette, origin='lower', extent=[0, ny-1, 0, nx-1])
 plt.xlabel('x (pixels)', fontsize=dp.fontsize)
 plt.ylabel('y (pixels)', fontsize=dp.fontsize)
 t = "power law index (n) differences"
