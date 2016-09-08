@@ -18,9 +18,16 @@ map_color_style = 'w'
 fontsize = 20
 
 
-class LineSelection:
+# Two different general map plot styles.  The first style has
+# the sunspot outline in white, and the bad model fit pixels
+# in white.  The second style has the opposite
+map_plot_colors = {"w": {"sunspot": "white", "bad": "black"},
+                   "k": {"sunspot": "black", "bad": "white"}}
+
+
+class LinePlotStyle:
     """
-    Storage class for lines across multiple plots.
+    Storage class for line styles, to be used across multiple plots.
     """
     def __init__(self, color='k', label="", linestyle="-", linewidth=1,
                  position=1.0*u.s):
@@ -32,9 +39,9 @@ class LineSelection:
         self.frequency = 1.0 / self.position
 
 
-class MapPlots:
+class MapPlotStyle:
     """
-    Storage class for map styles across multiple plots.
+    Storage class for map styles, to be used across multiple plots.
     """
     def __init__(self, cm=cm.Set2, bad='white', upper='blue', lower='cyan'):
         self.cm = cm
@@ -43,46 +50,49 @@ class MapPlots:
         self.lower = lower
 
 #
-# Lines
+# Line plot Styles
 #
-three_minutes = LineSelection(color='k',
+three_minutes = LinePlotStyle(color='k',
                               label='3 minutes',
                               linestyle=":",
                               linewidth=3,
                               position=180*u.s)
 
 
-five_minutes = LineSelection(color='k',
+five_minutes = LinePlotStyle(color='k',
                              label='5 minutes',
                              linestyle="-",
                              linewidth=3,
                              position=300*u.s)
 
 
-mean = LineSelection(color='r', linewidth=3, linestyle='solid')
-median = LineSelection(color='r', linewidth=3, linestyle='dashed')
-percentile0 = LineSelection(color='g', linewidth=3, linestyle='dashdot')
-percentile1 = LineSelection(color='g', linewidth=3, linestyle='dotted')
-modeline = LineSelection(color='g', linewidth=3)
+mean = LinePlotStyle(color='r', linewidth=3, linestyle='solid')
+median = LinePlotStyle(color='r', linewidth=3, linestyle='dashed')
+percentile0 = LinePlotStyle(color='g', linewidth=3, linestyle='dashdot')
+percentile1 = LinePlotStyle(color='g', linewidth=3, linestyle='dotted')
+modeline = LinePlotStyle(color='g', linewidth=3)
+
+# Sunspot outline details
+sunspot_outline = LinePlotStyle(color=map_plot_colors[map_color_style]["sunspot"], linewidth=3, linestyle='solid')
+
+#
+# Map Plot Styles
+#
+# Information criterion maps
+information_criterion = MapPlotStyle(bad=map_plot_colors[map_color_style]["bad"],
+                                     cm=cm.seismic)
+
+# Any power spectrum variable maps
+spectral_parameters = MapPlotStyle(bad=map_plot_colors[map_color_style]["bad"])
 
 # Histograms have the following type
 hloc = (100,)  # 'scott', 'knuth', 'freedman')
 histogram_1d_bins = 100
 
-# Map plot styles
-map_plot_colors = {"w": {"sunspot": "white", "bad": "black"},
-                   "k": {"sunspot": "black", "bad": "white"}}
-
 # Parameters which are frequencies
 frequency_parameters = ['lognormal position']
 
-# Sunspot outline details
-sunspot_outline = LineSelection(color=map_plot_colors[map_color_style]["sunspot"], linewidth=3, linestyle='solid')
 
-# Color tables
-map_ic = MapPlots(bad=map_plot_colors[map_color_style]["bad"])
-
-spectral_parameters = MapPlots(bad=map_plot_colors[map_color_style]["bad"])
 
 #
 # Useful strings for plots

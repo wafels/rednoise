@@ -19,6 +19,8 @@ my_map = {}
 
 reduction = 0.9
 
+output_location = os.path.expanduser('~/Desktop/nano/')
+
 
 def normalized_dot_product(a, b):
     """
@@ -98,7 +100,7 @@ else:
 print(ad)
 plt.text(0.5, 0.13, sig_string, fontstyle='italic', fontsize=reduction*dp.fontsize, bbox=dict(facecolor='yellow', alpha=0.1))
 plt.legend(fontsize=reduction*dp.fontsize, framealpha=0.5)
-filepath = os.path.join('/home/ireland/Desktop', 'power_index_comparison_across_simulations.png')
+filepath = os.path.join(output_location, 'power_index_comparison_across_simulations.png')
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
 plt.close('all')
@@ -151,7 +153,7 @@ title += "calculated on {:n}$\\times${:n} superpixels".format(dy, dx)
 plt.title(title)
 cb = plt.colorbar()
 cb.set_label(compare_type)
-filepath = os.path.join('/home/ireland/Desktop', '{:s}_power_index_comparison_across_simulations.png'.format(compare_type))
+filepath = os.path.join(output_location, '{:s}_power_index_comparison_across_simulations.png'.format(compare_type))
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
 plt.close('all')
@@ -159,7 +161,7 @@ plt.close('all')
 aaa = ImageError(my_map[sim1].data, my_map[sim2].data)
 umask = np.logical_or(my_map[sim1].mask, my_map[sim2].mask)
 final_diff = np.ma.array(np.transpose(aaa.diff), mask=np.transpose(umask))
-palette = cm.Spectral
+palette = cm.Accent
 palette.set_bad('k', 1.0)
 plt.imshow(final_diff, interpolation='none', cmap=palette, origin='lower', extent=[0, ny-1, 0, nx-1])
 plt.xlabel('x (pixels)', fontsize=dp.fontsize)
@@ -171,7 +173,7 @@ title += "intermediate - high".format(sim1, sim2)
 plt.title(title, fontsize=dp.fontsize)
 cb = plt.colorbar()
 cb.set_label(t, fontsize=dp.fontsize)
-filepath = os.path.join('/home/ireland/Desktop', 'power_index_difference_across_simulations.png')
+filepath = os.path.join(output_location, 'power_index_difference_across_simulations.png')
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
 plt.close('all')
