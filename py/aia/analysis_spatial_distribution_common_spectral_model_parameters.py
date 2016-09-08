@@ -184,7 +184,10 @@ for ic_type in ic_types:
                     print('{:s}: {:n}->{:n}'.format(parameter, np.nanmin(map_data), np.nanmax(map_data)))
 
                     if ds.corename in ds.simulation:
-                        plt.imshow(np.transpose(map_data), cmap=cm.Set2, origin='lower')
+                        palette = cm.Set2
+                        # Bad values are those that are masked out
+                        palette.set_bad('black', 1.0)
+                        plt.imshow(np.transpose(map_data), cmap=palette, origin='lower')
                         plt.xlabel('x (pixels)', fontsize=fontsize)
                         plt.ylabel('y (pixels)', fontsize=fontsize)
                         cbar = plt.colorbar()

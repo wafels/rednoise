@@ -40,9 +40,16 @@ from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
 import step0_plots
 import details_study as ds
+import details_plots as dp
 import details_simulated as dsim
 
+from astropy.visualization.mpl_normalize import ImageNormalize
+from astropy import visualization
+
+from sunpy.cm import cm
+
 from astropy.io import fits
+import matplotlib.pyplot as plt
 
 
 # Create the AIA source data location
@@ -96,7 +103,29 @@ pickle.dump(np.swapaxes(sda, 0, 2), outputfile)
 pickle.dump(times, outputfile)
 outputfile.close()
 
+stretch = {'papern_bradshaw_simulation_high_fn': 0.00001,
+           'papern_bradshaw_simulation_intermediate_fn': 0.001,
+           'papern_bradshaw_simulation_low_fn': 0.001}
 
+#stretch = {'papern_bradshaw_simulation_high_fn': 0.001,
+#           'papern_bradshaw_simulation_intermediate_fn': 0.001,
+#           'papern_bradshaw_simulation_low_fn': 0.001}
+
+nt = sda.shape[0]
+im = sda[nt//2, :, :]
+cmap = cm.sdoaia171  # get_cmap(self._get_cmap_name())
+norm = ImageNormalize(stretch=visualization.AsinhStretch(stretch[ds.corename]))
+
+plt.close('all')
+plt.imshow(im, cmap=cmap, norm=norm, origin='bottom')
+plt.xlabel('x (pixels)', fontsize=dp.fontsize)
+plt.ylabel('y (pixels)', fontsize=dp.fontsize)
+title = ds.sim_name[ds.corename]
+title += '\nsimulated AIA 171 Angstrom emission'
+plt.title(title, fontsize=dp.fontsize)
+#plt.colorbar(label='emission')
+plt.savefig('/home/ireland/Desktop/emission.{:s}.png'.format(ds.sim_name[ds.corename]), bbox_inches='tight')
+plt.close('all')
 """
 if dsim.method == 'simple':
     pass

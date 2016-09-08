@@ -97,7 +97,7 @@ else:
 #sig_string += "%s (global) = %3.2f" % (compare_type, measure)
 print(ad)
 plt.text(0.5, 0.13, sig_string, fontstyle='italic', fontsize=reduction*dp.fontsize, bbox=dict(facecolor='yellow', alpha=0.1))
-plt.legend(fontsize=reduction*dp.fontsize)
+plt.legend(fontsize=reduction*dp.fontsize, framealpha=0.5)
 filepath = os.path.join('/home/ireland/Desktop', 'power_index_comparison_across_simulations.png')
 print('Saving to ' + filepath)
 plt.savefig(filepath, bbox_inches='tight')
@@ -142,7 +142,7 @@ for j in range(0, n):
             ssim[j, i] = np.mean(qqq.abs_diff)
 
 
-plt.imshow(ssim, interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1], vmin=vmin, vmax=vmax)
+plt.imshow(ssim, interpolation='none', cmap=cm.jet, origin='lower', extent=[0, ny-1, 0, nx-1], vmin=vmin, vmax=vmax)
 plt.xlabel('pixels')
 plt.ylabel('pixels')
 title = "local {:s}\n".format(compare_type)
@@ -157,7 +157,7 @@ plt.savefig(filepath, bbox_inches='tight')
 plt.close('all')
 
 aaa = ImageError(my_map[sim1].data, my_map[sim2].data)
-plt.imshow(np.transpose(aaa.diff), interpolation='none', cmap=cm.viridis, origin='lower', extent=[0, ny-1, 0, nx-1])
+plt.imshow(np.transpose(aaa.diff), interpolation='none', cmap=cm.seismic, origin='lower', extent=[0, ny-1, 0, nx-1])
 plt.xlabel('x (pixels)', fontsize=dp.fontsize)
 plt.ylabel('y (pixels)', fontsize=dp.fontsize)
 t = "power law index (n) differences"

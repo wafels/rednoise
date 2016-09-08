@@ -129,8 +129,8 @@ study_type = 'papern_bradshaw_simulation_high_fn'
 
 #wave = '94'
 #wave = '131'
-#wave = '171'
-wave = '193'
+wave = '171'
+#wave = '193'
 #wave = '211'
 #wave = '335'
 
