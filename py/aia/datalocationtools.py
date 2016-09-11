@@ -1,3 +1,25 @@
+"""
+
+source data root / source / data / is / here
+source data root / source / data / is / here_also
+
+
+structure = Root + Branches
+
+Root = source data root
+
+Branches =  source / data / is / here
+
+
+step0 - get source data and process
+
+Source data -> process 0 -> output data from 0
+
+output data root / source / data / is / here / process 0
+
+"""
+
+
 import os
 
 
