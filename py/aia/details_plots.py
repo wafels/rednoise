@@ -2,6 +2,7 @@
 # Some magic numbers and parameters used in plots
 #
 import os
+import re
 import numpy as np
 import matplotlib.cm as cm
 import astropy.units as u
@@ -17,6 +18,8 @@ map_color_style = 'w'
 # General fontsize
 fontsize = 20
 
+#
+plot_file_type = 'eps'
 
 # Two different general map plot styles.  The first style has
 # the sunspot outline in white, and the bad model fit pixels
@@ -169,3 +172,7 @@ def log_10_product(x, pos):
             n = n + 1
         fmt = '%.' + str(n - 1) + 'f'
         return fmt % (x)
+
+
+def clean_for_overleaf(s, rule='\W+', rep='_'):
+    return re.sub(rule, rep, s)

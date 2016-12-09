@@ -6,7 +6,7 @@
 import os
 import glob
 from copy import deepcopy
-import cPickle as pickle
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors

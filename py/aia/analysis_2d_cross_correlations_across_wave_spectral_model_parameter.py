@@ -242,7 +242,7 @@ for ic_type in ic_types:
                                         ax.text(x0, y1, 'Spearman=%1.2f(%i%%)' % (r[1][0], np.rint(100*r[1][1])), bbox=dict(facecolor=dp.rchi2limitcolor[0], alpha=0.7))
                                         if p1_name == p2_name:
                                             ax.plot([p1_limits[0].value, p1_limits[1].value],
-                                                     [p1_limits[0].value, p1_limits[1].value],
+                                                    [p1_limits[0].value, p1_limits[1].value],
                                                      color='r', linewidth=3,
                                                      label='%s=%s' % (xlabel, ylabel))
                                         # Colorbar
@@ -256,9 +256,12 @@ for ic_type in ic_types:
                                                                        plot_identity_filename,
                                                                        subtitle_filename,
                                                                        plot_name,
-                                                                       appended_name]) + '.png'
+                                                                       appended_name])
+                                    final_filename = dp.clean_for_overleaf(final_filename) + '.' + dp.plot_file_type
                                     ax.legend(framealpha=0.7, fontsize=dp.fontsize, loc=4)
                                     fig.tight_layout()
+                                    print("\n")
                                     print(os.path.join(image, final_filename))
                                     fig.savefig(os.path.join(image, final_filename))
                                     plt.close(fig)
+                                    plt.close('all')
