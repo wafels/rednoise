@@ -126,6 +126,8 @@ study_type = 'paper2'
 #study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
 #study_type = 'papern_bradshaw_simulation_high_fn'
+study_type = 'walsh'
+
 
 #wave = '94'
 #wave = '131'
@@ -268,6 +270,19 @@ if study_type in simulation:
     step0_output_information = ''
     step1_input_information = ''
     step1_output_information = ''
+
+
+if study_type == 'walsh':
+    dataroot = '~/Data/ts/'
+    corename = study_type
+    sunlocation = 'disk'
+    fits_level = '1.0'
+    cross_correlate = True
+    derotate = True
+    step0_output_information = ''
+    step1_input_information = ''
+    step1_output_information = ''
+    rn_processing = ''
 
 """
 if study_type == 'paper2':
