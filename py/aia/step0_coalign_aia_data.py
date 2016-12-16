@@ -160,6 +160,9 @@ if ds.cross_correlate:
         print("Applying cross-correlation shifts to the data.")
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
 
+    # Data times
+    dts = [(m.date - data[layer_index].date).total_seconds() for m in data]
+
     # Save the cross correlation shifts
     directory = save_locations['pickle']
     filename = ident + '.cc_chifts.{:s}{:s}.{:s}.pkl'.format(
@@ -168,6 +171,7 @@ if ds.cross_correlate:
     print('Saving cross-correlation data to ' + pfilepath)
     outputfile = open(pfilepath, 'wb')
     pickle.dump(cc_shifts, outputfile)
+    pickle.dump(dts, outputfile)
     pickle.dump(layer_index, outputfile)
     outputfile.close()
 
@@ -197,9 +201,9 @@ if ds.cross_correlate:
     plt.title(title + analysis_title)
     plt.legend(framealpha=0.5)
     plt.tight_layout()
-    plt.show()
+    filepath = os.path.join(save_locations['image'], ident + '.fft_crosscorrelation.%s.png' % ds.index_string)
+    plt.savefig(filepath)
 
-    dts = [(m.date - data[layer_index].date).total_seconds() for m in data]
     plt.figure(2)
     plt.plot(np.arange(len(dts)), dts)
     plt.axis('tight')
@@ -211,7 +215,8 @@ if ds.cross_correlate:
     plt.title(title + analysis_title)
     plt.legend(framealpha=0.5)
     plt.tight_layout()
-    plt.show()
+    filepath = os.path.join(save_locations['image'], ident + '.sampletimes.%s.png' % ds.index_string)
+    plt.savefig(filepath)
 
     filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.%s.png' % ds.index_string)
     step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s' % cc_func.__name__,
