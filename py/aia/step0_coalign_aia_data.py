@@ -160,8 +160,11 @@ if ds.cross_correlate:
         print("Applying cross-correlation shifts to the data.")
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
 
-    # Data times
+    # Data particulars
     dts = [(m.date - data[layer_index].date).total_seconds() for m in data]
+    dts_obs = [m.date for m in data]
+    x_scale = data[layer_index].scale.x
+    y_scale = data[layer_index].scale.y
 
     # Save the cross correlation shifts
     directory = save_locations['pickle']
@@ -172,12 +175,15 @@ if ds.cross_correlate:
     outputfile = open(pfilepath, 'wb')
     pickle.dump(cc_shifts, outputfile)
     pickle.dump(dts, outputfile)
+    pickle.dump(dts_obs, outputfile)
     pickle.dump(layer_index, outputfile)
+    pickle.dump(x_scale, outputfile)
+    pickle.dump(y_scale, outputfile)
     outputfile.close()
 
     # Plot out the cross correlation shifts
-    ccx = cc_shifts['x']/data[layer_index].scale.x
-    ccy = cc_shifts['y']/data[layer_index].scale.y
+    ccx = cc_shifts['x']/x_scale
+    ccy = cc_shifts['y']/y_scale
     displacement_unit = ccx.unit
     displacement = np.sqrt(ccx.value**2 + ccy.value**2)
     npwr = len(displacement)
@@ -188,6 +194,7 @@ if ds.cross_correlate:
     freq = np.fft.fftfreq(npwr, 12.0)
     plt.close('all')
     plt.figure(1)
+
     plt.semilogy(freq[0:npwr//2], pwr_r[0:npwr//2], label='net displacement')
     plt.semilogy(freq[0:npwr//2], pwr_ccx[0:npwr//2], label='x displacement')
     plt.semilogy(freq[0:npwr//2], pwr_ccy[0:npwr//2], label='y displacement')
