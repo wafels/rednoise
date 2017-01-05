@@ -116,16 +116,28 @@ class Study:
 #
 # Study type
 #
+
+# Paper 2
 #study_type = 'debugpaper2'
 study_type = 'paper2'
 #study_type = 'paper2_shorter_ts'
+
+# 3 - Noise Analysis
 #study_type = 'paper3_PSF'
 #study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
+
+# 4 - Simulated Data
 #study_type = 'papern_bradshaw_simulation'
 #study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
 #study_type = 'papern_bradshaw_simulation_high_fn'
+
+# 5 - GMU Study
+study_type = 'gmu1'
+
+# 6 - Jitter
+study_type = 'jitter_001'
 
 #wave = '94'
 #wave = '131'
@@ -173,6 +185,10 @@ sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares
 #
 # Setup the details given the study type
 #
+
+###############################################################################
+# Paper 2
+#
 if study_type == 'debugpaper2':
     dataroot = '~/Data/ts/'
     # corename = 'request4'
@@ -183,7 +199,6 @@ if study_type == 'debugpaper2':
     derotate = True
 
 if study_type == 'paper2':
-
     dataroot = '~/Data/ts/'
     corename = 'paper2_six_euv'
     sunlocation = 'disk'
@@ -222,6 +237,9 @@ if study_type == 'paper2_shorter_ts':
     file_list_index = [0, 1749]
 
 
+###############################################################################
+# Noise Analysis - paper 3
+#
 if study_type == 'paper3_BM3D':
     dataroot = '~/Data/ts/'
     corename = study_type
@@ -244,7 +262,6 @@ if study_type == 'paper3_PSF':
     step1_input_information = '.kirk=1-4_ireland=step0'
     step1_output_information = '.1-5'
 
-
 if study_type == 'paper3_BLSGSM':
     dataroot = '~/Data/ts/'
     corename = study_type
@@ -256,7 +273,9 @@ if study_type == 'paper3_BLSGSM':
     step1_input_information = '.kirk=1-10_ireland=step0'
     step1_output_information = '.1-11'
 
-
+###############################################################################
+# Simulated Data - paper 4
+#
 if study_type in simulation:
     conversion_style = 'simple'
     dataroot = '~/Data/ts/'
@@ -268,6 +287,16 @@ if study_type in simulation:
     step0_output_information = ''
     step1_input_information = ''
     step1_output_information = ''
+
+###############################################################################
+# GMU - paper 5
+#
+
+
+###############################################################################
+# Jitter - paper 6
+#
+
 
 """
 if study_type == 'paper2':
