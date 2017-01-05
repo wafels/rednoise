@@ -194,10 +194,11 @@ if ds.cross_correlate:
     freq = np.fft.fftfreq(npwr, 12.0)
     plt.close('all')
     plt.figure(1)
-
-    plt.semilogy(freq[0:npwr//2], pwr_r[0:npwr//2], label='net displacement')
-    plt.semilogy(freq[0:npwr//2], pwr_ccx[0:npwr//2], label='x displacement')
-    plt.semilogy(freq[0:npwr//2], pwr_ccy[0:npwr//2], label='y displacement')
+    pwr_start = 0
+    pwr_end = npwr//2
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_r[pwr_start:pwr_end], label='net displacement')
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccx[pwr_start:pwr_end], label='x displacement')
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccy[pwr_start:pwr_end], label='y displacement')
     plt.axis('tight')
     plt.grid('on')
     plt.xlabel('frequency (Hz)')
