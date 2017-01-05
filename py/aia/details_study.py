@@ -137,12 +137,12 @@ study_type = 'paper2'
 study_type = 'gmu1'
 
 # 6 - Jitter
-study_type = 'jitter_001'
+# study_type = 'jitter'
 
 #wave = '94'
 #wave = '131'
-wave = '171'
-#wave = '193'
+#wave = '171'
+wave = '193'
 #wave = '211'
 #wave = '335'
 
@@ -291,12 +291,33 @@ if study_type in simulation:
 ###############################################################################
 # GMU - paper 5
 #
+if study_type == 'gmu1':
+    dataroot = '~/Data/ts/'
+    corename = study_type
+    sunlocation = 'disk'
+    fits_level = '1.5'
+    cross_correlate = True
+    derotate = True
+    step0_output_information = ''
+    step1_input_information = ''
+    step1_output_information = ''
+    rn_processing = ''
 
 
 ###############################################################################
 # Jitter - paper 6
 #
-
+if study_type == 'jitter':
+    dataroot = '~/Data/ts/'
+    corename = study_type
+    sunlocation = 'overlaps_HiC'
+    fits_level = '1.0'
+    cross_correlate = True
+    derotate = True
+    step0_output_information = ''
+    step1_input_information = ''
+    step1_output_information = ''
+    rn_processing = ''
 
 """
 if study_type == 'paper2':

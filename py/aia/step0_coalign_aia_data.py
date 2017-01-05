@@ -20,6 +20,7 @@ import os
 import pickle
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sunpy.time import parse_time
 from sunpy.map import Map
@@ -52,20 +53,27 @@ print('Acquiring data from ' + aia_data_location)
 # Get the list of data and sort it
 directory_listing = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
 list_of_data = []
+if ds.fits_level == '1.0':
+    ending = '.fts'
+    ending_number = -4
+else:
+    ending = '.fits'
+    ending_number = -5
+
 for f in directory_listing:
-    if f[-5:] == '.fits':
+    if f[ending_number:] == ending:
         list_of_data.append(f)
     else:
         print('File that does not end in ".fits" detected, and not included in list = %s ' %f)
 
 print("Number of files found = %i" % len(list_of_data))
 print("Indices of files used = %s" % ds.index_string)
+zzz
 #
 # Start manipulating the data
 #
 print("Loading data")
 mc = Map(list_of_data[file_list_index[0]:file_list_index[1]], cube=True)
-
 # Get the date and times from the original mapcube
 date_obs = []
 time_in_seconds = []
@@ -152,7 +160,72 @@ if ds.cross_correlate:
         print("Applying cross-correlation shifts to the data.")
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
 
+    # Data particulars
+    dts = [(m.date - data[layer_index].date).total_seconds() for m in data]
+    dts_obs = [m.date for m in data]
+    x_scale = data[layer_index].scale.x
+    y_scale = data[layer_index].scale.y
+
+    # Save the cross correlation shifts
+    directory = save_locations['pickle']
+    filename = ident + '.cc_chifts.{:s}{:s}.{:s}.pkl'.format(
+        ds.step0_output_information, ds.rn_processing, ds.index_string)
+    pfilepath = os.path.join(directory, filename)
+    print('Saving cross-correlation data to ' + pfilepath)
+    outputfile = open(pfilepath, 'wb')
+    pickle.dump(cc_shifts, outputfile)
+    pickle.dump(dts, outputfile)
+    pickle.dump(dts_obs, outputfile)
+    pickle.dump(layer_index, outputfile)
+    pickle.dump(x_scale, outputfile)
+    pickle.dump(y_scale, outputfile)
+    outputfile.close()
+
     # Plot out the cross correlation shifts
+    ccx = cc_shifts['x']/x_scale
+    ccy = cc_shifts['y']/y_scale
+    displacement_unit = ccx.unit
+    displacement = np.sqrt(ccx.value**2 + ccy.value**2)
+    npwr = len(displacement)
+    window = np.hanning(npwr)
+    pwr_r = np.abs(np.fft.fft(displacement*window, norm='ortho'))**2
+    pwr_ccx = np.abs(np.fft.fft(ccx*window, norm='ortho'))**2
+    pwr_ccy = np.abs(np.fft.fft(ccy*window, norm='ortho'))**2
+    freq = np.fft.fftfreq(npwr, 12.0)
+    plt.close('all')
+    plt.figure(1)
+    pwr_start = 0
+    pwr_end = npwr//2
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_r[pwr_start:pwr_end], label='net displacement')
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccx[pwr_start:pwr_end], label='x displacement')
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccy[pwr_start:pwr_end], label='y displacement')
+    plt.axis('tight')
+    plt.grid('on')
+    plt.xlabel('frequency (Hz)')
+    plt.ylabel(r'power ({:s})'.format((displacement_unit ** 2)._repr_latex_()))
+    title = 'FFT power of cross-correlation displacement\n'
+    analysis_title = 'AIA {:s}, {:n} images, FITS level={:s}\n'.format(ds.wave, npwr, ds.fits_level)
+    analysis_title += 'derotation and cross-correlation image index={:n}'.format(layer_index)
+    plt.title(title + analysis_title)
+    plt.legend(framealpha=0.5)
+    plt.tight_layout()
+    filepath = os.path.join(save_locations['image'], ident + '.fft_crosscorrelation.%s.png' % ds.index_string)
+    plt.savefig(filepath)
+
+    plt.figure(2)
+    plt.plot(np.arange(len(dts)), dts)
+    plt.axis('tight')
+    plt.axvline(layer_index, color='r', label='layer index')
+    plt.axhline(0.0, color='k', linestyle=":", label='reference layer')
+    plt.xlabel('sample number')
+    plt.ylabel('time (s) rel. to derotation and cross-correlation image\n at {:s}'.format(str(data[layer_index].date)))
+    title = 'FITS recorded observation time from initial observation\n'
+    plt.title(title + analysis_title)
+    plt.legend(framealpha=0.5)
+    plt.tight_layout()
+    filepath = os.path.join(save_locations['image'], ident + '.sampletimes.%s.png' % ds.index_string)
+    plt.savefig(filepath)
+
     filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.%s.png' % ds.index_string)
     step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s' % cc_func.__name__,
                             layer_index, filepath=filepath)
