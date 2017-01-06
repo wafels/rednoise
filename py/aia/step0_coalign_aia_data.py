@@ -68,12 +68,12 @@ for f in directory_listing:
 
 print("Number of files found = %i" % len(list_of_data))
 print("Indices of files used = %s" % ds.index_string)
-zzz
 #
 # Start manipulating the data
 #
 print("Loading data")
 mc = Map(list_of_data[file_list_index[0]:file_list_index[1]], cube=True)
+
 # Get the date and times from the original mapcube
 date_obs = []
 time_in_seconds = []
@@ -81,12 +81,14 @@ for m in mc:
     date_obs.append(parse_time(m.date))
     time_in_seconds.append((date_obs[-1] - date_obs[0]).total_seconds())
 times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
-
+sample_numbers = np.arange(len(mc))
 
 # Solar de-rotation and cross-correlation operations will be performed relative
 # to the map at this index.
 layer_index = len(mc) // 2
 t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_index]
+x_scale = mc[layer_index].scale.x
+y_scale = mc[layer_index].scale.y
 filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
 #
 # Apply solar derotation
@@ -98,14 +100,43 @@ if ds.derotate:
     print("Calculating the solar rotation shifts")
     sr_shifts = calculate_solar_rotate_shift(mc, layer_index=layer_index)
 
-    # Plot out the solar rotation shifts
-    filepath = os.path.join(save_locations['image'], ident + '.solar_derotation.%s.png' % ds.index_string)
-    step0_plots.plot_shifts(sr_shifts, 'shifts due to solar de-rotation',
-                            layer_index, filepath=filepath)
-    filepath = os.path.join(save_locations['image'], ident + '.time.solar_derotation.%s.png' % ds.index_string)
-    step0_plots.plot_shifts(sr_shifts, 'shifts due to solar de-rotation',
-                            layer_index, filepath=filepath,
-                            x=t_since_layer_index, xlabel='time relative to reference layer (s)')
+    # Plot out the solar rotation shifts as a function of sample numbers and
+    # sample times
+    srx = sr_shifts['x']/x_scale
+    sry = sr_shifts['y']/y_scale
+    displacement_unit = srx.unit
+    for plot_type in ('sample_numbers', 'sample_times'):
+        nlayers = ' (%i maps)' % len(mc)
+        if plot_type == 'sample_numbers':
+            xaxis = sample_numbers
+            xlabel = 'mapcube layer index' + nlayers
+        if plot_type == 'sample_times':
+            xaxis = t_since_layer_index
+            xlabel = 'time relative to reference layer (s)' + nlayers
+
+        plt.close('all')
+        plt.plot(xaxis, srx.value,
+                 label=step0_plots.shift_prop['x']['label'],
+                 color=step0_plots.shift_prop['x']['color'],
+                 linestyle=step0_plots.shift_prop['x']['linestyle'])
+        plt.plot(xaxis, sry.value,
+                 label=step0_plots.shift_prop['y']['label'],
+                 color=step0_plots.shift_prop['y']['color'],
+                 linestyle=step0_plots.shift_prop['y']['linestyle'])
+        plt.axvline(xaxis[layer_index],
+                    label=step0_plots.layer_index_prop['label'] + ' (%i)' % layer_index,
+                    color=step0_plots.layer_index_prop['color'],
+                    linestyle=step0_plots.layer_index_prop['linestyle'])
+        plt.axhline(0.0,
+                    label=step0_plots.zero_prop['label'],
+                    color=step0_plots.zero_prop['color'],
+                    linestyle=step0_plots.zero_prop['linestyle'])
+        plt.legend(framealpha=0.5)
+        plt.xlabel(xlabel)
+        plt.ylabel(displacement_unit._repr_latex_())
+        plt.title('shifts due to solar rotation')
+        filepath = os.path.join(save_locations['image'], ident + '.solar_rotation.%s.%s.png' % (ds.index_string, plot_type))
+        plt.savefig(filepath)
 
     # Apply the solar rotation shifts
     print("Applying solar rotation shifts")
@@ -160,12 +191,6 @@ if ds.cross_correlate:
         print("Applying cross-correlation shifts to the data.")
         data = mapcube_coalign_by_match_template(data, layer_index=layer_index, shift=cc_shifts)
 
-    # Data particulars
-    dts = [(m.date - data[layer_index].date).total_seconds() for m in data]
-    dts_obs = [m.date for m in data]
-    x_scale = data[layer_index].scale.x
-    y_scale = data[layer_index].scale.y
-
     # Save the cross correlation shifts
     directory = save_locations['pickle']
     filename = ident + '.cc_chifts.{:s}{:s}.{:s}.pkl'.format(
@@ -174,14 +199,20 @@ if ds.cross_correlate:
     print('Saving cross-correlation data to ' + pfilepath)
     outputfile = open(pfilepath, 'wb')
     pickle.dump(cc_shifts, outputfile)
-    pickle.dump(dts, outputfile)
-    pickle.dump(dts_obs, outputfile)
+    pickle.dump(t_since_layer_index, outputfile)
+    pickle.dump(times['date_obs'], outputfile)
     pickle.dump(layer_index, outputfile)
     pickle.dump(x_scale, outputfile)
     pickle.dump(y_scale, outputfile)
     outputfile.close()
 
-    # Plot out the cross correlation shifts
+    # Save an image of the coaligned data at the layer_index
+    data[layer_index].peek()
+    filepath = os.path.join(save_locations['image'], ident + '.image_at_layer_index.%s.png' % ds.index_string)
+    plt.savefig(filepath)
+    plt.close('all')
+
+    # FFT power of the cross-correlation shifts
     ccx = cc_shifts['x']/x_scale
     ccy = cc_shifts['y']/y_scale
     displacement_unit = ccx.unit
@@ -189,16 +220,25 @@ if ds.cross_correlate:
     npwr = len(displacement)
     window = np.hanning(npwr)
     pwr_r = np.abs(np.fft.fft(displacement*window, norm='ortho'))**2
-    pwr_ccx = np.abs(np.fft.fft(ccx*window, norm='ortho'))**2
-    pwr_ccy = np.abs(np.fft.fft(ccy*window, norm='ortho'))**2
+    pwr_ccx = np.abs(np.fft.fft(ccx.value*window, norm='ortho'))**2
+    pwr_ccy = np.abs(np.fft.fft(ccy.value*window, norm='ortho'))**2
     freq = np.fft.fftfreq(npwr, 12.0)
     plt.close('all')
     plt.figure(1)
     pwr_start = 0
     pwr_end = npwr//2
-    plt.semilogy(freq[pwr_start:pwr_end], pwr_r[pwr_start:pwr_end], label='net displacement')
-    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccx[pwr_start:pwr_end], label='x displacement')
-    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccy[pwr_start:pwr_end], label='y displacement')
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_r[pwr_start:pwr_end],
+                 label=step0_plots.shift_prop['d']['label'],
+                 color=step0_plots.shift_prop['d']['color'],
+                 linestyle=step0_plots.shift_prop['d']['linestyle'])
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccx[pwr_start:pwr_end],
+                 label=step0_plots.shift_prop['x']['label'],
+                 color=step0_plots.shift_prop['x']['color'],
+                 linestyle=step0_plots.shift_prop['x']['linestyle'])
+    plt.semilogy(freq[pwr_start:pwr_end], pwr_ccy[pwr_start:pwr_end],
+                 label=step0_plots.shift_prop['y']['label'],
+                 color=step0_plots.shift_prop['y']['color'],
+                 linestyle=step0_plots.shift_prop['y']['linestyle'])
     plt.axis('tight')
     plt.grid('on')
     plt.xlabel('frequency (Hz)')
@@ -212,11 +252,18 @@ if ds.cross_correlate:
     filepath = os.path.join(save_locations['image'], ident + '.fft_crosscorrelation.%s.png' % ds.index_string)
     plt.savefig(filepath)
 
+    # Plot of sample times as a function of image number and time
     plt.figure(2)
-    plt.plot(np.arange(len(dts)), dts)
+    plt.plot(sample_numbers, t_since_layer_index, label='sample times rel. to layer index time')
     plt.axis('tight')
-    plt.axvline(layer_index, color='r', label='layer index')
-    plt.axhline(0.0, color='k', linestyle=":", label='reference layer')
+    plt.axvline(layer_index,
+                label=step0_plots.layer_index_prop['label'] + ' (%i)' % layer_index,
+                color=step0_plots.layer_index_prop['color'],
+                linestyle=step0_plots.layer_index_prop['linestyle'])
+    plt.axhline(0.0,
+                label=step0_plots.zero_prop['label'],
+                color=step0_plots.zero_prop['color'],
+                linestyle=step0_plots.zero_prop['linestyle'])
     plt.xlabel('sample number')
     plt.ylabel('time (s) rel. to derotation and cross-correlation image\n at {:s}'.format(str(data[layer_index].date)))
     title = 'FITS recorded observation time from initial observation\n'
@@ -226,14 +273,44 @@ if ds.cross_correlate:
     filepath = os.path.join(save_locations['image'], ident + '.sampletimes.%s.png' % ds.index_string)
     plt.savefig(filepath)
 
-    filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.%s.png' % ds.index_string)
-    step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s' % cc_func.__name__,
-                            layer_index, filepath=filepath)
+    # Plot of sample times as a function of image number and time
+    for plot_type in ('sample_numbers', 'sample_times'):
+        nlayers = ' (%i maps)' % len(mc)
+        if plot_type == 'sample_numbers':
+            xaxis = sample_numbers
+            xlabel = 'mapcube layer index' + nlayers
+        if plot_type == 'sample_times':
+            xaxis = t_since_layer_index
+            xlabel = 'time relative to reference layer (s)' + nlayers
 
-    filepath = os.path.join(save_locations['image'], ident + '.time.cross_correlation.%s.png' % ds.index_string)
-    step0_plots.plot_shifts(cc_shifts, 'shifts due to cross correlation \n using %s'  % cc_func.__name__,
-                            layer_index, filepath=filepath,
-                            x=t_since_layer_index, xlabel='time relative to reference layer (s)')
+        plt.close('all')
+        plt.plot(xaxis, ccx.value,
+                 label=step0_plots.shift_prop['x']['label'],
+                 color=step0_plots.shift_prop['x']['color'],
+                 linestyle=step0_plots.shift_prop['x']['linestyle'])
+        plt.plot(xaxis, ccy.value,
+                 label=step0_plots.shift_prop['y']['label'],
+                 color=step0_plots.shift_prop['y']['color'],
+                 linestyle=step0_plots.shift_prop['y']['linestyle'])
+        plt.plot(xaxis, displacement,
+                 label=step0_plots.shift_prop['d']['label'],
+                 color=step0_plots.shift_prop['d']['color'],
+                 linestyle=step0_plots.shift_prop['d']['linestyle'])
+        plt.axvline(xaxis[layer_index],
+                    label=step0_plots.layer_index_prop['label'] + ' (%i)' % layer_index,
+                    color=step0_plots.layer_index_prop['color'],
+                    linestyle=step0_plots.layer_index_prop['linestyle'])
+        plt.axhline(0.0,
+                    label=step0_plots.zero_prop['label'],
+                    color=step0_plots.zero_prop['color'],
+                    linestyle=step0_plots.zero_prop['linestyle'])
+        plt.legend(framealpha=0.5)
+        plt.xlabel(xlabel)
+        plt.ylabel(displacement_unit._repr_latex_())
+        plt.title('shifts due to cross correlation\n' + 'using %s' % cc_func.__name__)
+        filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.%s.%s.png' % (ds.index_string, plot_type))
+        plt.savefig(filepath)
+
 #
 # Save the full dataset
 #

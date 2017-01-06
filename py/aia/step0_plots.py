@@ -21,6 +21,9 @@ shift_prop = {"x": {"label": "x",
                     "linestyle": '-'},
               "y": {"label": "y",
                     "color": "g",
+                    "linestyle": '-'},
+              "d": {"label": "net displacement",
+                    "color": "r",
                     "linestyle": '-'}}
 
 
@@ -48,6 +51,12 @@ def plot_shifts(shifts, title, layer_index,
                  label=shift_prop[c]['label'],
                  color=shift_prop[c]['color'],
                  linestyle=shift_prop[c]['linestyle'])
+
+    displacement = np.sqrt(shifts['x'].to(unit)**2 + shifts['y'].to(unit)**2)
+    plt.plot(xx, displacement,
+             label=shift_prop['d']['label'],
+             color=shift_prop['d']['color'],
+             linestyle=shift_prop['d']['linestyle'])
 
     plt.axvline(xx[layer_index],
                 label=layer_index_prop['label'] + ' (%i)' % layer_index,

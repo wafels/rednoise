@@ -137,12 +137,12 @@ study_type = 'paper2'
 study_type = 'gmu1'
 
 # 6 - Jitter
-# study_type = 'jitter'
+study_type = 'jitter'
 
-#wave = '94'
+wave = '94'
 #wave = '131'
 #wave = '171'
-wave = '193'
+#wave = '193'
 #wave = '211'
 #wave = '335'
 
@@ -311,6 +311,7 @@ if study_type == 'jitter':
     dataroot = '~/Data/ts/'
     corename = study_type
     sunlocation = 'overlaps_HiC'
+    sunlocation = 'same_time_as_overlaps_HiC'
     fits_level = '1.0'
     cross_correlate = True
     derotate = True
