@@ -65,7 +65,6 @@ for f in directory_listing:
         list_of_data.append(f)
     else:
         print('File that does not end in ".fits" detected, and not included in list = %s ' %f)
-
 print("Number of files found = %i" % len(list_of_data))
 print("Indices of files used = %s" % ds.index_string)
 #

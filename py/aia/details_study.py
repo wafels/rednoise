@@ -137,12 +137,12 @@ study_type = 'paper2'
 study_type = 'gmu1'
 
 # 6 - Jitter
-study_type = 'jitter'
+#study_type = 'jitter'
 
-wave = '94'
+#wave = '94'
 #wave = '131'
 #wave = '171'
-#wave = '193'
+wave = '193'
 #wave = '211'
 #wave = '335'
 
@@ -302,7 +302,7 @@ if study_type == 'gmu1':
     step1_input_information = ''
     step1_output_information = ''
     rn_processing = ''
-
+    interpolate_pairs = [[], [], [], []]
 
 ###############################################################################
 # Jitter - paper 6
