@@ -89,9 +89,9 @@ def get_all_data(waves=['171', '193'],
 #
 # Get the region submap
 #
-def get_region_submap(output, region_id, average_submap=False):
+def get_region_submap(output, region_id, average_submap=False, index_string='t0_None'):
     # Get the map: Open the file that stores it and read it in
-    map_data_filename = os.path.join(output, region_id + '.datacube.pkl')
+    map_data_filename = os.path.join(output, region_id + '.datacube.{:s}.pkl'.format(index_string))
     print("Getting map data from %s " % map_data_filename)
     get_map_data = open(map_data_filename, 'rb')
     data = pickle.load(get_map_data)

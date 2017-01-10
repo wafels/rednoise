@@ -149,7 +149,7 @@ wave = '193'
 input_root = '~/Data/ts'
 
 # Target cadence
-target_cadence = 12
+target_cadence = 12.0
 
 # Target cadence
 absolute_tolerance = 0.5 * u.s
@@ -302,8 +302,8 @@ if study_type == 'gmu1':
     step1_input_information = ''
     step1_output_information = ''
     rn_processing = ''
-    interpolate_pairs = [[], [], [], []]
-
+    regions = {"ch": {"llx": -90.0*u.arcsec, "lly": 120*u.arcsec,
+                      "width": 405*u.arcsec, "height": 220*u.arcsec}}
 ###############################################################################
 # Jitter - paper 6
 #

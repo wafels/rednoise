@@ -17,8 +17,8 @@ from tools import rnspectralmodels4
 # Wavelengths and regions we want to analyze
 # waves = ['131', '171', '193', '211', '335', '94']
 # waves = ['94', '193', '211', '335', '131', '171']
-waves = ['171']
-regions = ['six_euv']
+waves = ['193']
+regions = ['ch']
 power_type = 'fourier_power_relative'
 
 # Fall AGU 2015 Wavelengths and regions we want to analyze

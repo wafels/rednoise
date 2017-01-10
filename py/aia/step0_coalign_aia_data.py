@@ -192,7 +192,7 @@ if ds.cross_correlate:
 
     # Save the cross correlation shifts
     directory = save_locations['pickle']
-    filename = ident + '.cc_chifts.{:s}{:s}.{:s}.pkl'.format(
+    filename = ident + '.cc_shifts.{:s}{:s}.{:s}.pkl'.format(
         ds.step0_output_information, ds.rn_processing, ds.index_string)
     pfilepath = os.path.join(directory, filename)
     print('Saving cross-correlation data to ' + pfilepath)

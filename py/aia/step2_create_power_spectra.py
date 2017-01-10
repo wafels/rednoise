@@ -12,7 +12,7 @@ import astropy.units as u
 from tools import tsutils
 from tools.tstools import is_evenly_sampled
 from tools.timeseries import TimeSeries
-from aia import details_study as ds
+import details_study as ds
 
 
 # Apply the window
@@ -33,7 +33,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['171']  # '131', '193', '211']
+waves = ['193']  # '131', '193', '211']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -41,7 +41,7 @@ waves = ['171']  # '131', '193', '211']
 # regions = ['four_wavebands']
 # regions = ['test_six_euv']
 
-regions = ['six_euv']
+regions = ['ch']
 
 # Apodization windows
 windows = ['hanning']
@@ -97,12 +97,12 @@ for iwave, wave in enumerate(waves):
             dt = ds.target_cadence
             ts_evenly_sampled = is_evenly_sampled(t,
                                                   absolute_tolerance.to('s').value)
-            if not is_evenly_sampled:
-                print('Resampling to an even time cadence.')
+            if not ts_evenly_sampled:
                 dt = (t[-1] - t[0]) / (1.0 * (nt - 1))
+                print('Resampling to an even time cadence of {:n} seconds'.format(dt))
                 evenly_sampled_t = np.arange(0, nt) * dt
-                for iii in range(0, nx):
-                    for jjj in range(0, ny):
+                for iii in range(0, ny):
+                    for jjj in range(0, nx):
                         f = interp1d(t, dc[iii, jjj, :])
                         dc[iii, jjj, :] = f(evenly_sampled_t)
                 t = evenly_sampled_t

@@ -19,11 +19,11 @@ import details_study as ds
 import details_analysis as da
 
 # Wavelengths we want to analyze
-waves = ['171']
-waves = ['94', '131', '171', '193', '211', '335']
+waves = ['193']
+#waves = ['94', '131', '171', '193', '211', '335']
 
 # Regions we are interested in
-regions = ['six_euv']
+regions = ['ch']
 
 # Apodization windows
 windows = ['hanning']
@@ -134,6 +134,8 @@ for wave in waves:
                     #model_name_1 = analysis_get_data.hsr2015_model_name(model_names[1])
                     model_name_0 = model_paper_names[0]
                     model_name_1 = model_paper_names[1]
+                    print('Model 0 is {:s} and paper name {:s}.'.format(model_names[0], model_name_0))
+                    print('Model 1 is {:s} and paper name {:s}.'.format(model_names[1], model_name_1))
 
                     fraction_model0 = n_model0 / (1.0 * mask.size)
                     model_name_0_ltx = '$M_' + model_name_0 + '$'

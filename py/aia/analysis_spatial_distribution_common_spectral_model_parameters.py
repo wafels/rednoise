@@ -29,8 +29,8 @@ import matplotlib.cm as cm
 # Wavelengths we want to cross correlate
 waves = ['94', '131', '171', '193', '211', '335', ]
 waves = ['171', '193']
-waves = ['171']
-regions = ['six_euv']
+waves = ['193']
+regions = ['ch']
 power_type = 'fourier_power_relative'
 limit_type = 'standard'
 

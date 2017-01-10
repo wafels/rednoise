@@ -14,7 +14,7 @@ def normalized_times(times, norm=None):
         normalization = times.dt.value
     else:
         normalization = norm.value
-    return Timeseries.SampleTimes(times.t.value / normalization * u.dimensionless_unscaled)
+    return TimeSeries.SampleTimes(times.t.value / normalization * u.dimensionless_unscaled)
 
 
 # Get cadences
@@ -99,4 +99,4 @@ def normalized_freqs(f, norm=None):
         normalization = np.min(f.pf.value)
     else:
         normalization = norm.value
-    return Timeseries.Frequencies(f.value / normalization * u.dimensionless_unscaled)
+    return TimeSeries.Frequencies(f.value / normalization * u.dimensionless_unscaled)
