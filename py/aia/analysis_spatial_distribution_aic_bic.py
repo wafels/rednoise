@@ -17,6 +17,7 @@ import analysis_get_data
 import analysis_explore
 import details_study as ds
 import details_analysis as da
+import details_plots as dp
 
 # Wavelengths we want to analyze
 waves = ['193']
@@ -195,8 +196,9 @@ for wave in waves:
                     ax.autoscale_view()
 
                     # Dump image to file
-                    save_filename = 'spatial_distrib.' + region_id + '.%s.%s.%s.eps' % (measure, str(this_ic_limit), mask_status)
+                    save_filename = 'spatial_distrib.' + region_id + '.%s.%s.%s' % (measure, str(this_ic_limit), mask_status)
                     filepath = os.path.join(image, save_filename)
+                    filepath = dp.clean_for_overleaf(filepath) + '.' + dp.plot_file_type
                     print('Saving to ' + filepath)
                     plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
                     plt.close('all')
