@@ -165,13 +165,70 @@ def sunspot_outline(directory='~/ts/pickle/', filename='sunspot.info.pkl'):
     return polygon, sunspot_date
 
 
-def rotate_sunspot_outline(polygon, sunspot_date, date, linewidth=[2], edgecolors=['k']):
+def fe_outline(times, data_box=None, download=True, fevents=['SS'],
+               directory='~/', filename='fevent.info.pkl'):
+    """
+    :param times
+    :param download:
+    :param fevents:
+    :param directory:
+    :param filename:
+    :return:
+    """
+    filepath = os.path.expanduser(os.path.join(directory, filename))
+    if download:
+        for fevent in fevents:
+            print("Acquiring {:s} data from the HEK".format(fevent))
+            client = hek.HEKClient()
+            qr = client.query(hek.attrs.Time(times[0], times[1]), hek.attrs.EventType(fevent))
+            if len(qr) is None:
+                shape_time = None
+            else:
+                shape_time = []
+                for response in qr:
+                    # Check to see if the bounding box of the fevent overlaps
+                    # with the bounding box extent of the data
+                    bx0 = data_box.bottomleft.x
+                    bx1 = data_box.topright.x
+                    by0 = data_box.bottomleft.y
+                    by1 = data_box.topright.y
+
+                    fx0 = data_box.bottomleft.x
+                    fx1 = data_box.topright.x
+                    fy0 = data_box.bottomleft.y
+                    fy1 = data_box.topright.y
+
+                    x_extent = np.max([bx1, fx1]) - np.min([bx0, fx0])
+                    y_extent = np.max([by1, fy1]) - np.min([by0, fy0])
+                    if (x_extent < bx1-bx0 + fx1-fx0) and (y_extent < by1-by0 + fy1-fy0):
+                        p1 = response["hpc_boundcc"][9: -2]
+                        p2 = p1.split(',')
+                        p3 = [v.split(" ") for v in p2]
+                        p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+                        polygon = np.zeros([1, len(p2), 2])
+                        polygon[0, :, :] = p4[:, :]
+                        fe_date = response['event_starttime']
+                        shape_time.append((fevent, polygon, fe_date))
+
+        f = open(filepath, 'wb')
+        pickle.dump(shape_time, f)
+        f.close()
+        print('Saved feature/event data to %s' % filepath)
+    else:
+        print("Acquiring feature/event data from %s" % filepath)
+        f = open(filepath, 'rb')
+        shape_time = pickle.load(f)
+        f.close()
+    return shape_time
+
+
+def rotate_fevent_outline(polygon, fevent_date, date, linewidth=[2], edgecolors=['k']):
     rotated_polygon = np.zeros_like(polygon)
     n = polygon.shape[1]
     for i in range(0, n):
         new_coords = rot_hpc(polygon[0, i, 0] * u.arcsec,
                              polygon[0, i, 1] * u.arcsec,
-                             sunspot_date,
+                             fevent_date,
                              date)
         rotated_polygon[0, i, 0] = new_coords[0].value
         rotated_polygon[0, i, 1] = new_coords[1].value

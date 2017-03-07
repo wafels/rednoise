@@ -24,7 +24,7 @@ waves = ['193']
 #waves = ['94', '131', '171', '193', '211', '335']
 
 # Regions we are interested in
-regions = ['ch']
+regions = ds.regions
 
 # Apodization windows
 windows = ['hanning']
@@ -166,7 +166,7 @@ for wave in waves:
 
                     # Set up the palette we will use
                     palette = cm.viridis
-                    palette = cm.plasma
+                    palette = cm.PiYG
                     # Bad values are those that are masked out
                     palette.set_bad('black', 1.0)
                     palette.set_under('blue', 1.0)

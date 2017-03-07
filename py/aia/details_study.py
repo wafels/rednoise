@@ -119,7 +119,7 @@ class Study:
 
 # Paper 2
 #study_type = 'debugpaper2'
-study_type = 'paper2'
+#study_type = 'paper2'
 #study_type = 'paper2_shorter_ts'
 
 # 3 - Noise Analysis
