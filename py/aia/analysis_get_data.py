@@ -165,50 +165,80 @@ def sunspot_outline(directory='~/ts/pickle/', filename='sunspot.info.pkl'):
     return polygon, sunspot_date
 
 
-def fe_outline(times, data_box=None, download=True, fevents=['SS'],
-               directory='~/', filename='fevent.info.pkl'):
+def _convert_hek_polygon_to_mpl_polygon(polygon_string):
+    p1 = polygon_string[9: -2]
+    p2 = p1.split(',')
+    p3 = [v.split(" ") for v in p2]
+    p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+    polygon = np.zeros([1, len(p2), 2])
+    polygon[0, :, :] = p4[:, :]
+    return polygon
+
+
+def _convert_hek_bbox_to_region(polygon_string):
+    polygon = _convert_hek_polygon_to_mpl_polygon(polygon_string)
+    xmin = np.min(polygon[0, :, 0])
+    xmax = np.max(polygon[0, :, 0])
+    ymin = np.min(polygon[0, :, 1])
+    ymax = np.max(polygon[0, :, 1])
+
+    return {"llx": xmin*u.arcsec, "lly": ymin*u.arcsec,
+            "width": (xmax-xmin)*u.arcsec,
+            "height": (ymax-ymin)*u.arcsec}
+
+
+def fevent_outline(times, region_bbox, download=True, fevents=[('CH', 'SPoCA')],
+                   directory='~/', filename='fevent.info.pkl'):
     """
-    :param times
-    :param download:
-    :param fevents:
-    :param directory:
-    :param filename:
+    Get feature/event outlines from the HEK and save them in a format for use
+    in further analyses.
+
+    :param times : time range over which to search
+    :param region_bbox : the region of the Sun each feature/event must overlap
+    :param download: if True, then perform the query
+    :param fevents: : list-like of the form [(event type1, [frm 11, frm12, ...]), (event type2, [frm 21, frm22, ...]), ...]
+    :param directory: directory where the results are stored
+    :param filename: filename of the stored results
     :return:
     """
     filepath = os.path.expanduser(os.path.join(directory, filename))
     if download:
+        # Go through all the requested feature/event types and feature
+        # recognition methods
         for fevent in fevents:
             print("Acquiring {:s} data from the HEK".format(fevent))
             client = hek.HEKClient()
-            qr = client.query(hek.attrs.Time(times[0], times[1]), hek.attrs.EventType(fevent))
+            fevent_type = fevent[0]
+            fevent_frm = fevent[1]
+            qr = client.query(hek.attrs.Time(times[0], times[1]), hek.attrs.EventType(fevent_type))
             if len(qr) is None:
                 shape_time = None
             else:
                 shape_time = []
                 for response in qr:
-                    # Check to see if the bounding box of the fevent overlaps
-                    # with the bounding box extent of the data
-                    bx0 = data_box.bottomleft.x
-                    bx1 = data_box.topright.x
-                    by0 = data_box.bottomleft.y
-                    by1 = data_box.topright.y
+                    # If
+                    if response['frm_name'] in fevent_frm:
+                        # Bounding box information for the region
+                        rx0 = region_bbox["llx"].to(u.arcsec)
+                        rx1 = (region_bbox["llx"] + region_bbox["width"]).to(u.arcsec)
+                        ry0 = region_bbox["lly"].to(u.arcsec)
+                        ry1 = (region_bbox["lly"] + region_bbox["height"]).to(u.arcsec)
 
-                    fx0 = data_box.bottomleft.x
-                    fx1 = data_box.topright.x
-                    fy0 = data_box.bottomleft.y
-                    fy1 = data_box.topright.y
+                        # Bounding box information for the fevent
+                        fevent_bbox = _convert_hek_bbox_to_region(response['hpc_bbox'])
+                        fx0 = fevent_bbox["llx"].to(u.arcsec)
+                        fx1 = (fevent_bbox["llx"] + region_bbox["width"]).to(u.arcsec)
+                        fy0 = fevent_bbox["lly"].to(u.arcsec)
+                        fy1 = (fevent_bbox["lly"] + region_bbox["height"]).to(u.arcsec)
 
-                    x_extent = np.max([bx1, fx1]) - np.min([bx0, fx0])
-                    y_extent = np.max([by1, fy1]) - np.min([by0, fy0])
-                    if (x_extent < bx1-bx0 + fx1-fx0) and (y_extent < by1-by0 + fy1-fy0):
-                        p1 = response["hpc_boundcc"][9: -2]
-                        p2 = p1.split(',')
-                        p3 = [v.split(" ") for v in p2]
-                        p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
-                        polygon = np.zeros([1, len(p2), 2])
-                        polygon[0, :, :] = p4[:, :]
-                        fe_date = response['event_starttime']
-                        shape_time.append((fevent, polygon, fe_date))
+                        # Check to see if the bounding box of the fevent
+                        # overlaps with the bounding box extent of the data
+                        x_extent = np.max([rx1, fx1]) - np.min([rx0, fx0])
+                        y_extent = np.max([ry1, fy1]) - np.min([ry0, fy0])
+                        if (x_extent < rx1-rx0 + fx1-fx0) and (y_extent < ry1-ry0 + fy1-fy0):
+                            polygon = _convert_hek_polygon_to_mpl_polygon(response['hpc_boundcc'])
+                            fe_date = response['event_starttime']
+                            shape_time.append((fevent, polygon, fe_date))
 
         f = open(filepath, 'wb')
         pickle.dump(shape_time, f)

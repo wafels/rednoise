@@ -304,6 +304,7 @@ if study_type == 'gmu1':
     rn_processing = ''
     regions = {"ch": {"llx": -90.0*u.arcsec, "lly": 120*u.arcsec,
                       "width": 405*u.arcsec, "height": 220*u.arcsec}}
+    fevents = [('CH', ['SPoCA'])]
 ###############################################################################
 # Jitter - paper 6
 #

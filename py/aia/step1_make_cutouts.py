@@ -16,6 +16,7 @@ import astropy.units as u
 from astropy.io import fits
 
 import details_study as ds
+import analysis_get_data
 import step1_plots
 
 # Load in the derotated data into a datacube
@@ -140,6 +141,15 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
         hdu = fits.PrimaryHDU(subdata)
         hdulist = fits.HDUList([hdu])
         hdulist.writeto(ofilename + '.fits', clobber=True)
+
+        #
+        # Download the required feature/event data
+        #
+        for region in ds.regions:
+            # Next region
+            R = ds.regions[region]
+            fevent = analysis_get_data.fevent_outline([mc[-1], mc[0]], R, fevents=ds.fevents, download=True)
+
 
 #
 # Plot where the regions are
