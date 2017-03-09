@@ -5,7 +5,7 @@
 import os
 import datalocationtools
 import astropy.units as u
-
+from sunpy.physics.differential_rotation import rot_hpc
 
 class Study:
     """
@@ -211,6 +211,7 @@ if study_type == 'paper2':
     rn_processing = ''
     regions = {"six_euv": {"llx": -500.0*u.arcsec, "lly": -100*u.arcsec,
                            "width": 340*u.arcsec, "height": 200*u.arcsec}}
+    fevents = [('SS', 'EGSO_SFC')]
 
     study = Study(wave=wave,
                   input_root=input_root,
@@ -304,7 +305,7 @@ if study_type == 'gmu1':
     rn_processing = ''
     regions = {"ch": {"llx": -90.0*u.arcsec, "lly": 120*u.arcsec,
                       "width": 405*u.arcsec, "height": 220*u.arcsec}}
-    fevents = [('CH', ['SPoCA'])]
+    fevents = [('CH', 'SPoCA')]
 ###############################################################################
 # Jitter - paper 6
 #
@@ -386,3 +387,41 @@ hsr2015_range_y = [-98.0, 98.0] * u.arcsec
 hsr2015_model_name = {'Power law + Constant + Lognormal': '2',
                       'Power law + Constant': '1'}
 
+
+class BoundingBox:
+    def __init__(self, ll, ur, time=None):
+        self.ll = ll
+        self.ur = ur
+        self.width = ur[0] - ll[0]
+        self.height = ur[1] - ur[1]
+        self.time = time
+
+    # Check if this bounding box overlaps with another Bounding Box object
+    # Adapted from http://stackoverflow.com/questions/27152904/calculate-overlapped-area-between-two-rectangles
+
+    def overlap_exists(self, b):
+        axmax = self.ur[0].to(u.arcsec).value
+        axmin = self.ll[0].to(u.arcsec).value
+
+        bxmax = b.ur[0].to(u.arcsec).value
+        bxmin = b.ll[0].to(u.arcsec).value
+
+        aymax = self.ur[1].to(u.arcsec).value
+        aymin = self.ll[1].to(u.arcsec).value
+
+        bymax = b.ur[1].to(u.arcsec).value
+        bymin = b.ll[1].to(u.arcsec).value
+
+        dx = min(axmax, bxmax) - max(axmin, bxmin)
+        dy = min(aymax, bymax) - max(aymin, bymin)
+        if (dx >= 0.0) and (dy >= 0.0):
+            return True
+        else:
+            return False
+
+    # Solar rotate the existing Bounding Box
+    def solar_rotate(self, new_time):
+        self.ll = rot_hpc(self.ll[0], self.ll[1], self.time, new_time)
+        self.ur = rot_hpc(self.ur[0], self.ur[1], self.time, new_time)
+        self.time = new_time
+        return self

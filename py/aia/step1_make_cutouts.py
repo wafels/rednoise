@@ -6,18 +6,18 @@ focus on specific regions of interest.
 """
 
 import os
-
+from copy import deepcopy
 import pickle
 
 from sunpy.time import parse_time
 import numpy as np
 from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.io import fits
 
 import details_study as ds
 import analysis_get_data
-import step1_plots
 
 # Load in the derotated data into a datacube
 directory = ds.save_locations['pickle']
@@ -84,11 +84,11 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
     # co-ordinates.  These co-ordinates should be chosen in reference to the
     # time of the reference layer (layer_index).
     #
-    regions = calculate_region_information(ds.regions)
+    regions_mpl = calculate_region_information(deepcopy(ds.regions))
 
-    for region in regions:
+    for region in regions_mpl:
         # Next region
-        R = regions[region]
+        R = regions_mpl[region]
 
         # The mapcube images a piece of Sun that inevitably moves.  Defining
         # the subcube using HPC co-ords will not work in this case.  Therefore
@@ -145,31 +145,43 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
         #
         # Download the required feature/event data
         #
+        root_filename = region_id + '.fevent{:s}.pkl'.format(ds.processing_info)
         for region in ds.regions:
             # Next region
             R = ds.regions[region]
-            fevent = analysis_get_data.fevent_outline([mc[-1], mc[0]], R, fevents=ds.fevents, download=True)
+            for fevent in ds.fevents:
+                filename = region_id + '.{:s}.{:s}.fevent{:s}.pkl'.format(fevent[0], fevent[1], ds.processing_info)
+                fevents = analysis_get_data.fevent_outline([mc[0].date, mc[-1].date], R,
+                                                           mc_layer.date,
+                                                           fevent=fevent,
+                                                           download=True,
+                                                           directory=output,
+                                                           filename=filename)
 
 
 #
-# Plot where the regions are
+# Plot where the regions and any feature and events are
 #
+plt.ion()
+plt.close('all')
+fig, ax = plt.subplots()
+ret = mc_layer.plot()
 filepath = os.path.join(ds.save_locations['image'], ds.ident + '.regions{:s}'.format(ds.processing_info))
-for region in regions.keys():
-    filepath = filepath + '.' + region
-filepath = filepath + '.png'
-step1_plots.plot_regions(mc_layer, regions, filepath)
+for region in regions_mpl.keys():
+    patch = regions_mpl[region]["patch"]
+    label_offset = regions_mpl[region]["label_offset"]
+    ax.add_patch(patch)
+    llxy = patch.get_xy()
+    height = patch.get_height()
+    width = patch.get_width()
+    plt.text(llxy[0] + width + label_offset['x'],
+             llxy[1] + height + label_offset['y'],
+             patch.get_label(),
+             bbox=dict(facecolor='w', alpha=0.5))
 
-#
-# Plot a map of the extracted region
-#
-for region in ds.regions:
-    region_data = ds.regions[region]
-    range_x = (region_data['llx'].value, region_data['llx'].value + region_data['width'].value) * u.arcsec
-    range_y = (region_data['lly'].value, region_data['lly'].value + region_data['height'].value) * u.arcsec
-    exact_map = mc_layer.submap(range_x, range_y)
-    filepath = os.path.join(ds.save_locations['image'], ds.ident + '.exact_map{:s}'.format(ds.processing_info))
-    for region in regions.keys():
-        filepath = filepath + '.' + region
-    filepath = filepath + '.png'
-    step1_plots.plot_exact_map(exact_map, filepath)
+# Plot the features and events
+for fevent in fevents:
+    _polygon, collection = analysis_get_data.rotate_fevent_outline(fevent.polygon, fevent.date, mc_layer.date)
+    ax.add_collection(collection)
+ax.autoscale_view()
+plt.show()

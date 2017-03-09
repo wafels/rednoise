@@ -9,6 +9,7 @@ import os
 from copy import deepcopy
 import collections
 import pickle
+from collections import namedtuple
 import numpy as np
 from matplotlib.collections import PolyCollection
 from matplotlib.patches import Polygon
@@ -134,37 +135,9 @@ def hsr2015_model_name(n):
     return ds.hsr2015_model_name[n]
 
 
-def sunspot_outline(directory='~/ts/pickle/', filename='sunspot.info.pkl'):
-    # -----------------------------------------------------------------------------
-    # Get the sunspot details at the time of its detection
-    #
-    filepath = os.path.expanduser(os.path.join(directory, filename))
-    if os.path.isfile(filepath):
-        print("Acquiring sunspot data from %s" % filepath)
-        f = open(filepath, 'rb')
-        polygon = pickle.load(f)
-        sunspot_date = pickle.load(f)
-        f.close()
-    else:
-        print("Acquiring sunspot data from the HEK...")
-        client = hek.HEKClient()
-        qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
-        p1 = qr[0]["hpc_boundcc"][9: -2]
-        p2 = p1.split(',')
-        p3 = [v.split(" ") for v in p2]
-        p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
-        polygon = np.zeros([1, len(p2), 2])
-        polygon[0, :, :] = p4[:, :]
-        sunspot_date = qr[0]['event_starttime']
-
-        f = open(filepath, 'wb')
-        pickle.dump(polygon, f)
-        pickle.dump(sunspot_date, f)
-        f.close()
-        print('Saved sunspot data to %s' % filepath)
-    return polygon, sunspot_date
-
-
+#
+# General feature/event download and processing routines
+#
 def _convert_hek_polygon_to_mpl_polygon(polygon_string):
     p1 = polygon_string[9: -2]
     p2 = p1.split(',')
@@ -175,72 +148,62 @@ def _convert_hek_polygon_to_mpl_polygon(polygon_string):
     return polygon
 
 
-def _convert_hek_bbox_to_region(polygon_string):
-    polygon = _convert_hek_polygon_to_mpl_polygon(polygon_string)
-    xmin = np.min(polygon[0, :, 0])
-    xmax = np.max(polygon[0, :, 0])
-    ymin = np.min(polygon[0, :, 1])
-    ymax = np.max(polygon[0, :, 1])
+def _convert_hek_bbox_to_region(response):
+    xmin = response['boundbox_c1ll']
+    ymin = response['boundbox_c2ll']
+    xmax = response['boundbox_c1ur']
+    ymax = response['boundbox_c2ur']
 
-    return {"llx": xmin*u.arcsec, "lly": ymin*u.arcsec,
-            "width": (xmax-xmin)*u.arcsec,
-            "height": (ymax-ymin)*u.arcsec}
+    return ds.BoundingBox((xmin, ymin)*u.arcsec, (xmax, ymax)*u.arcsec,
+                          time=response['event_starttime'])
+
+Fevent = namedtuple('Fevent', 'fevent polygon date')
 
 
-def fevent_outline(times, region_bbox, download=True, fevents=[('CH', 'SPoCA')],
-                   directory='~/', filename='fevent.info.pkl'):
+def fevent_outline(times, region_bbox, region_time, download=False,
+                   fevent=('CH', 'SPoCA'), directory='~/',
+                   filename='fevent.info.pkl'):
     """
     Get feature/event outlines from the HEK and save them in a format for use
     in further analyses.
 
     :param times : time range over which to search
     :param region_bbox : the region of the Sun each feature/event must overlap
+    :param region_time :
     :param download: if True, then perform the query
     :param fevents: : list-like of the form [(event type1, [frm 11, frm12, ...]), (event type2, [frm 21, frm22, ...]), ...]
     :param directory: directory where the results are stored
     :param filename: filename of the stored results
     :return:
     """
+    r = ds.BoundingBox((region_bbox["llx"], region_bbox["lly"]),
+                       (region_bbox["llx"] + region_bbox["width"], region_bbox["lly"] + region_bbox["height"]),
+                       time=region_time)
     filepath = os.path.expanduser(os.path.join(directory, filename))
     if download:
         # Go through all the requested feature/event types and feature
         # recognition methods
-        for fevent in fevents:
-            client = hek.HEKClient()
-            fevent_type = fevent[0]
-            fevent_frm = fevent[1]
-            print("Acquiring {:s} ({:s}) data from the HEK".format(fevent_type, fevent_frm))
-            qr = client.query(hek.attrs.Time(times[0], times[1]), hek.attrs.EventType(fevent_type))
-            if len(qr) is None:
-                shape_time = None
-            else:
-                shape_time = []
-                for response in qr:
-                    # If
-                    if response['frm_name'] in fevent_frm:
-                        # Bounding box information for the region
-                        rx0 = region_bbox["llx"].to(u.arcsec).value
-                        rx1 = (region_bbox["llx"] + region_bbox["width"]).to(u.arcsec).value
-                        ry0 = region_bbox["lly"].to(u.arcsec).value
-                        ry1 = (region_bbox["lly"] + region_bbox["height"]).to(u.arcsec).value
-                        print(rx0, rx1, ry0, ry1)
-
-                        # Bounding box information for the fevent
-                        fevent_bbox = _convert_hek_bbox_to_region(response['hpc_bbox'])
-                        fx0 = fevent_bbox["llx"].to(u.arcsec).value
-                        fx1 = (fevent_bbox["llx"] + region_bbox["width"]).to(u.arcsec).value
-                        fy0 = fevent_bbox["lly"].to(u.arcsec).value
-                        fy1 = (fevent_bbox["lly"] + region_bbox["height"]).to(u.arcsec).value
-                        print(fx0, fx1, fy0, fy1)
-
-                        # Check to see if the bounding box of the fevent
-                        # overlaps with the bounding box extent of the data
-                        x_extent = np.max([rx1, fx1]) - np.min([rx0, fx0])
-                        y_extent = np.max([ry1, fy1]) - np.min([ry0, fy0])
-                        if (x_extent < rx1-rx0 + fx1-fx0) and (y_extent < ry1-ry0 + fy1-fy0):
-                            polygon = _convert_hek_polygon_to_mpl_polygon(response['hpc_boundcc'])
-                            fe_date = response['event_starttime']
-                            shape_time.append((fevent, polygon, fe_date))
+        client = hek.HEKClient()
+        fevent_type = fevent[0]
+        fevent_frm = fevent[1]
+        print("Acquiring {:s} frm={:s} data from the HEK".format(fevent_type, fevent_frm))
+        print(times[0], times[1], fevent_type)
+        qr = client.query(hek.attrs.Time(times[0], times[1]), hek.attrs.EventType(fevent_type))
+        if len(qr) is None:
+            shape_time = None
+        else:
+            shape_time = []
+            for response in qr:
+                # If
+                if response['frm_name'] == fevent_frm:
+                    # Bounding box information for the fevent.  Needs to be
+                    # rotated to the observation time
+                    fevent_bbox = _convert_hek_bbox_to_region(response)
+                    fevent_bbox = fevent_bbox.solar_rotate(region_time)
+                    if r.overlap_exists(fevent_bbox):
+                        polygon = _convert_hek_polygon_to_mpl_polygon(response['hpc_boundcc'])
+                        fe_date = response['event_starttime']
+                        shape_time.append(Fevent(fevent, polygon, fe_date))
 
         f = open(filepath, 'wb')
         pickle.dump(shape_time, f)
@@ -354,3 +317,37 @@ def estimated_fe_xviii(aia94, aia171, aia193, method=ugarte_warren_2014):
         raise ValueError('Third function argument must be an AIA 193 Angstrom SunPy map')
 
     return sunpy.map.Map(aia94.data - method(aia171.data, aia193.data), aia94.meta)
+
+
+#
+# Code below will be removed eventually
+#
+def sunspot_outline(directory='~/ts/pickle/', filename='sunspot.info.pkl'):
+    # -----------------------------------------------------------------------------
+    # Get the sunspot details at the time of its detection
+    #
+    filepath = os.path.expanduser(os.path.join(directory, filename))
+    if os.path.isfile(filepath):
+        print("Acquiring sunspot data from %s" % filepath)
+        f = open(filepath, 'rb')
+        polygon = pickle.load(f)
+        sunspot_date = pickle.load(f)
+        f.close()
+    else:
+        print("Acquiring sunspot data from the HEK...")
+        client = hek.HEKClient()
+        qr = client.query(hek.attrs.Time("2012-09-23 01:00:00", "2012-09-23 02:00:00"), hek.attrs.EventType('SS'))
+        p1 = qr[0]["hpc_boundcc"][9: -2]
+        p2 = p1.split(',')
+        p3 = [v.split(" ") for v in p2]
+        p4 = np.asarray([(eval(v[0]), eval(v[1])) for v in p3])
+        polygon = np.zeros([1, len(p2), 2])
+        polygon[0, :, :] = p4[:, :]
+        sunspot_date = qr[0]['event_starttime']
+
+        f = open(filepath, 'wb')
+        pickle.dump(polygon, f)
+        pickle.dump(sunspot_date, f)
+        f.close()
+        print('Saved sunspot data to %s' % filepath)
+    return polygon, sunspot_date
