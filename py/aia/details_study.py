@@ -3,9 +3,13 @@
 #
 
 import os
+import numpy as np
 import datalocationtools
 import astropy.units as u
 from sunpy.physics.differential_rotation import rot_hpc
+
+from matplotlib.patches import Polygon
+
 
 class Study:
     """
@@ -388,7 +392,7 @@ hsr2015_model_name = {'Power law + Constant + Lognormal': '2',
                       'Power law + Constant': '1'}
 
 
-class BoundingBox:
+class StudyBoundingBox:
     def __init__(self, ll, ur, time=None):
         """
         A simple bounding box object that holds spatial information and
@@ -450,5 +454,39 @@ class BoundingBox:
         """
         self.ll = rot_hpc(self.ll[0], self.ll[1], self.time, new_time)
         self.ur = rot_hpc(self.ur[0], self.ur[1], self.time, new_time)
+        self.time = new_time
+        return self
+
+
+class StudyPolygon:
+    def __init__(self, polygon, time=None, name=None, **polycollection_kwargs):
+        """
+        A simple closed polygon that holds spatial information and
+        optionally, a time associated with the bounding box
+
+        :param polygon :
+        :param time: a time associated with the polygon
+        :param name: a name associated with the polygon
+        """
+        self.polygon = polygon
+        self.time = time
+        self.name = name
+        self.nvertex = self.polygon.shape[0]
+        self.mpl_polygon = Polygon(self.polygon.to(u.arcsec).value, fill=False, color='k')
+
+    def solar_rotate(self, new_time):
+        """
+        Use solar rotation to move the polygon
+        :param new_time: the time the polygon is moved to
+        :return: the current polygon is updated with the input time. The
+        spatial position is updated according to solar rotation.
+        """
+        rotated_polygon = np.zeros_like(self.polygon)
+        for i in range(0, self.nvertex):
+            rotated_vertex = rot_hpc(self.polygon[i, 0],
+                                     self.polygon[i, 1], self.time, new_time)
+            rotated_polygon[i, 0] = rotated_vertex[0]
+            rotated_polygon[i, 1] = rotated_vertex[1]
+        self.polygon = rotated_polygon
         self.time = new_time
         return self

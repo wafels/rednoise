@@ -181,7 +181,6 @@ for region in regions_mpl.keys():
 
 # Plot the features and events
 for fevent in fevents:
-    _polygon, collection = analysis_get_data.rotate_fevent_outline(fevent.polygon, fevent.date, mc_layer.date)
-    ax.add_collection(collection)
+    ax.add_artist(fevent.solar_rotate(mc_layer.date).mpl_polygon)
 ax.autoscale_view()
 plt.show()
