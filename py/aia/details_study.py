@@ -390,6 +390,14 @@ hsr2015_model_name = {'Power law + Constant + Lognormal': '2',
 
 class BoundingBox:
     def __init__(self, ll, ur, time=None):
+        """
+        A simple bounding box object that holds spatial information and
+        optionally, a time associated with the bounding box
+
+        :param ll: lower left hand corner of the bounding box
+        :param ur: upper right hand corner of the bounding box
+        :param time: a time associated with the bounding box
+        """
         self.ll = ll
         self.ur = ur
         self.width = ur[0] - ll[0]
@@ -400,6 +408,13 @@ class BoundingBox:
     # Adapted from http://stackoverflow.com/questions/27152904/calculate-overlapped-area-between-two-rectangles
 
     def overlap_exists(self, b):
+        """
+        Tests if the current BoundingBox overlap with another
+
+        :param b: a BoundingBox object
+        :return: True, if b overlaps spatially with the current BoundingBox.
+        otherwise, False
+        """
         axmax = self.ur[0].to(u.arcsec).value
         axmin = self.ll[0].to(u.arcsec).value
 
@@ -419,8 +434,13 @@ class BoundingBox:
         else:
             return False
 
-    # Solar rotate the existing Bounding Box
     def solar_rotate(self, new_time):
+        """
+        Use solar rotation to move the BoundingBox
+        :param new_time: the time the BoundingBox is moved to
+        :return: the current BoundingBox is updated with the input time. The
+        spatial position is updated according to solar rotation.
+        """
         self.ll = rot_hpc(self.ll[0], self.ll[1], self.time, new_time)
         self.ur = rot_hpc(self.ur[0], self.ur[1], self.time, new_time)
         self.time = new_time
