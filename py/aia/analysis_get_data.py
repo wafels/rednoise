@@ -206,10 +206,10 @@ def fevent_outline(times, region_bbox, download=True, fevents=[('CH', 'SPoCA')],
         # Go through all the requested feature/event types and feature
         # recognition methods
         for fevent in fevents:
-            print("Acquiring {:s} data from the HEK".format(fevent))
             client = hek.HEKClient()
             fevent_type = fevent[0]
             fevent_frm = fevent[1]
+            print("Acquiring {:s} ({:s}) data from the HEK".format(fevent_type, fevent_frm))
             qr = client.query(hek.attrs.Time(times[0], times[1]), hek.attrs.EventType(fevent_type))
             if len(qr) is None:
                 shape_time = None
@@ -219,17 +219,19 @@ def fevent_outline(times, region_bbox, download=True, fevents=[('CH', 'SPoCA')],
                     # If
                     if response['frm_name'] in fevent_frm:
                         # Bounding box information for the region
-                        rx0 = region_bbox["llx"].to(u.arcsec)
-                        rx1 = (region_bbox["llx"] + region_bbox["width"]).to(u.arcsec)
-                        ry0 = region_bbox["lly"].to(u.arcsec)
-                        ry1 = (region_bbox["lly"] + region_bbox["height"]).to(u.arcsec)
+                        rx0 = region_bbox["llx"].to(u.arcsec).value
+                        rx1 = (region_bbox["llx"] + region_bbox["width"]).to(u.arcsec).value
+                        ry0 = region_bbox["lly"].to(u.arcsec).value
+                        ry1 = (region_bbox["lly"] + region_bbox["height"]).to(u.arcsec).value
+                        print(rx0, rx1, ry0, ry1)
 
                         # Bounding box information for the fevent
                         fevent_bbox = _convert_hek_bbox_to_region(response['hpc_bbox'])
-                        fx0 = fevent_bbox["llx"].to(u.arcsec)
-                        fx1 = (fevent_bbox["llx"] + region_bbox["width"]).to(u.arcsec)
-                        fy0 = fevent_bbox["lly"].to(u.arcsec)
-                        fy1 = (fevent_bbox["lly"] + region_bbox["height"]).to(u.arcsec)
+                        fx0 = fevent_bbox["llx"].to(u.arcsec).value
+                        fx1 = (fevent_bbox["llx"] + region_bbox["width"]).to(u.arcsec).value
+                        fy0 = fevent_bbox["lly"].to(u.arcsec).value
+                        fy1 = (fevent_bbox["lly"] + region_bbox["height"]).to(u.arcsec).value
+                        print(fx0, fx1, fy0, fy1)
 
                         # Check to see if the bounding box of the fevent
                         # overlaps with the bounding box extent of the data
