@@ -403,9 +403,24 @@ class BoundingBox:
         self.width = ur[0] - ll[0]
         self.height = ur[1] - ur[1]
         self.time = time
+        self.area = self.width * self.height
 
     # Check if this bounding box overlaps with another Bounding Box object
     # Adapted from http://stackoverflow.com/questions/27152904/calculate-overlapped-area-between-two-rectangles
+
+    def _dx(self, b):
+        axmax = self.ur[0].to(u.arcsec).value
+        axmin = self.ll[0].to(u.arcsec).value
+        bxmax = b.ur[0].to(u.arcsec).value
+        bxmin = b.ll[0].to(u.arcsec).value
+        return min(axmax, bxmax) - max(axmin, bxmin)
+
+    def _dy(self, b):
+        aymax = self.ur[1].to(u.arcsec).value
+        aymin = self.ll[1].to(u.arcsec).value
+        bymax = b.ur[1].to(u.arcsec).value
+        bymin = b.ll[1].to(u.arcsec).value
+        return min(aymax, bymax) - max(aymin, bymin)
 
     def overlap_exists(self, b):
         """
@@ -415,24 +430,16 @@ class BoundingBox:
         :return: True, if b overlaps spatially with the current BoundingBox.
         otherwise, False
         """
-        axmax = self.ur[0].to(u.arcsec).value
-        axmin = self.ll[0].to(u.arcsec).value
-
-        bxmax = b.ur[0].to(u.arcsec).value
-        bxmin = b.ll[0].to(u.arcsec).value
-
-        aymax = self.ur[1].to(u.arcsec).value
-        aymin = self.ll[1].to(u.arcsec).value
-
-        bymax = b.ur[1].to(u.arcsec).value
-        bymin = b.ll[1].to(u.arcsec).value
-
-        dx = min(axmax, bxmax) - max(axmin, bxmin)
-        dy = min(aymax, bymax) - max(aymin, bymin)
-        if (dx >= 0.0) and (dy >= 0.0):
+        if (self._dx(b) >= 0.0) and (self._dy(b) >= 0.0):
             return True
         else:
             return False
+
+    def overlap_area(self, b):
+        if self.overlap_exists(self, b):
+            return self._dx(b) * self._dy(b)
+        else:
+            return None
 
     def solar_rotate(self, new_time):
         """
