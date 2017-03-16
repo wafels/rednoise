@@ -3,12 +3,14 @@
 #
 import os
 import numpy as np
+import matplotlib as mpl
+import details_plots as dp
+mpl.rcParams['xtick.labelsize'] = 0.8*dp.fontsize
+mpl.rcParams['ytick.labelsize'] = 0.8*dp.fontsize
 import matplotlib.pyplot as plt
-from astroML.plotting import hist
 import analysis_get_data
 import details_study as ds
 import details_analysis as da
-import details_plots as dp
 import analysis_explore
 
 # Paper 2: Wavelengths and regions
@@ -16,8 +18,8 @@ waves = ['94', '335', '131', '171', '193', '211']
 regions = ['six_euv']
 
 # Paper 3: Wavelengths and regions
-waves = ['171']
-regions = ['six_euv']
+waves = ['193']
+regions = ds.regions
 
 
 
@@ -41,8 +43,8 @@ windows = ['hanning']
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=('Power Law + Constant',
-                                                      'Power Law + Constant + Lognormal',
-                                                      'broken power law + Constant'))
+                                                      'Power Law + Constant + Lognormal'),
+                                         spectral_model='.rnspectralmodels3')
 
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)
@@ -94,7 +96,9 @@ for ic_type in ic_types:
                     for p1_name in parameters:
                         p1 = this.as_array(p1_name)
                         p1_index = parameters.index(p1_name)
-                        label1 = labels[p1_index] + ' (%s)' %
+                        label1 = labels[p1_index]
+                        if p1_name == 'lognormal position':
+                            label1 += ' (Hz)'
                         for ic_type in ic_types:
 
                             # Find out if this model is preferred
@@ -113,15 +117,14 @@ for ic_type in ic_types:
 
                             # Define the mean and mode lines
                             if p1_name in dp.frequency_parameters:
-                                mean = dp.meanline
-                                mean.label = 'mean=%f' % ss['mean'].value
-                                mode = dp.modeline
-                                mode.label = 'mode=%f' % ss['mode'].value
+                                mean_label = 'mean=%f' % ss['mean'].value
+                                mode_label = 'mode=%f' % ss['mode'].value
                             else:
-                                mean = dp.meanline
-                                mean.label = 'mean=%f' % ss['mean'].value
-                                mode = dp.modeline
-                                mode.label = 'mode=%f' % ss['mode'].value
+                                mean_label = 'mean=%f' % ss['mean'].value
+                                mode_label = 'mode=%f' % ss['mode'].value
+
+                            lo68_label = 'low 68%={:n}'.format(ss['lo68'].value)
+                            hi68_label = 'high 68%={:n}'.format(ss['hi68'].value)
 
                             # Identifier of the plot
                             plot_identity = dp.concat_string([wave,
@@ -131,28 +134,37 @@ for ic_type in ic_types:
                                                               limit_type])
 
                             # Title of the plot
-                            title = '%s\n%s\n%s\n%s' % (plot_identity,
-                                                        dp.get_mask_info_string(mask),
-                                                        ic_limit_string, limit_type)
-
+                            title = '{:s}\n{:s}\n{:s}\n{:s}'.format(label1, this_model, ic_limit_string, dp.get_mask_info_string(mask)[2])
                             # location of the image
                             image = dp.get_image_model_location(ds.roots, b, [this_model, ic_limit_string, limit_type])
 
-                            # For what it is worth, plot the same data using all the bin
-                            # choices.
+                            # For what it is worth, plot the same data using
+                            # all the bin choices.
                             plt.close('all')
                             plt.figure(1, figsize=(10, 10))
                             for ibinning, binning in enumerate(hloc):
                                 plt.subplot(len(hloc), 1, ibinning+1)
-                                h_info = hist(pm1, bins=binning)
+                                plt.hist(pm1, bins=100)
                                 plt.axvline(ss['mean'].value,
-                                            color=mean.color,
-                                            label=mean.label,
-                                            linewidth=mean.linewidth)
+                                            color=dp.mean.color,
+                                            label=mean_label,
+                                            linewidth=dp.mean.linewidth,
+                                            linestyle=dp.mean.linestyle)
                                 plt.axvline(ss['mode'].value,
-                                            color=mode.color,
-                                            label=mode.label,
-                                            linewidth=mode.linewidth)
+                                            color=dp.mode.color,
+                                            label=mode_label,
+                                            linewidth=dp.mode.linewidth,
+                                            linestyle=dp.mode.linestyle)
+                                plt.axvline(ss['lo68'].value,
+                                            color=dp.lo68.color,
+                                            label=lo68_label,
+                                            linewidth=dp.lo68.linewidth,
+                                            linestyle=dp.lo68.linestyle)
+                                plt.axvline(ss['hi68'].value,
+                                            color=dp.hi68.color,
+                                            label=hi68_label,
+                                            linewidth=dp.hi68.linewidth,
+                                            linestyle=dp.hi68.linestyle)
                                 if p1_name in dp.frequency_parameters:
                                     plt.axvline((1.0/five_minutes.position).to(fz).value,
                                                 color=five_minutes.color,
@@ -166,11 +178,12 @@ for ic_type in ic_types:
                                                 linestyle=three_minutes.linestyle,
                                                 linewidth=three_minutes.linewidth)
 
-                                plt.xlabel(label1)
-                                plt.title(str(binning) + ' : %s\n%s' % (title, this_model))
-                                plt.legend(framealpha=0.5, fontsize=8)
+                                plt.xlabel(label1, fontsize=dp.fontsize)
+                                plt.ylabel('number', fontsize=dp.fontsize)
+                                plt.title(title, fontsize=dp.fontsize)
+                                plt.legend(framealpha=0.5, fontsize=0.8*dp.fontsize)
                                 plt.xlim(limits[p1_name].value)
 
                             plt.tight_layout()
-                            ofilename = this_model + '.' + plot_identity + '.hist.png'
+                            ofilename = dp.clean_for_overleaf(this_model + '.' + plot_identity + '.hist.png')
                             plt.savefig(os.path.join(image, ofilename))

@@ -69,9 +69,6 @@ mdefine = analysis_explore.MaskDefine(storage, limits)
 parameters = mdefine.common_parameters
 npar = len(parameters)
 
-# Get the sunspot outline
-sunspot_outline = analysis_get_data.sunspot_outline()
-
 # Plot spatial distributions of the common parameters
 plot_type = 'spatial.common'
 
@@ -184,7 +181,7 @@ for ic_type in ic_types:
                     print('{:s}: {:n}->{:n}'.format(parameter, np.nanmin(map_data), np.nanmax(map_data)))
 
                     if ds.corename in ds.simulation:
-                        palette = cm.Set2
+                        palette = cm.viridis
                         # Bad values are those that are masked out
                         palette.set_bad('black', 1.0)
                         plt.imshow(np.transpose(map_data), cmap=palette, origin='lower')
@@ -225,15 +222,20 @@ for ic_type in ic_types:
                         # Make a SunPy map for nice spatially aware plotting.
                         my_map = analysis_get_data.make_map(region_submap, map_data)
 
-                        # Get the sunspot
-                        polygon, sunspot_collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0],
-                                                                                      sunspot_outline[1],
-                                                                                      my_map.date,
-                                                                                      edgecolors=[dp.sunspot_outline.color])
+                        # Get the feature/event data
+                        fevent = (ds.fevents)[0]
+                        fevent_filename = region_id + '.{:s}.{:s}.fevent{:s}.pkl'.format(fevent[0], fevent[1], ds.processing_info)
+                        fevents = analysis_get_data.fevent_outline(None, None,
+                                                                   None,
+                                                                   fevent=None,
+                                                                   download=False,
+                                                                   directory=output,
+                                                                   filename=fevent_filename)
 
                         subtitle = dp.concat_string(['%s - %s' % (region, wave),
                                                     percent_used_string], sep='\n')
-                        # Make a spatial distribution map spectral model parameter
+                        # Make a spatial distribution map spectral model
+                        # parameter
                         plt.close('all')
                         # Normalize the color table
                         norm = colors.Normalize(clip=False,
@@ -241,42 +243,34 @@ for ic_type in ic_types:
                                                 vmax=p1_limits[1].value)
 
                         # Set up the palette we will use
-                        palette = dp.spectral_parameters.cm
+                        palette = dp.spectral_parameters[parameter].cm
                         # Bad values are those that are masked out
-                        palette.set_bad(dp.spectral_parameters.bad, 1.0)
-                        #palette.set_under('green', 1.0)
-                        #palette.set_over('red', 1.0)
+                        palette.set_bad(dp.spectral_parameters[parameter].bad, 1.0)
 
                         # Begin the plot
                         fig, ax = plt.subplots()
+
                         # Plot the map
                         ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
-                        #ret.axes.set_title('%s\n%s' % (label, subtitle))
-                        title = label + r'$_{%s}$' % wave
-                        #ret.axes.set_title(title + '\n[%s]' % percent_used_string, fontsize=fontsize)
-                        #map_title = title + '\n%s of all pixels' % percent_used_string
-                        map_title = 'power law index ' + label
+                        map_title = label
                         map_title += '\nAIA ' + wave + r'$\mathrm{\AA}$' + ', {:s} fit'.format(percent_used_string)
                         ret.axes.set_title(map_title, fontsize=fontsize)
-                        #X = my_map.xrange[0].value + my_map.scale.x.value * np.arange(0, my_map.dimensions.x.value)
-                        #Y = my_map.yrange[0].value + my_map.scale.y.value * np.arange(0, my_map.dimensions.y.value)
-                        #ret.axes.contour(X, Y, all_submaps[submap_type].data, 3,
-                        #                 colors=["#0088ff", "#0044ff", "#0000ff"],
-                        #                 linewidths=[2, 2, 2])
-                        ax.add_collection(sunspot_collection)
+                        for fevent in fevents:
+                            z = fevent.solar_rotate(region_submap.date).mpl_polygon
+                            z.set_edgecolor('r')
+                            z.set_linewidth(3)
+                            ax.add_artist(z)
+
                         cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
 
                         # Fit everything in.
                         ax.autoscale_view()
 
                         # Dump to file
-                        #final_filename = dp.concat_string([plot_type,
-                        #                                   submap_type,
-                        #                                   plot_identity_filename,
-                        #                                   subtitle_filename])
                         final_filename = dp.concat_string([plot_type,
                                                            plot_identity_filename,
                                                            subtitle_filename]).replace(' ', '')
+                        final_filename = dp.clean_for_overleaf(final_filename)
                         filepath = os.path.join(image, final_filename + '.png')
                         print('Saving to ' + filepath)
                         plt.savefig(filepath, bbox_inches='tight')
@@ -288,7 +282,7 @@ for ic_type in ic_types:
                         bins = 50
                         ss = statistics_tools.Summary(map_data.compressed())
                         plt.hist(map_data.compressed(), bins=bins)
-                        plt.title(title)
+                        plt.title(map_title)
                         plt.xlabel(parameter)
                         plt.ylabel('number')
                         plt.axvline(ss.mean,

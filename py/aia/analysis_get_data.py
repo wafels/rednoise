@@ -169,11 +169,11 @@ def fevent_outline(times, region_bbox, region_time, download=False,
     :param filename: filename of the stored results
     :return:
     """
-    r = ds.StudyBoundingBox((region_bbox["llx"], region_bbox["lly"]),
-                       (region_bbox["llx"] + region_bbox["width"], region_bbox["lly"] + region_bbox["height"]),
-                       time=region_time)
     filepath = os.path.expanduser(os.path.join(directory, filename))
     if download:
+        r = ds.StudyBoundingBox((region_bbox["llx"], region_bbox["lly"]),
+                       (region_bbox["llx"] + region_bbox["width"], region_bbox["lly"] + region_bbox["height"]),
+                       time=region_time)
         # Go through all the requested feature/event types and feature
         # recognition methods
         client = hek.HEKClient()
@@ -195,7 +195,7 @@ def fevent_outline(times, region_bbox, region_time, download=False,
                     if r.overlap_exists(fevent_bbox):
                         polygon = _convert_hek_polygon(response['hpc_boundcc'])
                         shape_time.append(ds.StudyPolygon(polygon,
-                                                     time=response['event_endtime'],
+                                                     time=response['event_starttime'],
                                                      name=fevent_type))
 
         f = open(filepath, 'wb')

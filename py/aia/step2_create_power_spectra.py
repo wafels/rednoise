@@ -98,6 +98,7 @@ for iwave, wave in enumerate(waves):
             ts_evenly_sampled = is_evenly_sampled(t,
                                                   absolute_tolerance.to('s').value)
             if not ts_evenly_sampled:
+                print('Resampling data to even cadence.')
                 dt = (t[-1] - t[0]) / (1.0 * (nt - 1))
                 print('Resampling to an even time cadence of {:n} seconds'.format(dt))
                 evenly_sampled_t = np.arange(0, nt) * dt

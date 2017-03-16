@@ -1,10 +1,8 @@
 import numpy as np
-from rnfit2 import Do_MCMC, rnsave
-from pymcmodels import single_power_law_with_constant
-#from cubetools import get_datacube
 from timeseries import TimeSeries
 from rnsimulation import SimplePowerLawSpectrumWithConstantBackground, TimeSeriesFromPowerSpectrum
 #import pickle
+
 
 def create_test_data():
 

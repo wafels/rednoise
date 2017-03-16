@@ -53,9 +53,6 @@ storage = analysis_get_data.get_all_data(waves=waves,
                                          spectral_model='.rnspectralmodels3')
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
-# Get the sunspot outline
-sunspot_outline = analysis_get_data.sunspot_outline()
-
 # Storage for the filepaths
 filepaths_root = os.path.join(ds.dataroot, 'pickle')
 filepaths = []
@@ -165,7 +162,6 @@ for wave in waves:
                     print(measure, map_data_abs_max)
 
                     # Set up the palette we will use
-                    palette = cm.viridis
                     palette = cm.PiYG
                     # Bad values are those that are masked out
                     palette.set_bad('black', 1.0)
@@ -179,9 +175,19 @@ for wave in waves:
                     label = '$\Delta %s$ = $%s_{%s}$-$%s_{%s}$' % (measure, measure, model_name_0, measure, model_name_1)
                     ret.axes.set_title("%s\n%s " % ('AIA ' + wave + ' Angstrom', label))
                     # Get the sunspot outline
-                    sunspot_outline = analysis_get_data.sunspot_outline()
-                    _polygon, collection = analysis_get_data.rotate_sunspot_outline(sunspot_outline[0], sunspot_outline[1], region_submap.date, edgecolors=['w'])
-                    ax.add_collection(collection)
+                    fevent = (ds.fevents)[0]
+                    fevent_filename = region_id + '.{:s}.{:s}.fevent{:s}.pkl'.format(fevent[0], fevent[1], ds.processing_info)
+                    fevents = analysis_get_data.fevent_outline(None, None,
+                                                               None,
+                                                               fevent=None,
+                                                               download=False,
+                                                               directory=output,
+                                                               filename=fevent_filename)
+                    for fevent in fevents:
+                        z = fevent.solar_rotate(region_submap.date).mpl_polygon
+                        z.set_linewidth(3)
+                        z.set_edgecolor('r')
+                        ax.add_artist(fevent.solar_rotate(region_submap.date).mpl_polygon)
 
                     cbar = fig.colorbar(ret, extend='both', orientation='vertical',
                                         shrink=0.8, label=label)
@@ -197,8 +203,8 @@ for wave in waves:
 
                     # Dump image to file
                     save_filename = 'spatial_distrib.' + region_id + '.%s.%s.%s' % (measure, str(this_ic_limit), mask_status)
-                    filepath = os.path.join(image, save_filename)
-                    filepath = dp.clean_for_overleaf(filepath) + '.' + dp.plot_file_type
+                    save_filename = dp.clean_for_overleaf(save_filename)
+                    filepath = os.path.join(image, save_filename) + '.' + dp.plot_file_type
                     print('Saving to ' + filepath)
                     plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
                     plt.close('all')

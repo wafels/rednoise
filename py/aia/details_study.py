@@ -123,7 +123,7 @@ class Study:
 
 # Paper 2
 #study_type = 'debugpaper2'
-#study_type = 'paper2'
+study_type = 'paper2'
 #study_type = 'paper2_shorter_ts'
 
 # 3 - Noise Analysis
@@ -138,7 +138,7 @@ class Study:
 #study_type = 'papern_bradshaw_simulation_high_fn'
 
 # 5 - GMU Study
-study_type = 'gmu1'
+#study_type = 'gmu1'
 
 # 6 - Jitter
 #study_type = 'jitter'

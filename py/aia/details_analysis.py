@@ -125,8 +125,10 @@ def summary_statistics(a, bins=100):
         unit = 1.0
     return {"mean": np.mean(a),
             "median": np.percentile(a, 50.0) * unit,
-            "lo": np.percentile(a, 2.5) * unit,
-            "hi": np.percentile(a, 97.5) * unit,
+            "lo95": np.percentile(a, 2.5) * unit,
+            "hi95": np.percentile(a, 97.5) * unit,
+            "lo68": np.percentile(a, 16.0) * unit,
+            "hi68": np.percentile(a, 84.0) * unit,
             "min": np.min(a),
             "max": np.max(a),
             "std": np.std(a),

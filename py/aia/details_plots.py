@@ -10,7 +10,7 @@ import details_study as ds
 
 
 # Units that frequencies will be plotted in
-fz = 'mHz'
+fz = 'Hz'
 
 # Which major color style for maps
 map_color_style = 'w'
@@ -46,7 +46,7 @@ class MapPlotStyle:
     """
     Storage class for map styles, to be used across multiple plots.
     """
-    def __init__(self, cm=cm.Set2, bad='white', upper='blue', lower='cyan'):
+    def __init__(self, cm=cm.viridis, bad='black', upper='blue', lower='cyan'):
         self.cm = cm
         self.bad = bad
         self.upper = upper
@@ -71,9 +71,9 @@ five_minutes = LinePlotStyle(color='k',
 
 mean = LinePlotStyle(color='r', linewidth=3, linestyle='solid')
 median = LinePlotStyle(color='r', linewidth=3, linestyle='dashed')
-percentile0 = LinePlotStyle(color='g', linewidth=3, linestyle='dashdot')
-percentile1 = LinePlotStyle(color='g', linewidth=3, linestyle='dotted')
-modeline = LinePlotStyle(color='g', linewidth=3)
+lo68 = LinePlotStyle(color='c', linewidth=3, linestyle='dashdot')
+hi68 = LinePlotStyle(color='c', linewidth=3, linestyle='dotted')
+mode = LinePlotStyle(color='r', linewidth=3, linestyle='dotted')
 
 # Sunspot outline details
 sunspot_outline = LinePlotStyle(color=map_plot_colors[map_color_style]["sunspot"], linewidth=3, linestyle='solid')
@@ -83,10 +83,15 @@ sunspot_outline = LinePlotStyle(color=map_plot_colors[map_color_style]["sunspot"
 #
 # Information criterion maps
 information_criterion = MapPlotStyle(bad=map_plot_colors[map_color_style]["bad"],
-                                     cm=cm.seismic)
+                                     cm=cm.PiYG)
 
 # Any power spectrum variable maps
-spectral_parameters = MapPlotStyle(bad=map_plot_colors[map_color_style]["bad"])
+spectral_parameters = {'power law index': MapPlotStyle(),
+                       'ln(constant)': MapPlotStyle(cm=cm.PiYG),
+                       'ln(power law amplitude)': MapPlotStyle(cm=cm.PiYG),
+                       'lognormal position': MapPlotStyle(),
+                       'ln(lognormal amplitude)': MapPlotStyle(cm=cm.PiYG),
+                       'ln(lognormal width)': MapPlotStyle(cm=cm.PiYG)}
 
 # Histograms have the following type
 hloc = (100,)  # 'scott', 'knuth', 'freedman')
@@ -137,7 +142,7 @@ def get_mask_info_string(mask):
     n_not_masked = np.sum(np.logical_not(mask))
     number_pixel_string = "%i" % n_not_masked
     percent_used_string = '%3.1f%%' % (100 * n_not_masked/(1.0*mask.size))
-    return number_pixel_string, percent_used_string, '(#px=%s, used=%s)' % (number_pixel_string, percent_used_string)
+    return number_pixel_string, percent_used_string, '#px=%s, used=%s' % (number_pixel_string, percent_used_string)
 
 
 def get_image_model_location(roots, b, dirs):
