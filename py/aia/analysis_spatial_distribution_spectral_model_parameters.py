@@ -18,9 +18,9 @@ import details_plots as dp
 from tools import statistics_tools
 
 # Wavelengths we want to cross correlate
-#waves = ['94', '131', '171', '193', '211', '335']
+waves = ['94', '131', '171', '193', '211', '335']
 regions = ['six_euv']
-waves = ['193']
+#waves = ['193']
 #regions = ['ch']
 
 power_type = 'fourier_power_relative'

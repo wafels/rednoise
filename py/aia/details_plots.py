@@ -46,7 +46,7 @@ class MapPlotStyle:
     """
     Storage class for map styles, to be used across multiple plots.
     """
-    def __init__(self, cm=cm.viridis, bad='black', upper='blue', lower='cyan'):
+    def __init__(self, cm=cm.plasma, bad='black', upper='blue', lower='cyan'):
         self.cm = cm
         self.bad = bad
         self.upper = upper

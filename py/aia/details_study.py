@@ -3,10 +3,12 @@
 #
 
 import os
+from copy import deepcopy
 import numpy as np
 import datalocationtools
 import astropy.units as u
 from sunpy.physics.differential_rotation import rot_hpc
+from sunpy.time import parse_time
 
 from matplotlib.patches import Polygon
 
@@ -136,6 +138,7 @@ study_type = 'paper2'
 #study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
 #study_type = 'papern_bradshaw_simulation_high_fn'
+study_type = 'simulated_power_spectra'
 
 # 5 - GMU Study
 #study_type = 'gmu1'
@@ -148,7 +151,7 @@ study_type = 'paper2'
 #wave = '171'
 wave = '193'
 #wave = '211'
-#wave = '335'
+wave = '335'
 
 input_root = '~/Data/ts'
 
@@ -175,16 +178,13 @@ file_list_index = [0, None]
 
 simulation = ('papern_bradshaw_simulation_low_fn',
               'papern_bradshaw_simulation_intermediate_fn',
-              'papern_bradshaw_simulation_high_fn')
-
-sim_name = {'papern_bradshaw_simulation_low_fn': 'low frequency nanoflares',
-            'papern_bradshaw_simulation_intermediate_fn': 'intermediate frequency nanoflares',
-            'papern_bradshaw_simulation_high_fn': 'high frequency nanoflares'}
-
+              'papern_bradshaw_simulation_high_fn',
+              'simulated_power_spectra')
 
 sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares',
             'papern_bradshaw_simulation_intermediate_fn': 'intermediate occurrence rate nanoflares',
-            'papern_bradshaw_simulation_high_fn': 'high occurrence rate nanoflares'}
+            'papern_bradshaw_simulation_high_fn': 'high occurrence rate nanoflares',
+            'simulated_power_spectra': 'simulated power spectra'}
 
 #
 # Setup the details given the study type
@@ -490,3 +490,22 @@ class StudyPolygon:
         self.polygon = rotated_polygon
         self.time = new_time
         return self
+
+
+class StudyFevents:
+    def __init__(self, fevents, _dt=30*u.day):
+        """
+        A list of fevents, with some convenient methods.
+        """
+        self.fevents = fevents
+        self._dt = _dt.to(u.s).value
+
+    def closest_in_time(self, date):
+        dt = deepcopy(self._dt)
+        for i, fevent in enumerate(fevents):
+            this_dt = np.abs((parse_time(fevent.time) - date).total_seconds())
+            if this_dt < dt:
+                this_fevent = i
+                dt = this_dt
+        return self.fevents[this_fevent]
+

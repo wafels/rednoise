@@ -151,12 +151,12 @@ if ds.sunlocation == 'disk' or ds.sunlocation == 'debug':
             R = ds.regions[region]
             for fevent in ds.fevents:
                 filename = region_id + '.{:s}.{:s}.fevent{:s}.pkl'.format(fevent[0], fevent[1], ds.processing_info)
-                fevents = analysis_get_data.fevent_outline([mc[0].date, mc[-1].date], R,
+                fevents = ds.StudyFevents(analysis_get_data.fevent_outline([mc[0].date, mc[-1].date], R,
                                                            mc_layer.date,
                                                            fevent=fevent,
                                                            download=True,
                                                            directory=output,
-                                                           filename=filename)
+                                                           filename=filename))
 
 #
 # Plot where the regions and any feature and events are
@@ -179,11 +179,6 @@ for region in regions_mpl.keys():
              bbox=dict(facecolor='w', alpha=0.5))
 
 # Plot the features and events
-dt = (30 * u.day).to(u.s).value
-for i, fevent in enumerate(fevents):
-    this_dt = np.abs((parse_time(fevent.time) - mc_layer.date).total_seconds())
-    if this_dt < dt:
-        this_fevent = i
-ax.add_artist(fevents[this_fevent].solar_rotate(mc_layer.date).mpl_polygon)
+ax.add_artist(fevents.closest_in_time(mc_layer.date).solar_rotate(mc_layer.date).mpl_polygon)
 ax.autoscale_view()
 plt.show()
