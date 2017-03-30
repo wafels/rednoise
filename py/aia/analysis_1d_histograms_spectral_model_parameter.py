@@ -19,7 +19,13 @@ regions = ['six_euv']
 
 # Paper 3: Wavelengths and regions
 waves = ['193']
-regions = ds.regions
+#regions = ds.regions
+
+
+# Paper 3: Wavelengths and regions
+waves = ['335']
+regions = ['six_euv']
+
 
 
 
@@ -44,7 +50,7 @@ storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=('Power Law + Constant',
                                                       'Power Law + Constant + Lognormal'),
-                                         spectral_model='.rnspectralmodels3')
+                                         spectral_model='.rnspectralmodels4')
 
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)

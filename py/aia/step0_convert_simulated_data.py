@@ -27,18 +27,10 @@ been de-rotated and co-aligned.
 """
 
 import os
-from datetime import timedelta
 import pickle
-
 import numpy as np
-
 import astropy.units as u
 
-from sunpy.time import parse_time
-from sunpy.map import Map
-from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift, _default_fmap_function
-from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
-import step0_plots
 import details_study as ds
 import details_plots as dp
 import details_simulated as dsim
@@ -72,6 +64,8 @@ bradshaw_simulated_data = ds.study_type in ('papern_bradshaw_simulation_low_fn',
                                             'papern_bradshaw_simulation_intermediate_fn',
                                             'papern_bradshaw_simulation_high_fn')
 
+date_obs = "2016-08-15 01:23:45"
+
 if bradshaw_simulated_data:
     # Get the simulated data
     directory_listing = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
@@ -88,13 +82,14 @@ if bradshaw_simulated_data:
 
 else:
     directory_listing = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
-    data = np.load(directory_listing)
-
+    data = np.load(directory_listing[0])
+    sda = data['arr_0']
 
 #
 # Output the data in the format required
 #
-times = {"date_obs": "2016-08-15 01:23:45", "time_in_seconds": dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])}
+times = {"date_obs": date_obs,
+         "time_in_seconds": dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])}
 #
 # Step 2 has data shaped like (ny, nx, nt)
 #
@@ -116,7 +111,7 @@ outputfile = open(pfilepath, 'wb')
 pickle.dump(sda, outputfile)
 pickle.dump(times, outputfile)
 outputfile.close()
-
+zzz
 if bradshaw_simulated_data:
     # Color stretching for the Bradshaw simulated data
     stretch = {'papern_bradshaw_simulation_high_fn': 0.00001,

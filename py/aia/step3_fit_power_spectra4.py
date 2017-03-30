@@ -17,8 +17,8 @@ from tools import rnspectralmodels4
 # Wavelengths and regions we want to analyze
 # waves = ['131', '171', '193', '211', '335', '94']
 # waves = ['94', '193', '211', '335', '131', '171']
-waves = ['193']
-regions = ['ch']
+waves = ['335']
+regions = ['six_euv']
 power_type = 'fourier_power_relative'
 
 # Fall AGU 2015 Wavelengths and regions we want to analyze
@@ -91,7 +91,7 @@ for iwave, wave in enumerate(waves):
                 results[this_model.name] = rnspectralmodels4.Fit(pfrequencies, pwr, this_model, verbose=1)
 
             # Dump the results
-            filepath = os.path.join(output, ofilename + '.rnspectralmodels3.lnlike_fit_results.pkl')
+            filepath = os.path.join(output, ofilename + '.rnspectralmodels4.lnlike_fit_results.pkl')
             print('Saving results to ' + filepath)
             f = open(filepath, 'wb')
             pickle.dump(results, f)

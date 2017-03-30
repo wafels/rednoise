@@ -68,11 +68,26 @@ class TimeSeriesFromModelSpectrum:
         #
         self.k = self.v * self.w * self.nt / 2
 
-        # Frequencies that we are calculating the power spectrum at
-        self.frequencies = np.arange(1, self.k + 1) / (1.0*(self.v * self.nt * self.dt))
+        # Positive Fourier frequencies as defined by the input characteristics
+        posff = np.fft.fftfreq(self.nt, self.dt)
+        self.posff = posff[posff > 0.0]
+
+        # Power at the Fourier frequencies
+        self.power_at_fourier_frequencies = self.spectrum_model(self.a,
+                                                                self.posff/self.posff[0])
+
+        # Over sampled frequencies that we are calculating the power spectrum at
+        self.over_sampled_frequencies = np.arange(1, self.k + 1) / (1.0*(self.v * self.nt * self.dt))
+        self.minimum_frequency = np.min(self.over_sampled_frequencies)
+
+        new_posff = np.fft.fftfreq(self.w*self.v*self.nt, self.dt/self.w)
+        self.over_sampled_frequencies = new_posff[new_posff > 0]
+
+        # Normalize to the first Fourier frequency
+        self.over_sampled_frequencies = self.over_sampled_frequencies / self.posff[0]
 
         # Non-noisy power at the frequencies we are interested in
-        self.power = self.spectrum_model(self.a, self.frequencies)
+        self.over_sampled_power = self.spectrum_model(self.a, self.over_sampled_frequencies)
 
     def sample(self, fft_zero=0.0, phase_noise=True, power_noise=True):
         """
@@ -86,7 +101,7 @@ class TimeSeriesFromModelSpectrum:
 
         # The fully over-sampled timeseries, with a sampling cadence of dt/W,
         # and a duration of V*N*dt.
-        oversampled = time_series_from_power_spectrum(self.power,
+        oversampled = time_series_from_power_spectrum(self.over_sampled_power,
                                                       fft_zero=fft_zero,
                                                       phase_noise=phase_noise,
                                                       power_noise=power_noise)
@@ -94,12 +109,11 @@ class TimeSeriesFromModelSpectrum:
         # Subsample the time-series back down to the requested cadence of dt
         long_timeseries = oversampled[0:len(oversampled):self.w]
         nlts = len(long_timeseries)
+        print(nlts, self.nt)
 
         # Get a sample of the desired length nt from the middle of the long
         # time series.
-        return self.dt * np.arange(0, self.nt),\
-               long_timeseries[nlts//2 - self.nt//2:
-                               nlts//2 - self.nt//2 + self.nt]
+        return long_timeseries
 
 
 def time_series_from_power_spectrum(power_spectrum, fft_zero=0.0,

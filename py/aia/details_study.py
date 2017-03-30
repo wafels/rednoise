@@ -138,7 +138,7 @@ study_type = 'paper2'
 #study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
 #study_type = 'papern_bradshaw_simulation_high_fn'
-study_type = 'simulated_power_spectra'
+study_type = 'from_simulated_power_spectra'
 
 # 5 - GMU Study
 #study_type = 'gmu1'
@@ -179,12 +179,12 @@ file_list_index = [0, None]
 simulation = ('papern_bradshaw_simulation_low_fn',
               'papern_bradshaw_simulation_intermediate_fn',
               'papern_bradshaw_simulation_high_fn',
-              'simulated_power_spectra')
+              'from_simulated_power_spectra')
 
 sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares',
             'papern_bradshaw_simulation_intermediate_fn': 'intermediate occurrence rate nanoflares',
             'papern_bradshaw_simulation_high_fn': 'high occurrence rate nanoflares',
-            'simulated_power_spectra': 'simulated power spectra'}
+            'from_simulated_power_spectra': 'simulated power spectra'}
 
 #
 # Setup the details given the study type
