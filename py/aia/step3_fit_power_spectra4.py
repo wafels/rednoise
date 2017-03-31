@@ -82,7 +82,6 @@ for iwave, wave in enumerate(waves):
             these_models = [rnspectralmodels4.PowerLawPlusConstantPlusLognormal(f_norm=pfrequencies[0]),
                             rnspectralmodels4.PowerLawPlusConstant(f_norm=pfrequencies[0])]
             n_models = len(these_models)
-
             # Go through the models
             for itm, this_model in enumerate(these_models):
                 print('Fitting model: %s (%i out of %i)' % (this_model.name, itm+1, n_models))

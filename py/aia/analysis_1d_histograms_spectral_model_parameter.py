@@ -48,8 +48,7 @@ windows = ['hanning']
 # Load in all the data
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
-                                         model_names=('Power Law + Constant',
-                                                      'Power Law + Constant + Lognormal'),
+                                         model_names=('Power Law + Constant',),
                                          spectral_model='.rnspectralmodels4')
 
 # Define the masks
