@@ -19,6 +19,8 @@ from tools import statistics_tools
 
 # Wavelengths we want to cross correlate
 waves = ['94', '131', '171', '193', '211', '335']
+waves = ['335']
+
 regions = ['six_euv']
 #waves = ['193']
 #regions = ['ch']
@@ -52,7 +54,7 @@ fontsize = dp.fontsize
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=model_names,
-                                         spectral_model='.rnspectralmodels3')
+                                         spectral_model='.rnspectralmodels4')
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
 # Plot cross-correlations across different AIA channels

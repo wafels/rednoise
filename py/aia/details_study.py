@@ -138,7 +138,8 @@ study_type = 'paper2'
 #study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
 #study_type = 'papern_bradshaw_simulation_high_fn'
-study_type = 'from_simulated_power_spectra'
+study_type = 'from_simulated_power_spectra_1'
+study_type = 'from_simulated_power_spectra_6'
 
 # 5 - GMU Study
 #study_type = 'gmu1'
@@ -176,15 +177,24 @@ fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
 file_list_index = [0, None]
 
 
-simulation = ('papern_bradshaw_simulation_low_fn',
+simulation = ['papern_bradshaw_simulation_low_fn',
               'papern_bradshaw_simulation_intermediate_fn',
               'papern_bradshaw_simulation_high_fn',
-              'from_simulated_power_spectra')
+              'from_simulated_power_spectra']
+for i in range(1, 11):
+    simulation.append('from_simulated_power_spectra_{:s}'.format(str(i)))
+
 
 sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares',
             'papern_bradshaw_simulation_intermediate_fn': 'intermediate occurrence rate nanoflares',
             'papern_bradshaw_simulation_high_fn': 'high occurrence rate nanoflares',
             'from_simulated_power_spectra': 'simulated power spectra'}
+
+for i in range(1, 11):
+    s = str(i)
+    key = 'from_simulated_power_spectra_{:s}'.format(s)
+    value = 'simulated power spectra {:s}'.format(s)
+    sim_name[key] = value
 
 #
 # Setup the details given the study type

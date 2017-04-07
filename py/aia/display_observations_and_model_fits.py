@@ -16,7 +16,7 @@ import analysis_explore
 from tools import rnspectralmodels4
 
 # Paper 2: Wavelengths and regions we want to analyze
-waves = ['171'] #, '193', '211', '335', '94']
+waves = ['335'] #, '193', '211', '335', '94']
 regions = ['six_euv']
 power_type = 'fourier_power_relative'
 
@@ -53,7 +53,7 @@ n_models = len(these_models)
 # Load the model fits
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
-                                         spectral_model='.rnspectralmodels3')
+                                         spectral_model='.rnspectralmodels4')
 
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)
@@ -145,7 +145,6 @@ for iwave, wave in enumerate(waves):
             nx = storage[wave][region][model].as_array('BIC').shape[1]
             these_locations = list(zip(np.random.randint(0, ny, size=n_locations),
                                   np.random.randint(0, nx, size=n_locations)))
-            these_locations.append((105, 107))
 
             # Go through the pixel locations
             for this_y, this_x in these_locations:

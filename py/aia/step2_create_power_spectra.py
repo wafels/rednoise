@@ -209,7 +209,6 @@ for iwave, wave in enumerate(waves):
                     this_fft_relative_change_with_window = np.fft.fft(d_relative_change_with_window)
                     this_power_relative_change_with_window = ((np.abs(this_fft_relative_change_with_window) ** 2) / (1.0 * nt))[pindex]
                     pwr_rel[j, i, :] = this_power_relative_change_with_window[:]
-
                     # ---
                     # Ireland et al (2015) summation
                     # Sum over the log(Fourier power of the relative intensities)
