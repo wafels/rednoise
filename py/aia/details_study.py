@@ -125,7 +125,7 @@ class Study:
 
 # Paper 2
 #study_type = 'debugpaper2'
-study_type = 'paper2'
+#study_type = 'paper2'
 #study_type = 'paper2_shorter_ts'
 
 # 3 - Noise Analysis
@@ -137,9 +137,9 @@ study_type = 'paper2'
 #study_type = 'papern_bradshaw_simulation'
 #study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
-#study_type = 'papern_bradshaw_simulation_high_fn'
-study_type = 'from_simulated_power_spectra_1'
-study_type = 'from_simulated_power_spectra_6'
+study_type = 'papern_bradshaw_simulation_high_fn'
+#study_type = 'from_simulated_power_spectra_1'
+#study_type = 'from_simulated_power_spectra_10'
 
 # 5 - GMU Study
 #study_type = 'gmu1'
@@ -149,10 +149,10 @@ study_type = 'from_simulated_power_spectra_6'
 
 #wave = '94'
 #wave = '131'
-#wave = '171'
-wave = '193'
+wave = '171'
+#wave = '193'
 #wave = '211'
-wave = '335'
+#wave = '335'
 
 input_root = '~/Data/ts'
 
@@ -179,10 +179,14 @@ file_list_index = [0, None]
 
 simulation = ['papern_bradshaw_simulation_low_fn',
               'papern_bradshaw_simulation_intermediate_fn',
-              'papern_bradshaw_simulation_high_fn',
-              'from_simulated_power_spectra']
-for i in range(1, 11):
-    simulation.append('from_simulated_power_spectra_{:s}'.format(str(i)))
+              'papern_bradshaw_simulation_high_fn']
+
+#simulation = ['papern_bradshaw_simulation_low_fn',
+#              'papern_bradshaw_simulation_intermediate_fn',
+#              'papern_bradshaw_simulation_high_fn',
+#              'from_simulated_power_spectra']
+#for i in range(1, 11):
+#    simulation.append('from_simulated_power_spectra_{:s}'.format(str(i)))
 
 
 sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares',
@@ -512,8 +516,8 @@ class StudyFevents:
 
     def closest_in_time(self, date):
         dt = deepcopy(self._dt)
-        for i, fevent in enumerate(fevents):
-            this_dt = np.abs((parse_time(fevent.time) - date).total_seconds())
+        for i, fevent in enumerate(self.fevents):
+            this_dt = np.abs((parse_time(fevent.time) - parse_time(date)).total_seconds())
             if this_dt < dt:
                 this_fevent = i
                 dt = this_dt

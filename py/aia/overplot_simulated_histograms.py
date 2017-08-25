@@ -161,7 +161,7 @@ plt.close('all')
 aaa = ImageError(my_map[sim1].data, my_map[sim2].data)
 umask = np.logical_or(my_map[sim1].mask, my_map[sim2].mask)
 final_diff = np.ma.array(np.transpose(aaa.diff), mask=np.transpose(umask))
-palette = cm.Accent
+palette = cm.seismic
 palette.set_bad('k', 1.0)
 plt.imshow(final_diff, interpolation='none', cmap=palette, origin='lower', extent=[0, ny-1, 0, nx-1])
 plt.xlabel('x (pixels)', fontsize=dp.fontsize)

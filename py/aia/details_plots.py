@@ -74,6 +74,9 @@ median = LinePlotStyle(color='r', linewidth=3, linestyle='dashed')
 lo68 = LinePlotStyle(color='c', linewidth=3, linestyle='dashdot')
 hi68 = LinePlotStyle(color='c', linewidth=3, linestyle='dotted')
 mode = LinePlotStyle(color='r', linewidth=3, linestyle='dotted')
+percentile0 = LinePlotStyle(color='r', linewidth=3, linestyle='dashdot')
+percentile1 = LinePlotStyle(color='r', linewidth=3, linestyle='dashdot')
+
 
 # Sunspot outline details
 sunspot_outline = LinePlotStyle(color=map_plot_colors[map_color_style]["sunspot"], linewidth=3, linestyle='solid')
@@ -86,11 +89,12 @@ information_criterion = MapPlotStyle(bad=map_plot_colors[map_color_style]["bad"]
                                      cm=cm.PiYG)
 
 # Any power spectrum variable maps
-spectral_parameters = {'power law index': MapPlotStyle(),
-                       'ln(constant)': MapPlotStyle(cm=cm.PiYG),
-                       'ln(power law amplitude)': MapPlotStyle(cm=cm.PiYG),
-                       'lognormal position': MapPlotStyle(),
-                       'ln(lognormal amplitude)': MapPlotStyle(cm=cm.PiYG),
+amplitude_cm = cm.viridis
+spectral_parameters = {'power law index': MapPlotStyle(cm=cm.Dark2_r),  # cm=cm.Dark_r
+                       'ln(lognormal amplitude)': MapPlotStyle(cm=amplitude_cm),
+                       'ln(constant)': MapPlotStyle(cm=amplitude_cm),
+                       'ln(power law amplitude)': MapPlotStyle(cm=amplitude_cm),
+                       'lognormal position': MapPlotStyle(cm=cm.Set2),
                        'ln(lognormal width)': MapPlotStyle(cm=cm.PiYG)}
 
 # Histograms have the following type

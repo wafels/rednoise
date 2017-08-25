@@ -17,14 +17,14 @@ from tools import rnspectralmodels4
 # Wavelengths and regions we want to analyze
 # waves = ['131', '171', '193', '211', '335', '94']
 # waves = ['94', '193', '211', '335', '131', '171']
-waves = ['335']
-regions = ['six_euv']
-power_type = 'fourier_power_relative'
+# waves = ['335']
+# regions = ['six_euv']
+# power_type = 'fourier_power_relative'
 
 # Fall AGU 2015 Wavelengths and regions we want to analyze
-#waves = ['171', '193']
-#regions = ['six_euv']
-
+waves = ['171', '193']
+regions = ['six_euv']
+power_type = 'fourier_power_relative'
 
 # Wavelengths and regions we want to analyze
 #waves = ['171', '193']

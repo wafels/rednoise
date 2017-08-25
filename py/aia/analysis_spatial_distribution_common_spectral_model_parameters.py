@@ -27,10 +27,10 @@ import matplotlib.cm as cm
 
 # Paper 2
 # Wavelengths we want to cross correlate
-waves = ['94', '131', '171', '193', '211', '335', ]
+waves = ['94', '131', '171', '193', '211', '335']
 waves = ['171', '193']
-waves = ['193']
-regions = ['ch']
+waves = ['171']
+regions = ['six_euv']
 power_type = 'fourier_power_relative'
 limit_type = 'standard'
 
@@ -181,7 +181,7 @@ for ic_type in ic_types:
                     print('{:s}: {:n}->{:n}'.format(parameter, np.nanmin(map_data), np.nanmax(map_data)))
 
                     if ds.corename in ds.simulation:
-                        palette = cm.viridis
+                        palette = cm.Dark2_r
                         # Bad values are those that are masked out
                         palette.set_bad('black', 1.0)
                         plt.imshow(np.transpose(map_data), cmap=palette, origin='lower')
@@ -225,12 +225,12 @@ for ic_type in ic_types:
                         # Get the feature/event data
                         fevent = (ds.fevents)[0]
                         fevent_filename = region_id + '.{:s}.{:s}.fevent{:s}.pkl'.format(fevent[0], fevent[1], ds.processing_info)
-                        fevents = analysis_get_data.fevent_outline(None, None,
+                        fevents = fevents = ds.StudyFevents(analysis_get_data.fevent_outline(None, None,
                                                                    None,
                                                                    fevent=None,
                                                                    download=False,
                                                                    directory=output,
-                                                                   filename=fevent_filename)
+                                                                   filename=fevent_filename))
 
                         subtitle = dp.concat_string(['%s - %s' % (region, wave),
                                                     percent_used_string], sep='\n')
@@ -246,20 +246,26 @@ for ic_type in ic_types:
                         palette = dp.spectral_parameters[parameter].cm
                         # Bad values are those that are masked out
                         palette.set_bad(dp.spectral_parameters[parameter].bad, 1.0)
-
                         # Begin the plot
                         fig, ax = plt.subplots()
 
                         # Plot the map
                         ret = my_map.plot(cmap=palette, axes=ax, interpolation='none', norm=norm)
-                        map_title = label
+                        map_title = 'power law index ' + label
                         map_title += '\nAIA ' + wave + r'$\mathrm{\AA}$' + ', {:s} fit'.format(percent_used_string)
                         ret.axes.set_title(map_title, fontsize=fontsize)
-                        for fevent in fevents:
-                            z = fevent.solar_rotate(region_submap.date).mpl_polygon
-                            z.set_edgecolor('r')
-                            z.set_linewidth(3)
-                            ax.add_artist(z)
+
+                        # Plot the feature and event closest in time
+                        # mc_layer_date = mc_layer.date
+                        mc_layer_date = '2012-09-23 03:00:00'  # temporarily in order to generate plots for proposal
+                        z = fevents.closest_in_time(mc_layer_date).solar_rotate(mc_layer_date).mpl_polygon
+                        z.set_edgecolor('w')
+                        z.set_linewidth(3)
+                        ax.add_artist(z)
+                        zz = fevents.closest_in_time(mc_layer_date).solar_rotate(mc_layer_date).mpl_polygon
+                        zz.set_edgecolor('w')
+                        zz.set_linewidth(1)
+                        ax.add_artist(zz)
 
                         cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
 

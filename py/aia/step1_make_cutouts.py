@@ -40,6 +40,11 @@ times = {"date_obs": date_obs, "time_in_seconds": np.asarray(time_in_seconds)}
 # Layer on which all de-rotations, etc are based on.
 mc_layer = mc[layer_index]
 
+# Locations of the output datatypes
+save_locations = ds.save_locations
+
+# Identity of the data
+ident = ds.ident
 
 #
 # A function that calculates some necessary region information in order to
@@ -181,4 +186,5 @@ for region in regions_mpl.keys():
 # Plot the features and events
 ax.add_artist(fevents.closest_in_time(mc_layer.date).solar_rotate(mc_layer.date).mpl_polygon)
 ax.autoscale_view()
-plt.show()
+filepath = os.path.join(save_locations['image'], ident + '.image_analyzed_at_layer_index.%s.png' % ds.index_string)
+plt.savefig(filepath)
