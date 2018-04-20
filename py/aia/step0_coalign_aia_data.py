@@ -1,4 +1,6 @@
 """
+Requires SunPy 0.9
+
 Step 0
 
 Load in the FITS files and write out a mapcube that has had the derotation
@@ -25,9 +27,10 @@ import matplotlib.pyplot as plt
 from sunpy.time import parse_time
 from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift, _default_fmap_function
-from sunpy.physics.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift
+from sunpy.physics.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift, mapcube_solar_differential_derotate
 import step0_plots
 import details_study as ds
+from mapcube_tools import calculate_movie_normalization, apply_movie_normalization, write_layers, mapcube_simple_replace
 
 # Use base cross-correlation channel?
 use_base_cross_correlation_channel = ds.use_base_cross_correlation_channel
@@ -86,8 +89,8 @@ sample_numbers = np.arange(len(mc))
 # to the map at this index.
 layer_index = len(mc) // 2
 t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_index]
-x_scale = mc[layer_index].scale.x
-y_scale = mc[layer_index].scale.y
+x_scale = mc[layer_index].scale.axis1
+y_scale = mc[layer_index].scale.axis2
 filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
 #
 # Apply solar derotation
@@ -139,11 +142,17 @@ if ds.derotate:
 
     # Apply the solar rotation shifts
     print("Applying solar rotation shifts")
-    data = mapcube_solar_derotate(mc,
-                                  layer_index=layer_index, shift=sr_shifts, clip=True,
-                                  order=1)
+    #data = mapcube_solar_derotate(mc,
+    #                              layer_index=layer_index, shift=sr_shifts, clip=True,
+    #                              order=1)
+    data = mapcube_solar_differential_derotate(mc,
+                                               layer_index=layer_index)
 else:
     data = Map(list_of_data, cube=True)
+
+
+# Clean the data in a very simple way
+data = mapcube_simple_replace(data)
 
 #
 # Coalign images by cross correlation
@@ -181,8 +190,8 @@ if ds.cross_correlate:
         # data, i.e. flares.  This may be throwing the fits off.  Perhaps
         # better to apply something like a log?
         #
-        if ds.wave == '131' or (ds.wave == '171' and ds.study_type == 'paper3_BLSGSM'):
-            cc_func = np.sqrt
+        if ds.wave == '171' or (ds.wave == '171' and ds.study_type == 'paper3_BLSGSM'):
+            cc_func = np.log
         else:
             cc_func = _default_fmap_function
         print('Data will have %s applied to it.' % cc_func.__name__)
@@ -321,3 +330,14 @@ outputfile = open(pfilepath, 'wb')
 pickle.dump(data, outputfile)
 pickle.dump(layer_index, outputfile)
 outputfile.close()
+
+#
+# Dump out frames to make a movie
+#
+print("Writing out frames to make movies")
+directory = os.path.join(save_locations['image'], 'movieframes')
+if not os.path.isdir(directory):
+    os.makedirs(directory)
+new_norm = calculate_movie_normalization(data)
+data = apply_movie_normalization(data, new_norm)
+filepaths = write_layers(data, directory, ident, show_frame_number=True)
