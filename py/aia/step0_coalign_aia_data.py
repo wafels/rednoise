@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 from sunpy.time import parse_time
 from sunpy.map import Map
 from sunpy.image.coalignment import mapcube_coalign_by_match_template, calculate_match_template_shift, _default_fmap_function
-from sunpy.physics.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift, mapcube_solar_differential_derotate
+from sunpy.physics.solar_rotation import mapcube_solar_derotate, calculate_solar_rotate_shift#, mapcube_solar_differential_derotate
 import step0_plots
 import details_study as ds
 from mapcube_tools import calculate_movie_normalization, apply_movie_normalization, write_layers, mapcube_simple_replace
@@ -92,9 +92,8 @@ t_since_layer_index = times["time_in_seconds"] - times["time_in_seconds"][layer_
 x_scale = mc[layer_index].scale.axis1
 y_scale = mc[layer_index].scale.axis2
 filepath = os.path.join(save_locations['image'], ident + '.cross_correlation.png')
-#
-# Apply solar derotation
-#
+
+
 if ds.derotate:
     print("\nPerforming de-rotation")
 
@@ -142,17 +141,14 @@ if ds.derotate:
 
     # Apply the solar rotation shifts
     print("Applying solar rotation shifts")
-    #data = mapcube_solar_derotate(mc,
-    #                              layer_index=layer_index, shift=sr_shifts, clip=True,
-    #                              order=1)
-    data = mapcube_solar_differential_derotate(mc,
-                                               layer_index=layer_index)
+    data = mapcube_solar_derotate(mc,
+                                  layer_index=layer_index, shift=sr_shifts, clip=True,
+                                  order=1)
+    #print("Applying solar differential rotation")
+    #data = mapcube_solar_differential_derotate(mc,
+    #                                           layer_index=layer_index)
 else:
     data = Map(list_of_data, cube=True)
-
-
-# Clean the data in a very simple way
-data = mapcube_simple_replace(data)
 
 #
 # Coalign images by cross correlation
@@ -333,6 +329,8 @@ outputfile.close()
 
 #
 # Dump out frames to make a movie
+# How to make a movie
+# avconv -framerate 25 -f image2 -i paper2_six_euv_disk_1.5_193_%5d.png -c:v h264 -crf 1 out.mov
 #
 print("Writing out frames to make movies")
 directory = os.path.join(save_locations['image'], 'movieframes')

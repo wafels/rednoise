@@ -7,7 +7,7 @@ from copy import deepcopy
 import numpy as np
 import datalocationtools
 import astropy.units as u
-from sunpy.physics.differential_rotation import rot_hpc
+from sunpy.physics.differential_rotation import solar_rotate_coordinate
 from sunpy.time import parse_time
 
 from matplotlib.patches import Polygon
@@ -125,7 +125,7 @@ class Study:
 
 # Paper 2
 #study_type = 'debugpaper2'
-#study_type = 'paper2'
+study_type = 'paper2'
 #study_type = 'paper2_shorter_ts'
 
 # 3 - Noise Analysis
@@ -137,7 +137,7 @@ class Study:
 #study_type = 'papern_bradshaw_simulation'
 #study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
-study_type = 'papern_bradshaw_simulation_high_fn'
+#study_type = 'papern_bradshaw_simulation_high_fn'
 #study_type = 'from_simulated_power_spectra_1'
 #study_type = 'from_simulated_power_spectra_10'
 
@@ -149,9 +149,9 @@ study_type = 'papern_bradshaw_simulation_high_fn'
 
 #wave = '94'
 #wave = '131'
-wave = '171'
-#wave = '193'
-#wave = '211'
+#wave = '171'
+wave = '193'
+wave = '211'
 #wave = '335'
 
 input_root = '~/Data/ts'
@@ -466,8 +466,8 @@ class StudyBoundingBox:
         :return: the current BoundingBox is updated with the input time. The
         spatial position is updated according to solar rotation.
         """
-        self.ll = rot_hpc(self.ll[0], self.ll[1], self.time, new_time)
-        self.ur = rot_hpc(self.ur[0], self.ur[1], self.time, new_time)
+        self.ll = solar_rotate_coordinate(self.ll, self.time, new_time)
+        self.ur = solar_rotate_coordinate(self.ur, self.time, new_time)
         self.time = new_time
         return self
 
@@ -495,13 +495,7 @@ class StudyPolygon:
         :return: the current polygon is updated with the input time. The
         spatial position is updated according to solar rotation.
         """
-        rotated_polygon = np.zeros_like(self.polygon)
-        for i in range(0, self.nvertex):
-            rotated_vertex = rot_hpc(self.polygon[i, 0],
-                                     self.polygon[i, 1], self.time, new_time)
-            rotated_polygon[i, 0] = rotated_vertex[0]
-            rotated_polygon[i, 1] = rotated_vertex[1]
-        self.polygon = rotated_polygon
+        self.polygon = solar_rotate_coordinate(self.polygon, self.time, new_time)
         self.time = new_time
         return self
 
