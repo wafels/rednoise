@@ -126,6 +126,7 @@ class Study:
 # Paper 2
 #study_type = 'debugpaper2'
 study_type = 'paper2'
+study_type = 'vk'
 #study_type = 'paper2_shorter_ts'
 
 # 3 - Noise Analysis
@@ -333,6 +334,21 @@ if study_type == 'jitter':
     sunlocation = 'overlaps_HiC'
     sunlocation = 'same_time_as_overlaps_HiC'
     fits_level = '1.0'
+    cross_correlate = True
+    derotate = True
+    step0_output_information = ''
+    step1_input_information = ''
+    step1_output_information = ''
+    rn_processing = ''
+
+###############################################################################
+# VK - paper 7
+#
+if study_type == 'vk':
+    dataroot = '~/Data/ts/'
+    corename = study_type
+    sunlocation = 'vk2012'
+    fits_level = '1.5'
     cross_correlate = True
     derotate = True
     step0_output_information = ''
