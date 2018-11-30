@@ -148,12 +148,12 @@ study_type = 'vk'
 # 6 - Jitter
 #study_type = 'jitter'
 
+#wave = '171'
 #wave = '94'
 #wave = '131'
-#wave = '171'
-wave = '193'
-wave = '211'
-#wave = '335'
+#wave = '193'
+#wave = '211'
+wave = '335'
 
 input_root = '~/Data/ts'
 

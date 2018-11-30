@@ -33,7 +33,7 @@ def DefineWindow(window, nt):
 
 
 # Wavelengths we want to analyze
-waves = ['171']  # '131', '193', '211']
+waves = ['94', '131', '193', '211', '335']
 # regions = ['loop footpoints', 'moss']
 # Regions we are interested in
 # regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
@@ -80,7 +80,7 @@ for iwave, wave in enumerate(waves):
             print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
 
             # Load the data
-            pkl_file_location = os.path.join(output, ofilename + '.pkl')
+            pkl_file_location = os.path.join(ofilename + '.pkl')
             print('Loading ' + pkl_file_location)
             pkl_file = open(pkl_file_location, 'rb')
             dc = pickle.load(pkl_file)
@@ -222,15 +222,16 @@ for iwave, wave in enumerate(waves):
                     # ---
                     # Sum over the Fourier power of the absolute intensities
 
-            # Save the Fourier power of the absolute intensities
             ofilename = ofilename + '.' + window
+            """
+            # Save the Fourier power of the absolute intensities
             filepath = os.path.join(output, ofilename + '.fourier_power.pkl')
             print('Saving power spectra to ' + filepath)
             f = open(filepath, 'wb')
             pickle.dump(pfrequencies, f)
             pickle.dump(pwr, f)
             f.close()
-
+            """
             # Save the Fourier power of the relative intensities
             filepath = os.path.join(output, ofilename + '.fourier_power_relative.pkl')
             print('Saving power spectra to ' + filepath)
@@ -239,6 +240,7 @@ for iwave, wave in enumerate(waves):
             pickle.dump(pwr_rel, f)
             f.close()
 
+            """
             # Save the FFT of the analyzed time-series
             filepath = os.path.join(output, ofilename + '.fourier_transform.pkl')
             print('Saving Fourier transform to ' + filepath)
@@ -256,3 +258,4 @@ for iwave, wave in enumerate(waves):
             filepath = os.path.join(output, ofilename + '.sum_log_fft_power_relative_intensities.npz')
             np.savez(filepath, drel_power=drel_power/(1.0 * nx * ny),
                      pfrequencies=pfrequencies.to('Hz').value)
+            """
