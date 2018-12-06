@@ -9,6 +9,7 @@ import matplotlib.colors as colors
 
 import astropy.units as u
 from sunpy.time import parse_time
+from sunpy.map import Map
 
 import analysis_get_data
 import analysis_explore
@@ -19,7 +20,6 @@ from tools import statistics_tools
 
 # Wavelengths we want to cross correlate
 waves = ['94', '131', '171', '193', '211', '335']
-waves = ['335']
 
 regions = ['six_euv']
 #waves = ['193']
@@ -31,8 +31,10 @@ limit_type = 'standard'
 # Apodization windows
 windows = ['hanning']
 
+fake_map = True
+
 # Model results to examine
-model_names = ('Power Law + Constant', 'Power Law + Constant + Lognormal')
+model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 #model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
 
 #
@@ -91,11 +93,6 @@ for ic_type in ic_types:
                     # Output filename
                     ofilename = os.path.join(output, region_id + '.datacube')
 
-                    # Get the region submap
-                    if iwave == 0:
-                        submaps = analysis_get_data.get_region_submap(output, region_id)
-                        submap = submaps['reference region']
-
                     # Get the data for this model
                     this = storage[wave][region][this_model]
 
@@ -105,6 +102,16 @@ for ic_type in ic_types:
 
                     # Get the combined mask
                     mask1 = mdefine.combined_good_fit_parameter_limit[wave][region][this_model]
+
+                    # Get the region submap
+                    if not fake_map:
+                        if iwave == 0:
+                            submaps = analysis_get_data.get_region_submap(output, region_id)
+                            submap = submaps['reference region']
+                    else:
+                        fake_map_data = np.zeros_like(mask1, dtype=np.float)
+                        fake_map_header = {"CDELT1": 0.6, "CDELT2": 0.6}
+                        submap = Map((fake_map_data, fake_map_header))
 
                     for i in range(0, npar):
                         # Data
@@ -153,6 +160,7 @@ for ic_type in ic_types:
                         # Get the sunspot
 
                         # Get the feature/event data
+                        """
                         fevent = (ds.fevents)[0]
                         fevent_filename = region_id + '.{:s}.{:s}.fevent{:s}.pkl'.format(fevent[0], fevent[1], ds.processing_info)
                         fevents = analysis_get_data.fevent_outline(None, None,
@@ -161,7 +169,7 @@ for ic_type in ic_types:
                                                                    download=False,
                                                                    directory=output,
                                                                    filename=fevent_filename)
-
+                        """
                         # Make a spatial distribution map spectral model
                         # parameter
                         plt.close('all')
@@ -186,6 +194,7 @@ for ic_type in ic_types:
 
                         # Plot the features and events
                         dt = (30 * u.day).to(u.s).value
+                        """
                         for i, fevent in enumerate(fevents):
                             this_dt = np.abs((parse_time(fevent.time) - submap.date).total_seconds())
                             if this_dt < dt:
@@ -194,7 +203,7 @@ for ic_type in ic_types:
                         z.set_edgecolor('r')
                         z.set_linewidth(1)
                         ax.add_artist(z)
-
+                        """
                         cbar = fig.colorbar(ret, extend='both', orientation='vertical',
                                             shrink=0.8, label=label)
                         # Fit everything in.

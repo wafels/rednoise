@@ -18,13 +18,13 @@ waves = ['94', '335', '131', '171', '193', '211']
 regions = ['six_euv']
 
 # Paper 3: Wavelengths and regions
-waves = ['193']
+#waves = ['193']
 #regions = ds.regions
 
 
 # Paper 3: Wavelengths and regions
-waves = ['335']
-regions = ['six_euv']
+#waves = ['335']
+#regions = ['six_euv']
 
 
 
@@ -149,7 +149,7 @@ for ic_type in ic_types:
                             plt.figure(1, figsize=(10, 10))
                             for ibinning, binning in enumerate(hloc):
                                 plt.subplot(len(hloc), 1, ibinning+1)
-                                plt.hist(pm1, bins=100)
+                                plt.hist(pm1.value, bins=100)
                                 plt.axvline(ss['mean'].value,
                                             color=dp.mean.color,
                                             label=mean_label,

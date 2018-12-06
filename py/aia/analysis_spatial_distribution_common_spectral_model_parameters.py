@@ -15,6 +15,8 @@ import numpy.ma as ma
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
+from sunpy.map import Map
+
 import analysis_get_data
 import analysis_explore
 import details_study as ds
@@ -28,8 +30,8 @@ import matplotlib.cm as cm
 # Paper 2
 # Wavelengths we want to cross correlate
 waves = ['94', '131', '171', '193', '211', '335']
-waves = ['171', '193']
-waves = ['171']
+#waves = ['171', '193']
+#waves = ['171']
 regions = ['six_euv']
 power_type = 'fourier_power_relative'
 limit_type = 'standard'
@@ -61,7 +63,7 @@ fontsize = dp.fontsize
 storage = analysis_get_data.get_all_data(waves=waves,
                                          regions=regions,
                                          model_names=model_names,
-                                         spectral_model='.rnspectralmodels3')
+                                         spectral_model='.rnspectralmodels4')
 # Define the masks
 mdefine = analysis_explore.MaskDefine(storage, limits)
 
@@ -76,6 +78,7 @@ plot_type = 'spatial.common'
 filepaths_root = ds.datalocationtools.save_location_calculator(ds.roots, [ds.corename, ds.sunlocation, ds.fits_level])['pickle']
 filepaths = []
 
+fake_map = True
 
 
 # Plot spatial distributions of the spectral model parameters.
@@ -107,9 +110,10 @@ for ic_type in ic_types:
                 ofilename = os.path.join(output, region_id + '.datacube')
 
                 # Get the region submap
-                if iwave == 0 and not (ds.corename in ds.simulation):
-                    all_submaps = analysis_get_data.get_region_submap(output, region_id)
-                    region_submap = all_submaps['reference region']
+                if not fake_map:
+                    if iwave == 0 and not (ds.corename in ds.simulation):
+                        all_submaps = analysis_get_data.get_region_submap(output, region_id)
+                        region_submap = all_submaps['reference region']
 
                 # Get preferred model index.  This is an index to the list of
                 # models used.  If the mask value is true, then the preferred
@@ -220,9 +224,14 @@ for ic_type in ic_types:
                         my_map = map_data
                     else:
                         # Make a SunPy map for nice spatially aware plotting.
-                        my_map = analysis_get_data.make_map(region_submap, map_data)
+                        if not fake_map:
+                            my_map = analysis_get_data.make_map(region_submap, map_data)
+                        else:
+                            fake_map_header = {"CDELT1": 0.6, "CDELT2": 0.6}
+                            my_map = Map((map_data, fake_map_header))
 
                         # Get the feature/event data
+                        """
                         fevent = (ds.fevents)[0]
                         fevent_filename = region_id + '.{:s}.{:s}.fevent{:s}.pkl'.format(fevent[0], fevent[1], ds.processing_info)
                         fevents = fevents = ds.StudyFevents(analysis_get_data.fevent_outline(None, None,
@@ -231,7 +240,7 @@ for ic_type in ic_types:
                                                                    download=False,
                                                                    directory=output,
                                                                    filename=fevent_filename))
-
+                        """
                         subtitle = dp.concat_string(['%s - %s' % (region, wave),
                                                     percent_used_string], sep='\n')
                         # Make a spatial distribution map spectral model
@@ -257,6 +266,7 @@ for ic_type in ic_types:
 
                         # Plot the feature and event closest in time
                         # mc_layer_date = mc_layer.date
+                        """
                         mc_layer_date = '2012-09-23 03:00:00'  # temporarily in order to generate plots for proposal
                         z = fevents.closest_in_time(mc_layer_date).solar_rotate(mc_layer_date).mpl_polygon
                         z.set_edgecolor('w')
@@ -266,7 +276,7 @@ for ic_type in ic_types:
                         zz.set_edgecolor('w')
                         zz.set_linewidth(1)
                         ax.add_artist(zz)
-
+                        """
                         cbar = fig.colorbar(ret, extend='both', orientation='vertical', shrink=0.8, label=label)
 
                         # Fit everything in.

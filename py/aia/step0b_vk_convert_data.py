@@ -38,7 +38,7 @@ import details_simulated as dsim
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy import visualization
 
-from sunpy.cm import cm
+from sunpy.map import Map
 
 from astropy.io import fits
 import matplotlib.pyplot as plt
@@ -99,4 +99,33 @@ f = open(ofilename, 'wb')
 pickle.dump(sda, f)
 pickle.dump(times, f)
 f.close()
+
+# Create maps of the data for display purposes
+fake_header = {"CDELT1": 0.6, "CDELT2": 0.6, "WAVELNTH": np.float(ds.wave),
+               "INSTRUME": "AIA", "TELESCOP": "SDO", "WAVEUNIT": "Angstrom"}
+fake_map = Map((np.mean(sda, 2), fake_header))
+plt.close('all')
+fake_map.peek()
+# Output location
+output = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
+
+# Output filename
+filepath = os.path.join(output, region_id + '.summary_image.{:s}.png'.format(ds.index_string))
+print('Saving to ' + filepath)
+plt.savefig(filepath, bbox_inches='tight')
+plt.close('all')
+
+
+# Create maps of the data for display purposes
+fake_map = Map((sda[:, :, 0], fake_header))
+plt.close('all')
+fake_map.peek()
+# Output location
+output = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
+
+# Output filename
+filepath = os.path.join(output, region_id + '.example_image.{:s}.png'.format(ds.index_string))
+print('Saving to ' + filepath)
+plt.savefig(filepath, bbox_inches='tight')
+plt.close('all')
 
