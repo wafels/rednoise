@@ -101,9 +101,7 @@ pickle.dump(times, f)
 f.close()
 
 # Create maps of the data for display purposes
-fake_header = {"CDELT1": 0.6, "CDELT2": 0.6, "WAVELNTH": np.float(ds.wave),
-               "INSTRUME": "AIA", "TELESCOP": "SDO", "WAVEUNIT": "Angstrom"}
-fake_map = Map((np.mean(sda, 2), fake_header))
+fake_map = ds.make_simple_map(wave, date_obs, np.mean(sda, 2))
 plt.close('all')
 fake_map.peek()
 # Output location
@@ -117,7 +115,7 @@ plt.close('all')
 
 
 # Create maps of the data for display purposes
-fake_map = Map((sda[:, :, 0], fake_header))
+fake_map = ds.make_simple_map(wave, date_obs, sda[:, :, 0])
 plt.close('all')
 fake_map.peek()
 # Output location

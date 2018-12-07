@@ -228,7 +228,7 @@ for ic_type in ic_types:
                             my_map = analysis_get_data.make_map(region_submap, map_data)
                         else:
                             fake_map_header = {"CDELT1": 0.6, "CDELT2": 0.6}
-                            my_map = Map((map_data, fake_map_header))
+                            my_map = ds.make_simple_map(wave, "1999-12-30", map_data)
 
                         # Get the feature/event data
                         """

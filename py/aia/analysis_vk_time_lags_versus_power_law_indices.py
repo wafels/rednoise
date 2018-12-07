@@ -4,6 +4,9 @@ from scipy.io import readsav
 from scipy.stats import anderson_ksamp
 import matplotlib.pyplot as plt
 import astropy.units as u
+import details_study as ds
+
+# This section loads in the VK time lag data
 
 filepaths = {"low": {"bv": "~/Data/ts/bradshaw_viall_2016/crosscor_SteveModel10.sav",
                      "pli": "~/Data/ts/bradshaw_viall_2016/powerlawindices171/powerlawindices_data_low171.npy",
@@ -26,10 +29,37 @@ bv_data_ranges = {"peak": [-3600, 3600], "max": [-1, 1]}
 
 bv_ylabel = {"peak": 'time lag (seconds)', "max": 'cross correlation coefficient'}
 
-img_save = os.path.expanduser('~/ts/img/bradshaw_viall_2016')
+
+
 
 pli_range = [1, 4]
 bv_peak_range = [-2000, 2000]
+
+# This section loads in the power law indices, as outputted by the
+# analysis_spatial_distribution_common_spectral_model_parameters.py
+csmp_waves = ['94', '131', '171', '193', '211', '335']
+
+filepaths_root = ds.datalocationtools.save_location_calculator(ds.roots, [ds.corename, ds.sunlocation, ds.fits_level])['pickle']
+
+# Get the output file paths
+filepaths_filepath = os.path.join(filepaths_root, "analysis_spatial_distribution_common_spectral_model_parameters.filepaths.pkl")
+f = open(filepaths_filepath, 'rb')
+csmp_filepaths = pickle.load(f)
+f.close()
+
+# Find the particular filepaths we are interested in
+this_parameter = 'powerlawindex'
+parameter_info = dict()
+for wave in waves:
+    for csmp_filepath in csmp_filepaths:
+        if (wave in csmp_filepath) and (this_parameter in csmp_filepath):
+            f = open(csmp_filepath, 'rb')
+            parameter_info[wave] = dict()
+            parameter_info[wave]['title'] = pickle.load(f)
+            parameter_info[wave]['subtitle'] = pickle.load(f)
+            parameter_info[wave]['map'] = pickle.load(f)
+
+
 
 
 def peak_value_to_timelag(value):

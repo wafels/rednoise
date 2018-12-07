@@ -355,6 +355,8 @@ if study_type == 'vk':
     step1_input_information = ''
     step1_output_information = ''
     rn_processing = ''
+    time_lag_x_range = (-1, -1) * u.pix
+    time_lag_y_range = (-1, -1) * u.pix
 
 """
 if study_type == 'paper2':
@@ -420,6 +422,20 @@ hsr2015_range_x = [-498.0, -498 + 340.0] * u.arcsec
 hsr2015_range_y = [-98.0, 98.0] * u.arcsec
 hsr2015_model_name = {'Power law + Constant + Lognormal': '2',
                       'Power law + Constant': '1'}
+
+
+def make_simple_map(wave, date, data):
+    """
+    Make a map using
+    :param wave:
+    :param date:
+    :param data:
+    :return:
+    """
+    header = {"CDELT1": 0.6, "CDELT2": 0.6, "WAVELNTH": np.float(wave),
+              "INSTRUME": "AIA", "TELESCOP": "SDO", "WAVEUNIT": "Angstrom",
+              "DATE-OBS": date}
+    return Map(data, header)
 
 
 class StudyBoundingBox:
