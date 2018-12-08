@@ -9,6 +9,7 @@ import datalocationtools
 import astropy.units as u
 from sunpy.physics.differential_rotation import solar_rotate_coordinate
 from sunpy.time import parse_time
+from sunpy.map import Map
 
 from matplotlib.patches import Polygon
 
@@ -149,10 +150,10 @@ study_type = 'vk'
 #study_type = 'jitter'
 
 wave = '94'
-wave = '131'
-wave = '171'
-wave = '193'
-wave = '211'
+#wave = '131'
+#wave = '171'
+#wave = '193'
+#wave = '211'
 #wave = '335'
 
 input_root = '~/Data/ts'
@@ -355,8 +356,10 @@ if study_type == 'vk':
     step1_input_information = ''
     step1_output_information = ''
     rn_processing = ''
-    time_lag_x_range = (-1, -1) * u.pix
-    time_lag_y_range = (-1, -1) * u.pix
+    vk_x_range = (375, 924 + 1) * u.pix
+    vk_y_range = (150, 649 + 1) * u.pix
+    ar_x = (125, 350) * u.pix
+    ar_y = (75, 300) * u.pix
 
 """
 if study_type == 'paper2':

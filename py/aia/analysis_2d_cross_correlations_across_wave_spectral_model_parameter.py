@@ -27,7 +27,7 @@ appended_name = None
 windows = ['hanning']
 
 # Model results to examine
-model_names = ('Power Law + Constant + Lognormal', 'Power Law + Constant')
+model_names = ( 'Power Law + Constant',)
 
 #
 # Details of the analysis

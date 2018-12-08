@@ -1,39 +1,42 @@
 import os
+import pickle
+from copy import deepcopy
 import numpy as np
 from scipy.io import readsav
 from scipy.stats import anderson_ksamp
 import matplotlib.pyplot as plt
 import astropy.units as u
+from sunpy.map import Map
 import details_study as ds
 
 # This section loads in the VK time lag data
+# Where the data is
+filepaths = {"vk": "~/Data/ts/vk/crosscor06_19_12hr.sav",
+             "vk193replacement": "~/Data/ts/vk/crosscor06_19_12hr_0_193.sav"}
 
-filepaths = {"low": {"bv": "~/Data/ts/bradshaw_viall_2016/crosscor_SteveModel10.sav",
-                     "pli": "~/Data/ts/bradshaw_viall_2016/powerlawindices171/powerlawindices_data_low171.npy",
-                     "plim": "~/Data/ts/bradshaw_viall_2016/powerlawindices171/powerlawindices_mask_low171.npy"},
-             "intermediate": {"bv": "~/Data/ts/bradshaw_viall_2016/crosscor_SteveTrain10.sav",
-                              "pli": "~/Data/ts/bradshaw_viall_2016/powerlawindices171/powerlawindices_data_intermediate171.npy",
-                              "plim": "~/Data/ts/bradshaw_viall_2016/powerlawindices171/powerlawindices_mask_intermediate171.npy"},
-             "high": {"bv": "~/Data/ts/bradshaw_viall_2016/crosscor_SteveIntTrain10.sav",
-                      "pli": "~/Data/ts/bradshaw_viall_2016/powerlawindices171/powerlawindices_data_high171.npy",
-                      "plim": "~/Data/ts/bradshaw_viall_2016/powerlawindices171/powerlawindices_mask_high171.npy"}
-             }
+# Load in the data
+vk = readsav(os.path.expanduser(filepaths["vk"]))
+vk193replacement = readsav(os.path.expanduser(filepaths["vk193replacement"]))
+vk['peak193'] = deepcopy(vk193replacement['peak193'])
+vk['max193'] = deepcopy(vk193replacement['max193'])
 
-bv_keys = ('peak335', 'peak211', 'peak193', 'peak171', 'peak094', 'max094', 'max335', 'max211', 'max193', 'max171')
+# Ordered data
+#vk_keys = ('peak335', 'peak211', 'peak193', 'peak171', 'peak094', 'max094', 'max335', 'max211', 'max193', 'max171')
 
+vk_keys = {'peak': ('peak094', 'peak335', 'peak211', 'peak193', 'peak171'),
+           'max': ('max094', 'max335', 'max211', 'max193', 'max171')}
+
+
+# The VK temperature order
 channel_by_decreasing_temp = ('094', '335', '211', '193', '171', '131')
 
-types_of_bv_data = ('peak',)
+# The VK data we are looking at
+type_of_vk_data = 'peak'
 
-bv_data_ranges = {"peak": [-3600, 3600], "max": [-1, 1]}
+vk_data_ranges = {"peak": [-10000, 10000], "max": [-1, 1]}
 
-bv_ylabel = {"peak": 'time lag (seconds)', "max": 'cross correlation coefficient'}
+vk_ylabel = {"peak": 'time lag (seconds)', "max": 'cross correlation coefficient'}
 
-
-
-
-pli_range = [1, 4]
-bv_peak_range = [-2000, 2000]
 
 # This section loads in the power law indices, as outputted by the
 # analysis_spatial_distribution_common_spectral_model_parameters.py
@@ -48,6 +51,7 @@ csmp_filepaths = pickle.load(f)
 f.close()
 
 # Find the particular filepaths we are interested in
+waves = ('94', '335', '211', '193', '171', '131')
 this_parameter = 'powerlawindex'
 parameter_info = dict()
 for wave in waves:
@@ -59,7 +63,8 @@ for wave in waves:
             parameter_info[wave]['subtitle'] = pickle.load(f)
             parameter_info[wave]['map'] = pickle.load(f)
 
-
+pli_range = [0, 2]
+vk_range = ([-1, 1]*u.h).to(u.s).value
 
 
 def peak_value_to_timelag(value):
@@ -68,13 +73,108 @@ def peak_value_to_timelag(value):
     :param value:
     Return
     """
-    return (-3600 + value*8)*u.s
+    dx = 24 * u.h / 500
+    return (-12 * u.h + value * dx).to(u.s).value
 
-
-keys = filepaths.keys()
 
 anderson_ks = {}
 
+vk_x_range = ds.vk_x_range.value
+vk_y_range = ds.vk_y_range.value
+
+ar_y = ds.ar_x
+ar_x = ds.ar_y
+
+
+mask_type = 'index only'
+mask_type = 'also exclude AR'
+mask_type = 'also exclude outlying'
+
+mask_types = ('index only', 'also exclude AR', 'also exclude outlying')
+
+for mask_type in mask_types:
+
+    for wave in waves:
+
+        # The power law index measurement
+        pli_measurement = 'n (channel={:s} mask={:s})'.format(wave, mask_type)
+
+        for vk_key in vk_keys[type_of_vk_data]:
+            #
+            print('Measurement type and initial channel = {:s}'.format(vk_key))
+            #
+            filename = ''.format(vk_key)
+            vk_data = vk[vk_key][:, int(vk_y_range[0]):int(vk_y_range[1]), int(vk_x_range[0]):int(vk_x_range[1])]
+
+            if 'peak' in vk_key:
+                vk_data = peak_value_to_timelag(vk_data)
+
+            # Number of channels
+            nchannels = vk_data.shape[0]
+            #
+            this_map = parameter_info[wave]['map']
+
+            # Very rough AR mask
+            exclude_ar = np.zeros_like(this_map.mask)
+            exclude_ar[int(ar_y[0].value):int(ar_y[1].value), int(ar_x[0].value):int(ar_x[1].value)] = True
+
+            # Mask
+            if mask_type == 'index only':
+                mask = this_map.mask
+            elif mask_type == 'also exclude AR':
+                mask = np.logical_or(this_map.mask, exclude_ar)
+            elif mask_type == 'also exclude outlying':
+                mask = np.logical_or(this_map.mask, np.logical_not(exclude_ar))
+
+            # Power law index data
+            pli_data_masked = np.ma.array(this_map.data, mask=mask)
+            pli_comp = pli_data_masked.compressed()
+
+            pli_mean = np.mean(pli_comp)
+            pli_std = np.std(pli_comp)
+            pli_median = np.median(pli_comp)
+            pli_mad = np.median(np.abs(pli_comp-pli_median))
+
+            # go through the channels
+            channels_remaining = channel_by_decreasing_temp[-nchannels:]
+            for j in range(1, len(channels_remaining)):
+                # The VK measurement
+                ending_channel = channels_remaining[j]
+                print('   - ending channel is {:s}.'.format(ending_channel))
+                vk_measurement = '{:s}_cc_{:s}'.format(vk_key, ending_channel)
+
+                # Get the VK data
+                vk_data_masked = np.ma.array(vk_data[j, :, :], mask=mask)
+                vk_comp = vk_data_masked.compressed()
+
+                vk_mean = np.mean(vk_comp)
+                vk_std = np.std(vk_comp)
+                vk_median = np.median(vk_comp)
+                vk_mad = np.median(np.abs(vk_comp-vk_median))
+
+                plt.close('all')
+                fig, ax = plt.subplots()
+
+                _, _, _, cax = ax.hist2d(pli_comp, vk_comp, range=(pli_range, vk_range), bins=(50, 50))
+                ax.axhline(vk_mean, color='red', linestyle=":", linewidth=2, label='{:.0f} ({:.0f}) s'.format(vk_mean, vk_std))
+                ax.axvline(pli_mean, color='red', linewidth=2, label='{:n} ({:n})'.format(pli_mean, pli_std))
+                npix = len(pli_comp)
+                ax.set_xlabel('{:s} power law index'.format(wave))
+                ylabel = "{:s} to {:s}".format(vk_key, ending_channel)
+                ax.set_ylabel(ylabel)
+                ax.set_ylim(vk_range)
+                ax.set_title('{:n} pixels of {:n} used\n{:s}'.format(npix, mask.size, mask_type))
+                cbar = fig.colorbar(cax)
+                cbar.ax.set_ylabel('number of pixels')
+                plt.legend(fontsize=15, framealpha=0.8)
+                img_filename = 'nanoflare={:s}_versus_{:s}.png'.format(pli_measurement, vk_measurement)
+                img_filepath = os.path.join(filepaths_root, img_filename)
+                plt.tight_layout()
+                plt.savefig(img_filepath)
+                #print('Saved {:s}'.format(img_filepath))
+
+
+stop
 for key in keys:
     # Get the files
     files = filepaths[key]
@@ -95,7 +195,7 @@ for key in keys:
     pli_mask = np.logical_or(plim, np.logical_not(pli_satisfied))
 
     # Go through all the BV data
-    for bv_data_type in types_of_bv_data:
+    for bv_data_type in types_of_vk_data:
         for i, starting_channel in enumerate(channel_by_decreasing_temp[:-1]):
             bv_key = "{:s}{:s}".format(bv_data_type, starting_channel)
 
@@ -133,7 +233,7 @@ for key in keys:
                 pli_data = np.ma.array(pli, mask=mask)
 
                 # Select the range values
-                bv_data_range = bv_data_ranges[bv_data_type]
+                bv_data_range = vk_data_ranges[bv_data_type]
 
                 # Make a plot
                 plt.close('all')

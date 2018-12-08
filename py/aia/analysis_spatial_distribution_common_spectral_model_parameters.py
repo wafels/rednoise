@@ -334,6 +334,10 @@ for ic_type in ic_types:
                     pickle.dump(my_map, f)
                     f.close()
 
+                    final_pickle_filepath = final_pickle_filepath + '.npz'
+                    np.savez(final_pickle_filepath, data=map_data.data, mask=map_data.mask)
+
+
                     # Store the location and file name
                     print('Adding %s' % final_pickle_filepath)
                     filepaths.append(final_pickle_filepath)

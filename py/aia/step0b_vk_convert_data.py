@@ -41,6 +41,8 @@ from astropy import visualization
 from sunpy.map import Map
 
 from astropy.io import fits
+import astropy.units as u
+from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
 
 
@@ -101,7 +103,7 @@ pickle.dump(times, f)
 f.close()
 
 # Create maps of the data for display purposes
-fake_map = ds.make_simple_map(wave, date_obs, np.mean(sda, 2))
+fake_map = ds.make_simple_map(ds.wave, date_obs, np.mean(sda, 2))
 plt.close('all')
 fake_map.peek()
 # Output location
@@ -115,9 +117,25 @@ plt.close('all')
 
 
 # Create maps of the data for display purposes
-fake_map = ds.make_simple_map(wave, date_obs, sda[:, :, 0])
+fake_map = ds.make_simple_map(ds.wave, date_obs, sda[:, :, 0])
 plt.close('all')
-fake_map.peek()
+figure = plt.figure(4)
+ax = plt.subplot(projection=fake_map)
+
+# Create the composite map
+
+box = fake_map.pixel_to_world((ds.ar_x[0].value, ds.ar_x[0].value, ds.ar_x[1].value, ds.ar_x[1].value)*u.pix,
+                              (ds.ar_y[0].value, ds.ar_y[1].value, ds.ar_y[0].value, ds.ar_y[1].value)*u.pix)
+
+fake_map.plot(axes=ax)
+ax.plot_coord(box, color='c')
+plt.colorbar()
+plt.show()
+
+
+fake_map.plot_coord(box)
+# Add a line that indicates where the best Long score is
+
 # Output location
 output = ds.datalocationtools.save_location_calculator(ds.roots, b)["image"]
 
