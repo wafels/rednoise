@@ -292,76 +292,6 @@ def power_law_with_constant_with_deltafn(a, f):
 
 
 #
-# Conversion functions
-#
-class ConverterInfo:
-    def __init__(self, array, converted_unit, factors):
-        self.array = array
-        self.converted_unit = converted_unit
-        self.factors = factors
-
-
-def no_conversion(ci):
-    return ci.converted_unit * ci.array
-
-
-def convert_ln_to_log10(ci):
-    return ci.converted_unit * ci.array / np.log(10.0)
-
-
-def convert_dimensionless_frequency_to_frequency(ci):
-    return ci.converted_unit * ci.array * ci.factors[0]
-
-
-def convert_ln_dimensionless_frequency_to_frequency(ci):
-    return ci.converted_unit * np.exp(ci.array) * ci.factors[0]
-
-
-#
-# Describe a variable as it is fit, and how we want to display and handle it.
-#
-class Variable:
-    def __init__(self,
-                 fit_parameter,
-                 conversion_function,
-                 converted_label,
-                 converted_unit):
-        # The parameter that is actually fit by the routine
-        self.fit_parameter = fit_parameter
-
-        # The conversion function that turns the fit parameter into something
-        # that is easy to understand.
-        self.conversion_function = conversion_function
-
-        # Converted label - used in plotting
-        self.converted_label = converted_label
-
-        # Astropy unit of the variable after conversion
-        self.converted_unit = converted_unit
-
-
-#
-# Specific variable types.
-#
-class FrequencyVariable(Variable):
-    def __init__(self, label):
-        Variable.__init__(self,
-                          'dimensionless frequency',
-                          convert_dimensionless_frequency_to_frequency,
-                          label,
-                          u.Hz)
-
-
-class LnVariable(Variable):
-    def __init__(self, parameter, label):
-        Variable.__init__(self,
-                          'ln(' + parameter + ')',
-                          convert_ln_to_log10,
-                          r"$\log_{10}(" + label + ")$",
-                          u.dimensionless_unscaled)
-
-
-#
 # Spectrum model class
 #
 class Spectrum:
@@ -387,87 +317,6 @@ class Spectrum:
         if isinstance(f, u.Quantity):
             raise ValueError('Spectrum power argument must be a normalized frequency.')
         pass
-
-
-class CompoundSpectrum:
-    def __init__(self, components, f_norm=1*u.Hz):
-        self.name = ''
-        self.variables = []
-        self.components = components
-
-        # Normalization applied to the frequencies
-        if not isinstance(f_norm, u.Quantity):
-            raise ValueError('Normalization factor must be a quantity and convertible to Hz.')
-        self.f_norm = f_norm
-
-        for component in self.components:
-            # Get the spectrum model
-            spectrum = component[0]
-
-            # Update the name
-            self.name = self.name + spectrum.name + ' + '
-
-            # Update the variable list
-            for variable in spectrum.variables:
-                self.variables.append(variable)
-
-        # Remove the last ' + '
-        self.name = self.name[:-3]
-
-    # Calculate the power in each component.  Useful for plotting out the
-    # individual components, ratios, etc
-    def power_per_component(self, a, f):
-        ppc = []
-        for component in self.components:
-            spectrum = component[0]
-            variables = a[component[1][0]: component[1][1]]
-            ppc.append(spectrum.power(variables, f))
-        return ppc
-
-    # Return the total power
-    def power(self, a, f):
-        ppc = self.power_per_component(a, f)
-        total_power = np.zeros_like(f)
-        for power in range(0, len(self.components)):
-            total_power += ppc[power]
-        return total_power
-
-    # Subclassed for any particular power law
-    def guess(self, f, data):
-        if isinstance(f, u.Quantity):
-            raise ValueError('Spectrum power argument must be a normalized frequency.')
-        pass
-
-
-#
-# Specific spectral models
-#
-class Constant(Spectrum):
-    def __init__(self):
-        Spectrum.__init__(self, 'Constant', [LnVariable('constant', 'C')])
-
-    def power(self, a, f):
-        return constant(a)
-
-
-class PowerLaw(Spectrum):
-    def __init__(self):
-        power_law_amplitude = LnVariable('power law amplitude', 'A_{P}')
-        power_law_index = Variable('power law index',
-                                   no_conversion,
-                                   r'$n$',
-                                   u.dimensionless_unscaled)
-
-        Spectrum.__init__(self, 'Power Law', [power_law_amplitude, power_law_index])
-
-    def power(self, a, f):
-        return power_law(a, f)
-
-    # A good enough guess that will allow a proper fitting algorithm to proceed.
-    def guess(self, f, observed_power, amp_range=[0, 5]):
-        index_estimate = pstools.most_probable_power_law_index(f, observed_power, 0.0, np.arange(0.0, 4.0, 0.01))
-        log_amplitude_estimate = np.log(np.mean(observed_power[amp_range[0]:amp_range[1]]))
-        return log_amplitude_estimate, index_estimate
 
 
 class BrokenPowerLaw(Spectrum):
@@ -629,25 +478,53 @@ class PowerLawPlusConstantPlusLognormal(CompoundSpectrum):
 #
 #
 #
-def estimate_power_law_plus_constant():
-    pass
+def estimate_power_law_plus_constant(f, power,
+                                     amplitude_range=(0, 5),
+                                     index_range=(0, 50),
+                                     background_range=(-50, -1)):
+    """
+
+    Parameters
+    ----------
+    f
+    power
+    amplitude_range
+    index_range
+    background_range
+
+    Returns
+    -------
+
+    """
+    # Amplitude estimate
+    amplitude_estimate = np.mean(power[amplitude_range[0]:amplitude_range[1]])
+
+    # Index estimate
+    index_estimate = pstools.most_probable_power_law_index(f[index_range[0]:index_range[1]],
+                                                           power[index_range[0]:index_range[1]],
+                                                           0.0, np.arange(0.0, 4.0, 0.01))
+    # Background estimate
+    background_estimate = np.mean(power[background_range[0]:background_range[1]])
+    return amplitude_estimate, index_estimate, background_estimate
+
 
 #
 # A function that fits a power law plus a constant to
 #
-def fit_power_law_plus_constant(log_normalized_frequency, log_power, fit_method='Nelder-Mead', **kwargs):
+def fit_power_law_plus_constant(f, power, fit_method='Nelder-Mead', **kwargs):
         """
 
-        :param f:
-        :param data:
-        :param f_norm:
-        :param fit_method:
-        :param kwargs:
-        :return:
-        """
-        # Number of guesses to the fit
-        attempt_limit = 1
+        Parameters
+        ----------
+        f
+        power
+        fit_method
+        kwargs
 
+        Returns
+        -------
+
+        """
         # Number of data points in each power spectrum
         n = len(f)
 
@@ -668,7 +545,7 @@ def fit_power_law_plus_constant(log_normalized_frequency, log_power, fit_method=
 
         # Initial guess should always satisfy the acceptable fit criterion
         # as defined in the model.
-        guess = self.model.guess(self.fn, observed_power, **kwargs)
+        estimate = estimate_power_law_plus_constant(f, power, **kwargs)
 
         # We want to ensure that at least one fit is attempted using the
         # initial guess.  To do this, the acceptable fit property is set
@@ -677,19 +554,18 @@ def fit_power_law_plus_constant(log_normalized_frequency, log_power, fit_method=
         this_guess = deepcopy(guess)
 
         # Vary the initial guess until a good fit is found up to a
-        result = lnlike_model_fit.go(self.fn,
-                                     observed_power,
+        result = lnlike_model_fit.go(f, power,
                                      self.model.power,
-                                     this_guess,
-                                     self.fit_method)
+                                     estimate,
+                                     fit_method)
 
         # Estimates of the quality of the fit to the data
         parameter_estimate = result['x']
 
         bestfit = self.model.power(parameter_estimate, self.fn)
         rhoj = lnlike_model_fit.rhoj(observed_power, bestfit)
-        rchi2 = lnlike_model_fit.rchi2(1.0, self.dof, rhoj)
-        aic = lnlike_model_fit.AIC(self.k, parameter_estimate, self.fn,
+        rchi2 = lnlike_model_fit.rchi2(1.0, dof, rhoj)
+        aic = lnlike_model_fit.AIC(k, parameter_estimate, self.fn,
                                    observed_power, self.model.power)
         bic = lnlike_model_fit.BIC(self.k, parameter_estimate, self.fn,
                                    observed_power, self.model.power,
@@ -698,35 +574,8 @@ def fit_power_law_plus_constant(log_normalized_frequency, log_power, fit_method=
         # Store the final results
         self.result[j][i] = (this_guess, result, rchi2, aic, bic, self.acceptable_fit_found)
 
-    def as_array(self, quantity):
-        """
-        Convert parts of the results nested list into a numpy array.
 
-        :param quantity: a string that indicates which quantity you want
-        :return: numpy array of size (ny, nx)
-        """
-        as_array = self._as_array(self.index[quantity])
 
-        # Convert to an easier to use value if returning a model parameter.
-        fit_parameters = [variable.fit_parameter for variable in self.model.variables]
-        if quantity in fit_parameters:
-            fp_index = fit_parameters.index(quantity)
-            converted_unit = self.model.variables[fp_index].converted_unit
-            conversion_function = self.model.variables[fp_index].conversion_function
-            quantity_info = ConverterInfo(as_array, converted_unit, [self.f_norm])
-            return conversion_function(quantity_info)
-        else:
-            return as_array
-
-    def _as_array(self, indices):
-        as_array = np.zeros((self.ny, self.nx))
-        for i in range(0, self.nx):
-            for j in range(0, self.ny):
-                x = self.result[j][i]
-                for index in indices:
-                    x = x[index]
-                as_array[j, i] = x
-        return as_array
 
     def good_rchi2_mask(self, p_value=[0.025, 0.975]):
         """
