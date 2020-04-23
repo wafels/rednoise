@@ -27,7 +27,6 @@ been de-rotated and co-aligned.
 """
 
 import os
-import pickle
 import numpy as np
 import astropy.units as u
 
@@ -59,15 +58,17 @@ ident = ds.ident
 # Load in the derotated data into a datacube
 print('Acquiring data from ' + aia_data_location)
 
-# Bradshaw simulated data?
-bradshaw_simulated_data = ds.study_type in ('papern_bradshaw_simulation_low_fn',
-                                            'papern_bradshaw_simulation_intermediate_fn',
-                                            'papern_bradshaw_simulation_high_fn')
+directory = aia_data_location 
+filename = 'aaa'
+filepath = os.path.join(directory, filename)
+hdulist = fits.open(filepath)
+# The data needs to be re-ordered for use by the following analyses
+sda = np.swapaxes(hdulist[0].data, 0, 2)  # check this! 
+hdulist.close()
 
-date_obs = "2016-08-15 01:23:45"
-
+"""
 if bradshaw_simulated_data:
-    # Get the simulated data
+    # Load the simulated data
     directory_listing = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
     list_of_data = []
     for f in directory_listing:
@@ -77,41 +78,45 @@ if bradshaw_simulated_data:
             print('File that does not end in ".fits" detected, and not included in list = %s ' %f)
     print("Number of files = %i" % len(list_of_data))
     hdulist = fits.open(list_of_data[0])  # check this!
+    # The data needs to be re-ordered for use by the followinf code
     sda = np.swapaxes(hdulist[0].data, 0, 2)  # check this!
     hdulist.close()
-
 else:
     directory_listing = sorted(os.path.join(aia_data_location, f) for f in os.listdir(aia_data_location))
     data = np.load(directory_listing[0])
     sda = data['arr_0']
+"""
+
 
 #
 # Output the data in the format required
 #
-times = {"date_obs": date_obs,
-         "time_in_seconds": dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])}
-#
-# Step 2 has data shaped like (ny, nx, nt)
-#
-a = list()
-a.append(ds.study_type)
-a.append('disk')
-a.append('sim0')
-a.append('{:s}'.format(ds.wave))
-z = '/home/ireland/ts/pickle/cc_True_dr_True_bcc_False/{:s}/{:s}/{:s}/{:s}/six_euv'.format(a[0], a[1], a[2], a[3])
+time_in_seconds = dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])
 
-filename = '{:s}_{:s}_{:s}_{:s}_six_euv.datacube.t0_None.pkl'.format(a[0], a[1], a[2], a[3])
-if not os.path.exists(z):
-    print('Creating {:s}'.format(z))
-    os.makedirs(z)
+# Let's simplify the output directory compared to what was done previously.
+# Since the output is intended to be that from a step1 process, let's
+# dump the output data into such a directory.
 
-pfilepath = '{:s}/{:s}'.format(z, filename)
-print('Saving to {:s}'.format(pfilepath))
-outputfile = open(pfilepath, 'wb')
-pickle.dump(sda, outputfile)
-pickle.dump(times, outputfile)
-outputfile.close()
-zzz
+# Where the data will be stored
+project_data = ds.save_locations['project_data']
+output_path = '{:s}/step1/{:s}'.format(project_data, ds.study_type)
+
+# Name the file
+output_filename = '{:s}_{:s}.step1.npz'.format(ds.study_type, ds.wave)
+
+# Full filepath
+output_filepath = os.path.join(output_path, output_filename)
+
+# Make the subdirectory if it does not already exist
+if not os.path.exists(output_path):
+    print('Creating {:s}'.format(output_path))
+    os.makedirs(output_path)
+
+# Save the data
+np.savez(output_filepath, sda, time_in_seconds)
+
+
+""" Let's not bother with making a plot just yet.
 if bradshaw_simulated_data:
     # Color stretching for the Bradshaw simulated data
     stretch = {'papern_bradshaw_simulation_high_fn': 0.00001,
@@ -133,3 +138,4 @@ if bradshaw_simulated_data:
     #plt.colorbar(label='emission')
     plt.savefig('/home/ireland/Desktop/emission.{:s}.png'.format(ds.sim_name[ds.corename]), bbox_inches='tight')
     plt.close('all')
+"""

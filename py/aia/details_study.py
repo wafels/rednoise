@@ -13,121 +13,14 @@ from sunpy.map import Map
 
 from matplotlib.patches import Polygon
 
-
-class Study:
-    """
-    Defines all the major parameters used to study a single region in an
-    input data set.
-    """
-    def __init__(self,
-                 # Overall study name.
-                 study_type='paper2',
-                 # Which AIA channel to study
-                 wave='171',
-                 # Where the input data is
-                 input_root=os.path.expanduser('~/Data/ts'),
-                 input_branches=None,
-                 # Output information
-                 output_root=os.path.expanduser('~/ts'),
-                 output_types=['pickle', 'images', 'movies'],
-                 # Cross correlation and de-rotation parameters
-                 cross_correlate=True,
-                 derotate=True,
-                 base_cross_correlation_channel='171',
-                 use_base_cross_correlation=False,
-                 # Spatial information
-                 region=None,
-                 # Temporal information
-                 file_list_index=[0, None]):
-
-        # Overall study name
-        self.study_type = study_type
-
-        # Which (AIA) channel to study
-        self.wave = wave
-
-        # Where the input data is
-        self.input_root = input_root
-        self.input_branches = input_branches
-
-        # Output information
-        self.output_root = output_root
-        self.output_types = output_types
-
-        # Information about procedures applied to the set of files in the
-        # input directory.
-        # Cross correlation and solar de-rotation parameters
-        self.cross_correlate = cross_correlate
-        self.base_cross_correlation_channel = base_cross_correlation_channel
-        self.use_base_cross_correlation = use_base_cross_correlation
-        self.derotate = derotate
-
-        # Specific file indices that will be examined.
-        self.file_list_index = file_list_index
-
-        # Specific spatial subregions in the data
-        if len(region) > 1:
-            raise ValueError('Only one region allowed.')
-        self.region = region
-
-    def output_branches(self):
-        """ Calculate the output branches. """
-        # Overall study name.
-        a = [self.study_type]
-        # Copy the structure of the input data.
-        for branch in self.input_branches:
-            a.append(branch)
-        # Copy the information about the procedures applied.
-        for procedure in self.procedures_applied():
-            a.append(procedure)
-        # The wavelength used.
-        a.append(self.wave)
-        # Calculate an output branch for each region.
-        a.append(list(self.region.keys())[0])
-        return a
-
-    def output_filepaths(self):
-        """ Calculate the path for all the outputs."""
-        a = dict()
-        for output_type in self.output_types:
-            root = datalocationtools.path([output_type], root=self.output_root)
-            a[output_type] = datalocationtools.path(self.output_branches(),
-                                                    root=root)
-        return a
-
-    def output_filename(self):
-        """ Calculate a filename based on the input root and branches, and
-        the procedures applied to that input data."""
-        return datalocationtools.filename(self.output_branches())
-
-    def info_file_list(self):
-        # File list information as a string.
-        return 't{:s}_{:s}'.format(str(self.file_list_index[0]),
-                                   str(self.file_list_index[1]))
-
-    def info_cc_and_dr(self):
-        # Cross-correlation and solar de-rotation information as a string.
-        return 'cc_{:s}_dr_{:s}_bcc_{:s}'.format(str(self.cross_correlate),
-                                                 str(self.derotate),
-                                                 str(self.use_base_cross_correlation))
-
-    def procedures_applied(self):
-        # Procedures applied to the data.
-        a = list()
-        a.append(self.info_file_list())
-        a.append(self.info_cc_and_dr())
-        return a
-
-
-
 #
 # Study type
 #
 
 # Paper 2
 #study_type = 'debugpaper2'
-study_type = 'paper2'
-study_type = 'vk'
+#study_type = 'paper2'
+#study_type = 'vk'
 #study_type = 'paper2_shorter_ts'
 
 # 3 - Noise Analysis
@@ -137,7 +30,7 @@ study_type = 'vk'
 
 # 4 - Simulated Data
 #study_type = 'papern_bradshaw_simulation'
-#study_type = 'papern_bradshaw_simulation_low_fn'
+study_type = 'papern_bradshaw_simulation_low_fn'
 #study_type = 'papern_bradshaw_simulation_intermediate_fn'
 #study_type = 'papern_bradshaw_simulation_high_fn'
 #study_type = 'from_simulated_power_spectra_1'
@@ -177,18 +70,6 @@ fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
 
 # Standard index range of files to read in
 file_list_index = [0, None]
-
-
-simulation = ['papern_bradshaw_simulation_low_fn',
-              'papern_bradshaw_simulation_intermediate_fn',
-              'papern_bradshaw_simulation_high_fn']
-
-#simulation = ['papern_bradshaw_simulation_low_fn',
-#              'papern_bradshaw_simulation_intermediate_fn',
-#              'papern_bradshaw_simulation_high_fn',
-#              'from_simulated_power_spectra']
-#for i in range(1, 11):
-#    simulation.append('from_simulated_power_spectra_{:s}'.format(str(i)))
 
 
 sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares',
@@ -297,17 +178,15 @@ if study_type == 'paper3_BLSGSM':
 ###############################################################################
 # Simulated Data - paper 4
 #
-if study_type in simulation:
+if study_type in list(sim_name.keys()):
     conversion_style = 'simple'
-    dataroot = '~/Data/ts/'
+    # Where the original data is, typically FITS or sav files
+    dataroot = os.path.expanduser('~/Data/ts/')
+    # Where the output data will be stored.
+    output_root = os.path.expanduser('~/ts/output/')
     corename = study_type
-    sunlocation = 'disk'
-    fits_level = 'sim0'
-    cross_correlate = True
-    derotate = True
-    step0_output_information = ''
-    step1_input_information = ''
-    step1_output_information = ''
+    # A description of the data
+    original_datatype = 'disk'
 
 ###############################################################################
 # GMU - paper 5
@@ -378,40 +257,17 @@ if study_type == 'paper2':
 # Index string
 index_string = 't' + str(file_list_index[0]) + '_' + str(file_list_index[1])
 
-# Processing information
-processing_info = '{:s}.{:s}'.format(step1_input_information, index_string)
-
 # Create the branches in order
-branches = [corename, sunlocation, fits_level, wave]
+branches = [corename, wave, original_datatype]
 
 # Create the AIA source data location
 aia_data_location = datalocationtools.save_location_calculator({"aiadata": dataroot}, branches)
 
-# Extend the name if cross correlation is requested
-extension = "_"
-if cross_correlate:
-    extension = 'cc_True_'
-else:
-    extension = 'cc_False_'
-
-# Extend the name if derotation is requested
-if derotate:
-    extension = extension + 'dr_True_'
-else:
-    extension = extension + 'dr_False'
-
-# Extend the name if derotation is requested
-if use_base_cross_correlation_channel:
-    extension = extension + 'bcc_True_'
-else:
-    extension = extension + 'bcc_False'
-
-
 # Locations of the output datatypes
-roots = {"pickle": '~/ts/pickle/' + extension,
-         "image": '~/ts/img/' + extension,
-         "movie": '~/ts/movies/' + extension}
+roots = {"project_data": os.path.join(output_root, 'project_data'),
+         "image": os.path.join(output_root, 'image')}
 save_locations = datalocationtools.save_location_calculator(roots, branches)
+
 
 # Identity of the data
 ident = datalocationtools.ident_creator(branches)
