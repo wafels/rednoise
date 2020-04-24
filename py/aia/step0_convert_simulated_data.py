@@ -33,6 +33,7 @@ import astropy.units as u
 import details_study as ds
 import details_plots as dp
 import details_simulated as dsim
+import datalocationtools
 
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy import visualization
@@ -42,29 +43,55 @@ from sunpy.cm import cm
 from astropy.io import fits
 import matplotlib.pyplot as plt
 
-
-# Create the AIA source data location
-aia_data_location = ds.aia_data_location["aiadata"]
-
-# Extend the name if cross correlation is requested
-extension = ds.aia_data_location
-
 # Locations of the output datatypes
 save_locations = ds.save_locations
 
 # Identity of the data
 ident = ds.ident
 
-# Load in the derotated data into a datacube
-print('Acquiring data from ' + aia_data_location)
+for wave in ds.waves:
+    branches = [ds.corename, ds.original_datatype, wave]
+    directory = datalocationtools.save_location_calculator({"aiadata": ds.dataroot}, branches)['aiadata']
+    # Load in the derotated data into a datacube
+    print('Acquiring data from ' + directory)
+    filename = ds.source_filename(ds.study_type, wave)
+    filepath = os.path.join(directory, filename)
+    hdulist = fits.open(filepath)
+    # The data needs to be re-ordered for use by the following analyses
+    sda = np.swapaxes(hdulist[0].data, 0, 2)  # check this! 
+    hdulist.close()
 
-directory = aia_data_location 
-filename = 'aaa'
-filepath = os.path.join(directory, filename)
-hdulist = fits.open(filepath)
-# The data needs to be re-ordered for use by the following analyses
-sda = np.swapaxes(hdulist[0].data, 0, 2)  # check this! 
-hdulist.close()
+    #
+    # Output the data in the format required
+    #
+    time_in_seconds = dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])
+
+    # Let's simplify the output directory compared to what was done previously.
+    # Since the output is intended to be that from a step1 process, let's
+    # dump the output data into such a directory.
+
+    # Locations of the output datatypes
+    roots = {"project_data": os.path.join(ds.output_root, 'project_data'),
+             "image": os.path.join(ds.output_root, 'image')}
+    output_path = datalocationtools.save_location_calculator(roots, branches)['project_data']
+
+    # Name the file
+    output_filename = '{:s}_{:s}.step1.npz'.format(ds.study_type, wave)
+
+    # Full filepath
+    output_filepath = os.path.join(output_path, output_filename)
+
+    # Make the subdirectory if it does not already exist
+    if not os.path.exists(output_path):
+        print('Creating {:s}'.format(output_path))
+        os.makedirs(output_path)
+
+    # Save the data
+    print('Saving data to ' + output_filepath)
+    np.savez(output_filepath, sda, time_in_seconds)
+
+
+
 
 """
 if bradshaw_simulated_data:
@@ -87,33 +114,6 @@ else:
     sda = data['arr_0']
 """
 
-
-#
-# Output the data in the format required
-#
-time_in_seconds = dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])
-
-# Let's simplify the output directory compared to what was done previously.
-# Since the output is intended to be that from a step1 process, let's
-# dump the output data into such a directory.
-
-# Where the data will be stored
-project_data = ds.save_locations['project_data']
-output_path = '{:s}/step1/{:s}'.format(project_data, ds.study_type)
-
-# Name the file
-output_filename = '{:s}_{:s}.step1.npz'.format(ds.study_type, ds.wave)
-
-# Full filepath
-output_filepath = os.path.join(output_path, output_filename)
-
-# Make the subdirectory if it does not already exist
-if not os.path.exists(output_path):
-    print('Creating {:s}'.format(output_path))
-    os.makedirs(output_path)
-
-# Save the data
-np.savez(output_filepath, sda, time_in_seconds)
 
 
 """ Let's not bother with making a plot just yet.

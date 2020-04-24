@@ -31,8 +31,8 @@ from matplotlib.patches import Polygon
 # 4 - Simulated Data
 #study_type = 'papern_bradshaw_simulation'
 study_type = 'papern_bradshaw_simulation_low_fn'
-#study_type = 'papern_bradshaw_simulation_intermediate_fn'
-#study_type = 'papern_bradshaw_simulation_high_fn'
+study_type = 'papern_bradshaw_simulation_intermediate_fn'
+study_type = 'papern_bradshaw_simulation_high_fn'
 #study_type = 'from_simulated_power_spectra_1'
 #study_type = 'from_simulated_power_spectra_10'
 
@@ -187,6 +187,17 @@ if study_type in list(sim_name.keys()):
     corename = study_type
     # A description of the data
     original_datatype = 'disk'
+    # A function that calculates the data filename
+    def source_filename(study_type, w):
+        if study_type == 'papern_bradshaw_simulation_low_fn':
+            filename = 'low_fn_AIA_{:s}_noisy.fits'
+        elif study_type == 'papern_bradshaw_simulation_intermediate_fn':
+            filename = 'AIA_{:s}_noisy.fits'
+        elif study_type == 'papern_bradshaw_simulation_high_fn':
+            filename = 'high_fn_AIA_{:s}_noisy.fits'
+        return filename.format(w)
+    # All the wavelengths
+    waves = ['94', '131', '171', '193', '211', '335']
 
 ###############################################################################
 # GMU - paper 5
@@ -258,7 +269,7 @@ if study_type == 'paper2':
 index_string = 't' + str(file_list_index[0]) + '_' + str(file_list_index[1])
 
 # Create the branches in order
-branches = [corename, wave, original_datatype]
+branches = [corename, original_datatype, wave]
 
 # Create the AIA source data location
 aia_data_location = datalocationtools.save_location_calculator({"aiadata": dataroot}, branches)

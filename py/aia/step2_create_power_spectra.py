@@ -28,23 +28,14 @@ def DefineWindow(window, nt):
         win = np.hanning(nt)
     if window == 'hamming':
         win = np.hamming(nt)
-    winname = ', ' + window
-    return win, winname
+    return win
 
 
 # Wavelengths we want to analyze
-waves = ['94', '131', '193', '211', '335']
-# regions = ['loop footpoints', 'moss']
-# Regions we are interested in
-# regions = ['sunspot', 'loop footpoints', 'quiet Sun', 'moss']
-# regions = ['most_of_fov']
-# regions = ['four_wavebands']
-# regions = ['test_six_euv']
-
-regions = ['six_euv']
+waves = ['94', '171', '131', '193', '211', '335']
 
 # Apodization windows
-windows = ['hanning']
+window = 'hanning'
 
 # Absolute tolerance in seconds when deciding if data is evenly sampled
 absolute_tolerance = ds.absolute_tolerance
@@ -53,209 +44,146 @@ absolute_tolerance = ds.absolute_tolerance
 # Main FFT power and time-series characteristic preparation loop
 #
 for iwave, wave in enumerate(waves):
+    # General notification that we have a new data-set
+    print('\nLoading New Data')
 
-    for iregion, region in enumerate(regions):
+    # branch location
+    b = [ds.corename, ds.original_datatype, wave]
+    
+    # Region identifier name
+    region_id = ds.datalocationtools.ident_creator(b)
 
-        # branch location
-        b = [ds.corename, ds.sunlocation, ds.fits_level, wave, region]
+    # Location of the project data
+    directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
 
-        # Region identifier name
-        region_id = ds.datalocationtools.ident_creator(b)
+    # Input filename
+    input_filename = '{:s}_{:s}.step1.npz'.format(ds.study_type, wave)
 
-        # Output location
-        output = ds.datalocationtools.save_location_calculator(ds.roots, b)["pickle"]
+    # Input filepath
+    input_filepath = os.path.join(directory, input_filename)
 
-        # Output filename
-        ofilename = os.path.join(output, region_id + '.datacube.{:s}'.format(ds.index_string))
+    # Load the data
+    print('Loading ' + input_filepath)
+    dc = np.load(input_filepath)['arr_0']
+    t = np.load(input_filepath)['arr_1']
 
-        # Go through all the windows
-        for iwindow, window in enumerate(windows):
-            # General notification that we have a new data-set
-            print('\nLoading New Data')
-            # Which wavelength?
-            print('Wave: ' + wave + ' (%i out of %i)' % (iwave + 1, len(waves)))
-            # Which region
-            print('Region: ' + region + ' (%i out of %i)' % (iregion + 1, len(regions)))
-            # Which window
-            print('Window: ' + window + ' (%i out of %i)' % (iwindow + 1, len(windows)))
-
-            # Load the data
-            pkl_file_location = os.path.join(ofilename + '.pkl')
-            print('Loading ' + pkl_file_location)
-            pkl_file = open(pkl_file_location, 'rb')
-            dc = pickle.load(pkl_file)
-            time_information = pickle.load(pkl_file)
-            pkl_file.close()
-
-            # Get some properties of the datacube
-            ny = dc.shape[0]
-            nx = dc.shape[1]
-            nt = dc.shape[2]
-            # Should be evenly sampled data.  It not, then resample to get
-            # evenly sampled data
-            t = time_information["time_in_seconds"]
-            dt = ds.target_cadence
-            ts_evenly_sampled = is_evenly_sampled(t,
-                                                  absolute_tolerance.to('s').value)
-            if not ts_evenly_sampled:
-                print('Resampling data to even cadence.')
-                dt = (t[-1] - t[0]) / (1.0 * (nt - 1))
-                print('Resampling to an even time cadence of {:n} seconds'.format(dt))
-                evenly_sampled_t = np.arange(0, nt) * dt
-                for iii in range(0, ny):
-                    for jjj in range(0, nx):
-                        f = interp1d(t, dc[iii, jjj, :])
-                        dc[iii, jjj, :] = f(evenly_sampled_t)
+    # Get some properties of the datacube
+    ny = dc.shape[0]
+    nx = dc.shape[1]
+    nt = dc.shape[2]
+    # Should be evenly sampled data.  It not, then resample to get
+    # evenly sampled data
+    dt = ds.target_cadence
+    ts_evenly_sampled = is_evenly_sampled(t, absolute_tolerance.to('s').value)
+    if not ts_evenly_sampled:
+        print('Resampling data to even cadence.')
+        dt = (t[-1] - t[0]) / (1.0 * (nt - 1))
+        print('Resampling to an even time cadence of {:n} seconds'.format(dt))
+        evenly_sampled_t = np.arange(0, nt) * dt
+        for iii in range(0, ny):
+            for jjj in range(0, nx):
+                f = interp1d(t, dc[iii, jjj, :])
+                dc[iii, jjj, :] = f(evenly_sampled_t)
                 t = evenly_sampled_t
-            else:
-                print('Evenly sampled to within tolerance.')
+    else:
+        print('Evenly sampled to within tolerance.')
+        
+    # Define an array to store the analyzed data
+    dc_analysed = np.zeros_like(dc)
 
-            # Define an array to store the analyzed data
-            dc_analysed = np.zeros_like(dc)
+    # calculate a window function
+    win = DefineWindow(window, nt)
 
-            # calculate a window function
-            win, dummy_winname = DefineWindow(window, nt)
+    # Create a dummy time series object to get some frequency
+    # information
+    t = dt * np.arange(0, nt)
+    tsdummy = TimeSeries(t * u.s, t)
 
-            # Create a dummy time series object to get some frequency
-            # information
-            t = dt * np.arange(0, nt)
-            tsdummy = TimeSeries(t * u.s, t)
+    # Positive frequencies
+    pfrequencies = tsdummy.FFTPowerSpectrum.frequencies.pfrequencies
 
-            # Positive frequencies
-            pfrequencies = tsdummy.FFTPowerSpectrum.frequencies.pfrequencies
+    # The index of the positive frequencies
+    pindex = tsdummy.FFTPowerSpectrum.frequencies.pindex
 
-            # The index of the positive frequencies
-            pindex = tsdummy.FFTPowerSpectrum.frequencies.pindex
+    # Number of positive frequencies
+    nposfreq = len(pfrequencies)
 
-            # Number of positive frequencies
-            nposfreq = len(pfrequencies)
+    # Storage - Fourier power
+    pwr = np.zeros((ny, nx, nposfreq))
 
-            # Storage - Fourier power
-            pwr = np.zeros((ny, nx, nposfreq))
+    # Storage - Fourier power
+    pwr_rel = np.zeros_like(pwr)
+            
+    # Storage - sum of log of relative intensity
+    drel_power = np.zeros(nposfreq)
 
-            # Storage - Fourier power
-            pwr_rel = np.zeros_like(pwr)
+    # Storage - Fast Fourier transfrom
+    n_fft_freq = len(tsdummy.FFTPowerSpectrum.frequencies.frequencies)
+    all_fft = np.zeros((ny, nx, n_fft_freq), dtype=np.complex64)
 
-            # Storage - sum of log of relative intensity
-            drel_power = np.zeros(nposfreq)
+    # Storage - summary stats
+    dtotal = np.zeros((ny, nx))
+    dmax = np.zeros_like(dtotal)
+    dmin = np.zeros_like(dtotal)
+    dsd = np.zeros_like(dtotal)
+    dlnsd = np.zeros_like(dtotal)
 
-            # Storage - Fast Fourier transfrom
-            n_fft_freq = len(tsdummy.FFTPowerSpectrum.frequencies.frequencies)
-            all_fft = np.zeros((ny, nx, n_fft_freq), dtype=np.complex64)
+    for i in range(0, nx):
+        for j in range(0, ny):
 
-            # Storage - summary stats
-            dtotal = np.zeros((ny, nx))
-            dmax = np.zeros_like(dtotal)
-            dmin = np.zeros_like(dtotal)
-            dsd = np.zeros_like(dtotal)
-            dlnsd = np.zeros_like(dtotal)
+            # Get the next time-series
+            d = dc[j, i, :].flatten()
 
-            for i in range(0, nx):
-                for j in range(0, ny):
+            # Fix the data for any non-finite entries
+            d = tsutils.fix_nonfinite(d)
 
-                    # Get the next time-series
-                    d = dc[j, i, :].flatten()
+            # Basic statistics of the time series
+            # Get the total emission
+            dtotal[j, i] = np.sum(d)
 
-                    # Fix the data for any non-finite entries
-                    d = tsutils.fix_nonfinite(d)
+            # Get the maximum emission
+            dmax[j, i] = np.max(d)
 
-                    # ---
-                    # Basic statistics of the time series
-                    # Get the total emission
-                    dtotal[j, i] = np.sum(d)
+            # Get the minimum emission
+            dmin[j, i] = np.min(d)
 
-                    # Get the maximum emission
-                    dmax[j, i] = np.max(d)
+            # Get the standard deviation of the emission
+            dsd[j, i] = np.std(d)
 
-                    # Get the minimum emission
-                    dmin[j, i] = np.min(d)
+            # Get the standard deviation of the log of the emission
+            dlnsd[j, i] = np.std(np.log(d))
 
-                    # Get the standard deviation of the emission
-                    dsd[j, i] = np.std(d)
+            # Fourier transform of the absolute intensities
+            # Multiply the data by the apodization window
+            d_with_window = apply_window(d, win)
 
-                    # Get the standard deviation of the log of the emission
-                    dlnsd[j, i] = np.std(np.log(d))
+            # Get the Fourier transform
+            this_fft = np.fft.fft(d_with_window)
 
-                    # ---
-                    # Fourier transform of the absolute intensities
-                    # Multiply the data by the apodization window
-                    d_with_window = apply_window(d, win)
+            # Fourier power of the absolute intensities
+            this_power = ((np.abs(this_fft) ** 2) / (1.0 * nt))[pindex]
 
-                    #plt.plot(d, label='original data')
-                    #plt.plot(d_with_window, label='with window')
-                    #plt.show()
+            # Store the individual Fourier power
+            pwr[j, i, :] = this_power
 
-                    # Get the Fourier transform
-                    this_fft = np.fft.fft(d_with_window)
+            # Store the full FFT
+            all_fft[j, i, :] = this_fft
 
-                    # Fourier power of the absolute intensities
-                    this_power = ((np.abs(this_fft) ** 2) / (1.0 * nt))[pindex]
+            # Relative change in intensity
+            dmean = np.mean(d)
+            d_relative_change = (d - dmean) / dmean
+            d_relative_change_with_window = apply_window(d_relative_change, win)
+            this_fft_relative_change_with_window = np.fft.fft(d_relative_change_with_window)
+            this_power_relative_change_with_window = ((np.abs(this_fft_relative_change_with_window) ** 2) / (1.0 * nt))[pindex]
+            pwr_rel[j, i, :] = this_power_relative_change_with_window[:]
+            # Ireland et al (2015) summation
+            # Sum over the log(Fourier power of the relative intensities)
+            drel_power += np.log10(this_power_relative_change_with_window)
 
-                    # Store the individual Fourier power
-                    pwr[j, i, :] = this_power
+    output_filename = '{:s}_{:s}_{:s}.step2.npz'.format(ds.study_type, wave, window)
+    # Save the Fourier power of the relative intensities
+    output_filepath = os.path.join(directory, output_filename)
+    print('Saving power spectra to ' + output_filepath)
+    np.savez(output_filepath, pwr_rel, pfrequencies)
 
-                    #plt.plot(tsdummy.FFTPowerSpectrum.frequencies.frequencies.value, ((np.abs(this_fft) ** 2) / (1.0 * nt)))
-                    #plt.plot(pfrequencies.value, this_power)
-                    #plt.show()
 
-                    # Store the full FFT
-                    all_fft[j, i, :] = this_fft
-
-                    # ---
-                    # Relative change in intensity
-                    dmean = np.mean(d)
-                    d_relative_change = (d - dmean) / dmean
-                    d_relative_change_with_window = apply_window(d_relative_change, win)
-                    this_fft_relative_change_with_window = np.fft.fft(d_relative_change_with_window)
-                    this_power_relative_change_with_window = ((np.abs(this_fft_relative_change_with_window) ** 2) / (1.0 * nt))[pindex]
-                    pwr_rel[j, i, :] = this_power_relative_change_with_window[:]
-                    # ---
-                    # Ireland et al (2015) summation
-                    # Sum over the log(Fourier power of the relative intensities)
-                    drel_power += np.log10(this_power_relative_change_with_window)
-                    # ---
-                    # Sum over the log(Fourier power of the absolute intensities)
-
-                    # ---
-                    # Sum over the Fourier power of the relative intensities
-
-                    # ---
-                    # Sum over the Fourier power of the absolute intensities
-
-            ofilename = ofilename + '.' + window
-            """
-            # Save the Fourier power of the absolute intensities
-            filepath = os.path.join(output, ofilename + '.fourier_power.pkl')
-            print('Saving power spectra to ' + filepath)
-            f = open(filepath, 'wb')
-            pickle.dump(pfrequencies, f)
-            pickle.dump(pwr, f)
-            f.close()
-            """
-            # Save the Fourier power of the relative intensities
-            filepath = os.path.join(output, ofilename + '.fourier_power_relative.pkl')
-            print('Saving power spectra to ' + filepath)
-            f = open(filepath, 'wb')
-            pickle.dump(pfrequencies, f)
-            pickle.dump(pwr_rel, f)
-            f.close()
-
-            """
-            # Save the FFT of the analyzed time-series
-            filepath = os.path.join(output, ofilename + '.fourier_transform.pkl')
-            print('Saving Fourier transform to ' + filepath)
-            f = open(filepath, 'wb')
-            pickle.dump(pfrequencies, f)
-            pickle.dump(all_fft, f)
-            f.close()
-
-            # Save the summary statistics
-            filepath = os.path.join(output, ofilename + '.summary_stats.npz')
-            print('Saving summary statistics to ' + filepath)
-            np.savez(filepath, dtotal=dtotal, dmax=dmax, dmin=dmin, dsd=dsd, dlnsd=dlnsd)
-
-            # Save the sum over the log(Fourier power of the relative intensities)
-            filepath = os.path.join(output, ofilename + '.sum_log_fft_power_relative_intensities.npz')
-            np.savez(filepath, drel_power=drel_power/(1.0 * nx * ny),
-                     pfrequencies=pfrequencies.to('Hz').value)
-            """
