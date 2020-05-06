@@ -139,19 +139,19 @@ for iwave, wave in enumerate(waves):
 
             # Basic statistics of the time series
             # Get the total emission
-            dtotal[j, i] = np.sum(d)
+            # dtotal[j, i] = np.sum(d)
 
             # Get the maximum emission
-            dmax[j, i] = np.max(d)
+            # dmax[j, i] = np.max(d)
 
             # Get the minimum emission
-            dmin[j, i] = np.min(d)
+            # dmin[j, i] = np.min(d)
 
             # Get the standard deviation of the emission
-            dsd[j, i] = np.std(d)
+            # dsd[j, i] = np.std(d)
 
             # Get the standard deviation of the log of the emission
-            dlnsd[j, i] = np.std(np.log(d))
+            # dlnsd[j, i] = np.std(np.log(d))
 
             # Fourier transform of the absolute intensities
             # Multiply the data by the apodization window
@@ -180,10 +180,33 @@ for iwave, wave in enumerate(waves):
             # Sum over the log(Fourier power of the relative intensities)
             drel_power += np.log10(this_power_relative_change_with_window)
 
-    output_filename = '{:s}_{:s}_{:s}.step2.npz'.format(ds.study_type, wave, window)
     # Save the Fourier power of the relative intensities
+    output_filename = '{:s}_{:s}_{:s}.relative_change.step2.npz'.format(ds.study_type, wave, window)
     output_filepath = os.path.join(directory, output_filename)
     print('Saving power spectra to ' + output_filepath)
     np.savez(output_filepath, pwr_rel, pfrequencies)
 
+    # Save the sum over the log(Fourier power of the relative intensities).  This is the kind of
+    # summing done in Ireland et al (2015).
+    output_filename = '{:s}_{:s}_{:s}.sum_log10_relative_change.step2.npz'.format(ds.study_type, wave, window)
+    output_filepath = os.path.join(directory, output_filename)
+    print('Saving power spectrum to ' + output_filepath)
+    np.savez(output_filepath, drel_power, pfrequencies)
 
+    # Save the Fourier power of the absolute intensities
+    output_filename = '{:s}_{:s}_{:s}.absolute.step2.npz'.format(ds.study_type, wave, window)
+    output_filepath = os.path.join(directory, output_filename)
+    print('Saving power spectra to ' + output_filepath)
+    np.savez(output_filepath, pwr, pfrequencies)
+
+    # Save the sum of the Fourier power of the absolute intensities
+    output_filename = '{:s}_{:s}_{:s}.sum_absolute.step2.npz'.format(ds.study_type, wave, window)
+    output_filepath = os.path.join(directory, output_filename)
+    print('Saving power spectrum to ' + output_filepath)
+    np.savez(output_filepath, np.sum(pwr, axis=(0, 1)), pfrequencies)
+
+    # Save the sum of the log(Fourier power of the absolute intensities)
+    output_filename = '{:s}_{:s}_{:s}.sum_log10_absolute.step2.npz'.format(ds.study_type, wave, window)
+    output_filepath = os.path.join(directory, output_filename)
+    print('Saving power spectrum to ' + output_filepath)
+    np.savez(output_filepath, np.sum(np.log10(pwr), axis=(0, 1)), pfrequencies)
