@@ -102,6 +102,7 @@ if __name__ == '__main__':
         y_min = 100  # 0
         y_max = 110  # ny
         data = for_analysis['arr_0'][x_min:x_max, y_min:y_max]
+        mfits = np.zeros_like(data)
         shape = data.shape
         nx = shape[0]
         ny = shape[1]
@@ -148,10 +149,17 @@ if __name__ == '__main__':
                 outputs[i, j, 2 * n_parameters + 1] = r.bic
                 outputs[i, j, 2 * n_parameters + 2] = r.result
 
+                mfits[i, j, :] = r.mfit[:]
+
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
         np.savez(filepath, outputs)
+
+        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.mfits.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
+        filepath = os.path.join(directory, filename)
+        print('Saving ' + filepath)
+        np.savez(filepath, mfits)
 
         # Create a list the names of the output in the same order that they appear in the outputs
         output_names = list()
