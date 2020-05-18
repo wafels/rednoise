@@ -67,12 +67,12 @@ def dask_fit_fourier_pl_c(power_spectrum):
 
     # Define the log-likelihood of the data given the model
     loglike = PSDLogLikelihood(ps.freq, ps.power, observation_model, m=ps.m)
-
     # Parameter estimation object
     parameter_estimate = PSDParEst(ps, fitmethod="L-BFGS-B", max_post=False)
 
     # Estimate the starting parameters
     ipe = InitialParameterEstimatePlC(ps.freq, ps.power)
+    print([ipe.amplitude, ipe.index, ipe.background])
     return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background])
 
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
         powers = list()
         for i in range(0, nx):
             for j in range(0, ny):
-                powers.append((frequencies, data[i, j, :]))
+                powers.append((frequencies, data[i, j, :]/data[i, j, 0]))
 
         # Use Dask to to fit the spectra
         client = distributed.Client()
