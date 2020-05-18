@@ -17,6 +17,23 @@ from matplotlib.patches import Polygon
 # Study type
 #
 
+# 2 - Bradshaw & Viall (20??) Simulated Data
+#
+# The prefix/suffix 'bv' will indicate the analysis of the
+# simulated data from this paper.
+#
+study_type = 'bv_simulation_low_fn'
+study_type = 'bv_simulation_intermediate_fn'
+study_type = 'bv_simulation_high_fn'
+
+wave = '94'
+#wave = '131'
+#wave = '171'
+#wave = '193'
+#wave = '211'
+#wave = '335'
+
+
 # Paper 2
 #study_type = 'debugpaper2'
 #study_type = 'paper2'
@@ -28,27 +45,13 @@ from matplotlib.patches import Polygon
 #study_type = 'paper3_BM3D'
 #study_type = 'paper3_BLSGSM'
 
-# 4 - Simulated Data
-#study_type = 'papern_bradshaw_simulation'
-study_type = 'papern_bradshaw_simulation_low_fn'
-study_type = 'papern_bradshaw_simulation_intermediate_fn'
-study_type = 'papern_bradshaw_simulation_high_fn'
-#study_type = 'from_simulated_power_spectra_1'
-#study_type = 'from_simulated_power_spectra_10'
-
 # 5 - GMU Study
 #study_type = 'gmu1'
 
 # 6 - Jitter
 #study_type = 'jitter'
 
-wave = '94'
-#wave = '131'
-#wave = '171'
-#wave = '193'
-#wave = '211'
-#wave = '335'
-
+# Where the data is stored
 input_root = '~/Data/ts'
 
 # Target cadence
@@ -72,9 +75,9 @@ fixed_aia_scale = {'x': 0.6*arcsec_per_pixel_unit,
 file_list_index = [0, None]
 
 
-sim_name = {'papern_bradshaw_simulation_low_fn': 'low occurrence rate nanoflares',
-            'papern_bradshaw_simulation_intermediate_fn': 'intermediate occurrence rate nanoflares',
-            'papern_bradshaw_simulation_high_fn': 'high occurrence rate nanoflares',
+sim_name = {'bv_simulation_low_fn': 'low occurrence rate nanoflares',
+            'bv_simulation_intermediate_fn': 'intermediate occurrence rate nanoflares',
+            'bv_simulation_high_fn': 'high occurrence rate nanoflares',
             'from_simulated_power_spectra': 'simulated power spectra'}
 
 for i in range(1, 11):
@@ -86,6 +89,32 @@ for i in range(1, 11):
 #
 # Setup the details given the study type
 #
+
+###############################################################################
+# Bradshaw & Viall (20??) simulated data.
+#
+if study_type in list(sim_name.keys()):
+    conversion_style = 'simple'
+    # Where the original data is, typically FITS or sav files
+    dataroot = os.path.expanduser('~/Data/ts/')
+    # Where the output data will be stored.
+    output_root = os.path.expanduser('~/web/ts/output')
+    corename = study_type
+    # A description of the data
+    original_datatype = 'disk'
+    # A function that calculates the data filename
+    def source_filename(study_type, w):
+        if study_type == 'bv_simulation_low_fn':
+            filename = 'low_fn_AIA_{:s}_noisy.fits'
+        elif study_type == 'bv_simulation_intermediate_fn':
+            filename = 'AIA_{:s}_noisy.fits'
+        elif study_type == 'bv_simulation_high_fn':
+            filename = 'high_fn_AIA_{:s}_noisy.fits'
+        return filename.format(w)
+    # All the wavelengths
+    waves = ['94', '131', '171', '193', '211', '335']
+
+
 
 ###############################################################################
 # Paper 2
@@ -174,30 +203,6 @@ if study_type == 'paper3_BLSGSM':
     step0_output_information = '.kirk=1-10'
     step1_input_information = '.kirk=1-10_ireland=step0'
     step1_output_information = '.1-11'
-
-###############################################################################
-# Simulated Data - paper 4
-#
-if study_type in list(sim_name.keys()):
-    conversion_style = 'simple'
-    # Where the original data is, typically FITS or sav files
-    dataroot = os.path.expanduser('~/Data/ts/')
-    # Where the output data will be stored.
-    output_root = os.path.expanduser('~/ts/output/')
-    corename = study_type
-    # A description of the data
-    original_datatype = 'disk'
-    # A function that calculates the data filename
-    def source_filename(study_type, w):
-        if study_type == 'papern_bradshaw_simulation_low_fn':
-            filename = 'low_fn_AIA_{:s}_noisy.fits'
-        elif study_type == 'papern_bradshaw_simulation_intermediate_fn':
-            filename = 'AIA_{:s}_noisy.fits'
-        elif study_type == 'papern_bradshaw_simulation_high_fn':
-            filename = 'high_fn_AIA_{:s}_noisy.fits'
-        return filename.format(w)
-    # All the wavelengths
-    waves = ['94', '131', '171', '193', '211', '335']
 
 ###############################################################################
 # GMU - paper 5
