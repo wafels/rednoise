@@ -148,7 +148,7 @@ if __name__ == '__main__':
                 outputs[i, j, 2 * n_parameters + 1] = r.bic
                 outputs[i, j, 2 * n_parameters + 2] = r.result
 
-        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
+        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.output.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
         np.savez(filepath, outputs)
@@ -167,7 +167,7 @@ if __name__ == '__main__':
         output_names.append('bic')
         output_names.append('result')
 
-        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.names.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
+        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.output_names.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
         with open(filepath, 'w') as file_out:
