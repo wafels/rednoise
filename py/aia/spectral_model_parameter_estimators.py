@@ -1,8 +1,5 @@
 import numpy as np
 
-# Range of power law indices permitted.
-power_law_index_bounds = (0, 4)
-
 
 # Assume a power law in power spectrum - Use a Bayesian marginal distribution
 # to calculate the probability that the power spectrum has a power law index
@@ -70,7 +67,7 @@ def range_background_estimate(f, frequency_limits=None):
 
 class InitialParameterEstimatePlC(object):
     def __init__(self, f, p, ir=None, ar=None, br=None,
-                 bayes_search=(0, np.linspace(power_law_index_bounds[0], power_law_index_bounds[1], 50))):
+                 bayes_search=(0, np.linspace(0, 4, 50))):
         """
         Estimate of three parameters of the power law + constant observation model - the amplitude,
         the power law index, and the background value.
