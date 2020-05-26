@@ -87,10 +87,10 @@ if __name__ == '__main__':
 
         # Create a list of power spectra for use by the fitter and Dask.
         frequencies = for_analysis['arr_1']
-        x_min = 100  # 0
-        x_max = 110  # nx
-        y_min = 100  # 0
-        y_max = 111  # ny
+        x_min = 128 - 20  # 0
+        x_max = 128 + 20  # nx
+        y_min = 128 - 20
+        y_max = 128 + 20  # ny
         data = for_analysis['arr_0'][x_min:x_max, y_min:y_max]
         mfits = np.zeros_like(data)
         shape = data.shape
@@ -165,7 +165,7 @@ if __name__ == '__main__':
         output_names.append('bic')
         output_names.append('result')
 
-        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.names.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
+        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.names.step3.txt'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
         with open(filepath, 'w') as file_out:
