@@ -161,7 +161,7 @@ if __name__ == '__main__':
         output_names.append('bic')
         output_names.append('result')
 
-        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.names.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
+        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.names.step3.txt'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
         with open(filepath, 'w') as file_out:
