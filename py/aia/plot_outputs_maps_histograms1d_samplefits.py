@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib import rc
+import matplotlib.cm as cm
 from tools.statistics import SummaryStatistics
 import details_study as ds
 
@@ -39,8 +40,8 @@ for wave in waves:
     # "amplitude_0",None,None,"A_{0}"
     # "alpha_0",0,4,"n"
     filename = 'models.outputs_information.{:s}.csv'.format(observation_model_name)
-    filepath = os.path.join(os.path.expanduser('~/time_series_cor_heat-git/time_series_cor_heat'), filename)
-    df = pd.read_csv(filepath, index_col=0)
+    # filepath = os.path.join(os.path.expanduser('~/time_series_cor_heat-git/time_series_cor_heat'), filename)
+    df = pd.read_csv(filename, index_col=0)
     df = df.replace({"None": None})
 
     # Load in the fit parameters and the output names
@@ -102,6 +103,7 @@ for wave in waves:
         mask = np.logical_or(mask, ub_mask)
 
     # Make the plots
+    super_title = "{:s}, {:s}\n".format(ds.study_type.replace("_", " "), wave)
     for i, output_name in enumerate(output_names):
         data = np.ma.array(outputs[:, :, i], mask=mask)
 
@@ -141,7 +143,7 @@ for wave in waves:
         h = ax.hist(compressed, bins=bins)
         plt.xlabel(variable_name)
         plt.ylabel('number')
-        plt.title(f'histogram of {title_information}')
+        plt.title(f'{super_title}histogram of {title_information}')
         plt.grid(linestyle=":")
         ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
         ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
@@ -159,17 +161,20 @@ for wave in waves:
         title_information = f"{variable_name}\n{n_samples} fits, {n_bad} bad (in {bad_color}), {n_good} good, {percent_bad_string} bad"
         plt.close('all')
         fig, ax = plt.subplots()
-        im = ax.imshow(data, origin='lower')
+        if output_name == 'n':
+            cmap = cm.Dark2_r
+        else:
+            cmap = cm.inferno
+        im = ax.imshow(data, origin='lower', cmap=cm.cmap)
         im.cmap.set_bad(bad_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
-        ax.set_title(f'spatial distribution of {title_information}')
+        ax.set_title(f'{super_title}spatial distribution of {title_information}')
         ax.grid(linestyle=":")
         fig.colorbar(im, ax=ax, label=variable_name)
         filename = 'spatial.{:s}.{:s}.png'.format(observation_model_name, output_name)
         filename = os.path.join(directory, filename)
         plt.savefig(filename)
-
 
     # Plot some example spectra
     nx_plot = 3
@@ -185,7 +190,7 @@ for wave in waves:
             while mask[ii, jj]:
                 ii = np.random.randint(0, nx)
                 jj = np.random.randint(0, ny)
-            axs[i, j].loglog(freq, powers[108+ii, 108+jj, :])
+            axs[i, j].loglog(freq, powers[ii, jj, :])
             axs[i, j].loglog(freq, mfits[ii, jj, :])
             axs[i, j].set_title('{:n},{:n}'.format(ii, jj))
             axs[i, j].grid('on', linestyle=':')
