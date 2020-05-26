@@ -87,11 +87,7 @@ if __name__ == '__main__':
 
         # Create a list of power spectra for use by the fitter and Dask.
         frequencies = for_analysis['arr_1']
-        x_min = 100  # 0
-        x_max = 110  # nx
-        y_min = 100  # 0
-        y_max = 111  # ny
-        data = for_analysis['arr_0'][x_min:x_max, y_min:y_max]
+        data = for_analysis['arr_0']
         mfits = np.zeros_like(data)
         shape = data.shape
         nx = shape[0]
