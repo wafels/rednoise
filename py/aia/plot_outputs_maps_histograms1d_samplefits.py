@@ -185,7 +185,7 @@ for wave in waves:
             while mask[ii, jj]:
                 ii = np.random.randint(0, nx)
                 jj = np.random.randint(0, ny)
-            axs[i, j].loglog(freq, powers[108+ii, 108+jj, :]/powers[108+ii, 108+jj, 0])
+            axs[i, j].loglog(freq, powers[108+ii, 108+jj, :])
             axs[i, j].loglog(freq, mfits[ii, jj, :])
             axs[i, j].set_title('{:n},{:n}'.format(ii, jj))
             axs[i, j].grid('on', linestyle=':')
