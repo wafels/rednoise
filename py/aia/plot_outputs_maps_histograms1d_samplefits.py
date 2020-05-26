@@ -6,6 +6,7 @@ from matplotlib import rc
 import matplotlib.cm as cm
 from tools.statistics import SummaryStatistics
 import details_study as ds
+from tools import lnlike_model_fit
 
 rc('text', usetex=True)  # Use LaTeX
 
@@ -21,6 +22,40 @@ bins = 50
 bad_color = 'red'
 
 waves = ['171']
+
+
+class Fitness:
+    def __init__(self, observed_power, bestfit, k):
+        self.observed_power = observed_power
+        self.bestfit = bestfit
+        self.n = len(observed_power)
+        self.k = k
+        self._dof = self.n - self.k - 1
+
+        self._rhoj = lnlike_model_fit.rhoj(self.observed_power, self.bestfit)
+        self._rchi2 = lnlike_model_fit.rchi2(1.0, self._dof, self._rhoj)
+
+    def _rchi2limit(self, p):
+        return lnlike_model_fit.rchi2_given_prob(p, 1.0, self._dof)
+
+    def is_good(self, p=(0.025, 0.975)):
+        """
+        Tests the probability that the reduced-chi squared value is
+        within the bounds given by p
+
+        Parameters
+        ----------
+        p : 2-element array
+
+        Returns
+        -------
+        Returns True if the reduced chi-squared value lies within
+        the specified probability limits
+        """
+        rchi2_gt_low_limit = self._rchi2 > self._rchi2limit(p[1])
+        rchi2_lt_high_limit = self._rchi2 < self._rchi2limit(p[0])
+        return rchi2_gt_low_limit * rchi2_lt_high_limit
+
 
 for wave in waves:
     # General notification that we have a new data-set
@@ -79,6 +114,9 @@ for wave in waves:
     # for example, bad fits.  The mask is calculated using all the variable
     # output.  True values will be masked out
     mask = np.zeros_like(outputs[:, :, 0], dtype=bool)
+    shape = mask.shape
+    ny = shape[0]
+    nx = shape[1]
     for i, output_name in enumerate(output_names):
         data = outputs[:, :, i]
 
@@ -101,6 +139,16 @@ for wave in waves:
         else:
             ub_mask = data > float(upper_bound)
         mask = np.logical_or(mask, ub_mask)
+
+    # Calculate a fitness mask
+    fitness_mask = np.zeros_like(mask)
+    for i in range(0, nx):
+        for j in range(0, ny):
+            fitness = Fitness(powers[i, j, :], mfits[i, j, :], 3)
+            fitness_mask[i, j] = not fitness.is_good()
+
+    # Update the overall mask with the fitness mask
+    mask = np.logical_or(mask, fitness_mask)
 
     # Make the plots
     super_title = "{:s}, {:s}\n".format(ds.study_type.replace("_", " "), wave)
@@ -165,7 +213,7 @@ for wave in waves:
             cmap = cm.Dark2_r
         else:
             cmap = cm.inferno
-        im = ax.imshow(data, origin='lower', cmap=cm.cmap)
+        im = ax.imshow(data, origin='lower', cmap=cmap)
         im.cmap.set_bad(bad_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
