@@ -12,9 +12,8 @@ from stingray.modeling import PSDParEst
 
 import astropy.units as u
 from astropy.time import Time
-from astropy.modeling import models
 from spectral_model_parameter_estimators import InitialParameterEstimatePlC
-
+from details_spectral_models import SelectModel
 import details_study as ds
 
 # Data to analyze
@@ -28,19 +27,10 @@ power_type = 'absolute'
 # Window used
 window = 'hanning'
 
-# Power spectrum mode;
-# Power law component
-power_law = models.PowerLaw1D()
-
-# fix x_0 of power law component
-power_law.x_0.fixed = True
-
-# Constant component
-constant = models.Const1D()
-
 # Define the observation model
-observation_model = power_law + constant
-observation_model.name = 'pl_c'
+this_model = SelectModel('pl_c')
+observation_model = this_model.observation_model
+scipy_optimize_options = this_model.scipy_optimize_options
 
 
 def dask_fit_fourier_pl_c(power_spectrum):
@@ -72,8 +62,8 @@ def dask_fit_fourier_pl_c(power_spectrum):
 
     # Estimate the starting parameters
     ipe = InitialParameterEstimatePlC(ps.freq, ps.power)
-    print([ipe.amplitude, ipe.index, ipe.background])
-    return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background])
+    return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
+                                  scipy_optimize_options=scipy_optimize_options)
 
 
 if __name__ == '__main__':
@@ -100,7 +90,7 @@ if __name__ == '__main__':
         x_min = 100  # 0
         x_max = 110  # nx
         y_min = 100  # 0
-        y_max = 110  # ny
+        y_max = 111  # ny
         data = for_analysis['arr_0'][x_min:x_max, y_min:y_max]
         mfits = np.zeros_like(data)
         shape = data.shape
@@ -109,7 +99,7 @@ if __name__ == '__main__':
         powers = list()
         for i in range(0, nx):
             for j in range(0, ny):
-                powers.append((frequencies, data[i, j, :]/data[i, j, 0]))
+                powers.append((frequencies, data[i, j, :]))
 
         # Use Dask to to fit the spectra
         client = distributed.Client()
@@ -151,7 +141,7 @@ if __name__ == '__main__':
 
                 mfits[i, j, :] = r.mfit[:]
 
-        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
+        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.outputs.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
         np.savez(filepath, outputs)
@@ -159,7 +149,7 @@ if __name__ == '__main__':
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.mfits.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
-        np.savez(filepath, mfits)
+        np.savez(filepath, mfits, frequencies)
 
         # Create a list the names of the output in the same order that they appear in the outputs
         output_names = list()
