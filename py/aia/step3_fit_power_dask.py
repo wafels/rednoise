@@ -4,7 +4,8 @@
 import os
 import numpy as np
 
-import distributed
+# import distributed
+from dask.distributed import Client, LocalCluster
 
 from stingray import Powerspectrum
 from stingray.modeling import PSDLogLikelihood
@@ -35,7 +36,7 @@ else:
     subsection = ((0, None), (0, None))
 
 # Perform an old-school analysis?
-old_school = True
+old_school = False
 
 # Perform an old-school analysis as far as possible
 if old_school:
@@ -83,7 +84,7 @@ def dask_fit_fourier_pl_c(power_spectrum):
     if old_school:
         ipe = OldSchoolInitialParameterEstimatePlC(ps.freq, ps.power)
     else:
-        ipe = InitialParameterEstimatePlC(ps.freq, ps.power)
+        ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 5), ar=(0, 5), br=(-50, -1))
     return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
                                   scipy_optimize_options=scipy_optimize_options)
 
@@ -115,10 +116,10 @@ if __name__ == '__main__':
 
         # Analyze a smaller portion of the data for testing purposes?
         shape = (for_analysis['arr_0']).shape
-        x0 = subsection[0][0] if not None else 0
-        x1 = subsection[0][1] if not None else shape[0]
-        y0 = subsection[1][0] if not None else 0
-        y1 = subsection[1][1] if not None else shape[1]
+        x0 = subsection[0][0] if subsection[0][0] is not None else 0
+        x1 = subsection[0][1] if subsection[0][1] is not None else shape[0]
+        y0 = subsection[1][0] if subsection[1][0] is not None else 0
+        y1 = subsection[1][1] if subsection[1][1] is not None else shape[1]
         data = (for_analysis['arr_0'])[x0:x1, y0:y1, :]
         mfits = np.zeros_like(data)
         shape = data.shape
@@ -134,8 +135,10 @@ if __name__ == '__main__':
                 powers.append((frequencies, data[i, j, :]/norm))
 
         # Use Dask to to fit the spectra
-        client = distributed.Client()
+        # client = distributed.Client()
         print('Dask processing of {:n} spectra'.format(nx*ny))
+        cluster = LocalCluster(n_workers=10)
+        client = Client(cluster)
 
         # Get the start time
         t_start = Time.now()
@@ -181,7 +184,14 @@ if __name__ == '__main__':
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.mfits.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
-        np.savez(filepath, mfits, frequencies, old_school, [x0, x1, y0, y1])
+        np.savez(filepath, mfits, frequencies)
+
+
+        filename = '{:s}_{:s}_{:s}_{:s}.{:s}.analysis.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
+        filepath = os.path.join(directory, filename)
+        print('Saving ' + filepath)
+        np.savez(filepath,  old_school, [x0, x1, y0, y1])
+
 
         # Create a list the names of the output in the same order that they appear in the outputs
         output_names = list()
