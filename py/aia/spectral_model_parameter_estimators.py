@@ -100,34 +100,18 @@ class InitialParameterEstimatePlC(object):
         self.br = br
         self.bayes_search = bayes_search
 
-        self._ir = range_index_estimate(self.f, frequency_limits=self.ir)
-        self._ar = range_index_estimate(self.f, frequency_limits=self.ar)
-        self._br = range_background_estimate(self.f, frequency_limits=self.br)
-
         # The bit in-between the low and high end of the spectrum to estimate the power law index.
-        self._index = most_probable_power_law_index(self.f[self._ir[0]:self._ir[1]],
-                                                    self.p[self._ir[0]:self._ir[1]],
+        self._index = most_probable_power_law_index(self.f[self.ir[0]:self.ir[1]],
+                                                    self.p[self.ir[0]:self.ir[1]],
                                                     bayes_search[0], bayes_search[1])
 
         # Use the low-frequency end to estimate the amplitude, normalizing for the first frequency
-        observed_power = self.p[self._ar[0]:self._ar[1]]
-        observed_freqs = self.f[self._ar[0]:self._ar[1]] ** self._index
-        self._amplitude = np.mean(observed_power*observed_freqs)
+        observed_power = self.p[self.ar[0]:self.ar[1]]
+        observed_freqs = self.f[self.ar[0]:self.ar[1]] ** self._index
+        self._amplitude = np.exp(np.mean(np.log(observed_power*observed_freqs)))
 
         # Use the high frequency part of the spectrum to estimate the constant value.
         self._background = np.exp(np.mean(np.log(self.p[self._br[0]:self._br[1]])))
-
-    @property
-    def index_range(self):
-        return self._ir
-
-    @property
-    def amplitude_range(self):
-        return self._ar
-
-    @property
-    def background_range(self):
-        return self._br
 
     @property
     def index(self):
