@@ -14,7 +14,7 @@ class SelectModel:
             power_law.amplitude.min = 0.0
             power_law.amplitude.max = None
             power_law.alpha.min = 0.0
-            power_law.alpha.max = 4.0
+            power_law.alpha.max = 20.0
 
             # fix x_0 of power law component
             power_law.x_0.fixed = True
