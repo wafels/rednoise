@@ -19,7 +19,7 @@ power_type = 'absolute'
 bins = 50
 
 # Colour for bad fits in the spatial distribution
-bad_color = 'red'
+bad_color = 'black'
 
 waves = ['171']
 
@@ -55,6 +55,31 @@ class Fitness:
         rchi2_gt_low_limit = self._rchi2 > self._rchi2limit(p[1])
         rchi2_lt_high_limit = self._rchi2 < self._rchi2limit(p[0])
         return rchi2_gt_low_limit * rchi2_lt_high_limit
+
+
+class VariableBounds(object):
+    def __init__(self, data, bounds):
+        """
+        Returns Boolean arrays
+        :param data:
+        :param bounds:
+        """
+        self.data = data
+        self.bounds = bounds
+
+    @property
+    def exceeds_low(self):
+        if self.bounds[0] is None:
+            return np.zeros_like(data, dtype=bool)
+        else:
+            return self.data < float(self.bounds[0])
+
+    @property
+    def exceeds_high(self):
+        if self.bounds[1] is None:
+            return np.zeros_like(data, dtype=bool)
+        else:
+            return self.data > float(self.bounds[1])
 
 
 for wave in waves:
@@ -108,7 +133,7 @@ for wave in waves:
     filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
-    powers = np.load(filepath)['arr_0']
+    observed = np.load(filepath)['arr_0']
 
     # Calculate a mask.  The mask eliminates results that we do not wish to consider,
     # for example, bad fits.  The mask is calculated using all the variable
@@ -124,27 +149,19 @@ for wave in waves:
         is_not_finite = ~np.isfinite(data)
         mask = np.logical_or(mask, is_not_finite)
 
-        # Data that exceeds the lower bound is masked out
-        lower_bound = df['lower_bound'][output_name]
-        if lower_bound is None:
-            lb_mask = np.zeros_like(mask)
-        else:
-            lb_mask = data < float(lower_bound)
-        mask = np.logical_or(mask, lb_mask)
+        # Boundaries
+        bounds = (df['lower_bound'][output_name], df['upper_bound'][output_name])
+        boundaries = VariableBounds(data, bounds)
 
-        # Data that exceeds the upper bound is masked out
-        upper_bound = df['upper_bound'][output_name]
-        if upper_bound is None:
-            ub_mask = np.zeros_like(mask)
-        else:
-            ub_mask = data > float(upper_bound)
-        mask = np.logical_or(mask, ub_mask)
+        # Update mask
+        mask = np.logical_or(mask, boundaries.exceeds_low)
+        mask = np.logical_or(mask, boundaries.exceeds_high)
 
     # Calculate a fitness mask
     fitness_mask = np.zeros_like(mask)
     for i in range(0, nx):
         for j in range(0, ny):
-            fitness = Fitness(powers[i, j, :], mfits[i, j, :], 3)
+            fitness = Fitness(observed[i, j, :], mfits[i, j, :], 3)
             fitness_mask[i, j] = not fitness.is_good()
 
     # Update the overall mask with the fitness mask
@@ -209,11 +226,13 @@ for wave in waves:
         title_information = f"{variable_name}\n{n_samples} fits, {n_bad} bad (in {bad_color}), {n_good} good, {percent_bad_string} bad"
         plt.close('all')
         fig, ax = plt.subplots()
-        if output_name == 'n':
+        if output_name == 'alpha_0':
             cmap = cm.Dark2_r
+            im = ax.imshow(data, origin='lower', cmap=cmap)
+            im.set_clim(df['lower_bound'][output_name], df['upper_bound'][output_name])
         else:
             cmap = cm.inferno
-        im = ax.imshow(data, origin='lower', cmap=cmap)
+            im = ax.imshow(data, origin='lower', cmap=cmap)
         im.cmap.set_bad(bad_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
@@ -238,7 +257,7 @@ for wave in waves:
             while mask[ii, jj]:
                 ii = np.random.randint(0, nx)
                 jj = np.random.randint(0, ny)
-            axs[i, j].loglog(freq, powers[ii, jj, :])
+            axs[i, j].loglog(freq, observed[ii, jj, :])
             axs[i, j].loglog(freq, mfits[ii, jj, :])
             axs[i, j].set_title('{:n},{:n}'.format(ii, jj))
             axs[i, j].grid('on', linestyle=':')
