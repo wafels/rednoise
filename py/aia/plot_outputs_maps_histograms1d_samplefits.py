@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -128,12 +129,18 @@ for wave in waves:
     print(f'Loading {filepath}')
     mfits = np.load(filepath)['arr_0']
     freq = np.load(filepath)['arr_1']
+    old_school = np.load(filepath)['arr_2']
+    subsection = np.load(filepath)['arr_3']
 
     # Load in the data
     filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
-    observed = np.load(filepath)['arr_0']
+    observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
+    if np.all(old_school):
+        norm = deepcopy(observed[:, :, 0])
+        for k in range(0, observed.shape[2]):
+            observed[:, :, k] = observed[:, :, k] / norm
 
     # Calculate a mask.  The mask eliminates results that we do not wish to consider,
     # for example, bad fits.  The mask is calculated using all the variable

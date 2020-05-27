@@ -12,7 +12,7 @@ from stingray.modeling import PSDParEst
 
 import astropy.units as u
 from astropy.time import Time
-from spectral_model_parameter_estimators import InitialParameterEstimatePlC
+from spectral_model_parameter_estimators import InitialParameterEstimatePlC, OldSchoolInitialParameterEstimatePlC
 from details_spectral_models import SelectModel
 import details_study as ds
 
@@ -26,6 +26,25 @@ power_type = 'absolute'
 
 # Window used
 window = 'hanning'
+
+# Analyze a subsection of the data?
+analyze_subsection = False
+if analyze_subsection:
+    subsection = ((128-20, 128+20), (128-20, 128+20))
+else:
+    subsection = ((0, None), (0, None))
+
+# Perform an old-school analysis?
+old_school = True
+
+# Perform an old-school analysis as far as possible
+if old_school:
+    normalize_frequencies = True
+    divide_by_initial_power = True
+else:
+    # Normalize the frequencies?
+    normalize_frequencies = False
+    divide_by_initial_power = False
 
 # Define the observation model
 this_model = SelectModel('pl_c')
@@ -61,7 +80,10 @@ def dask_fit_fourier_pl_c(power_spectrum):
     parameter_estimate = PSDParEst(ps, fitmethod="L-BFGS-B", max_post=False)
 
     # Estimate the starting parameters
-    ipe = InitialParameterEstimatePlC(ps.freq, ps.power)
+    if old_school:
+        ipe = OldSchoolInitialParameterEstimatePlC(ps.freq, ps.power)
+    else:
+        ipe = InitialParameterEstimatePlC(ps.freq, ps.power)
     return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
                                   scipy_optimize_options=scipy_optimize_options)
 
@@ -87,7 +109,17 @@ if __name__ == '__main__':
 
         # Create a list of power spectra for use by the fitter and Dask.
         frequencies = for_analysis['arr_1']
-        data = for_analysis['arr_0']
+        # Normalize the frequencies?
+        if normalize_frequencies:
+            frequencies = frequencies / frequencies[0]
+
+        # Analyze a smaller portion of the data for testing purposes?
+        shape = (for_analysis['arr_0']).shape
+        x0 = subsection[0][0] if not None else 0
+        x1 = subsection[0][1] if not None else shape[0]
+        y0 = subsection[1][0] if not None else 0
+        y1 = subsection[1][1] if not None else shape[1]
+        data = (for_analysis['arr_0'])[x0:x1, y0:y1, :]
         mfits = np.zeros_like(data)
         shape = data.shape
         nx = shape[0]
@@ -95,7 +127,11 @@ if __name__ == '__main__':
         powers = list()
         for i in range(0, nx):
             for j in range(0, ny):
-                powers.append((frequencies, data[i, j, :]))
+                if divide_by_initial_power:
+                    norm = data[i, j, 0]
+                else:
+                    norm = 1.0
+                powers.append((frequencies, data[i, j, :]/norm))
 
         # Use Dask to to fit the spectra
         client = distributed.Client()
@@ -145,7 +181,7 @@ if __name__ == '__main__':
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.mfits.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
-        np.savez(filepath, mfits, frequencies)
+        np.savez(filepath, mfits, frequencies, old_school, [x0, x1, y0, y1])
 
         # Create a list the names of the output in the same order that they appear in the outputs
         output_names = list()
