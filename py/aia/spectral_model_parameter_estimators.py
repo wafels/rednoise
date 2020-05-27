@@ -67,7 +67,7 @@ def range_background_estimate(f, frequency_limits=None):
 
 class InitialParameterEstimatePlC(object):
     def __init__(self, f, p, ir=None, ar=None, br=None,
-                 bayes_search=(0, np.linspace(0, 4, 50))):
+                 bayes_search=(0, np.linspace(0, 20, 100))):
         """
         Estimate of three parameters of the power law + constant observation model - the amplitude,
         the power law index, and the background value.
@@ -110,8 +110,9 @@ class InitialParameterEstimatePlC(object):
                                                     bayes_search[0], bayes_search[1])
 
         # Use the low-frequency end to estimate the amplitude, normalizing for the first frequency
-        z = np.exp(np.mean(np.log(self.p[self._ar[0]:self._ar[1]])))
-        self._amplitude = np.mean(self.p[self._ar[0]:self._ar[1]]) * (self.f[0] ** self._index)
+        observed_power = self.p[self._ar[0]:self._ar[1]]
+        observed_freqs = self.f[self._ar[0]:self._ar[1]] ** self._index
+        self._amplitude = np.mean(observed_power*observed_freqs)
 
         # Use the high frequency part of the spectrum to estimate the constant value.
         self._background = np.exp(np.mean(np.log(self.p[self._br[0]:self._br[1]])))
