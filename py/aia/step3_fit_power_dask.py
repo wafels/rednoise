@@ -85,6 +85,7 @@ def dask_fit_fourier_pl_c(power_spectrum):
         ipe = OldSchoolInitialParameterEstimatePlC(ps.freq, ps.power)
     else:
         ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 5), ar=(0, 5), br=(-50, -1))
+        print(ipe.amplitude, ipe.index, ipe.background)
     return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
                                   scipy_optimize_options=scipy_optimize_options)
 
