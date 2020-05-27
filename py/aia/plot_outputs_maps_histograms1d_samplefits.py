@@ -129,8 +129,15 @@ for wave in waves:
     print(f'Loading {filepath}')
     mfits = np.load(filepath)['arr_0']
     freq = np.load(filepath)['arr_1']
-    old_school = np.load(filepath)['arr_2']
-    subsection = np.load(filepath)['arr_3']
+
+    # Load in the analysis details
+    filename = '{:s}_{:s}_{:s}_{:s}.{:s}.analysis.step3.npz'.format(observation_model_name,
+                                                                   ds.study_type, wave, window,
+                                                                   power_type)
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    old_school = np.load(filepath)['arr_0']
+    subsection = np.load(filepath)['arr_1']
 
     # Load in the data
     filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
@@ -177,7 +184,8 @@ for wave in waves:
     # Make the plots
     super_title = "{:s}, {:s}\n".format(ds.study_type.replace("_", " "), wave)
     for i, output_name in enumerate(output_names):
-        data = np.ma.array(outputs[:, :, i], mask=mask)
+        # Transpose because the data is the wrong way around
+        data = np.transpose(np.ma.array(outputs[:, :, i], mask=mask))
 
         # Total number of fits, including bad ones
         n_samples = data.size
