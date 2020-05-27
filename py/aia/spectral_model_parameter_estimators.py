@@ -33,38 +33,6 @@ def most_probable_power_law_index(f, I, m, n):
     return n[np.argmax(blp)]
 
 
-def _frequency_range_indices(f, frequency_limits):
-    return [np.argmin(np.abs(f-frequency_limits[0])),
-            np.argmin(np.abs(f-frequency_limits[1]))]
-
-
-def range_index_estimate(f, frequency_limits=None):
-    nf = len(f)
-    if frequency_limits is None:
-        ii = [int(0.025*nf), int(0.975*nf)]
-    else:
-        ii = _frequency_range_indices(f, frequency_limits)
-    return ii
-
-
-def range_amplitude_estimate(f, frequency_limits=None):
-    nf = len(f)
-    if frequency_limits is None:
-        ii = [0, int(0.025*nf)]
-    else:
-        ii = _frequency_range_indices(f, frequency_limits)
-    return ii
-
-
-def range_background_estimate(f, frequency_limits=None):
-    nf = len(f)
-    if frequency_limits is None:
-        ii = [int(0.975 * nf), nf]
-    else:
-        ii = _frequency_range_indices(f, frequency_limits)
-    return ii
-
-
 class InitialParameterEstimatePlC(object):
     def __init__(self, f, p, ir=None, ar=None, br=None,
                  bayes_search=(0, np.linspace(0, 20, 100))):
@@ -101,7 +69,7 @@ class InitialParameterEstimatePlC(object):
         self.bayes_search = bayes_search
 
         # The bit in-between the low and high end of the spectrum to estimate the power law index.
-        self._index = most_probable_power_law_index(self.f[self.ir[0]:self.ir[1]],
+        self._index = most_probable_power_law_index(self.f[self.ir[0]:self.ir[1]]/self.f[ir[0]],
                                                     self.p[self.ir[0]:self.ir[1]],
                                                     bayes_search[0], bayes_search[1])
 
@@ -111,7 +79,7 @@ class InitialParameterEstimatePlC(object):
         self._amplitude = np.exp(np.mean(np.log(observed_power*observed_freqs)))
 
         # Use the high frequency part of the spectrum to estimate the constant value.
-        self._background = np.exp(np.mean(np.log(self.p[self._br[0]:self._br[1]])))
+        self._background = np.exp(np.mean(np.log(self.p[self.br[0]:self.br[1]])))
 
     @property
     def index(self):
