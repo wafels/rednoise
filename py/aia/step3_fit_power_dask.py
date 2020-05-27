@@ -29,9 +29,10 @@ power_type = 'absolute'
 window = 'hanning'
 
 # Analyze a subsection of the data?
-analyze_subsection = False
+analyze_subsection = True
 if analyze_subsection:
-    subsection = ((128-20, 128+20), (128-20, 128+20))
+    side = 20
+    subsection = ((128-side, 128+side), (128-side, 128+side))
 else:
     subsection = ((0, None), (0, None))
 
@@ -44,7 +45,7 @@ if old_school:
     divide_by_initial_power = True
 else:
     # Normalize the frequencies?
-    normalize_frequencies = False
+    normalize_frequencies = True
     divide_by_initial_power = False
 
 # Define the observation model
@@ -85,7 +86,6 @@ def dask_fit_fourier_pl_c(power_spectrum):
         ipe = OldSchoolInitialParameterEstimatePlC(ps.freq, ps.power)
     else:
         ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 5), ar=(0, 5), br=(-50, -1))
-        print(ipe.amplitude, ipe.index, ipe.background)
     return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
                                   scipy_optimize_options=scipy_optimize_options)
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         # Use Dask to to fit the spectra
         # client = distributed.Client()
         print('Dask processing of {:n} spectra'.format(nx*ny))
-        cluster = LocalCluster(n_workers=10)
+        cluster = LocalCluster()
         client = Client(cluster)
 
         # Get the start time
@@ -187,12 +187,10 @@ if __name__ == '__main__':
         print('Saving ' + filepath)
         np.savez(filepath, mfits, frequencies)
 
-
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.analysis.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
-        np.savez(filepath,  old_school, [x0, x1, y0, y1])
-
+        np.savez(filepath,  old_school, [x0, x1, y0, y1], normalize_frequencies, divide_by_initial_power)
 
         # Create a list the names of the output in the same order that they appear in the outputs
         output_names = list()
