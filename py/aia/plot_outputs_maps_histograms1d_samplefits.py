@@ -136,18 +136,19 @@ for wave in waves:
                                                                    power_type)
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
-    old_school = np.load(filepath)['arr_0']
-    subsection = np.load(filepath)['arr_1']
+    subsection = np.load(filepath)['arr_0']
+    normalize_frequencies = np.all(np.load(filepath)['arr_1'])
+    divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
 
     # Load in the data
     filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
-    if np.all(old_school):
-        norm = deepcopy(observed[:, :, 0])
-        for k in range(0, observed.shape[2]):
-            observed[:, :, k] = observed[:, :, k] / norm
+    if divide_by_initial_power:
+        for i in range(0, observed.shape[0]):
+            for j in range(0, observed.shape[1]):
+                observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
 
     # Calculate a mask.  The mask eliminates results that we do not wish to consider,
     # for example, excluded fits.  The mask is calculated using all the variable
