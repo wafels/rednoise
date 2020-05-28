@@ -31,22 +31,16 @@ window = 'hanning'
 # Analyze a subsection of the data?
 analyze_subsection = True
 if analyze_subsection:
-    side = 50
+    side = 16
     subsection = ((128-side, 128+side), (128-side, 128+side))
 else:
     subsection = ((0, None), (0, None))
 
-# Perform an old-school analysis?
-old_school = False
+# Normalize the frequencies?
+normalize_frequencies = True
 
-# Perform an old-school analysis as far as possible
-if old_school:
-    normalize_frequencies = True
-    divide_by_initial_power = True
-else:
-    # Normalize the frequencies?
-    normalize_frequencies = True
-    divide_by_initial_power = False
+# Divide by the initial power?
+divide_by_initial_power = True
 
 # Define the observation model
 this_model = SelectModel('pl_c')
@@ -79,14 +73,11 @@ def dask_fit_fourier_pl_c(power_spectrum):
     # Define the log-likelihood of the data given the model
     loglike = PSDLogLikelihood(ps.freq, ps.power, observation_model, m=ps.m)
     # Parameter estimation object
-    parameter_estimate = PSDParEst(ps, fitmethod="L-BFGS-B", max_post=False)
+    fm = "L-BFGS-B"
+    parameter_estimate = PSDParEst(ps, fitmethod=fm, max_post=False)
 
     # Estimate the starting parameters
-    if old_school:
-        ipe = OldSchoolInitialParameterEstimatePlC(ps.freq, ps.power)
-    else:
-        ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 5), ar=(0, 5), br=(-50, -1))
-        print(ipe.amplitude, ipe.index, ipe.background)
+    ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 10), ar=(0, 5), br=(-50, -1))
     return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
                                   scipy_optimize_options=scipy_optimize_options)
 
@@ -191,7 +182,7 @@ if __name__ == '__main__':
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.analysis.step3.npz'.format(observation_model.name, ds.study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print('Saving ' + filepath)
-        np.savez(filepath,  old_school, [x0, x1, y0, y1], normalize_frequencies, divide_by_initial_power)
+        np.savez(filepath, [x0, x1, y0, y1], normalize_frequencies, divide_by_initial_power)
 
         # Create a list the names of the output in the same order that they appear in the outputs
         output_names = list()
