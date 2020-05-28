@@ -139,6 +139,11 @@ for wave in waves:
 
     # Make the plots
     super_title = "{:s}, {:s}\n".format(ds.study_type.replace("_", " "), wave)
+
+    # Make a plot of the total intensity over time, and its distribution
+
+
+
     for i, output_name in enumerate(output_names):
         # Transpose because the data is the wrong way around
         data = np.transpose(np.ma.array(outputs[:, :, i], mask=mask))
