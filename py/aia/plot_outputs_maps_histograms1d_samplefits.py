@@ -132,7 +132,7 @@ for wave in waves:
 
     # Calculate a brightness mask
     total_intensity = np.sum(emission, axis=2)
-    intensity_mask = IntensityMask(total_intensity, 0.01)
+    intensity_mask = IntensityMask(total_intensity, 0.5).mask
 
     # Update the overall mask with the fitness mask
     mask = np.logical_or(mask, intensity_mask)

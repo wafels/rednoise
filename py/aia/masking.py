@@ -75,6 +75,6 @@ class IntensityMask(object):
         self.p = p
         self._nanquantile = np.nanquantile(self.data, self.p)
 
-    @@property
+    @property
     def mask(self):
         return self.data < self._nanquantile
