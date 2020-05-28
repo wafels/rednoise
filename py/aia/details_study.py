@@ -5,13 +5,15 @@
 import os
 from copy import deepcopy
 import numpy as np
-import datalocationtools
+from matplotlib.patches import Polygon
+
 import astropy.units as u
 from sunpy.physics.differential_rotation import solar_rotate_coordinate
 from sunpy.time import parse_time
 from sunpy.map import Map
 
-from matplotlib.patches import Polygon
+import datalocationtools
+from details_spectral_models import SelectModel
 
 #
 # Study type
@@ -25,6 +27,7 @@ from matplotlib.patches import Polygon
 study_type = 'bv_simulation_low_fn'
 study_type = 'bv_simulation_intermediate_fn'
 study_type = 'bv_simulation_high_fn'
+#study_type = "verify_fitting"
 
 wave = '94'
 #wave = '131'
@@ -65,6 +68,9 @@ base_cross_correlation_channel = '171'
 
 # Use base cross-correlation channel?
 use_base_cross_correlation_channel = False
+
+# Start off by analyzing time series data
+use_time_series_data = True
 
 # Fixed AIA scale across all channels
 arcsec_per_pixel_unit = u.arcsec / u.pix
@@ -114,7 +120,41 @@ if study_type in list(sim_name.keys()):
     # All the wavelengths
     waves = ['94', '131', '171', '193', '211', '335']
 
+###############################################################################
+# Simulation of power spectra.
+#
+if study_type == 'verify_fitting':
+    #
+    use_time_series_data = False
 
+    #
+    #conversion_style = 'simple'
+
+    # Where the original data is, typically FITS or sav files
+    dataroot = os.path.expanduser('~/Data/ts/')
+
+    # Where the output data will be stored.
+    output_root = os.path.expanduser('~/web/ts/output')
+
+    #
+    corename = study_type
+
+    # A description of the data
+    original_datatype = 'disk'
+
+    # All the wavelengths
+    waves = ['171']
+
+    # Bradshaw & Viall frequencies
+    df = 0.000196078431372549 - 9.80392156862745e-05
+    pfrequencies = 9.80392156862745e-05 + df * np.arange(424)
+    nx = 33
+    ny = 33
+    alpha = 2.0
+    amplitude = 1000000.0  # 2923968935.189489
+    white_noise = 80 / amplitude
+    true_parameters = [amplitude, alpha, white_noise]
+    simulation_model = SelectModel('pl_c').observation_model
 
 ###############################################################################
 # Paper 2
