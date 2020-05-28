@@ -19,8 +19,8 @@ power_type = 'absolute'
 # Number of equally spaced bins in the histogram
 bins = 50
 
-# Colour for bad fits in the spatial distribution
-bad_color = 'black'
+# Colour for excluded fits in the spatial distribution
+excluded_color = 'black'
 
 waves = ['171']
 
@@ -136,21 +136,22 @@ for wave in waves:
                                                                    power_type)
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
-    old_school = np.load(filepath)['arr_0']
-    subsection = np.load(filepath)['arr_1']
+    subsection = np.load(filepath)['arr_0']
+    normalize_frequencies = np.all(np.load(filepath)['arr_1'])
+    divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
 
     # Load in the data
     filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
-    if np.all(old_school):
-        norm = deepcopy(observed[:, :, 0])
-        for k in range(0, observed.shape[2]):
-            observed[:, :, k] = observed[:, :, k] / norm
+    if divide_by_initial_power:
+        for i in range(0, observed.shape[0]):
+            for j in range(0, observed.shape[1]):
+                observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
 
     # Calculate a mask.  The mask eliminates results that we do not wish to consider,
-    # for example, bad fits.  The mask is calculated using all the variable
+    # for example, excluded fits.  The mask is calculated using all the variable
     # output.  True values will be masked out
     mask = np.zeros_like(outputs[:, :, 0], dtype=bool)
     shape = mask.shape
@@ -187,13 +188,13 @@ for wave in waves:
         # Transpose because the data is the wrong way around
         data = np.transpose(np.ma.array(outputs[:, :, i], mask=mask))
 
-        # Total number of fits, including bad ones
+        # Total number of fits, including excluded ones
         n_samples = data.size
 
-        # Compressed data and the number of good and bad fits
+        # Compressed data and the number of good and excluded fits
         compressed = data.flatten().compressed()
         n_good = compressed.size
-        n_bad = n_samples - n_good
+        n_excluded = n_samples - n_good
 
         # Summary statistics
         ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
@@ -203,11 +204,11 @@ for wave in waves:
         # used in the paper.
         variable_name = df['variable_name'][output_name]
 
-        # Percentage that are bad fits
-        percent_bad_string = "{:.1f}$\%$".format(100*n_bad/n_samples)
+        # Percentage that are excluded fits
+        percent_excluded_string = "{:.1f}$\%$".format(100*n_excluded/n_samples)
 
         # Information that goes in to the histogram title
-        title_information = f"{variable_name}\n{n_samples} fits, {n_bad} bad, {n_good} good, {percent_bad_string} bad"
+        title_information = f"{variable_name}\n{n_samples} fits, {n_excluded} excluded, {n_good} good, {percent_excluded_string} excluded"
 
         # Credible interval strings
         ci_a = "{:.1f}$\%$".format(100*ss.ci[0])
@@ -238,7 +239,7 @@ for wave in waves:
         plt.savefig(filename)
 
         # Spatial distribution
-        title_information = f"{variable_name}\n{n_samples} fits, {n_bad} bad (in {bad_color}), {n_good} good, {percent_bad_string} bad"
+        title_information = f"{variable_name}\n{n_samples} fits, {n_excluded} excluded (in {excluded_color}), {n_good} good, {percent_excluded_string} excluded"
         plt.close('all')
         fig, ax = plt.subplots()
         if output_name == 'alpha_0':
@@ -248,7 +249,7 @@ for wave in waves:
         else:
             cmap = cm.inferno
             im = ax.imshow(data, origin='lower', cmap=cmap)
-        im.cmap.set_bad(bad_color)
+        im.cmap.set_bad(excluded_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
         ax.set_title(f'{super_title}spatial distribution of {title_information}')

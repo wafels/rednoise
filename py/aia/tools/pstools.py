@@ -3,10 +3,8 @@
 #
 import numpy as np
 from scipy.stats import norm
-#import rnspectralmodels
-#import details_study as ds
-#import matplotlib.pyplot as plt
-#from scipy.optimize import curve_fit
+from astropy.modeling.fitting import _fitter_to_model_params
+
 
 #
 # Assume a power law in power spectrum - Use a Bayesian marginal distribution
@@ -85,3 +83,21 @@ def power_law_component(a, n, mu0):
     in the power spectral analysis.
     """
     return (a / (n + 1.0)) * mu0 ** (1.0-n)
+
+
+# Create an array of simulated Fourier powers
+def create_simulated_power_spectra(nx, ny, observation_model, model_parameters, frequencies):
+    d = np.zeros([nx, ny, len(frequencies)])
+    for i in range(0, nx):
+        for j in range(0, ny):
+            # This section will be replaced with a section that reads observed power spectra
+            # Set the model parameters
+            _fitter_to_model_params(observation_model,
+                                    [model_parameters[0], model_parameters[1], model_parameters[2]])
+            # Create the true data
+            psd_shape = observation_model(frequencies)
+
+            # Now randomize the true data and store it in an iterable
+            d[i, j, :] = psd_shape * np.random.chisquare(2, size=psd_shape.shape[0]) / 2.0
+    return d
+
