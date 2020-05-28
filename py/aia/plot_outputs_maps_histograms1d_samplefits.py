@@ -7,7 +7,7 @@ from matplotlib import rc
 import matplotlib.cm as cm
 from tools.statistics import SummaryStatistics
 import details_study as ds
-from tools import lnlike_model_fit
+from masking import VariableBounds, Fitness, IntensityMask
 
 rc('text', usetex=True)  # Use LaTeX
 
@@ -23,64 +23,6 @@ bins = 50
 excluded_color = 'black'
 
 waves = ['171']
-
-
-class Fitness:
-    def __init__(self, observed_power, bestfit, k):
-        self.observed_power = observed_power
-        self.bestfit = bestfit
-        self.n = len(observed_power)
-        self.k = k
-        self._dof = self.n - self.k - 1
-
-        self._rhoj = lnlike_model_fit.rhoj(self.observed_power, self.bestfit)
-        self._rchi2 = lnlike_model_fit.rchi2(1.0, self._dof, self._rhoj)
-
-    def _rchi2limit(self, p):
-        return lnlike_model_fit.rchi2_given_prob(p, 1.0, self._dof)
-
-    def is_good(self, p=(0.025, 0.975)):
-        """
-        Tests the probability that the reduced-chi squared value is
-        within the bounds given by p
-
-        Parameters
-        ----------
-        p : 2-element array
-
-        Returns
-        -------
-        Returns True if the reduced chi-squared value lies within
-        the specified probability limits
-        """
-        rchi2_gt_low_limit = self._rchi2 > self._rchi2limit(p[1])
-        rchi2_lt_high_limit = self._rchi2 < self._rchi2limit(p[0])
-        return rchi2_gt_low_limit * rchi2_lt_high_limit
-
-
-class VariableBounds(object):
-    def __init__(self, data, bounds):
-        """
-        Returns Boolean arrays
-        :param data:
-        :param bounds:
-        """
-        self.data = data
-        self.bounds = bounds
-
-    @property
-    def exceeds_low(self):
-        if self.bounds[0] is None:
-            return np.zeros_like(data, dtype=bool)
-        else:
-            return self.data < float(self.bounds[0])
-
-    @property
-    def exceeds_high(self):
-        if self.bounds[1] is None:
-            return np.zeros_like(data, dtype=bool)
-        else:
-            return self.data > float(self.bounds[1])
 
 
 for wave in waves:
@@ -140,7 +82,7 @@ for wave in waves:
     normalize_frequencies = np.all(np.load(filepath)['arr_1'])
     divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
 
-    # Load in the data
+    # Load in the observed fourier power data
     filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
@@ -149,6 +91,12 @@ for wave in waves:
         for i in range(0, observed.shape[0]):
             for j in range(0, observed.shape[1]):
                 observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
+
+    # Load in the original time series data to create an intensity mask
+    filename = '{:s}_{:s}.step1.npz'.format(ds.study_type, wave)
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
 
     # Calculate a mask.  The mask eliminates results that we do not wish to consider,
     # for example, excluded fits.  The mask is calculated using all the variable
@@ -181,6 +129,13 @@ for wave in waves:
 
     # Update the overall mask with the fitness mask
     mask = np.logical_or(mask, fitness_mask)
+
+    # Calculate a brightness mask
+    total_intensity = np.sum(emission, axis=2)
+    intensity_mask = IntensityMask(total_intensity, 0.01)
+
+    # Update the overall mask with the fitness mask
+    mask = np.logical_or(mask, intensity_mask)
 
     # Make the plots
     super_title = "{:s}, {:s}\n".format(ds.study_type.replace("_", " "), wave)
