@@ -65,16 +65,28 @@ class VariableBounds(object):
 
 
 class IntensityMask(object):
-    def __init__(self, data, p):
+    def __init__(self, data, q=None, absolute_level=None):
         """
         Returns Boolean arrays
         :param data:
         :param bounds:
         """
         self.data = data
-        self.p = p
-        self._nanquantile = np.nanquantile(self.data, self.p)
+        self.q = q
+        self.absolute_level = absolute_level
+        if self.q is None and self.absolute_level is None:
+            raise ValueError('Either "q" or "absolute_level" must not None.')
+        if self.q is not None and self.absolute_level is not None:
+            raise ValueError('Only one of "q" or "absolute_level" can be set.')
+        if self.q is not None:
+            self._level = np.nanquantile(self.data, self.q)
+        if self.absolute_level is not None:
+            self._level = absolute_level
+
+    @property
+    def level(self):
+        return self._level
 
     @property
     def mask(self):
-        return self.data < self._nanquantile
+        return self.data < self._level
