@@ -1,5 +1,4 @@
 import os
-from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -7,7 +6,6 @@ from matplotlib import rc
 import matplotlib.cm as cm
 from tools.statistics import SummaryStatistics
 import details_study as ds
-from masking import VariableBounds, Fitness, IntensityMask
 
 rc('text', usetex=True)  # Use LaTeX
 
@@ -15,6 +13,7 @@ rc('text', usetex=True)  # Use LaTeX
 observation_model_name = 'pl_c'
 window = 'hanning'
 power_type = 'absolute'
+study_type = ds.study_type
 
 # Number of equally spaced bins in the histogram
 bins = 50
@@ -22,9 +21,21 @@ bins = 50
 # Colour for excluded fits in the spatial distribution
 excluded_color = 'black'
 
+#
 waves = ['171']
 
 
+# Helper function
+def mask_plotting_information(m, excluded_color):
+    n_samples = m.size
+    n_excluded = np.sum(m)
+    n_good = n_samples - n_excluded
+    percent_excluded_string = "{:.1f}$\%$".format(100 * n_excluded / n_samples)
+    mask_info = f"{n_samples} pixels, {n_excluded} excluded (in {excluded_color}), {n_good} good, {percent_excluded_string} excluded"
+    return mask_info
+
+
+# Load the data
 for wave in waves:
     # General notification that we have a new data-set
     print('\nLoading New Data')
@@ -38,44 +49,38 @@ for wave in waves:
     # Location of the project data
     directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
 
+    # Base filename
+    base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
+
     # Load in some information about how to treat and plot the outputs, for example
     # output_name,lower_bound,upper_bound,variable_name
     # "amplitude_0",None,None,"A_{0}"
     # "alpha_0",0,4,"n"
     filename = 'models.outputs_information.{:s}.csv'.format(observation_model_name)
-    # filepath = os.path.join(os.path.expanduser('~/time_series_cor_heat-git/time_series_cor_heat'), filename)
     df = pd.read_csv(filename, index_col=0)
     df = df.replace({"None": None})
 
     # Load in the fit parameters and the output names
-    filename = '{:s}_{:s}_{:s}_{:s}.{:s}.outputs.step3.npz'.format(observation_model_name,
-                                                                   ds.study_type, wave, window,
-                                                                   power_type)
+    filename = f'{base_filename}.outputs.step3.npz'
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     outputs = np.load(filepath)['arr_0']
 
-    filename = '{:s}_{:s}_{:s}_{:s}.{:s}.names.step3.txt'.format(observation_model_name,
-                                                                   ds.study_type, wave, window,
-                                                                   power_type)
+    filename = f'{base_filename}.names.step3.txt'
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     with open(filepath) as f:
         output_names = [line.rstrip() for line in f]
 
     # Load in the fits
-    filename = '{:s}_{:s}_{:s}_{:s}.{:s}.mfits.step3.npz'.format(observation_model_name,
-                                                                   ds.study_type, wave, window,
-                                                                   power_type)
+    filename = f'{base_filename}.mfits.step3.npz'
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     mfits = np.load(filepath)['arr_0']
     freq = np.load(filepath)['arr_1']
 
     # Load in the analysis details
-    filename = '{:s}_{:s}_{:s}_{:s}.{:s}.analysis.step3.npz'.format(observation_model_name,
-                                                                   ds.study_type, wave, window,
-                                                                   power_type)
+    filename = f'{base_filename}.analysis.step3.npz'
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     subsection = np.load(filepath)['arr_0']
@@ -83,7 +88,7 @@ for wave in waves:
     divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
 
     # Load in the observed fourier power data
-    filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
+    filename = f'{study_type}_{wave}_{window}.{power_type}.step2.npz'
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
@@ -93,82 +98,73 @@ for wave in waves:
                 observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
 
     # Load in the original time series data to create an intensity mask
-    filename = '{:s}_{:s}.step1.npz'.format(ds.study_type, wave)
+    filename = f'{study_type}_{wave}.step1.npz'
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
     emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
 
-    # Calculate a mask.  The mask eliminates results that we do not wish to consider,
-    # for example, excluded fits.  The mask is calculated using all the variable
-    # output.  True values will be masked out
-    mask = np.zeros_like(outputs[:, :, 0], dtype=bool)
-    shape = mask.shape
-    ny = shape[0]
-    nx = shape[1]
-    for i, output_name in enumerate(output_names):
-        data = outputs[:, :, i]
-
-        # Finiteness
-        is_not_finite = ~np.isfinite(data)
-        mask = np.logical_or(mask, is_not_finite)
-
-        # Boundaries
-        bounds = (df['lower_bound'][output_name], df['upper_bound'][output_name])
-        boundaries = VariableBounds(data, bounds)
-
-        # Update mask
-        mask = np.logical_or(mask, boundaries.exceeds_low)
-        mask = np.logical_or(mask, boundaries.exceeds_high)
-
-    # Calculate a fitness mask
-    fitness_mask = np.zeros_like(mask)
-    for i in range(0, nx):
-        for j in range(0, ny):
-            fitness = Fitness(observed[i, j, :], mfits[i, j, :], 3)
-            fitness_mask[i, j] = not fitness.is_good()
-
-    # Update the overall mask with the fitness mask
-    mask = np.logical_or(mask, fitness_mask)
+    # Load in the mask data
+    mask_list = ("finiteness", "bounds", "fitness", "intensity", "combined")
+    masks = dict()
+    for this_mask in mask_list:
+        filename = f'{base_filename}.{this_mask}.step4.npz'
+        filepath = os.path.join(directory, filename)
+        print(f'Loading {filepath}')
+        masks[this_mask] = (np.load(filepath))['arr_0']
 
     # Calculate a brightness mask
-    total_intensity = np.sum(emission, axis=2)
-    intensity_mask = IntensityMask(total_intensity, 0.5).mask
+    total_intensity = np.transpose(np.sum(emission, axis=2))
 
-    # Update the overall mask with the fitness mask
-    mask = np.logical_or(mask, intensity_mask)
-
+    ###########################
     # Make the plots
-    super_title = "{:s}, {:s}\n".format(ds.study_type.replace("_", " "), wave)
+    # The super title describes the study type and the wavelength
+    super_title = "{:s}, {:s}\n".format(study_type.replace("_", " "), wave)
 
-    # Make a plot of the total intensity over time, and its distribution
+    ###########################
+    # Plot the masks
+    for this_mask in mask_list:
+        description = f'{this_mask} mask' + "\n"
+        mask = np.transpose(masks[this_mask])
+        mask_info = mask_plotting_information(mask, excluded_color)
+        plt.close('all')
+        fig, ax = plt.subplots()
+        im = ax.imshow(mask, origin='lower', cmap=cm.Greys)
+        ax.set_xlabel('solar X')
+        ax.set_ylabel('solar Y')
+        ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+        ax.grid(linestyle=":")
+        filename = f'spatial.mask.{this_mask}.{base_filename}.png'
+        filepath = os.path.join(directory, filename)
+        plt.tight_layout()
+        plt.savefig(filepath)
 
+    ###########################
+    # Plot the intensity with and without the combined mask
+    masks['none'] = np.zeros_like(masks['combined'])
+    for this_mask in ('none', 'combined'):
+        description = f'emission (mask={this_mask})' + "\n"
+        data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
+        mask_info = mask_plotting_information(data.mask, excluded_color)
 
+        # Spatial distribution
+        plt.close('all')
+        fig, ax = plt.subplots()
+        im = ax.imshow(data, origin='lower', cmap=cm.viridis)
+        im.cmap.set_bad(excluded_color)
+        ax.set_xlabel('solar X')
+        ax.set_ylabel('solar Y')
+        ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+        ax.grid(linestyle=":")
+        fig.colorbar(im, ax=ax, label="emission")
+        filename = f'spatial.emission_{this_mask}.{base_filename}.png'
+        filepath = os.path.join(directory, filename)
+        plt.tight_layout()
+        plt.savefig(filepath)
 
-    for i, output_name in enumerate(output_names):
-        # Transpose because the data is the wrong way around
-        data = np.transpose(np.ma.array(outputs[:, :, i], mask=mask))
-
-        # Total number of fits, including excluded ones
-        n_samples = data.size
-
-        # Compressed data and the number of good and excluded fits
-        compressed = data.flatten().compressed()
-        n_good = compressed.size
-        n_excluded = n_samples - n_good
-
+        # Histograms
         # Summary statistics
+        compressed = data.flatten().compressed()
         ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
-
-        # The variable name is used in the plot instead of the output_name
-        # because we use LaTeX in the plots to match with the variables
-        # used in the paper.
-        variable_name = df['variable_name'][output_name]
-
-        # Percentage that are excluded fits
-        percent_excluded_string = "{:.1f}$\%$".format(100*n_excluded/n_samples)
-
-        # Information that goes in to the histogram title
-        title_information = f"{variable_name}\n{n_samples} fits, {n_excluded} excluded, {n_good} good, {percent_excluded_string} excluded"
 
         # Credible interval strings
         ci_a = "{:.1f}$\%$".format(100*ss.ci[0])
@@ -179,12 +175,13 @@ for wave in waves:
         ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2], ss.cred[3])
 
         # Histograms
+        description = f"histogram of emission (mask={this_mask})" + "\n"
         plt.close('all')
         fig, ax = plt.subplots()
         h = ax.hist(compressed, bins=bins)
-        plt.xlabel(variable_name)
+        plt.xlabel('emission')
         plt.ylabel('number')
-        plt.title(f'{super_title}histogram of {title_information}')
+        plt.title("{:s}{:s}{:s}".format(super_title, description, mask_info))
         plt.grid(linestyle=":")
         ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
         ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
@@ -194,12 +191,57 @@ for wave in waves:
         ax.axvline(ss.cred[2], color='k', linestyle=':')
         ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
         ax.legend()
-        filename = 'histogram.{:s}.{:s}.png'.format(observation_model_name, output_name)
-        filename = os.path.join(directory, filename)
-        plt.savefig(filename)
+        filename = f'histogram.emission.{this_mask}.{base_filename}.png'
+        filepath = os.path.join(directory, filename)
+        plt.savefig(filepath)
+
+    ###########################
+    # Plot the results of the fitting
+    for i, output_name in enumerate(output_names):
+        # Transpose because the data is the wrong way around
+        data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks['combined']))
+        compressed = data.flatten().compressed()
+
+        mask_info = mask_plotting_information(data.mask, excluded_color)
+        # Summary statistics
+        ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
+
+        # The variable name is used in the plot instead of the output_name
+        # because we use LaTeX in the plots to match with the variables
+        # used in the paper.
+        variable_name = df['variable_name'][output_name]
+
+        # Credible interval strings
+        ci_a = "{:.1f}$\%$".format(100*ss.ci[0])
+        ci_b = "{:.1f}$\%$".format(100*ss.ci[1])
+        ci_c = "{:.1f}$\%$".format(100*ss.ci[2])
+        ci_d = "{:.1f}$\%$".format(100*ss.ci[3])
+        ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b, ss.cred[0], ss.cred[1])
+        ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2], ss.cred[3])
+
+        # Histograms
+        description = f"histogram of {variable_name}" + "\n"
+        plt.close('all')
+        fig, ax = plt.subplots()
+        h = ax.hist(compressed, bins=bins)
+        plt.xlabel(variable_name)
+        plt.ylabel('number')
+        plt.title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+        plt.grid(linestyle=":")
+        ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
+        ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
+        ax.axvline(ss.median, label='median ({:.2f})'.format(ss.median), color='y')
+        ax.axvline(ss.cred[0], color='r', linestyle=':')
+        ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
+        ax.axvline(ss.cred[2], color='k', linestyle=':')
+        ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
+        ax.legend()
+        filename = f'histogram.{output_name}.{base_filename}.png'
+        filepath = os.path.join(directory, filename)
+        plt.savefig(filepath)
 
         # Spatial distribution
-        title_information = f"{variable_name}\n{n_samples} fits, {n_excluded} excluded (in {excluded_color}), {n_good} good, {percent_excluded_string} excluded"
+        description = f"spatial distribution of {variable_name}" + "\n"
         plt.close('all')
         fig, ax = plt.subplots()
         if output_name == 'alpha_0':
@@ -212,13 +254,14 @@ for wave in waves:
         im.cmap.set_bad(excluded_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
-        ax.set_title(f'{super_title}spatial distribution of {title_information}')
+        ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
         ax.grid(linestyle=":")
         fig.colorbar(im, ax=ax, label=variable_name)
-        filename = 'spatial.{:s}.{:s}.png'.format(observation_model_name, output_name)
-        filename = os.path.join(directory, filename)
-        plt.savefig(filename)
+        filename = f'spatial.{output_name}.{base_filename}.png'
+        filepath = os.path.join(directory, filename)
+        plt.savefig(filepath)
 
+    ###########################
     # Plot some example spectra
     nx_plot = 3
     ny_plot = 3
@@ -239,6 +282,6 @@ for wave in waves:
             axs[i, j].grid('on', linestyle=':')
 
     fig.tight_layout()
-    filename = 'sample_fits.{:s}.{:s}.png'.format(observation_model_name, output_name)
-    filename = os.path.join(directory, filename)
-    plt.savefig(filename)
+    filename = f'sample_fits.{base_filename}.png'
+    filepath = os.path.join(directory, filename)
+    plt.savefig(filepath)
