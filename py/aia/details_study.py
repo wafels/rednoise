@@ -26,7 +26,7 @@ from details_spectral_models import SelectModel
 #
 study_type = 'bv_simulation_low_fn'
 study_type = 'bv_simulation_intermediate_fn'
-#study_type = 'bv_simulation_high_fn'
+study_type = 'bv_simulation_high_fn'
 #study_type = "verify_fitting"
 
 wave = '94'
