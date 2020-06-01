@@ -35,9 +35,9 @@ power_type = 'absolute'
 window = 'hanning'
 
 # Analyze a subsection of the data?
-analyze_subsection = False
+analyze_subsection = True
 if analyze_subsection:
-    side = 16
+    side = 8
     subsection = ((128-side, 128+side), (128-side, 128+side))
 else:
     subsection = ((0, None), (0, None))
@@ -89,7 +89,7 @@ def dask_fit_fourier_pl_c(power_spectrum):
 
 
 if __name__ == '__main__':
-
+    cluster = LocalCluster()
     for wave in waves:
         # General notification that we have a new data-set
         print('\nLoading New Data')
@@ -136,11 +136,11 @@ if __name__ == '__main__':
         # Use Dask to to fit the spectra
         # client = distributed.Client()
         print('Dask processing of {:n} spectra'.format(nx*ny))
-        cluster = LocalCluster(n_workers=10)
         client = Client(cluster)
 
         # Get the start time
         t_start = Time.now()
+        print(f'...started Dask processing at {t_start}')
 
         # Do the model fits
         results = client.map(dask_fit_fourier_pl_c, powers)
@@ -148,6 +148,7 @@ if __name__ == '__main__':
 
         # Get the end time and calculate the time taken
         t_end = Time.now()
+        print(f'...ended Dask processing at {t_end}')
         print('Time taken to perform fits', (t_end-t_start).to(u.s))
 
         # Now go through all the results and save out the results
@@ -210,3 +211,6 @@ if __name__ == '__main__':
         with open(filepath, 'w') as file_out:
             for output_name in output_names:
                 file_out.write(f"{output_name}\n")
+
+        # Restart the client
+        client.restart()
