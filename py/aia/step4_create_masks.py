@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import details_study as ds
 from masking import VariableBounds, Fitness, IntensityMask
+from tools.statistics import noise_level_estimate
 
 
 # Which model to look at
@@ -124,7 +125,8 @@ for wave in waves:
 
     # Calculate a brightness mask
     total_intensity = np.sum(emission, axis=2)
-    intensity_mask = IntensityMask(total_intensity, 0.5).mask
+    noise_level = noise_level_estimate(total_intensity, ((0, 0), (10, 10)))
+    intensity_mask = IntensityMask(total_intensity, absolute_level=noise_level).mask
 
     # Collect all the previous masks and combine them
     masks = {"finiteness": finite_mask,
