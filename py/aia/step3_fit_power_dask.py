@@ -25,7 +25,6 @@ args = parser.parse_args()
 
 # Data to analyze
 # Wavelengths we want to analyze
-waves = ['94', '171', '131', '193', '211', '335']
 waves = [item for item in args.waves.split(',')]
 
 
