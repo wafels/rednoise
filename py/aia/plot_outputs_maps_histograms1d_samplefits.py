@@ -198,68 +198,70 @@ for wave in waves:
     ###########################
     # Plot the results of the fitting
     for i, output_name in enumerate(output_names):
-        # Transpose because the data is the wrong way around
-        data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks['combined']))
-        compressed = data.flatten().compressed()
+        for this_mask in ('none', 'combined'):
 
-        mask_info = mask_plotting_information(data.mask, excluded_color)
-        # Summary statistics
-        ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
+            # Transpose because the data is the wrong way around
+            data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
+            compressed = data.flatten().compressed()
 
-        # The variable name is used in the plot instead of the output_name
-        # because we use LaTeX in the plots to match with the variables
-        # used in the paper.
-        variable_name = df['variable_name'][output_name]
+            mask_info = mask_plotting_information(data.mask, excluded_color)
+            # Summary statistics
+            ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
 
-        # Credible interval strings
-        ci_a = "{:.1f}$\%$".format(100*ss.ci[0])
-        ci_b = "{:.1f}$\%$".format(100*ss.ci[1])
-        ci_c = "{:.1f}$\%$".format(100*ss.ci[2])
-        ci_d = "{:.1f}$\%$".format(100*ss.ci[3])
-        ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b, ss.cred[0], ss.cred[1])
-        ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2], ss.cred[3])
+            # The variable name is used in the plot instead of the output_name
+            # because we use LaTeX in the plots to match with the variables
+            # used in the paper.
+            variable_name = df['variable_name'][output_name]
 
-        # Histograms
-        description = f"histogram of {variable_name}" + "\n"
-        plt.close('all')
-        fig, ax = plt.subplots()
-        h = ax.hist(compressed, bins=bins)
-        plt.xlabel(variable_name)
-        plt.ylabel('number')
-        plt.title("{:s}{:s}{:s}".format(super_title, description, mask_info))
-        plt.grid(linestyle=":")
-        ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
-        ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
-        ax.axvline(ss.median, label='median ({:.2f})'.format(ss.median), color='y')
-        ax.axvline(ss.cred[0], color='r', linestyle=':')
-        ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
-        ax.axvline(ss.cred[2], color='k', linestyle=':')
-        ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
-        ax.legend()
-        filename = f'histogram.{output_name}.{base_filename}.png'
-        filepath = os.path.join(directory, filename)
-        plt.savefig(filepath)
+            # Credible interval strings
+            ci_a = "{:.1f}$\%$".format(100*ss.ci[0])
+            ci_b = "{:.1f}$\%$".format(100*ss.ci[1])
+            ci_c = "{:.1f}$\%$".format(100*ss.ci[2])
+            ci_d = "{:.1f}$\%$".format(100*ss.ci[3])
+            ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b, ss.cred[0], ss.cred[1])
+            ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2], ss.cred[3])
 
-        # Spatial distribution
-        description = f"spatial distribution of {variable_name}" + "\n"
-        plt.close('all')
-        fig, ax = plt.subplots()
-        if output_name == 'alpha_0':
-            cmap = cm.Dark2_r
-            im = ax.imshow(data, origin='lower', cmap=cmap)
-            im.set_clim(df['lower_bound'][output_name], df['upper_bound'][output_name])
-        else:
-            cmap = cm.inferno
-            im = ax.imshow(data, origin='lower', cmap=cmap)
-        im.cmap.set_bad(excluded_color)
-        ax.set_xlabel('solar X')
-        ax.set_ylabel('solar Y')
-        ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
-        ax.grid(linestyle=":")
-        fig.colorbar(im, ax=ax, label=variable_name)
-        filename = f'spatial.{output_name}.{base_filename}.png'
-        filepath = os.path.join(directory, filename)
-        plt.savefig(filepath)
+            # Histograms
+            description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
+            plt.close('all')
+            fig, ax = plt.subplots()
+            h = ax.hist(compressed, bins=bins)
+            plt.xlabel(variable_name)
+            plt.ylabel('number')
+            plt.title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+            plt.grid(linestyle=":")
+            ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
+            ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
+            ax.axvline(ss.median, label='median ({:.2f})'.format(ss.median), color='y')
+            ax.axvline(ss.cred[0], color='r', linestyle=':')
+            ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
+            ax.axvline(ss.cred[2], color='k', linestyle=':')
+            ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
+            ax.legend()
+            filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
+            filepath = os.path.join(directory, filename)
+            plt.savefig(filepath)
+
+            # Spatial distribution
+            description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
+            plt.close('all')
+            fig, ax = plt.subplots()
+            if output_name == 'alpha_0':
+                cmap = cm.Dark2_r
+                im = ax.imshow(data, origin='lower', cmap=cmap)
+                im.set_clim(df['lower_bound'][output_name], df['upper_bound'][output_name])
+            else:
+                cmap = cm.inferno
+                im = ax.imshow(data, origin='lower', cmap=cmap)
+            im.cmap.set_bad(excluded_color)
+            ax.set_xlabel('solar X')
+            ax.set_ylabel('solar Y')
+            ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+            ax.grid(linestyle=":")
+            fig.colorbar(im, ax=ax, label=variable_name)
+            filename = f'spatial.{output_name}.{this_mask}.{base_filename}.png'
+            filepath = os.path.join(directory, filename)
+            plt.savefig(filepath)
 
     ###########################
     # Plot some example spectra
