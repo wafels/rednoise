@@ -253,7 +253,7 @@ for wave in waves:
                 cmap = cm.Dark2_r
                 im = ax.imshow(data, origin='lower', cmap=cmap)
                 im.set_clim(df['lower_bound'][output_name], df['upper_bound'][output_name])
-            elif "err_" in output_name:
+            elif "err_" in output_name or "amplitude" in output_name:
                 cmap = cm.plasma
                 im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
             else:

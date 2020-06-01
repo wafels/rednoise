@@ -2,18 +2,23 @@
 Create masks that exclude various parts of the data.
 """
 import os
+import argparse
 import numpy as np
 import pandas as pd
 import details_study as ds
 from masking import VariableBounds, Fitness, IntensityMask
 from tools.statistics import noise_level_estimate
 
+parser = argparse.ArgumentParser(description='Create masks for the results from one or more channels.')
+parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
+args = parser.parse_args()
+waves = [item for item in args.waves.split(',')]
+
 
 # Which model to look at
 observation_model_name = 'pl_c'
 window = 'hanning'
 power_type = 'absolute'
-waves = ['131']
 
 
 for wave in waves:
