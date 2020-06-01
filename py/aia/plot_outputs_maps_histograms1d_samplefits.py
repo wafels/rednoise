@@ -22,7 +22,7 @@ bins = 50
 excluded_color = 'black'
 
 #
-waves = ['171']
+waves = ['131']
 
 
 # Helper function
