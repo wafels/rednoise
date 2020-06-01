@@ -42,3 +42,21 @@ class SummaryStatistics:
     def is_all_finite(self):
         """Returns True if all elements are finite."""
         return np.all(np.isfinite(self.data))
+
+
+def noise_level_estimate(data, area, exclude_zero=True):
+    """
+
+    :param data:
+    :param area:
+    :return:
+    """
+    br = area[0]
+    tl = area[1]
+    subset = data[br[0]:tl[0], br[1]:tl[1]]
+    if exclude_zero:
+        greater_than_zero = subset > 0.0
+        ss = SummaryStatistics(subset[greater_than_zero])
+    else:
+        ss = SummaryStatistics(subset)
+    return ss.mean
