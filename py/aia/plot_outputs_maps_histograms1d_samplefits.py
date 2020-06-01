@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib import rc
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 from tools.statistics import SummaryStatistics
 import details_study as ds
 
@@ -151,7 +152,7 @@ for wave in waves:
         # Spatial distribution
         plt.close('all')
         fig, ax = plt.subplots()
-        im = ax.imshow(np.log10(data), origin='lower', cmap=cm.viridis)
+        im = ax.imshow(data, origin='lower', cmap=cm.inferno, norm=colors.LogNorm(vmin=data.nanmin(), vmax=data.nanmax()))
         im.cmap.set_bad(excluded_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
@@ -252,8 +253,11 @@ for wave in waves:
                 cmap = cm.Dark2_r
                 im = ax.imshow(data, origin='lower', cmap=cmap)
                 im.set_clim(df['lower_bound'][output_name], df['upper_bound'][output_name])
+            elif "err_" in output_name:
+                cmap = cm.plasma
+                im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
             else:
-                cmap = cm.inferno
+                cmap = cm.plasma
                 im = ax.imshow(data, origin='lower', cmap=cmap)
             im.cmap.set_bad(excluded_color)
             ax.set_xlabel('solar X')
