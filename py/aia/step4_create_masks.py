@@ -13,7 +13,7 @@ from tools.statistics import noise_level_estimate
 observation_model_name = 'pl_c'
 window = 'hanning'
 power_type = 'absolute'
-waves = ['171']
+waves = ['131']
 
 
 for wave in waves:
@@ -126,7 +126,7 @@ for wave in waves:
     # Calculate a brightness mask
     total_intensity = np.sum(emission, axis=2)
     noise_level = noise_level_estimate(total_intensity, ((0, 0), (10, 10)))
-    intensity_mask = IntensityMask(total_intensity, absolute_level=noise_level).mask
+    intensity_mask = IntensityMask(total_intensity, absolute_level=2*noise_level).mask
 
     # Collect all the previous masks and combine them
     masks = {"finiteness": finite_mask,

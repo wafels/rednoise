@@ -20,7 +20,7 @@ import details_study as ds
 # Data to analyze
 # Wavelengths we want to analyze
 waves = ['94', '171', '131', '193', '211', '335']
-waves = ['171']
+waves = ['131']
 
 # Type of power spectrum
 power_type = 'absolute'
