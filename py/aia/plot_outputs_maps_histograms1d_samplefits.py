@@ -1,4 +1,5 @@
 import os
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -6,6 +7,11 @@ from matplotlib import rc
 import matplotlib.cm as cm
 from tools.statistics import SummaryStatistics
 import details_study as ds
+
+parser = argparse.ArgumentParser(description='Plot maps and histograms of results from a channel')
+parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
+args = parser.parse_args()
+waves = [item for item in args.waves.split(',')]
 
 rc('text', usetex=True)  # Use LaTeX
 
@@ -20,10 +26,6 @@ bins = 50
 
 # Colour for excluded fits in the spatial distribution
 excluded_color = 'black'
-
-#
-waves = ['131']
-
 
 # Helper function
 def mask_plotting_information(m, excluded_color):
@@ -149,13 +151,13 @@ for wave in waves:
         # Spatial distribution
         plt.close('all')
         fig, ax = plt.subplots()
-        im = ax.imshow(data, origin='lower', cmap=cm.viridis)
+        im = ax.imshow(np.log10(data), origin='lower', cmap=cm.viridis)
         im.cmap.set_bad(excluded_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
         ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
         ax.grid(linestyle=":")
-        fig.colorbar(im, ax=ax, label="emission")
+        fig.colorbar(im, ax=ax, label="$log_{10}(\mbox{emission})$")
         filename = f'spatial.emission_{this_mask}.{base_filename}.png'
         filepath = os.path.join(directory, filename)
         plt.tight_layout()
