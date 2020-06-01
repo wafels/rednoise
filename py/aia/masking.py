@@ -5,7 +5,6 @@ import numpy as np
 from tools import lnlike_model_fit
 
 
-
 class Fitness:
     def __init__(self, observed_power, bestfit, k):
         self.observed_power = observed_power
@@ -65,7 +64,7 @@ class VariableBounds(object):
 
 
 class IntensityMask(object):
-    def __init__(self, data, q=None, absolute_level=None):
+    def __init__(self, data, q=None, absolute_level=None, area=((0, 10), (0, 10))):
         """
         Returns Boolean arrays
         :param data:
@@ -74,6 +73,7 @@ class IntensityMask(object):
         self.data = data
         self.q = q
         self.absolute_level = absolute_level
+        self.area = area
         if self.q is None and self.absolute_level is None:
             raise ValueError('Either "q" or "absolute_level" must not None.')
         if self.q is not None and self.absolute_level is not None:
