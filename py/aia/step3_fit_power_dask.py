@@ -2,6 +2,7 @@
 # Step 3.  Load in the FFT power spectra and fit models. Save the results
 #
 import os
+import argparse
 import numpy as np
 
 # import distributed
@@ -17,10 +18,16 @@ from spectral_model_parameter_estimators import InitialParameterEstimatePlC, Old
 from details_spectral_models import SelectModel
 import details_study as ds
 
+
+parser = argparse.ArgumentParser(description='Fit a model to Fourier power spectra (from step2).')
+parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
+args = parser.parse_args()
+
 # Data to analyze
 # Wavelengths we want to analyze
 waves = ['94', '171', '131', '193', '211', '335']
-waves = ['171']
+waves = [item for item in args.waves.split(',')]
+
 
 # Type of power spectrum
 power_type = 'absolute'
