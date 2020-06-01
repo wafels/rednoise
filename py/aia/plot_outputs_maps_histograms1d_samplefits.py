@@ -145,20 +145,20 @@ for wave in waves:
     # Plot the intensity with and without the combined mask
     masks['none'] = np.zeros_like(masks['combined'])
     for this_mask in ('none', 'combined'):
-        description = f'emission (mask={this_mask})' + "\n"
+        description = f'total emission (mask={this_mask})' + "\n"
         data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
         mask_info = mask_plotting_information(data.mask, excluded_color)
 
         # Spatial distribution
         plt.close('all')
         fig, ax = plt.subplots()
-        im = ax.imshow(data, origin='lower', cmap=cm.inferno, norm=colors.LogNorm(vmin=data.nanmin(), vmax=data.nanmax()))
+        im = ax.imshow(data, origin='lower', cmap=cm.Oranges_r, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
         im.cmap.set_bad(excluded_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
         ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
         ax.grid(linestyle=":")
-        fig.colorbar(im, ax=ax, label="$log_{10}(\mbox{emission})$")
+        fig.colorbar(im, ax=ax, label="total emission")
         filename = f'spatial.emission_{this_mask}.{base_filename}.png'
         filepath = os.path.join(directory, filename)
         plt.tight_layout()
