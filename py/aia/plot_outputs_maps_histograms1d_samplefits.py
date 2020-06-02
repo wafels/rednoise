@@ -207,6 +207,7 @@ for wave in waves:
             # Transpose because the data is the wrong way around
             data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
             compressed = data.flatten().compressed()
+            compressed = compressed(np.isfinite(compressed))
 
             mask_info = mask_plotting_information(data.mask, excluded_color)
             # Summary statistics
