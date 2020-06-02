@@ -31,12 +31,15 @@ bins = 50
 excluded_color = 'black'
 
 # Helper function
-def mask_plotting_information(m, excluded_color):
+def mask_plotting_information(m, excluded_color=None):
     n_samples = m.size
     n_excluded = np.sum(m)
     n_good = n_samples - n_excluded
     percent_excluded_string = "{:.1f}$\%$".format(100 * n_excluded / n_samples)
-    mask_info = f"{n_samples} pixels, {n_excluded} excluded (in {excluded_color}), {n_good} good, {percent_excluded_string} excluded"
+    if excluded_color is None:
+        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded, {n_good} included"
+    else:
+        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded (in {excluded_color}), {n_good} included"
     return mask_info
 
 
@@ -130,7 +133,7 @@ for wave in waves:
     for this_mask in mask_list:
         description = f'{this_mask} mask' + "\n"
         mask = np.transpose(masks[this_mask])
-        mask_info = mask_plotting_information(mask, excluded_color)
+        mask_info = mask_plotting_information(mask, excluded_color=excluded_color)
         plt.close('all')
         fig, ax = plt.subplots()
         im = ax.imshow(mask, origin='lower', cmap=cm.Greys)
@@ -149,7 +152,7 @@ for wave in waves:
     for this_mask in ('none', 'combined'):
         description = f'total emission (mask={this_mask})' + "\n"
         data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
-        mask_info = mask_plotting_information(data.mask, excluded_color)
+        mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
 
         # Spatial distribution
         plt.close('all')
@@ -170,7 +173,7 @@ for wave in waves:
 
         # Histograms
         # Summary statistics
-        compressed = data.flatten().compressed()
+        compressed = np.log10(data.flatten().compressed())
         compressed = compressed[np.isfinite(compressed)]
         ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
 
@@ -184,10 +187,11 @@ for wave in waves:
 
         # Histograms
         description = f"histogram of emission (mask={this_mask})" + "\n"
+        mask_info = mask_plotting_information(data.mask)
         plt.close('all')
         fig, ax = plt.subplots()
         h = ax.hist(compressed, bins=bins)
-        plt.xlabel('emission')
+        plt.xlabel('$\log_{10}$(emission)')
         plt.ylabel('number')
         plt.title("{:s}{:s}{:s}".format(super_title, description, mask_info))
         plt.grid(linestyle=":")
@@ -214,7 +218,7 @@ for wave in waves:
             compressed = data.flatten().compressed()
             compressed = compressed[np.isfinite(compressed)]
 
-            mask_info = mask_plotting_information(data.mask, excluded_color)
+            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
             # Summary statistics
             ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
 
@@ -233,6 +237,7 @@ for wave in waves:
 
             # Histograms
             description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
+            mask_info = mask_plotting_information(data.mask)
             filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
             filepath = os.path.join(directory, filename)
             print(f'Creating and saving {filepath}')
@@ -255,12 +260,13 @@ for wave in waves:
 
             # Spatial distribution
             description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
+            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
             plt.close('all')
             fig, ax = plt.subplots()
             if output_name == 'alpha_0':
                 cmap = cm.Dark2_r
                 im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
-                im.cmap.set_over('red')
+                im.cmap.set_over('lemonchiffon')
             elif "err_" in output_name:
                 cmap = cm.plasma
                 im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.LogNorm(vmin=compressed.min(), vmax=compressed.max()))
