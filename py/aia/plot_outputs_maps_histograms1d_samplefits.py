@@ -6,6 +6,8 @@ import pandas as pd
 from matplotlib import rc
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+from astropy.visualization import AsinhStretch, ImageNormalize
+import sunpy.visualization.colormaps as scm
 from tools.statistics import SummaryStatistics
 import details_study as ds
 
@@ -152,7 +154,9 @@ for wave in waves:
         # Spatial distribution
         plt.close('all')
         fig, ax = plt.subplots()
-        im = ax.imshow(data, origin='lower', cmap=cm.Oranges_r, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
+        cmap = plt.get_cmap(f'sdoaia{wave}')
+        norm = ImageNormalize(stretch=AsinhStretch(0.01), vmin=data.min(), vmax=data.max())
+        im = ax.imshow(data, origin='lower', cmap=cmap, norm=norm)
         im.cmap.set_bad(excluded_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
@@ -167,6 +171,7 @@ for wave in waves:
         # Histograms
         # Summary statistics
         compressed = data.flatten().compressed()
+        compressed = compressed[np.isfinite(compressed)]
         ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
 
         # Credible interval strings
@@ -207,7 +212,7 @@ for wave in waves:
             # Transpose because the data is the wrong way around
             data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
             compressed = data.flatten().compressed()
-            compressed = compressed(np.isfinite(compressed))
+            compressed = compressed[np.isfinite(compressed)]
 
             mask_info = mask_plotting_information(data.mask, excluded_color)
             # Summary statistics
@@ -228,6 +233,9 @@ for wave in waves:
 
             # Histograms
             description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
+            filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
+            filepath = os.path.join(directory, filename)
+            print(f'Creating and saving {filepath}')
             plt.close('all')
             fig, ax = plt.subplots()
             h = ax.hist(compressed, bins=bins)
@@ -243,8 +251,6 @@ for wave in waves:
             ax.axvline(ss.cred[2], color='k', linestyle=':')
             ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
             ax.legend()
-            filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
-            filepath = os.path.join(directory, filename)
             plt.savefig(filepath)
 
             # Spatial distribution
@@ -253,11 +259,11 @@ for wave in waves:
             fig, ax = plt.subplots()
             if output_name == 'alpha_0':
                 cmap = cm.Dark2_r
-                im = ax.imshow(data, origin='lower', cmap=cmap)
-                im.set_clim(df['lower_bound'][output_name], df['upper_bound'][output_name])
+                im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
+                im.cmap.set_over('red')
             elif "err_" in output_name:
                 cmap = cm.plasma
-                im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.LogNorm(vmin=data.min(), vmax=data.max()))
+                im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.LogNorm(vmin=compressed.min(), vmax=compressed.max()))
             else:
                 cmap = cm.plasma
                 im = ax.imshow(data, origin='lower', cmap=cmap)
@@ -266,7 +272,7 @@ for wave in waves:
             ax.set_ylabel('solar Y')
             ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
             ax.grid(linestyle=":")
-            fig.colorbar(im, ax=ax, label=variable_name)
+            fig.colorbar(im, ax=ax, label=variable_name, extend='max')
             filename = f'spatial.{output_name}.{this_mask}.{base_filename}.png'
             filepath = os.path.join(directory, filename)
             plt.savefig(filepath)
