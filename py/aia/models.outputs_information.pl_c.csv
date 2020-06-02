@@ -1,6 +1,6 @@
 output_name,lower_bound,upper_bound,variable_name
 "amplitude_0",0.0,None,"$A_{0}$"
-"alpha_0",0.0,4.0,"$n$"
+"alpha_0",0.0,8.0,"$n$"
 "amplitude_1",0.0,None,"$C$"
 "err_amplitude_0",None,None,"$\delta A_{0}$"
 "err_alpha_0",None,None,"$\delta n$"
