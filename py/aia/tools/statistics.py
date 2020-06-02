@@ -29,7 +29,7 @@ class SummaryStatistics:
         self.min = np.nanmin(self.data)
         self.mean = np.nanmean(self.data)
         self.median = np.nanmedian(self.data)
-        self.hist, self.xhist = np.histogram(self.data, **histogram_kwargs)
+        self.hist, self.xhist = np.histogram(self.data[np.isfinite(self.data)], **histogram_kwargs)
         self.x = 0.5 * (self.xhist[0:-2] + self.xhist[1:-1])
         self.mode = self.xhist[np.argmax(self.hist)]
         self.std = np.nanstd(self.data)
