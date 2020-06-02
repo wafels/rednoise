@@ -201,8 +201,9 @@ for wave in waves:
     ###########################
     # Plot the results of the fitting
     for i, output_name in enumerate(output_names):
+        print(f'Plotting {output_name}')
         for this_mask in ('none', 'combined'):
-
+            print(f'         mask={this_mask}')
             # Transpose because the data is the wrong way around
             data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
             compressed = data.flatten().compressed()
