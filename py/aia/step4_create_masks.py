@@ -52,7 +52,7 @@ for study_type in study_types:
 
         # Load in the fit parameters and the output names
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.outputs.step3.npz'.format(observation_model_name,
-                                                                       ds.study_type, wave, window,
+                                                                       study_type, wave, window,
                                                                        power_type)
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
@@ -60,7 +60,7 @@ for study_type in study_types:
 
         # Load in the names of the output
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.names.step3.txt'.format(observation_model_name,
-                                                                       ds.study_type, wave, window,
+                                                                       study_type, wave, window,
                                                                        power_type)
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
@@ -69,7 +69,7 @@ for study_type in study_types:
 
         # Load in the spectral fits
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.mfits.step3.npz'.format(observation_model_name,
-                                                                       ds.study_type, wave, window,
+                                                                       study_type, wave, window,
                                                                        power_type)
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
@@ -78,7 +78,7 @@ for study_type in study_types:
 
         # Load in the analysis details
         filename = '{:s}_{:s}_{:s}_{:s}.{:s}.analysis.step3.npz'.format(observation_model_name,
-                                                                       ds.study_type, wave, window,
+                                                                       study_type, wave, window,
                                                                        power_type)
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
@@ -87,7 +87,7 @@ for study_type in study_types:
         divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
 
         # Load in the observed Fourier power data
-        filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
+        filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
         observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
@@ -97,7 +97,7 @@ for study_type in study_types:
                     observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
 
         # Load in the original time series data to create an intensity mask
-        filename = '{:s}_{:s}.step1.npz'.format(ds.study_type, wave)
+        filename = '{:s}_{:s}.step1.npz'.format(study_type, wave)
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
         emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
@@ -155,7 +155,7 @@ for study_type in study_types:
         # Find the minimum and maximum spectral power across the study types and waves, taking into
         # account the masking
         # Load in the observed Fourier power data
-        filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
+        filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(study_type, wave, window, power_type)
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
         observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
@@ -174,7 +174,7 @@ for study_type in study_types:
         # Save the masks
         for key in list(masks.keys()):
             filename = '{:s}_{:s}_{:s}_{:s}.{:s}.{:s}.step4.npz'.format(observation_model_name,
-                                                                        ds.study_type, wave, window,
+                                                                        study_type, wave, window,
                                                                         power_type, key)
             filepath = os.path.join(directory, filename)
             print(f'Saving {filepath}')
