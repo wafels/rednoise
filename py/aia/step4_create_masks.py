@@ -11,8 +11,10 @@ from tools.statistics import noise_level_estimate
 
 parser = argparse.ArgumentParser(description='Create masks for the results from one or more channels.')
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
+parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
 args = parser.parse_args()
 waves = [item for item in args.waves.split(',')]
+study_types = [item for item in args.study.split(',')]
 
 
 # Which model to look at
@@ -20,10 +22,10 @@ observation_model_name = 'pl_c'
 window = 'hanning'
 power_type = 'absolute'
 
-
-for wave in waves:
-    # General notification that we have a new data-set
-    print('\nLoading New Data')
+for study_type in study_types:
+    for wave in waves:
+        # General notification that we have a new data-set
+        print('\nLoading New Data')
 
     # branch location
     b = [ds.corename, ds.original_datatype, wave]
@@ -131,7 +133,7 @@ for wave in waves:
     # Calculate a brightness mask
     total_intensity = np.sum(emission, axis=2)
     noise_level = noise_level_estimate(total_intensity, ((0, 0), (10, 10)))
-    intensity_mask = IntensityMask(total_intensity, absolute_level=2*noise_level).mask
+    intensity_mask = IntensityMask(total_intensity, absolute_level=1.5*noise_level).mask
 
     # Collect all the previous masks and combine them
     masks = {"finiteness": finite_mask,
@@ -142,6 +144,33 @@ for wave in waves:
     for key in list(masks.keys()):
         combined_mask = np.logical_or(combined_mask, masks[key])
     masks['combined'] = combined_mask
+
+    # Get the minimum and maximum spectral power across the study types and waves
+    min_spectral_power = 1e20
+    max_spectral_power = 0.0
+    for study_type in study_types:
+        for wave in waves:
+
+            # branch location
+            b = [study_type, ds.original_datatype, wave]
+            print(b)
+            # Directory
+            directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+
+            # The spectral power
+            spectral_power = (load_spectrum(directory, study_type, wave, window, power_type))['arr_0']
+
+            # Load in the mask
+
+            this_min_power = np.nanmin(spectral_power)
+            this_max_power = np.nanmax(spectral_power)
+            if this_min_power < min_spectral_power:
+                min_spectral_power = this_min_power
+            if this_max_power > max_spectral_power:
+                max_spectral_power = this_max_power
+    print('Minimum spectral power = ' + str(min_spectral_power))
+    print('Maximum spectral power = ' + str(max_spectral_power))
+
 
     # Save the masks
     for key in list(masks.keys()):

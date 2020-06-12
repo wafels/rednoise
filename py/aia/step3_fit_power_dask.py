@@ -21,19 +21,16 @@ import details_study as ds
 
 parser = argparse.ArgumentParser(description='Fit a model to Fourier power spectra (from step2).')
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
-args = parser.parse_args()
-
-parser = argparse.ArgumentParser(description='Which study type(s) to load.')
 parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
 args = parser.parse_args()
 
 # Data to analyze
 # Wavelengths we want to analyze
 waves = [item for item in args.waves.split(',')]
-
+print(waves)
 # Studies to load in
 study_types = [item for item in args.study.split(',')]
-
+print(study_types)
 # Type of power spectrum
 power_type = 'absolute'
 
@@ -102,29 +99,6 @@ def dask_fit_fourier_pl_c(power_spectrum):
 
 
 if __name__ == '__main__':
-    # Get the minimum and maximum spectral power across the study types and waves
-    min_spectral_power = 1e20
-    max_spectral_power = 0.0
-    for study_type in study_types:
-        for wave in waves:
-
-            # branch location
-            b = [ds.corename, ds.original_datatype, wave]
-
-            # Directory
-            directory = ds.datalocationtools.save_location_calculator(ds, b)["project_data"]
-
-            # The spectral power
-            spectral_power = (load_spectrum(directory, study_type, wave, window, power_type))['arr_0']
-            this_min_power = np.nanmin(spectral_power)
-            this_max_power = np.nanmax(spectral_power)
-            if this_min_power < min_spectral_power:
-                min_spectral_power = this_min_power
-            if this_max_power > max_spectral_power:
-                max_spectral_power = this_max_power
-    print('Minimum spectral power = ' + str(min_spectral_power))
-    print('Maximum spectral power = ' + str(max_spectral_power))
-
     # Now do the fitting
     cluster = LocalCluster()
     for study_type in study_types:
