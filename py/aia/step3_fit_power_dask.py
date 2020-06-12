@@ -35,7 +35,7 @@ power_type = 'absolute'
 window = 'hanning'
 
 # Analyze a subsection of the data?
-analyze_subsection = True
+analyze_subsection = False
 if analyze_subsection:
     side = 8
     subsection = ((128-side, 128+side), (128-side, 128+side))
@@ -89,7 +89,7 @@ def dask_fit_fourier_pl_c(power_spectrum):
 
 
 if __name__ == '__main__':
-    cluster = LocalCluster()
+    cluster = LocalCluster(n_workers=10)
     for wave in waves:
         # General notification that we have a new data-set
         print('\nLoading New Data')
