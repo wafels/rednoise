@@ -36,9 +36,6 @@ for study_type in study_types:
         # branch location
         b = [study_type, ds.original_datatype, wave]
 
-        # Region identifier name
-        region_id = ds.datalocationtools.ident_creator(b)
-
         # Location of the project data
         directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
 
