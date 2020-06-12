@@ -101,3 +101,32 @@ def create_simulated_power_spectra(nx, ny, observation_model, model_parameters, 
             d[i, j, :] = psd_shape * np.random.chisquare(2, size=psd_shape.shape[0]) / 2.0
     return d
 
+
+# Create an array of simulated Fourier powers
+def create_simulated_power_spectra2(nx, ny, observation_model, model_parameters, frequencies):
+    d = np.zeros([nx, ny, len(frequencies)])
+    max_amplitude = np.log10(model_parameters[0])
+    min_amplitude = np.log10(model_parameters[2])
+
+    log10_amplitude = np.random.uniform(min_amplitude, max_amplitude)
+    log10_background = np.random.uniform(min_amplitude, max_amplitude)
+    # Ensure the amplitude of the power spectrum is at more than 10 times the
+    # background
+    while log10_amplitude - log10_background <= 1.0:
+        log10_amplitude = np.random.uniform(min_amplitude, max_amplitude)
+        log10_background = np.random.uniform(min_amplitude, max_amplitude)
+
+    for i in range(0, nx):
+        for j in range(0, ny):
+            # ensure there is always at least one order of magnitude
+            # This section will be replaced with a section that reads observed power spectra
+            # Set the model parameters
+            _fitter_to_model_params(observation_model,
+                                    [10.0**log10_amplitude, model_parameters[1], 10.0**log10_background])
+            # Create the true data
+            psd_shape = observation_model(frequencies)
+
+            # Now randomize the true data and store it in an iterable
+            d[i, j, :] = psd_shape * np.random.chisquare(2, size=psd_shape.shape[0]) / 2.0
+    return d
+

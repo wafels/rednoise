@@ -11,7 +11,7 @@ import astropy.units as u
 from tools import tsutils
 from tools.tstools import is_evenly_sampled
 from tools.timeseries import TimeSeries
-from tools.pstools import create_simulated_power_spectra
+from tools.pstools import create_simulated_power_spectra2
 import details_study as ds
 
 
@@ -108,10 +108,10 @@ for iwave, wave in enumerate(waves):
         nx = ds.nx
         ny = ds.ny
         pfrequencies = ds.pfrequencies
-        simulated_power_spectra = create_simulated_power_spectra(nx,
-                                                                 ny,
-                                                                 ds.simulation_model,
-                                                                 ds.true_parameters, pfrequencies)
+        simulated_power_spectra = create_simulated_power_spectra2(nx,
+                                                                  ny,
+                                                                  ds.simulation_model,
+                                                                  ds.true_parameters, pfrequencies)
 
     # Number of positive frequencies
     nposfreq = len(pfrequencies)
