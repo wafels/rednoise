@@ -163,7 +163,7 @@ for study_type in study_types:
         spectral_power_mask_combined = np.zeros([nx, ny, nf], dtype=np.bool)
         for i in range(0, nf):
             spectral_power_mask_combined[:, :, i] = combined_mask[:, :]
-        spectral_power = np.ma.asarray(observed, mask=combined_mask)
+        spectral_power = np.ma.array(observed, mask=spectral_power_mask_combined)
         this_min_power = np.nanmin(spectral_power.flatten().compressed())
         this_max_power = np.nanmax(spectral_power.flatten().compressed())
         if this_min_power < min_spectral_power:
