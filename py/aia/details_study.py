@@ -22,7 +22,6 @@ from details_spectral_models import SelectModel
 study_type = 'bv_simulation_low_fn'
 study_type = 'bv_simulation_intermediate_fn'
 study_type = 'bv_simulation_high_fn'
-
 wave = '94'
 #wave = '131'
 #wave = '171'
@@ -31,7 +30,7 @@ wave = '94'
 #wave = '335'
 
 
-#study_type = "verify_fitting"
+study_type = "verify_fitting"
 wave = '000'
 #wave = '050'
 #wave = '100'
@@ -41,31 +40,6 @@ wave = '000'
 #wave = '300'
 #wave = '350'
 #wave = '400'
-study_type = "verify_fitting"
-
-
-# Paper 2
-#study_type = 'debugpaper2'
-#study_type = 'paper2'
-#study_type = 'vk'
-#study_type = 'paper2_shorter_ts'
-
-# 3 - Noise Analysis
-#study_type = 'paper3_PSF'
-#study_type = 'paper3_BM3D'
-#study_type = 'paper3_BLSGSM'
-
-# 5 - GMU Study
-#study_type = 'gmu1'
-
-# 6 - Jitter
-#study_type = 'jitter'
-
-# Where the data is stored
-input_root = '~/Data/ts'
-
-# Target cadence
-target_cadence = 12.0
 
 # Target cadence
 absolute_tolerance = 0.5 * u.s
