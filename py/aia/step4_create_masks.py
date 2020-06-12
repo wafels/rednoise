@@ -154,11 +154,16 @@ for study_type in study_types:
 
         # Find the minimum and maximum spectral power across the study types and waves, taking into
         # account the masking
+        # Load in the observed Fourier power data
+        filename = '{:s}_{:s}_{:s}.{:s}.step2.npz'.format(ds.study_type, wave, window, power_type)
+        filepath = os.path.join(directory, filename)
+        print(f'Loading {filepath}')
+        observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
         nf = len(freq)
         spectral_power_mask_combined = np.zeros([nx, ny, nf], dtype=np.bool)
         for i in range(0, nf):
             spectral_power_mask_combined[:, :, i] = combined_mask[:, :]
-        spectral_power = np.ma.asarray()
+        spectral_power = np.ma.asarray(observed, mask=combined_mask)
         this_min_power = np.nanmin(spectral_power.flatten().compressed())
         this_max_power = np.nanmax(spectral_power.flatten().compressed())
         if this_min_power < min_spectral_power:
