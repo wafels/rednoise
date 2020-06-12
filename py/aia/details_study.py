@@ -127,8 +127,8 @@ if 'verify_fitting' in study_type:
     # Bradshaw & Viall frequencies
     df = 0.000196078431372549 - 9.80392156862745e-05
     pfrequencies = 9.80392156862745e-05 + df * np.arange(424)
-    nx = 100
-    ny = 100
+    nx = 256
+    ny = 256
     alpha = int(wave)/100
     amplitude = 284220259296.4687  # 284220259296.4687 maximum over all BV data
     white_noise = 2.7307259040496703e-10  # 2.7307259040496703e-10 minimum over all BV data
