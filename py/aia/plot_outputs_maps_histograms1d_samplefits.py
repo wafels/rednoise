@@ -13,8 +13,13 @@ import details_study as ds
 
 parser = argparse.ArgumentParser(description='Plot maps and histograms of results from a channel')
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
+parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
 args = parser.parse_args()
 waves = [item for item in args.waves.split(',')]
+
+# Studies to load in
+study_types = [item for item in args.study.split(',')]
+study_type = study_types[0]
 
 rc('text', usetex=True)  # Use LaTeX
 
@@ -22,13 +27,18 @@ rc('text', usetex=True)  # Use LaTeX
 observation_model_name = 'pl_c'
 window = 'hanning'
 power_type = 'absolute'
-study_type = ds.study_type
 
 # Number of equally spaced bins in the histogram
 bins = 50
 
 # Colour for excluded fits in the spatial distribution
 excluded_color = 'black'
+
+# Colour maps
+if "verify_fitting" not in study_type:
+    intensity_cmap = plt.get_cmap(f'sdoaia{wave}')
+else:
+    intensity_cmap = plt.get_cmap('gray')
 
 # Helper function
 def mask_plotting_information(m, excluded_color=None):
@@ -49,7 +59,7 @@ for wave in waves:
     print('\nLoading New Data')
 
     # branch location
-    b = [ds.corename, ds.original_datatype, wave]
+    b = [study_type, ds.original_datatype, wave]
 
     # Region identifier name
     region_id = ds.datalocationtools.ident_creator(b)
@@ -106,10 +116,13 @@ for wave in waves:
                 observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
 
     # Load in the original time series data to create an intensity mask
-    filename = f'{study_type}_{wave}.step1.npz'
-    filepath = os.path.join(directory, filename)
-    print(f'Loading {filepath}')
-    emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
+    if "verify_fitting" not in study_type:
+        filename = f'{study_type}_{wave}.step1.npz'
+        filepath = os.path.join(directory, filename)
+        print(f'Loading {filepath}')
+        emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
+    else:
+        emission = np.ones_like(observed)
 
     # Load in the mask data
     mask_list = ("finiteness", "bounds", "fitness", "intensity", "combined")
@@ -157,9 +170,8 @@ for wave in waves:
         # Spatial distribution
         plt.close('all')
         fig, ax = plt.subplots()
-        cmap = plt.get_cmap(f'sdoaia{wave}')
         norm = ImageNormalize(stretch=AsinhStretch(0.01), vmin=data.min(), vmax=data.max())
-        im = ax.imshow(data, origin='lower', cmap=cmap, norm=norm)
+        im = ax.imshow(data, origin='lower', cmap=intensity_cmap, norm=norm)
         im.cmap.set_bad(excluded_color)
         ax.set_xlabel('solar X')
         ax.set_ylabel('solar Y')
