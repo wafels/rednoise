@@ -7,7 +7,6 @@ from matplotlib import rc
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 from astropy.visualization import AsinhStretch, ImageNormalize
-import sunpy.visualization.colormaps as scm
 from tools.statistics import SummaryStatistics
 import details_study as ds
 
@@ -105,9 +104,8 @@ def spatial_distribution_plot(ax, data, output_name, title):
     Parameters
     ----------
     ax:
-    compressed:
-    bins:
-    variable_name:
+    data:
+    output_name:
     title:
 
     Returns
@@ -131,7 +129,7 @@ def spatial_distribution_plot(ax, data, output_name, title):
     ax.set_ylabel('solar Y')
     ax.set_title(title)
     ax.grid(linestyle=":")
-    return ax
+    return im, ax
 
 
 # Load the data
@@ -366,7 +364,8 @@ for wave in waves:
 
             plt.close('all')
             fig, ax = plt.subplots()
-            ax = spatial_distribution_plot()
+            im, ax = spatial_distribution_plot(ax, data, output_name, title)
+            """
             if output_name == 'alpha_0':
                 cmap = cm.Dark2_r
                 im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
@@ -382,6 +381,7 @@ for wave in waves:
             ax.set_ylabel('solar Y')
             ax.set_title(title)
             ax.grid(linestyle=":")
+            """
             fig.colorbar(im, ax=ax, label=variable_name, extend='max')
 
             # Create the filepath the plot will be saved to, and save it
