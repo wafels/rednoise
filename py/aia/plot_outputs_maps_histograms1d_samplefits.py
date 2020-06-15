@@ -388,7 +388,7 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
 
         plt.close('all')
         hfig, hax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5), sharex=True)  # Histogram figures
-        sfig, sax = plt.subplots(nrows, ncols)  # Spatial distribution figures
+        sfig, sax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5))  # Spatial distribution figures
         for iwave, wave in enumerate(waves):  # Load in each wave
             this_row = iwave // ncols
             this_col = iwave - this_row * ncols
