@@ -135,7 +135,7 @@ filename = 'models.outputs_information.{:s}.csv'.format(observation_model_name)
 df = pd.read_csv(filename, index_col=0)
 df = df.replace({"None": None})
 
-
+"""
 # Load the data
 for wave in waves:
 
@@ -370,6 +370,7 @@ for wave in waves:
     filename = f'sample_fits.{base_filename}.png'
     filepath = os.path.join(directory, filename)
     plt.savefig(filepath)
+"""
 
 
 # Gang six plots on one page
@@ -378,6 +379,17 @@ ncols = 3
 sim = list()
 for this_mask in ('none', 'combined'):  # Go through the masks we are interested in
     print(f'mask={this_mask}')
+
+    # Hack to get the output file names - all wavelengths are the same anyway.
+    b = [study_type, ds.original_datatype, '335']
+    directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+    base_filename = f"{observation_model_name}_{study_type}_335_{window}.{power_type}"
+    filename = f'{base_filename}.names.step3.txt'
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    with open(filepath) as f:
+        output_names = [line.rstrip() for line in f]
+
     for i, output_name in enumerate(output_names):  # Go through the variables
         print(f'Plotting {output_name}')
 
@@ -474,7 +486,7 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
             # Create the spatial distribution plot
             im, sax[this_row, this_col] = spatial_distribution_plot(sax[this_row, this_col], data, output_name, title)
             sim.append(im)
-            sfig.colorbar(sim[iwave], ax=sax[this_row, this_col], label=variable_name, extend='max')
+            sfig.colorbar(im, ax=sax[this_row, this_col], label=variable_name, extend='max')
 
         # Save the histograms
         hfig.tight_layout()
