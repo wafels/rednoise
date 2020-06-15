@@ -43,6 +43,87 @@ def mask_plotting_information(m, excluded_color=None):
     return mask_info
 
 
+def histogram_plot(ax, compressed, bins, variable_name, title):
+    """
+    Creates a histogram plot.
+
+    Parameters
+    ----------
+    ax:
+    compressed:
+    bins:
+    variable_name:
+    title:
+
+    Returns
+    -------
+    """
+
+    # Get the summary statistics
+    ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
+    # Credible interval strings for the plot
+    ci_a = "{:.1f}$\%$".format(100 * ss.ci[0])
+    ci_b = "{:.1f}$\%$".format(100 * ss.ci[1])
+    ci_c = "{:.1f}$\%$".format(100 * ss.ci[2])
+    ci_d = "{:.1f}$\%$".format(100 * ss.ci[3])
+    ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b, ss.cred[0],
+                                                                             ss.cred[1])
+    ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2],
+                                                                             ss.cred[3])
+
+    # Create and return the plot
+    h = ax.hist(compressed, bins=bins)
+    ax.set_xlabel(variable_name)
+    ax.set_ylabel('number')
+    ax.set_title(title)
+    ax.grid(linestyle=":")
+    ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
+    ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
+    ax.axvline(ss.median, label='median ({:.2f})'.format(ss.median), color='y')
+    ax.axvline(ss.cred[0], color='r', linestyle=':')
+    ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
+    ax.axvline(ss.cred[2], color='k', linestyle=':')
+    ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
+    ax.legend()
+    return ax
+
+
+def spatial_distribution_plot(ax, data, output_name, title):
+    """
+    Creates a spatial distribution plot.
+
+    Parameters
+    ----------
+    ax:
+    compressed:
+    bins:
+    variable_name:
+    title:
+
+    Returns
+    -------
+    """
+
+    if output_name == 'alpha_0':
+        cmap = cm.Dark2_r
+        im = ax.imshow(data, origin='lower', cmap=cmap,
+                       norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
+        im.cmap.set_over('lemonchiffon')
+    elif "err_" in output_name:
+        cmap = cm.plasma
+        im = ax.imshow(data, origin='lower', cmap=cmap,
+                       norm=colors.LogNorm(vmin=compressed.min(), vmax=compressed.max()))
+    else:
+        cmap = cm.plasma
+        im = ax.imshow(data, origin='lower', cmap=cmap)
+    im.cmap.set_bad(excluded_color)
+    ax.set_xlabel('solar X')
+    ax.set_ylabel('solar Y')
+    ax.set_title(title)
+    ax.grid(linestyle=":")
+    return ax
+
+
 # Load the data
 for wave in waves:
     # General notification that we have a new data-set
@@ -218,15 +299,24 @@ for wave in waves:
             compressed = data.flatten().compressed()
             compressed = compressed[np.isfinite(compressed)]
 
-            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
-            # Summary statistics
-            ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
-
             # The variable name is used in the plot instead of the output_name
             # because we use LaTeX in the plots to match with the variables
             # used in the paper.
             variable_name = df['variable_name'][output_name]
 
+            # Create the title of the plot
+            description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
+            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+            title = f"{super_title}{description}{mask_info}"
+
+            # Create the histogram plot
+            plt.close('all')
+            fig, ax = plt.subplots()
+            ax = histogram_plot(ax, compressed, bins, variable_name, title)
+
+            """
+            # Summary statistics
+            ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
             # Credible interval strings
             ci_a = "{:.1f}$\%$".format(100*ss.ci[0])
             ci_b = "{:.1f}$\%$".format(100*ss.ci[1])
@@ -235,18 +325,10 @@ for wave in waves:
             ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b, ss.cred[0], ss.cred[1])
             ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2], ss.cred[3])
 
-            # Histograms
-            description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-            mask_info = mask_plotting_information(data.mask)
-            filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
-            filepath = os.path.join(directory, filename)
-            print(f'Creating and saving {filepath}')
-            plt.close('all')
-            fig, ax = plt.subplots()
             h = ax.hist(compressed, bins=bins)
             plt.xlabel(variable_name)
             plt.ylabel('number')
-            plt.title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+            plt.title(title)
             plt.grid(linestyle=":")
             ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
             ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
@@ -256,13 +338,23 @@ for wave in waves:
             ax.axvline(ss.cred[2], color='k', linestyle=':')
             ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
             ax.legend()
+            """
+
+            # Create the filepath the plot will be saved to, and save it
+            filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
+            filepath = os.path.join(directory, filename)
+            print(f'Creating and saving {filepath}')
             plt.savefig(filepath)
 
             # Spatial distribution
+            # Create the title of the plot
             description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
             mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+            title = f"{super_title}{description}{mask_info}"
+
             plt.close('all')
             fig, ax = plt.subplots()
+            ax = spatial_distribution_plot()
             if output_name == 'alpha_0':
                 cmap = cm.Dark2_r
                 im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
@@ -276,9 +368,11 @@ for wave in waves:
             im.cmap.set_bad(excluded_color)
             ax.set_xlabel('solar X')
             ax.set_ylabel('solar Y')
-            ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+            ax.set_title(title)
             ax.grid(linestyle=":")
             fig.colorbar(im, ax=ax, label=variable_name, extend='max')
+
+            # Create the filepath the plot will be saved to, and save it
             filename = f'spatial.{output_name}.{this_mask}.{base_filename}.png'
             filepath = os.path.join(directory, filename)
             plt.savefig(filepath)
@@ -307,3 +401,15 @@ for wave in waves:
     filename = f'sample_fits.{base_filename}.png'
     filepath = os.path.join(directory, filename)
     plt.savefig(filepath)
+
+
+# Gang six plots on one page
+hfig, hax = plt.subplots(3, 2)  # Histogram figures
+sfig, sax = plt.subplots(3, 2)  # Spatial distribution figures
+
+
+for this_mask in ('none', 'combined'):  # Go through the masks we are interested in
+    print(f'mask={this_mask}')
+    for i, output_name in enumerate(output_names):  # Go through the variables
+        print(f'Plotting {output_name}')
+        for wave in waves:  # Load in each wave
