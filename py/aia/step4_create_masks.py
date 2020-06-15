@@ -138,8 +138,12 @@ for study_type in study_types:
             # Calculate a brightness mask
             total_intensity = np.sum(emission, axis=2)
             noise_level = noise_level_estimate(total_intensity, ((0, 0), (10, 10)))
+            if (wave, study_type) in (('94', 'bv_simulation_low_fn'), ('335', 'bv_simulation_low_fn'),('94', 'bv_simulation_intermediate_fn'), ('335', 'bv_simulation_intermediate_fn') ):
+                alf = 1.0
+            else:
+                alf = absolute_level_factor
             intensity_mask = IntensityMask(total_intensity,
-                                           absolute_level=absolute_level_factor*noise_level).mask
+                                           absolute_level=alf*noise_level).mask
         else:
             intensity_mask = np.zeros_like(finite_mask)
 
