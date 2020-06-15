@@ -30,8 +30,8 @@ wave = '94'
 #wave = '335'
 
 
-study_type = "verify_fitting"
-wave = '000'
+#study_type = "verify_fitting"
+#wave = '000'
 #wave = '050'
 #wave = '100'
 #wave = '150'
@@ -43,15 +43,13 @@ wave = '000'
 
 # Target cadence
 absolute_tolerance = 0.5 * u.s
+target_cadence = 12.0 * u.s
 
 # base cross-correlation channel
 base_cross_correlation_channel = '171'
 
 # Use base cross-correlation channel?
 use_base_cross_correlation_channel = False
-
-# Start off by analyzing time series data
-use_time_series_data = True
 
 # Fixed AIA scale across all channels
 arcsec_per_pixel_unit = u.arcsec / u.pix
@@ -81,6 +79,10 @@ for i in range(1, 11):
 # Bradshaw & Viall (20??) simulated data.
 #
 if study_type in list(sim_name.keys()):
+
+    # Start off by analyzing time series data
+    use_time_series_data = True
+
     conversion_style = 'simple'
     # Where the original data is, typically FITS or sav files
     dataroot = os.path.expanduser('~/Data/ts/')
