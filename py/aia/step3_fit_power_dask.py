@@ -27,10 +27,10 @@ args = parser.parse_args()
 # Data to analyze
 # Wavelengths we want to analyze
 waves = [item for item in args.waves.split(',')]
-print(waves)
+
 # Studies to load in
 study_types = [item for item in args.study.split(',')]
-print(study_types)
+
 # Type of power spectrum
 power_type = 'absolute'
 
@@ -110,10 +110,10 @@ if __name__ == '__main__':
             b = [ds.corename, ds.original_datatype, wave]
 
             # Directory
-            directory = ds.datalocationtools.save_location_calculator(ds, b)["project_data"]
+            directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
 
             # Location of the project data
-            for_analysis = load_spectrum(ds, b, study_type, wave, window, power_type)
+            for_analysis = load_spectrum(directory, study_type, wave, window, power_type)
 
             # Create a list of power spectra for use by the fitter and Dask.
             frequencies = for_analysis['arr_1']

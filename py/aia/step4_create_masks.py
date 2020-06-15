@@ -93,12 +93,6 @@ for study_type in study_types:
                 for j in range(0, observed.shape[1]):
                     observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
 
-        # Load in the original time series data to create an intensity mask
-        filename = '{:s}_{:s}.step1.npz'.format(study_type, wave)
-        filepath = os.path.join(directory, filename)
-        print(f'Loading {filepath}')
-        emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
-
         # Calculate different masks. Each mask eliminates results that we do not wish to consider,
         # for example, non-finite values.  Following numpy, True indicates that the value at
         # that position should be masked out.
@@ -133,11 +127,21 @@ for study_type in study_types:
                 fitness = Fitness(observed[i, j, :], mfits[i, j, :], 3)
                 fitness_mask[i, j] = not fitness.is_good()
 
-        # Calculate a brightness mask
-        total_intensity = np.sum(emission, axis=2)
-        noise_level = noise_level_estimate(total_intensity, ((0, 0), (10, 10)))
-        intensity_mask = IntensityMask(total_intensity,
-                                       absolute_level=absolute_level_factor*noise_level).mask
+
+        # Load in the original time series data to create an intensity mask
+        if "verify_fitting" not in study_type:
+            filename = '{:s}_{:s}.step1.npz'.format(study_type, wave)
+            filepath = os.path.join(directory, filename)
+            print(f'Loading {filepath}')
+            emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
+
+            # Calculate a brightness mask
+            total_intensity = np.sum(emission, axis=2)
+            noise_level = noise_level_estimate(total_intensity, ((0, 0), (10, 10)))
+            intensity_mask = IntensityMask(total_intensity,
+                                           absolute_level=absolute_level_factor*noise_level).mask
+        else:
+            intensity_mask = np.zeros_like(finite_mask)
 
         # Collect all the previous masks and combine them
         masks = {"finiteness": finite_mask,

@@ -121,7 +121,6 @@ def create_simulated_power_spectra2(nx, ny, observation_model, model_parameters,
             # This section will be replaced with a section that reads observed power spectra
             # Set the model parameters
             true_parameters = [10.0**log10_amplitude, model_parameters[1], 10.0**log10_background]
-            print(true_parameters)
             _fitter_to_model_params(observation_model, true_parameters)
 
             # Create the true data
