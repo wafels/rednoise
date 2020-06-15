@@ -127,6 +127,21 @@ def spatial_distribution_plot(ax, data, output_name, title):
     return im, ax
 
 
+def emission_plot(ax, data, title, intensity_cmap):
+    """
+    Creates an emission plot
+    """
+    norm = ImageNormalize(stretch=AsinhStretch(0.01), vmin=data.min(), vmax=data.max())
+    im = ax.imshow(data, origin='lower', cmap=intensity_cmap, norm=norm)
+    im.cmap.set_bad(excluded_color)
+    ax.set_xlabel('solar X')
+    ax.set_ylabel('solar Y')
+    ax.set_title(title)
+    ax.grid(linestyle=":")
+    return im, ax
+
+
+
 # Load in some information about how to treat and plot the outputs, for example
 # output_name,lower_bound,upper_bound,variable_name
 # "amplitude_0",None,None,"A_{0}"
@@ -376,9 +391,12 @@ for wave in waves:
 # Gang six plots on one page
 nrows = 2
 ncols = 3
-sim = list()
 for this_mask in ('none', 'combined'):  # Go through the masks we are interested in
     print(f'mask={this_mask}')
+
+    # Spatial emission figures
+    plt.close('all')
+    efig, eax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5))  # Spatial emission figures
 
     # Hack to get the output file names - all wavelengths are the same anyway.
     b = [study_type, ds.original_datatype, '335']
@@ -398,13 +416,12 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
         # used in the paper.
         variable_name = df['variable_name'][output_name]
 
-        plt.close('all')
         hfig, hax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5), sharex=True)  # Histogram figures
         sfig, sax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5))  # Spatial distribution figures
         for iwave, wave in enumerate(waves):  # Load in each wave
             this_row = iwave // ncols
             this_col = iwave - this_row * ncols
-            print(iwave, this_row, this_col)
+
             # Colour maps for spatial distributions
             if "verify_fitting" not in study_type:
                 intensity_cmap = plt.get_cmap(f'sdoaia{wave}')
@@ -485,8 +502,27 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
 
             # Create the spatial distribution plot
             im, sax[this_row, this_col] = spatial_distribution_plot(sax[this_row, this_col], data, output_name, title)
-            sim.append(im)
             sfig.colorbar(im, ax=sax[this_row, this_col], label=variable_name, extend='max')
+
+            # Load in the original time series data
+            if i == 0:
+                if "verify_fitting" not in study_type:
+                    filename = f'{study_type}_{wave}.step1.npz'
+                    filepath = os.path.join(directory, filename)
+                    print(f'Loading {filepath}')
+                    emission = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
+                    intensity_cmap = plt.get_cmap(f'sdoaia{wave}')
+                else:
+                    emission = np.ones_like(observed)
+                    intensity_cmap = plt.get_cmap('gray')
+                total_intensity = np.transpose(np.sum(emission, axis=2))
+                data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
+                description = f'total emission (mask={this_mask})' + "\n"
+                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                title = f"{super_title}{description}{mask_info}"
+                im, eax[this_row, this_col] = emission_plot(eax[this_row, this_col], data, title, intensity_cmap)
+                efig.colorbar(im, ax=eax[this_row, this_col], label="total emission")
+
 
         # Save the histograms
         hfig.tight_layout()
@@ -501,3 +537,10 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
         filepath = os.path.join(directory, filename)
         print(f'Creating and saving {filepath}')
         sfig.savefig(filepath)
+
+    # Save the emission plots
+    efig.tight_layout()
+    filename = f'emission.joint.{this_mask}.{base_filename}.png'
+    filepath = os.path.join(directory, filename)
+    print(f'Creating and saving {filepath}')
+    efig.savefig(filepath)
