@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib import rc
-import matplotlib.cm as cm
+from matplotlib import cm
+import sunpy.visualization.colormaps as scm
 import matplotlib.colors as colors
 from astropy.visualization import AsinhStretch, ImageNormalize
 from tools.statistics import SummaryStatistics
@@ -32,12 +33,6 @@ bins = 50
 
 # Colour for excluded fits in the spatial distribution
 excluded_color = 'black'
-
-# Colour maps
-if "verify_fitting" not in study_type:
-    intensity_cmap = plt.get_cmap(f'sdoaia{wave}')
-else:
-    intensity_cmap = plt.get_cmap('gray')
 
 # Helper function
 def mask_plotting_information(m, excluded_color=None):
@@ -132,30 +127,35 @@ def spatial_distribution_plot(ax, data, output_name, title):
     return im, ax
 
 
+# Load in some information about how to treat and plot the outputs, for example
+# output_name,lower_bound,upper_bound,variable_name
+# "amplitude_0",None,None,"A_{0}"
+# "alpha_0",0,4,"n"
+filename = 'models.outputs_information.{:s}.csv'.format(observation_model_name)
+df = pd.read_csv(filename, index_col=0)
+df = df.replace({"None": None})
+
+
 # Load the data
 for wave in waves:
+
+    # Colour maps
+    if "verify_fitting" not in study_type:
+        intensity_cmap = plt.get_cmap(f'sdoaia{wave}')
+    else:
+        intensity_cmap = plt.get_cmap('gray')
+
     # General notification that we have a new data-set
     print('\nLoading New Data')
 
     # branch location
     b = [study_type, ds.original_datatype, wave]
 
-    # Region identifier name
-    region_id = ds.datalocationtools.ident_creator(b)
-
     # Location of the project data
     directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
 
     # Base filename
     base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
-
-    # Load in some information about how to treat and plot the outputs, for example
-    # output_name,lower_bound,upper_bound,variable_name
-    # "amplitude_0",None,None,"A_{0}"
-    # "alpha_0",0,4,"n"
-    filename = 'models.outputs_information.{:s}.csv'.format(observation_model_name)
-    df = pd.read_csv(filename, index_col=0)
-    df = df.replace({"None": None})
 
     # Load in the fit parameters and the output names
     filename = f'{base_filename}.outputs.step3.npz'
@@ -194,7 +194,7 @@ for wave in waves:
             for j in range(0, observed.shape[1]):
                 observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
 
-    # Load in the original time series data to create an intensity mask
+    # Load in the original time series data
     if "verify_fitting" not in study_type:
         filename = f'{study_type}_{wave}.step1.npz'
         filepath = os.path.join(directory, filename)
@@ -324,32 +324,6 @@ for wave in waves:
             fig, ax = plt.subplots()
             ax = histogram_plot(ax, compressed, bins, variable_name, title)
 
-            """
-            # Summary statistics
-            ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
-            # Credible interval strings
-            ci_a = "{:.1f}$\%$".format(100*ss.ci[0])
-            ci_b = "{:.1f}$\%$".format(100*ss.ci[1])
-            ci_c = "{:.1f}$\%$".format(100*ss.ci[2])
-            ci_d = "{:.1f}$\%$".format(100*ss.ci[3])
-            ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b, ss.cred[0], ss.cred[1])
-            ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2], ss.cred[3])
-
-            h = ax.hist(compressed, bins=bins)
-            plt.xlabel(variable_name)
-            plt.ylabel('number')
-            plt.title(title)
-            plt.grid(linestyle=":")
-            ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
-            ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
-            ax.axvline(ss.median, label='median ({:.2f})'.format(ss.median), color='y')
-            ax.axvline(ss.cred[0], color='r', linestyle=':')
-            ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
-            ax.axvline(ss.cred[2], color='k', linestyle=':')
-            ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
-            ax.legend()
-            """
-
             # Create the filepath the plot will be saved to, and save it
             filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
             filepath = os.path.join(directory, filename)
@@ -365,23 +339,6 @@ for wave in waves:
             plt.close('all')
             fig, ax = plt.subplots()
             im, ax = spatial_distribution_plot(ax, data, output_name, title)
-            """
-            if output_name == 'alpha_0':
-                cmap = cm.Dark2_r
-                im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
-                im.cmap.set_over('lemonchiffon')
-            elif "err_" in output_name:
-                cmap = cm.plasma
-                im = ax.imshow(data, origin='lower', cmap=cmap, norm=colors.LogNorm(vmin=compressed.min(), vmax=compressed.max()))
-            else:
-                cmap = cm.plasma
-                im = ax.imshow(data, origin='lower', cmap=cmap)
-            im.cmap.set_bad(excluded_color)
-            ax.set_xlabel('solar X')
-            ax.set_ylabel('solar Y')
-            ax.set_title(title)
-            ax.grid(linestyle=":")
-            """
             fig.colorbar(im, ax=ax, label=variable_name, extend='max')
 
             # Create the filepath the plot will be saved to, and save it
@@ -416,12 +373,119 @@ for wave in waves:
 
 
 # Gang six plots on one page
-hfig, hax = plt.subplots(3, 2)  # Histogram figures
-sfig, sax = plt.subplots(3, 2)  # Spatial distribution figures
-
-
+nrows = 2
+ncols = 3
+sim = list()
 for this_mask in ('none', 'combined'):  # Go through the masks we are interested in
     print(f'mask={this_mask}')
     for i, output_name in enumerate(output_names):  # Go through the variables
         print(f'Plotting {output_name}')
-        for wave in waves:  # Load in each wave
+
+        # The variable name is used in the plot instead of the output_name
+        # because we use LaTeX in the plots to match with the variables
+        # used in the paper.
+        variable_name = df['variable_name'][output_name]
+
+        plt.close('all')
+        hfig, hax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5), sharex=True)  # Histogram figures
+        sfig, sax = plt.subplots(nrows, ncols)  # Spatial distribution figures
+        for iwave, wave in enumerate(waves):  # Load in each wave
+            this_row = iwave // ncols
+            this_col = iwave - this_row * ncols
+            print(iwave, this_row, this_col)
+            # Colour maps for spatial distributions
+            if "verify_fitting" not in study_type:
+                intensity_cmap = plt.get_cmap(f'sdoaia{wave}')
+            else:
+                intensity_cmap = plt.get_cmap('gray')
+
+            # The super title describes the study type and the wavelength
+            super_title = "{:s}, {:s}\n".format(study_type.replace("_", " "), wave)
+
+            # General notification that we have a new data-set
+            print('\nLoading New Data')
+
+            # branch location
+            b = [study_type, ds.original_datatype, wave]
+
+            # Location of the project data
+            directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+
+            # Base filename
+            base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
+
+            # Load in some information about how to treat and plot the outputs, for example
+            # output_name,lower_bound,upper_bound,variable_name
+            # "amplitude_0",None,None,"A_{0}"
+            # "alpha_0",0,4,"n"
+            filename = 'models.outputs_information.{:s}.csv'.format(observation_model_name)
+            df = pd.read_csv(filename, index_col=0)
+            df = df.replace({"None": None})
+
+            # Load in the fit parameters and the output names
+            filename = f'{base_filename}.outputs.step3.npz'
+            filepath = os.path.join(directory, filename)
+            print(f'Loading {filepath}')
+            outputs = np.load(filepath)['arr_0']
+
+            filename = f'{base_filename}.names.step3.txt'
+            filepath = os.path.join(directory, filename)
+            print(f'Loading {filepath}')
+            with open(filepath) as f:
+                output_names = [line.rstrip() for line in f]
+
+            # Load in the analysis details
+            filename = f'{base_filename}.analysis.step3.npz'
+            filepath = os.path.join(directory, filename)
+            print(f'Loading {filepath}')
+            subsection = np.load(filepath)['arr_0']
+            normalize_frequencies = np.all(np.load(filepath)['arr_1'])
+            divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
+
+            # Load in the mask data
+            mask_list = ("finiteness", "bounds", "fitness", "intensity", "combined")
+            masks = dict()
+            for tm in mask_list:
+                filename = f'{base_filename}.{tm}.step4.npz'
+                filepath = os.path.join(directory, filename)
+                print(f'Loading {filepath}')
+                masks[tm] = (np.load(filepath))['arr_0']
+            masks['none'] = np.zeros_like(masks['combined'])
+
+            # Mask the data
+            data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
+            compressed = data.flatten().compressed()
+            compressed = compressed[np.isfinite(compressed)]
+
+            # Create the title of the plot
+            description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
+            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+            title = f"{super_title}{description}{mask_info}"
+
+            # Create the histogram plot
+            hax[this_row, this_col] = histogram_plot(hax[this_row, this_col], compressed, bins, variable_name, title)
+
+            # Spatial distribution
+            # Create the title of the plot
+            description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
+            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+            title = f"{super_title}{description}{mask_info}"
+
+            # Create the spatial distribution plot
+            im, sax[this_row, this_col] = spatial_distribution_plot(sax[this_row, this_col], data, output_name, title)
+            sim.append(im)
+            sfig.colorbar(sim[iwave], ax=sax[this_row, this_col], label=variable_name, extend='max')
+
+        # Save the histograms
+        hfig.tight_layout()
+        filename = f'histogram.joint.{output_name}.{this_mask}.{base_filename}.png'
+        filepath = os.path.join(directory, filename)
+        print(f'Creating and saving {filepath}')
+        hfig.savefig(filepath)
+
+        # Save the spatial distributions
+        sfig.tight_layout()
+        filename = f'spatial.joint.{output_name}.{this_mask}.{base_filename}.png'
+        filepath = os.path.join(directory, filename)
+        print(f'Creating and saving {filepath}')
+        sfig.savefig(filepath)
