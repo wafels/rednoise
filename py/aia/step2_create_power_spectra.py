@@ -30,13 +30,15 @@ def apply_window(d, win):
 
 
 # Apodization windowing function
-def DefineWindow(window, nt):
-    if window == 'no window':
-        win = np.ones(nt)
-    if window == 'hanning':
-        win = np.hanning(nt)
-    if window == 'hamming':
-        win = np.hamming(nt)
+def define_window(w, n):
+    if w == 'no window':
+        win = np.ones(n)
+    elif w == 'hanning':
+        win = np.hanning(n)
+    elif window == 'hamming':
+        win = np.hamming(n)
+    else:
+        raise ValueError('Window not defined.')
     return win
 
 
@@ -94,7 +96,7 @@ for study_type in study_types:
                 print('Evenly sampled to within tolerance.')
 
             # calculate a window function
-            win = DefineWindow(window, nt)
+            win = define_window(window, nt)
 
             # Create a dummy time series object to get some frequency
             # information
