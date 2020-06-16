@@ -141,6 +141,35 @@ def emission_plot(ax, data, title, intensity_cmap):
     return im, ax
 
 
+def load_masks(directory, base_filename):
+    """
+    Loads in all the masks in a given directory and base filename
+    :param directory:
+    :param base_filename:
+    :return:
+    """
+    mask_list = ("finiteness", "bounds", "fitness", "intensity", "combined")
+    masks = dict()
+    for tm in mask_list:
+        filename = f'{base_filename}.{tm}.step4.npz'
+        filepath = os.path.join(directory, filename)
+        print(f'Loading {filepath}')
+        masks[tm] = (np.load(filepath))['arr_0']
+    masks['none'] = np.zeros_like(masks['combined'])
+    return masks
+
+
+# Hack to get the output file names - all wavelengths are the same anyway.
+def get_output_names_hack(study_type, ds, observation_model_name, window, power_type, wave='335'):
+    b = [study_type, ds.original_datatype, wave]
+    directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+    base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
+    filename = f'{base_filename}.names.step3.txt'
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    with open(filepath) as f:
+        output_names = [line.rstrip() for line in f]
+    return output_names
 
 # Load in some information about how to treat and plot the outputs, for example
 # output_name,lower_bound,upper_bound,variable_name
@@ -387,16 +416,26 @@ for wave in waves:
     plt.savefig(filepath)
 """
 
-
-# Gang six plots on one page
+# Gang six plots on one page - ganging by channel
 nrows = 2
+row_size = 5
 ncols = 3
+col_size = 7
+figsize = (ncols*col_size, nrows*row_size)
+
+# The save directory and base filenames for plots that are not specific to a particular
+# wave (i.e., AIA channel)
+b = [study_type, ds.original_datatype]
+across_waves_directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+across_waves_base_filename = f"{observation_model_name}_{study_type}_{window}.{power_type}"
+
+# Create the figures and save them
 for this_mask in ('none', 'combined'):  # Go through the masks we are interested in
     print(f'mask={this_mask}')
 
     # Spatial emission figures
     plt.close('all')
-    efig, eax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5))  # Spatial emission figures
+    efig, eax = plt.subplots(nrows, ncols, figsize=figsize)  # Spatial emission figures
 
     # Hack to get the output file names - all wavelengths are the same anyway.
     b = [study_type, ds.original_datatype, '335']
@@ -416,9 +455,10 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
         # used in the paper.
         variable_name = df['variable_name'][output_name]
 
-        hfig, hax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5), sharex=True)  # Histogram figures
-        sfig, sax = plt.subplots(nrows, ncols, figsize=(ncols*7, nrows*5))  # Spatial distribution figures
+        hfig, hax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Histogram figures
+        sfig, sax = plt.subplots(nrows, ncols, figsize=figsize)  # Spatial distribution figures
         for iwave, wave in enumerate(waves):  # Load in each wave
+            # Position of the plot in the figure
             this_row = iwave // ncols
             this_col = iwave - this_row * ncols
 
@@ -523,24 +563,123 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
                 im, eax[this_row, this_col] = emission_plot(eax[this_row, this_col], data, title, intensity_cmap)
                 efig.colorbar(im, ax=eax[this_row, this_col], label="total emission")
 
-
         # Save the histograms
         hfig.tight_layout()
-        filename = f'histogram.joint.{output_name}.{this_mask}.{base_filename}.png'
-        filepath = os.path.join(directory, filename)
+        filename = f'histogram.joint.{output_name}.{this_mask}.{across_waves_base_filename}.png'
+        filepath = os.path.join(across_waves_directory, filename)
         print(f'Creating and saving {filepath}')
         hfig.savefig(filepath)
 
         # Save the spatial distributions
         sfig.tight_layout()
-        filename = f'spatial.joint.{output_name}.{this_mask}.{base_filename}.png'
-        filepath = os.path.join(directory, filename)
+        filename = f'spatial.joint.{output_name}.{this_mask}.{across_waves_base_filename}.png'
+        filepath = os.path.join(across_waves_directory, filename)
         print(f'Creating and saving {filepath}')
         sfig.savefig(filepath)
 
     # Save the emission plots
     efig.tight_layout()
-    filename = f'emission.joint.{this_mask}.{base_filename}.png'
-    filepath = os.path.join(directory, filename)
+    filename = f'emission.joint.{this_mask}.{across_waves_base_filename}.png'
+    filepath = os.path.join(across_waves_directory, filename)
     print(f'Creating and saving {filepath}')
     efig.savefig(filepath)
+
+"""
+# More complicated plots....
+# Gang plots by AIA channel and overplot results from different simulations
+
+# The save directory and base filenames for plots that are not specific to a particular
+# wave or study type (i.e., AIA channel)
+b = [study_type, ds.original_datatype]
+across_waves_study_directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+across_waves_study_base_filename = f"{observation_model_name}_{window}.{power_type}"
+
+
+hfig, hax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Histogram figures
+pfig, pax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Probability distribution figures
+
+kfig, kax = plt.subplots(nrows, ncols, figsize=figsize)  # Joint mask images
+vfig, vax = plt.subplots(nrows, ncols, figsize=figsize)  # Scaled value images
+
+
+
+# Output names
+output_names = get_output_names_hack(study_type, ds, observation_model_name, window, power_type, wave='335')
+
+for ion, output_name in enumerate(output_names):  # Go through the variables
+    print(f'Generating plots for {output_name}.')
+
+    for wave in waves:
+        print(f'Loading wave {wave}.')
+        this_row = iwave // ncols
+        this_col = iwave - this_row * ncols
+
+        results = dict()
+        for ist, study_type in enumerate(study_types):
+            print(f'Loading study type f{study_type}.')
+
+            # branch location
+            b = [study_type, ds.original_datatype, wave]
+
+            # Location of the project data
+            directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+
+            # Base filename
+            base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
+
+            # Load in the mask data
+            masks = load_masks(directory, base_filename)
+
+            # Create an RGB image of the masks
+            if ist == 0:
+                image_mask = np.zeros((ny, nx, 3))
+                image_scaled = np.zeros_like(image_mask)
+            image_mask[:, :, ist] = np.asrray(masks['combined'], dtype=int)
+
+            # Scale the input data to a range 0-1 so we can make a RGB blended image
+            image_scaled[:, :, ist] =
+
+            # Create a
+            results[study_type] =
+
+        # Create the plot of the overlaid masks as a single RGB image
+        kax[this_row, this_col] = overlay_image_plot(kax[this_row, this_col], image_mask)
+
+        # Create the plot of the scaled output values as a single RGB image
+        vax[this_row, this_col] = overlay_image_plot(vax[this_row, this_col], image_scaled)
+
+        # Create the plot of the overlaid histograms
+        hax[this_row, this_col] = overlay_histograms(hax[this_row, this_col], results)
+
+        # Create the plot of the overlaid probability distributions
+        pax[this_row, this_col] = overlay_probability(pax[this_row, this_col], results)
+
+
+    # Save the histograms
+    hfig.tight_layout()
+    filename = f'histogram.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+    filepath = os.path.join(across_waves_study_directory, filename)
+    print(f'Creating and saving {filepath}')
+    hfig.savefig(filepath)
+
+    # Save the probability distributions
+    pfig.tight_layout()
+    filename = f'probability.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+    filepath = os.path.join(across_waves_study_directory, filename)
+    print(f'Creating and saving {filepath}')
+    pfig.savefig(filepath)
+
+    # Save the mask RGB
+    kfig.tight_layout()
+    filename = f'mask_rgb.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+    filepath = os.path.join(across_waves_study_directory, filename)
+    print(f'Creating and saving {filepath}')
+    kfig.savefig(filepath)
+
+    # Save the scaled value RGB
+    vfig.tight_layout()
+    filename = f'scaled_value.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+    filepath = os.path.join(across_waves_study_directory, filename)
+    print(f'Creating and saving {filepath}')
+    vfig.savefig(filepath)
+"""
