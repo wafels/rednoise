@@ -34,20 +34,8 @@ bins = 50
 # Colour for excluded fits in the spatial distribution
 excluded_color = 'black'
 
-# Helper function
-def mask_plotting_information(m, excluded_color=None):
-    n_samples = m.size
-    n_excluded = np.sum(m)
-    n_good = n_samples - n_excluded
-    percent_excluded_string = "{:.1f}$\%$".format(100 * n_excluded / n_samples)
-    if excluded_color is None:
-        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded, {n_good} included"
-    else:
-        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded (in {excluded_color}), {n_good} included"
-    return mask_info
 
-
-def histogram_plot(ax, compressed, bins, variable_name, title):
+def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=True):
     """
     Creates a histogram plot.
 
@@ -63,36 +51,39 @@ def histogram_plot(ax, compressed, bins, variable_name, title):
     -------
     """
 
-    # Get the summary statistics
-    ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
-    # Credible interval strings for the plot
-    ci_a = "{:.1f}$\%$".format(100 * ss.ci[0])
-    ci_b = "{:.1f}$\%$".format(100 * ss.ci[1])
-    ci_c = "{:.1f}$\%$".format(100 * ss.ci[2])
-    ci_d = "{:.1f}$\%$".format(100 * ss.ci[3])
-    ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b, ss.cred[0],
-                                                                             ss.cred[1])
-    ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d, ss.cred[2],
-                                                                             ss.cred[3])
-
     # Create and return the plot
     h = ax.hist(compressed, bins=bins)
     ax.set_xlabel(variable_name)
     ax.set_ylabel('number')
     ax.set_title(title)
     ax.grid(linestyle=":")
-    ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
-    ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
-    ax.axvline(ss.median, label='median ({:.2f})'.format(ss.median), color='y')
-    ax.axvline(ss.cred[0], color='r', linestyle=':')
-    ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
-    ax.axvline(ss.cred[2], color='k', linestyle=':')
-    ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
     ax.legend()
+
+    if show_statistics:
+        # Get the summary statistics
+        ss = SummaryStatistics(compressed, ci=(0.16, 0.84, 0.025, 0.975), bins=bins)
+        # Credible interval strings for the plot
+        ci_a = "{:.1f}$\%$".format(100 * ss.ci[0])
+        ci_b = "{:.1f}$\%$".format(100 * ss.ci[1])
+        ci_c = "{:.1f}$\%$".format(100 * ss.ci[2])
+        ci_d = "{:.1f}$\%$".format(100 * ss.ci[3])
+        ci_1 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_a, ci_b,
+                                                                                 ss.cred[0],
+                                                                                 ss.cred[1])
+        ci_2 = 'C.I. {:s}$\\rightarrow${:s} ({:.2f}$\\rightarrow${:.2f})'.format(ci_c, ci_d,
+                                                                                 ss.cred[2],
+                                                                                 ss.cred[3])
+        ax.axvline(ss.mean, label='mean ({:.2f})'.format(ss.mean), color='r')
+        ax.axvline(ss.mode, label='mode ({:.2f})'.format(ss.mode), color='k')
+        ax.axvline(ss.median, label='median ({:.2f})'.format(ss.median), color='y')
+        ax.axvline(ss.cred[0], color='r', linestyle=':')
+        ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
+        ax.axvline(ss.cred[2], color='k', linestyle=':')
+        ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
     return ax
 
 
-def spatial_distribution_plot(ax, data, output_name, title):
+def plot_spatial_distribution(ax, data, output_name, title):
     """
     Creates a spatial distribution plot.
 
@@ -127,7 +118,7 @@ def spatial_distribution_plot(ax, data, output_name, title):
     return im, ax
 
 
-def emission_plot(ax, data, title, intensity_cmap):
+def plot_emission(ax, data, title, intensity_cmap):
     """
     Creates an emission plot
     """
@@ -139,6 +130,50 @@ def emission_plot(ax, data, title, intensity_cmap):
     ax.set_title(title)
     ax.grid(linestyle=":")
     return im, ax
+
+
+# overlay_image_plot
+def plot_overlay_image(ax, image, colors, labels):
+    ax.imshow(image, origin='lower')
+    return ax
+
+
+# Overlay histograms
+def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, variable_name, title):
+    """
+
+    ax:
+    results:
+    bins:
+    colors:
+    keys:
+    :return:
+    """
+
+    # For each study
+    for study_type in study_types:
+        data = results[study_type]
+        ax.hist(data, bins=bins, alpha=0.5, color=colors[study_type], label=labels[study_type])
+
+    ax.set_xlabel(variable_name)
+    ax.set_ylabel('number')
+    ax.set_title(title)
+    ax.grid(linestyle=":")
+    ax.legend()
+    return ax
+
+
+# Helper function
+def mask_plotting_information(m, excluded_color=None):
+    n_samples = m.size
+    n_excluded = np.sum(m)
+    n_good = n_samples - n_excluded
+    percent_excluded_string = "{:.1f}$\%$".format(100 * n_excluded / n_samples)
+    if excluded_color is None:
+        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded, {n_good} included"
+    else:
+        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded (in {excluded_color}), {n_good} included"
+    return mask_info
 
 
 def load_masks(directory, base_filename):
@@ -170,6 +205,29 @@ def get_output_names_hack(study_type, ds, observation_model_name, window, power_
     with open(filepath) as f:
         output_names = [line.rstrip() for line in f]
     return output_names
+
+
+def load_fit_parameters(directory, base_filename):
+    """
+    Load in the fit data
+    """
+    filename = f'{base_filename}.outputs.step3.npz'
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    return np.load(filepath)['arr_0']
+
+
+def load_fit_parameter_output_names(directory, base_filename):
+    """
+    Load in the fit parameter output names
+    """
+    filename = f'{base_filename}.names.step3.txt'
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    with open(filepath) as f:
+        output_names = [line.rstrip() for line in f]
+    return output_names
+
 
 # Load in some information about how to treat and plot the outputs, for example
 # output_name,lower_bound,upper_bound,variable_name
@@ -491,17 +549,11 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
             df = pd.read_csv(filename, index_col=0)
             df = df.replace({"None": None})
 
-            # Load in the fit parameters and the output names
-            filename = f'{base_filename}.outputs.step3.npz'
-            filepath = os.path.join(directory, filename)
-            print(f'Loading {filepath}')
-            outputs = np.load(filepath)['arr_0']
+            # Load in the fit parameters
+            outputs = load_fit_parameters(directory, base_filename)
 
-            filename = f'{base_filename}.names.step3.txt'
-            filepath = os.path.join(directory, filename)
-            print(f'Loading {filepath}')
-            with open(filepath) as f:
-                output_names = [line.rstrip() for line in f]
+            # Load in the fit parameter output names
+            output_names = load_fit_parameter_output_names(directory, base_filename)
 
             # Load in the analysis details
             filename = f'{base_filename}.analysis.step3.npz'
@@ -512,13 +564,7 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
             divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
 
             # Load in the mask data
-            mask_list = ("finiteness", "bounds", "fitness", "intensity", "combined")
-            masks = dict()
-            for tm in mask_list:
-                filename = f'{base_filename}.{tm}.step4.npz'
-                filepath = os.path.join(directory, filename)
-                print(f'Loading {filepath}')
-                masks[tm] = (np.load(filepath))['arr_0']
+            masks = load_masks(directory, base_filename)
             masks['none'] = np.zeros_like(masks['combined'])
 
             # Mask the data
@@ -532,7 +578,7 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
             title = f"{super_title}{description}{mask_info}"
 
             # Create the histogram plot
-            hax[this_row, this_col] = histogram_plot(hax[this_row, this_col], compressed, bins, variable_name, title)
+            hax[this_row, this_col] = plot_histogram(hax[this_row, this_col], compressed, bins, variable_name, title)
 
             # Spatial distribution
             # Create the title of the plot
@@ -541,7 +587,7 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
             title = f"{super_title}{description}{mask_info}"
 
             # Create the spatial distribution plot
-            im, sax[this_row, this_col] = spatial_distribution_plot(sax[this_row, this_col], data, output_name, title)
+            im, sax[this_row, this_col] = plot_spatial_distribution(sax[this_row, this_col], data, output_name, title)
             sfig.colorbar(im, ax=sax[this_row, this_col], label=variable_name, extend='max')
 
             # Load in the original time series data
@@ -560,7 +606,7 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
                 description = f'total emission (mask={this_mask})' + "\n"
                 mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
                 title = f"{super_title}{description}{mask_info}"
-                im, eax[this_row, this_col] = emission_plot(eax[this_row, this_col], data, title, intensity_cmap)
+                im, eax[this_row, this_col] = plot_emission(eax[this_row, this_col], data, title, intensity_cmap)
                 efig.colorbar(im, ax=eax[this_row, this_col], label="total emission")
 
         # Save the histograms
@@ -584,9 +630,20 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
     print(f'Creating and saving {filepath}')
     efig.savefig(filepath)
 
-"""
+
 # More complicated plots....
 # Gang plots by AIA channel and overplot results from different simulations
+
+study_type_colors = dict()
+study_type_colors['bv_simulation_low_fn'] = 'red'
+study_type_colors['bv_simulation_intermediate_fn'] = 'green'
+study_type_colors['bv_simulation_high_fn'] = 'blue'
+
+# Labels that will appear in the legend in the plot
+study_type_labels = dict()
+study_type_labels['bv_simulation_low_fn'] = 'low frequency'
+study_type_labels['bv_simulation_intermediate_fn'] = 'intermediate frequency'
+study_type_labels['bv_simulation_high_fn'] = 'high frequency'
 
 # The save directory and base filenames for plots that are not specific to a particular
 # wave or study type (i.e., AIA channel)
@@ -601,8 +658,6 @@ pfig, pax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Probabil
 kfig, kax = plt.subplots(nrows, ncols, figsize=figsize)  # Joint mask images
 vfig, vax = plt.subplots(nrows, ncols, figsize=figsize)  # Scaled value images
 
-
-
 # Output names
 output_names = get_output_names_hack(study_type, ds, observation_model_name, window, power_type, wave='335')
 
@@ -614,7 +669,9 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
         this_row = iwave // ncols
         this_col = iwave - this_row * ncols
 
-        results = dict()
+        super_title = f"{wave} simulations"
+
+        for_histograms = dict()
         for ist, study_type in enumerate(study_types):
             print(f'Loading study type f{study_type}.')
 
@@ -631,28 +688,40 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
             masks = load_masks(directory, base_filename)
 
             # Create an RGB image of the masks
+            combined_mask = masks['combined']
             if ist == 0:
+                ny = combined_mask.shape[0]
+                nx = combined_mask.shape[1]
                 image_mask = np.zeros((ny, nx, 3))
                 image_scaled = np.zeros_like(image_mask)
-            image_mask[:, :, ist] = np.asrray(masks['combined'], dtype=int)
+            image_mask[:, :, ist] = np.asrray(combined_mask, dtype=int)
 
             # Scale the input data to a range 0-1 so we can make a RGB blended image
-            image_scaled[:, :, ist] =
+            # image_scaled[:, :, ist] =
 
-            # Create a
-            results[study_type] =
+            # Mask the data
+            data = np.transpose(np.ma.array(outputs[:, :, i], mask=combined_mask))
+
+            # Create the data used for the histograms
+            compressed = data.flatten().compressed()
+            compressed = compressed[np.isfinite(compressed)]
+            for_histograms[study_type] = compressed
 
         # Create the plot of the overlaid masks as a single RGB image
-        kax[this_row, this_col] = overlay_image_plot(kax[this_row, this_col], image_mask)
+        description = f"overlaid location of results from simulations"
+        title = f"{super_title}{description}"
+        kax[this_row, this_col] = plot_overlay_image(kax[this_row, this_col], image_mask, title)
 
         # Create the plot of the scaled output values as a single RGB image
-        vax[this_row, this_col] = overlay_image_plot(vax[this_row, this_col], image_scaled)
+        #vax[this_row, this_col] = overlay_image_plot(vax[this_row, this_col], image_scaled)
 
         # Create the plot of the overlaid histograms
-        hax[this_row, this_col] = overlay_histograms(hax[this_row, this_col], results)
+        description = f"histograms of {variable_name} for each simulation"
+        title = f"{super_title}{description}"
+        hax[this_row, this_col] = plot_overlay_histograms(hax[this_row, this_col], for_histograms, bins, colors, study_types, variable_name, title)
 
         # Create the plot of the overlaid probability distributions
-        pax[this_row, this_col] = overlay_probability(pax[this_row, this_col], results)
+        #pax[this_row, this_col] = overlay_probability(pax[this_row, this_col], results)
 
 
     # Save the histograms
@@ -662,6 +731,14 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
     print(f'Creating and saving {filepath}')
     hfig.savefig(filepath)
 
+    # Save the mask RGB
+    kfig.tight_layout()
+    filename = f'mask_rgb.joint.{this_mask}.{across_waves_study_base_filename}.png'
+    filepath = os.path.join(across_waves_study_directory, filename)
+    print(f'Creating and saving {filepath}')
+    kfig.savefig(filepath)
+
+    """
     # Save the probability distributions
     pfig.tight_layout()
     filename = f'probability.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
@@ -669,17 +746,10 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
     print(f'Creating and saving {filepath}')
     pfig.savefig(filepath)
 
-    # Save the mask RGB
-    kfig.tight_layout()
-    filename = f'mask_rgb.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
-    filepath = os.path.join(across_waves_study_directory, filename)
-    print(f'Creating and saving {filepath}')
-    kfig.savefig(filepath)
-
     # Save the scaled value RGB
     vfig.tight_layout()
     filename = f'scaled_value.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
     filepath = os.path.join(across_waves_study_directory, filename)
     print(f'Creating and saving {filepath}')
     vfig.savefig(filepath)
-"""
+    """
