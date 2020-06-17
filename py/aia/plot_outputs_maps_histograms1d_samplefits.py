@@ -57,7 +57,6 @@ def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=T
     ax.set_ylabel('number')
     ax.set_title(title)
     ax.grid(linestyle=":")
-    ax.legend()
 
     if show_statistics:
         # Get the summary statistics
@@ -80,6 +79,7 @@ def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=T
         ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
         ax.axvline(ss.cred[2], color='k', linestyle=':')
         ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
+    ax.legend()
     return ax
 
 
@@ -133,13 +133,17 @@ def plot_emission(ax, data, title, intensity_cmap):
 
 
 # overlay_image_plot
-def plot_overlay_image(ax, image, colors, labels):
-    ax.imshow(image, origin='lower')
+def plot_overlay_image(ax, image, title):
+    ax.imshow(image, origin='lower')    
+    ax.set_xlabel('solar X')
+    ax.set_ylabel('solar Y')
+    ax.set_title(title)
+    ax.grid(linestyle=":")
     return ax
 
 
 # Overlay histograms
-def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, variable_name, title):
+def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, variable_name, title, density=False):
     """
 
     ax:
@@ -153,10 +157,13 @@ def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, vari
     # For each study
     for study_type in study_types:
         data = results[study_type]
-        ax.hist(data, bins=bins, alpha=0.5, color=colors[study_type], label=labels[study_type])
+        h = ax.hist(data, bins=bins, alpha=0.5, color=colors[study_type], label=labels[study_type], density=density)
 
     ax.set_xlabel(variable_name)
-    ax.set_ylabel('number')
+    if not density:
+        ax.set_ylabel('number')
+    else:
+        ax.set_ylabel('probability density')
     ax.set_title(title)
     ax.grid(linestyle=":")
     ax.legend()
@@ -480,6 +487,7 @@ row_size = 5
 ncols = 3
 col_size = 7
 figsize = (ncols*col_size, nrows*row_size)
+"""
 
 # The save directory and base filenames for plots that are not specific to a particular
 # wave (i.e., AIA channel)
@@ -629,7 +637,7 @@ for this_mask in ('none', 'combined'):  # Go through the masks we are interested
     filepath = os.path.join(across_waves_directory, filename)
     print(f'Creating and saving {filepath}')
     efig.savefig(filepath)
-
+"""
 
 # More complicated plots....
 # Gang plots by AIA channel and overplot results from different simulations
@@ -647,33 +655,31 @@ study_type_labels['bv_simulation_high_fn'] = 'high frequency'
 
 # The save directory and base filenames for plots that are not specific to a particular
 # wave or study type (i.e., AIA channel)
-b = [study_type, ds.original_datatype]
-across_waves_study_directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+across_waves_study_directory = (ds.roots)["project_data"]
 across_waves_study_base_filename = f"{observation_model_name}_{window}.{power_type}"
-
-
-hfig, hax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Histogram figures
-pfig, pax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Probability distribution figures
-
-kfig, kax = plt.subplots(nrows, ncols, figsize=figsize)  # Joint mask images
-vfig, vax = plt.subplots(nrows, ncols, figsize=figsize)  # Scaled value images
 
 # Output names
 output_names = get_output_names_hack(study_type, ds, observation_model_name, window, power_type, wave='335')
 
 for ion, output_name in enumerate(output_names):  # Go through the variables
     print(f'Generating plots for {output_name}.')
+    variable_name = df['variable_name'][output_name]                                                                     
 
-    for wave in waves:
+    plt.close('all')
+    hfig, hax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Histogram figures
+    pfig, pax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Probability distribution figures
+    kfig, kax = plt.subplots(nrows, ncols, figsize=figsize)  # Joint mask images
+    vfig, vax = plt.subplots(nrows, ncols, figsize=figsize)  # Scaled value images
+    for iwave, wave in enumerate(waves):
         print(f'Loading wave {wave}.')
         this_row = iwave // ncols
         this_col = iwave - this_row * ncols
 
-        super_title = f"{wave} simulations"
+        super_title = f"{wave} simulations\n"
 
         for_histograms = dict()
         for ist, study_type in enumerate(study_types):
-            print(f'Loading study type f{study_type}.')
+            print(f'Loading study type {study_type}.')
 
             # branch location
             b = [study_type, ds.original_datatype, wave]
@@ -687,20 +693,26 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
             # Load in the mask data
             masks = load_masks(directory, base_filename)
 
+            # Load in the fit parameters
+            outputs = load_fit_parameters(directory, base_filename)
+
+            # Load in the fit parameter output names
+            output_names = load_fit_parameter_output_names(directory, base_filename)
+
             # Create an RGB image of the masks
-            combined_mask = masks['combined']
+            combined_mask = np.transpose(masks['combined'])
             if ist == 0:
                 ny = combined_mask.shape[0]
                 nx = combined_mask.shape[1]
                 image_mask = np.zeros((ny, nx, 3))
                 image_scaled = np.zeros_like(image_mask)
-            image_mask[:, :, ist] = np.asrray(combined_mask, dtype=int)
+            image_mask[:, :, ist] = 1-np.asarray(combined_mask, dtype=int)
 
             # Scale the input data to a range 0-1 so we can make a RGB blended image
             # image_scaled[:, :, ist] =
 
             # Mask the data
-            data = np.transpose(np.ma.array(outputs[:, :, i], mask=combined_mask))
+            data = np.transpose(np.ma.array(outputs[:, :, ion], mask=combined_mask))
 
             # Create the data used for the histograms
             compressed = data.flatten().compressed()
@@ -708,7 +720,7 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
             for_histograms[study_type] = compressed
 
         # Create the plot of the overlaid masks as a single RGB image
-        description = f"overlaid location of results from simulations"
+        description = f"locations of included fits from each simulation overlaid as RGB triple"
         title = f"{super_title}{description}"
         kax[this_row, this_col] = plot_overlay_image(kax[this_row, this_col], image_mask, title)
 
@@ -718,13 +730,16 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
         # Create the plot of the overlaid histograms
         description = f"histograms of {variable_name} for each simulation"
         title = f"{super_title}{description}"
-        hax[this_row, this_col] = plot_overlay_histograms(hax[this_row, this_col], for_histograms, bins, colors, study_types, variable_name, title)
+        hax[this_row, this_col] = plot_overlay_histograms(hax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title)
 
         # Create the plot of the overlaid probability distributions
-        #pax[this_row, this_col] = overlay_probability(pax[this_row, this_col], results)
+        description = f"probability densities for {variable_name} for each simulation"
+        title = f"{super_title}{description}"
+        pax[this_row, this_col] = plot_overlay_histograms(pax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title, density=True)
 
 
     # Save the histograms
+    this_mask = 'combined'
     hfig.tight_layout()
     filename = f'histogram.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
     filepath = os.path.join(across_waves_study_directory, filename)
@@ -738,7 +753,7 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
     print(f'Creating and saving {filepath}')
     kfig.savefig(filepath)
 
-    """
+
     # Save the probability distributions
     pfig.tight_layout()
     filename = f'probability.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
@@ -747,9 +762,8 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
     pfig.savefig(filepath)
 
     # Save the scaled value RGB
-    vfig.tight_layout()
-    filename = f'scaled_value.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
-    filepath = os.path.join(across_waves_study_directory, filename)
-    print(f'Creating and saving {filepath}')
-    vfig.savefig(filepath)
-    """
+    #vfig.tight_layout()
+    #filename = f'scaled_value.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+    #filepath = os.path.join(across_waves_study_directory, filename)
+    #print(f'Creating and saving {filepath}')
+    #vfig.savefig(filepath)
