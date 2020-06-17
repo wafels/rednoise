@@ -700,13 +700,13 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
             output_names = load_fit_parameter_output_names(directory, base_filename)
 
             # Create an RGB image of the masks
-            combined_mask = np.transpose(masks['combined'])
+            combined_mask = masks['combined']
             if ist == 0:
                 ny = combined_mask.shape[0]
                 nx = combined_mask.shape[1]
                 image_mask = np.zeros((ny, nx, 3))
                 image_scaled = np.zeros_like(image_mask)
-            image_mask[:, :, ist] = 1-np.asarray(combined_mask, dtype=int)
+            image_mask[:, :, ist] = 1-np.asarray(np.transpose(combined_mask), dtype=int)
 
             # Scale the input data to a range 0-1 so we can make a RGB blended image
             # image_scaled[:, :, ist] =
