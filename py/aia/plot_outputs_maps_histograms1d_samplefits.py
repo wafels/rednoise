@@ -143,7 +143,7 @@ def plot_overlay_image(ax, image, title):
 
 
 # Overlay histograms
-def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, variable_name, title, density=False):
+def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, variable_name, title, probability=False):
     """
 
     ax:
@@ -157,16 +157,22 @@ def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, vari
     # For each study
     for study_type in study_types:
         data = results[study_type]
-        h = ax.hist(data, bins=bins, alpha=0.5, color=colors[study_type], label=labels[study_type], density=density)
+        if probability:
+            nd = len(data)
+            weights = np.ones(nd)/nd
+        else:
+            weights = None
+        h = ax.hist(data, bins=bins, alpha=0.5, color=colors[study_type], label=labels[study_type], density=False, weights=weights)
 
     ax.set_xlabel(variable_name)
-    if not density:
+    if not probability:
         ax.set_ylabel('number')
     else:
-        ax.set_ylabel('probability density')
+        ax.set_ylabel('probability')
     ax.set_title(title)
     ax.grid(linestyle=":")
     ax.legend()
+
     return ax
 
 
@@ -733,9 +739,9 @@ for ion, output_name in enumerate(output_names):  # Go through the variables
         hax[this_row, this_col] = plot_overlay_histograms(hax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title)
 
         # Create the plot of the overlaid probability distributions
-        description = f"probability densities for {variable_name} for each simulation"
+        description = f"probabilities for {variable_name} for each simulation"
         title = f"{super_title}{description}"
-        pax[this_row, this_col] = plot_overlay_histograms(pax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title, density=True)
+        pax[this_row, this_col] = plot_overlay_histograms(pax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title, probability=True)
 
 
     # Save the histograms
