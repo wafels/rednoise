@@ -57,7 +57,6 @@ def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=T
     ax.set_ylabel('number')
     ax.set_title(title)
     ax.grid(linestyle=":")
-    ax.legend()
 
     if show_statistics:
         # Get the summary statistics
@@ -80,6 +79,7 @@ def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=T
         ax.axvline(ss.cred[1], label=ci_1, color='r', linestyle=':')
         ax.axvline(ss.cred[2], color='k', linestyle=':')
         ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
+    ax.legend()
     return ax
 
 
