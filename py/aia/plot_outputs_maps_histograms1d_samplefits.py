@@ -338,7 +338,12 @@ if 'individual' in plots:
         ###########################
         # Make the plots
         # The super title describes the study type and the wavelength
-        super_title = "{:s}, {:s}\n".format(study_type.replace("_", " "), wave)
+        if "verify_fitting" not in study_type:
+            super_title = "{:s}, {:s}\n".format(study_type.replace("_", " "), wave)
+        else:
+            wave_as_number = int(wave)/100
+            ntrue = "$n_{true}=$"
+            super_title = "{:s}, {:s}{:.1f}\n".format(study_type.replace("_", " "), ntrue, wave_as_number)
 
         ###########################
         # Plot the masks
