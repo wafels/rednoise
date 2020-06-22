@@ -9,11 +9,11 @@ class SelectModel:
         if self.model_type.lower() == 'pl_c':
             # Power Law plus constant model
 
-            # Power law component
+            # Power law component and limits
             power_law = models.PowerLaw1D()
             power_law.amplitude.min = 0.0
             power_law.amplitude.max = None
-            power_law.alpha.min = 0.0
+            power_law.alpha.min = -20.0
             power_law.alpha.max = 20.0
 
             # fix x_0 of power law component
