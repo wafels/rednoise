@@ -107,7 +107,7 @@ if __name__ == '__main__':
             print('\nLoading new data for fitting')
 
             # branch location
-            b = [ds.corename, ds.original_datatype, wave]
+            b = [study_type, ds.original_datatype, wave]
 
             # Directory
             directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
