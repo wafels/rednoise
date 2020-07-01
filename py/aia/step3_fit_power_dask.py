@@ -22,6 +22,7 @@ import details_study as ds
 parser = argparse.ArgumentParser(description='Fit a model to Fourier power spectra (from step2).')
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
 parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
+parser.add_argument('-n', '--n_workers', help='number of workers', type=int)
 args = parser.parse_args()
 
 # Data to analyze
@@ -30,6 +31,9 @@ waves = [item for item in args.waves.split(',')]
 
 # Studies to load in
 study_types = [item for item in args.study.split(',')]
+
+# Number of workers
+n_workers = args.n_workers
 
 # Type of power spectrum
 power_type = 'absolute'
@@ -100,7 +104,7 @@ def dask_fit_fourier_pl_c(power_spectrum):
 
 if __name__ == '__main__':
     # Now do the fitting
-    cluster = LocalCluster()
+    cluster = LocalCluster(n_workers=n_workers)
     for study_type in study_types:
         for wave in waves:
             # General notification that we have a new data-set
