@@ -46,6 +46,11 @@ bv_ordered_waves = OrderedDict([('94', "094"),
                                 ('171', '171'),
                                 ('131', '131')])
 
+def plot_histogram_2d(ax, c1, c2, bins, variable_name, title, show_statistics=True):
+    """
+    Creates a two-dimensional histogram plot
+    """
+
 
 def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=True):
     """
@@ -219,6 +224,15 @@ def load_masks(directory, base_filename):
     return masks
 
 
+def get_directory(ds, study_type, wave, original_datatype=None):
+    if original_datatype is None:
+        b = [study_type, ds.original_datatype, wave]
+    else:
+        b = [study_type, original_datatype, wave]
+    directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+    return directory
+
+
 # Hack to get the output file names - all wavelengths are the same anyway.
 def get_output_names_hack(study_type, ds, observation_model_name, window, power_type, wave='335'):
     b = [study_type, ds.original_datatype, wave]
@@ -287,6 +301,17 @@ def make_super_title(study_type, wave):
                                                   wave_as_number)
     return super_title
 
+
+def compressify(data, mask):
+    """
+    Take data and a mask and turn it into a one-d array.  This is used in creating histograms.
+    """
+    d = np.transpose(np.ma.array(data, mask=mask))
+    c = d.flatten().compressed()
+    return c[np.isfinite(c)]
+
+
+
 # Load in some information about how to treat and plot the outputs, for example
 # output_name,lower_bound,upper_bound,variable_name
 # "amplitude_0",None,None,"A_{0}"
@@ -299,16 +324,16 @@ df = df.replace({"None": None})
 # For the verify fitting results only, make a plot with eight different
 # results on the same figure
 if study_type == 'verify_fitting' and 'gang_by_index' in plots:
-    nrows = 2
+    nrows = 3
     row_size = 5
-    ncols = 4
+    ncols = 3
     col_size = 7
     figsize = (ncols*col_size, nrows*row_size)
 
     # Hack to get the output file names - all wavelengths are the same anyway.
-    b = [study_type, ds.original_datatype, '335']
+    b = [study_type, ds.original_datatype, '100']
     directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
-    base_filename = f"{observation_model_name}_{study_type}_335_{window}.{power_type}"
+    base_filename = f"{observation_model_name}_{study_type}_100_{window}.{power_type}"
     filename = f'{base_filename}.names.step3.txt'
     filepath = os.path.join(directory, filename)
     print(f'Loading {filepath}')
@@ -352,7 +377,7 @@ if study_type == 'verify_fitting' and 'gang_by_index' in plots:
                 # Make the title
                 super_title = make_super_title(study_type, wave)
                 description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(data.mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 vax[this_row, this_col] = plot_histogram(vax[this_row, this_col], compressed, bins,
@@ -868,9 +893,9 @@ if 'gang_by_simulation_and_wave' in plots:
             hax[this_row, this_col] = plot_overlay_histograms(hax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title)
 
             # Create the plot of the overlaid probability distributions
-            description = f"probability densities for {variable_name} for each simulation"
+            description = f"probability distributions for {variable_name} for each simulation"
             title = f"{super_title}{description}"
-            pax[this_row, this_col] = plot_overlay_histograms(pax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title, density=True)
+            pax[this_row, this_col] = plot_overlay_histograms(pax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title, probability=True)
 
         # Save the histograms
         this_mask = 'combined'
@@ -904,4 +929,56 @@ if 'gang_by_simulation_and_wave' in plots:
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
 if 'histogram2d' in plots:
-    pass
+
+# Plots per single AIA channel and simulation
+if 'individual' in plots:
+    nrows = len(waves) - 1
+    row_size = 5
+    ncols = len(waves
+    col_size = 7
+    figsize = (ncols*col_size, nrows*row_size)
+
+    for ion, output_name in enumerate(output_names):  # Go through the variables
+        print(f'Generating plots for {output_name}.')
+        variable_name = df['variable_name'][output_name]
+
+        for this_mask in ('none', 'combined'):
+
+
+            plt.close('all')
+            hfig, hax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True, sharey=True)
+
+            # Load the data for the x axis
+            for iwave1, wave1 in enumerate(waves):
+                # wave1 - load in the masks
+                b = [study_type, ds.original_datatype, wave1]
+                directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+                base_filename = f"{observation_model_name}_{study_type}_{wave1}_{window}.{power_type}"
+                masks1 = load_masks(directory, base_filename)
+
+                # wave1 - load in the fit parameters
+                output1 = load_fit_parameters(directory, base_filename)
+
+                # Load in the data for the y axis
+                for wave2 in waves:
+                    if wave1 == wave2:
+                        pass
+                    else:                
+                        # wave2 - load in the masks
+                        b = [study_type, ds.original_datatype, wave2]
+                        directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+                        base_filename = f"{observation_model_name}_{study_type}_{wave2}_{window}.{power_type}"
+                        masks2 = load_masks(directory, base_filename)
+
+                        # wave2 - load in the fit parameters
+                        outputs2 = load_fit_parameters(directory, base_filename)
+
+                        # Create the joint mask
+                        jmask = np.logical_or(masks1[this_mask], masks2[this_mask])
+
+                        # Mask the data with the joint mask
+                        c1 = compressify(outputs1[:, :, ion], jmask))
+                        c2 = compressify(outputs2[:, :, ion], jmask))
+
+                        # Make the histogram
+                        hax[iwave1, iwave2] = make_histogram2d(hax[iwave1, iwave2], c1, c2)
