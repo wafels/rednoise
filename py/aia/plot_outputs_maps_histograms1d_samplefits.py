@@ -1,6 +1,8 @@
 import os
 import argparse
+from collections import OrderedDict
 import numpy as np
+from scipy.io import readsav
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib import rc
@@ -35,6 +37,14 @@ bins = 50
 
 # Colour for excluded fits in the spatial distribution
 excluded_color = 'black'
+
+# BV ordering of AIA waves by temperature
+bv_ordered_waves = OrderedDict([('94', "094"),
+                                ('335', '335'),
+                                ('211', '211'),
+                                ('193', '193'),
+                                ('171', '171'),
+                                ('131', '131')])
 
 
 def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=True):
@@ -244,6 +254,39 @@ def load_fit_parameter_output_names(directory, base_filename):
     return output_names
 
 
+def load_time_lag_data(study_type):
+    """
+    Load in the time lag data
+    """
+    translations = {'bv_simulation_low_fn': 'crosscor_SteveModel10.sav',
+                    'bv_simulation_intermediate_fn': 'crosscor_SteveTrain10.sav',
+                    'bv_simulation_high_fn': 'crosscor_SteveIntTrain10.sav'}
+    filename = translations[study_type]
+    directory = 'aaa'
+    filepath = os.path.join(directory, filename)
+    return readsav(filepath)
+
+
+def extract_time_lag_data(time_lags, base_wave, correlated_wave, peak_or_max):
+    """
+    Extract a particular piece of data from the time lag information
+    """
+
+    key = f"{peak_or_max}{bv_ordered_waves[base_wave]}"
+    return key
+
+
+def make_super_title(study_type, wave):
+    """Make a super title"""
+    if "verify_fitting" not in study_type:
+        super_title = "{:s}, {:s}\n".format(study_type.replace("_", " "), wave)
+    else:
+        wave_as_number = int(wave) / 100
+        ntrue = "$n_{true}=$"
+        super_title = "{:s}, {:s}{:.1f}\n".format(study_type.replace("_", " "), ntrue,
+                                                  wave_as_number)
+    return super_title
+
 # Load in some information about how to treat and plot the outputs, for example
 # output_name,lower_bound,upper_bound,variable_name
 # "amplitude_0",None,None,"A_{0}"
@@ -251,6 +294,82 @@ def load_fit_parameter_output_names(directory, base_filename):
 filename = 'models.outputs_information.{:s}.csv'.format(observation_model_name)
 df = pd.read_csv(filename, index_col=0)
 df = df.replace({"None": None})
+
+
+# For the verify fitting results only, make a plot with eight different
+# results on the same figure
+if study_type == 'verify_fitting' and 'gang_by_index' in plots:
+    nrows = 2
+    row_size = 5
+    ncols = 4
+    col_size = 7
+    figsize = (ncols*col_size, nrows*row_size)
+
+    # Hack to get the output file names - all wavelengths are the same anyway.
+    b = [study_type, ds.original_datatype, '335']
+    directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+    base_filename = f"{observation_model_name}_{study_type}_335_{window}.{power_type}"
+    filename = f'{base_filename}.names.step3.txt'
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    with open(filepath) as f:
+        output_names = [line.rstrip() for line in f]
+
+    # Plot the results of the fitting
+    for i, output_name in enumerate(output_names):
+        print(f'Plotting {output_name}')
+        variable_name = df['variable_name'][output_name]
+
+        # Iterate over the the masks
+        for this_mask in ('none', 'combined'):
+
+            plt.close('all')
+            vfig, vax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)
+
+            # Iterate over the waves
+            for iwave, wave in enumerate(waves):
+
+                # Which plot to make
+                this_row = iwave // ncols
+                this_col = iwave - this_row * ncols
+
+                # Load in the masks
+                b = [study_type, ds.original_datatype, wave]
+                directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+                base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
+                masks = load_masks(directory, base_filename)
+
+                # Load in the fit parameters
+                outputs = load_fit_parameters(directory, base_filename)
+
+                # Mask the data
+                data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
+
+                # Create the data used for the histogram
+                compressed = data.flatten().compressed()
+                compressed = compressed[np.isfinite(compressed)]
+
+                # Make the title
+                super_title = make_super_title(study_type, wave)
+                description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
+                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                title = f"{super_title}{description}{mask_info}"
+
+                vax[this_row, this_col] = plot_histogram(vax[this_row, this_col], compressed, bins,
+                                                         variable_name, title, show_statistics=True)
+
+            # The save directory and base filenames for plots that are not specific to a particular
+            # wave (i.e., AIA channel)
+            b = [study_type, ds.original_datatype]
+            across_waves_directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+            across_waves_base_filename = f"{observation_model_name}_{study_type}_{window}.{power_type}"
+
+            # Save the figure
+            vfig.tight_layout()
+            filename = f'histograms.joint.{output_name}.{this_mask}.{across_waves_base_filename}.png'
+            filepath = os.path.join(across_waves_directory, filename)
+            print(f'Creating and saving {filepath}')
+            vfig.savefig(filepath)
 
 
 # Plots per single AIA channel and simulation
@@ -338,12 +457,7 @@ if 'individual' in plots:
         ###########################
         # Make the plots
         # The super title describes the study type and the wavelength
-        if "verify_fitting" not in study_type:
-            super_title = "{:s}, {:s}\n".format(study_type.replace("_", " "), wave)
-        else:
-            wave_as_number = int(wave)/100
-            ntrue = "$n_{true}=$"
-            super_title = "{:s}, {:s}{:.1f}\n".format(study_type.replace("_", " "), ntrue, wave_as_number)
+        super_title = make_super_title(study_type, wave)
 
         ###########################
         # Plot the masks
@@ -590,7 +704,6 @@ if 'gang_by_wave' in plots:
 
                 # Load in the mask data
                 masks = load_masks(directory, base_filename)
-                masks['none'] = np.zeros_like(masks['combined'])
 
                 # Mask the data
                 data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
@@ -788,3 +901,7 @@ if 'gang_by_simulation_and_wave' in plots:
         #print(f'Creating and saving {filepath}')
         #vfig.savefig(filepath)
 
+
+# Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
+if 'histogram2d' in plots:
+    pass
