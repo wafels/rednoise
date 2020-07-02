@@ -17,15 +17,26 @@ parser = argparse.ArgumentParser(description='Plot maps and histograms of result
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
 parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
 parser.add_argument('-p', '--plots', help='comma separated list of plot types ("individual", "gang_by_wave", "gang_by_simulation_and_wave"', type=str)
+parser.add_argument('-o', '-image_filetype', help='output image file type', type=str, default='png')
 args = parser.parse_args()
+
+# AIA channels to consider
 waves = [item for item in args.waves.split(',')]
+
+# What kind of plots to make
 plots = [item for item in args.plots.split(',')]
+
+# What kind of image file type to save
+image_filetype = args.image_filetype
 
 # Studies to load in
 study_types = [item for item in args.study.split(',')]
 study_type = study_types[0]
 
+# Plot information details
 rc('text', usetex=True)  # Use LaTeX
+font = {'size': 18}
+rc('font', **font)
 
 # Which model to look at
 observation_model_name = 'pl_c'
@@ -38,6 +49,7 @@ bins = 50
 # Colour for excluded fits in the spatial distribution
 excluded_color = 'black'
 
+
 # BV ordering of AIA waves by temperature
 bv_ordered_waves = OrderedDict([('94', "094"),
                                 ('335', '335'),
@@ -46,10 +58,20 @@ bv_ordered_waves = OrderedDict([('94', "094"),
                                 ('171', '171'),
                                 ('131', '131')])
 
-def plot_histogram_2d(ax, c1, c2, bins, variable_name, title, show_statistics=True):
+
+def plot_histogram2d(ax, c1, c2, bins, variable_names, title):
     """
     Creates a two-dimensional histogram plot
     """
+    # Create and return the plot
+    h = ax.hist2d(c1, c2, bins=bins, cmap=cm.viridis)
+    ax.set_xlabel(variable_names[0])
+    ax.set_ylabel(variable_names[1])
+    ax.set_title(title)
+    ax.grid(linestyle=":")
+    ax.plot([0,0], [8, 8], color='red', label='equality')
+    ax.legend()
+    return ax
 
 
 def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=True):
@@ -391,7 +413,7 @@ if study_type == 'verify_fitting' and 'gang_by_index' in plots:
 
             # Save the figure
             vfig.tight_layout()
-            filename = f'histograms.joint.{output_name}.{this_mask}.{across_waves_base_filename}.png'
+            filename = f'histograms.joint.{output_name}.{this_mask}.{across_waves_base_filename}.{image_filetype}'
             filepath = os.path.join(across_waves_directory, filename)
             print(f'Creating and saving {filepath}')
             vfig.savefig(filepath)
@@ -497,7 +519,7 @@ if 'individual' in plots:
             ax.set_ylabel('solar Y')
             ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
             ax.grid(linestyle=":")
-            filename = f'spatial.mask.{this_mask}.{base_filename}.png'
+            filename = f'spatial.mask.{this_mask}.{base_filename}.{image_filetype}'
             filepath = os.path.join(directory, filename)
             plt.tight_layout()
             plt.savefig(filepath)
@@ -521,7 +543,7 @@ if 'individual' in plots:
             ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
             ax.grid(linestyle=":")
             fig.colorbar(im, ax=ax, label="total emission")
-            filename = f'spatial.emission_{this_mask}.{base_filename}.png'
+            filename = f'spatial.emission_{this_mask}.{base_filename}.{image_filetype}'
             filepath = os.path.join(directory, filename)
             plt.tight_layout()
             plt.savefig(filepath)
@@ -558,7 +580,7 @@ if 'individual' in plots:
             ax.axvline(ss.cred[2], color='k', linestyle=':')
             ax.axvline(ss.cred[3], label=ci_2, color='k', linestyle=':')
             ax.legend()
-            filename = f'histogram.emission.{this_mask}.{base_filename}.png'
+            filename = f'histogram.emission.{this_mask}.{base_filename}.{image_filetype}'
             filepath = os.path.join(directory, filename)
             plt.savefig(filepath)
 
@@ -589,7 +611,7 @@ if 'individual' in plots:
                 ax = plot_histogram(ax, compressed, bins, variable_name, title)
 
                 # Create the filepath the plot will be saved to, and save it
-                filename = f'histogram.{output_name}.{this_mask}.{base_filename}.png'
+                filename = f'histogram.{output_name}.{this_mask}.{base_filename}.{image_filetype}'
                 filepath = os.path.join(directory, filename)
                 print(f'Creating and saving {filepath}')
                 plt.savefig(filepath)
@@ -606,7 +628,7 @@ if 'individual' in plots:
                 fig.colorbar(im, ax=ax, label=variable_name, extend='max')
 
                 # Create the filepath the plot will be saved to, and save it
-                filename = f'spatial.{output_name}.{this_mask}.{base_filename}.png'
+                filename = f'spatial.{output_name}.{this_mask}.{base_filename}.{image_filetype}'
                 filepath = os.path.join(directory, filename)
                 plt.savefig(filepath)
 
@@ -631,7 +653,7 @@ if 'individual' in plots:
                 axs[i, j].grid('on', linestyle=':')
 
         fig.tight_layout()
-        filename = f'sample_fits.{base_filename}.png'
+        filename = f'sample_fits.{base_filename}.{image_filetype}'
         filepath = os.path.join(directory, filename)
         plt.savefig(filepath)
 
@@ -774,21 +796,21 @@ if 'gang_by_wave' in plots:
 
             # Save the histograms
             hfig.tight_layout()
-            filename = f'histogram.joint.{output_name}.{this_mask}.{across_waves_base_filename}.png'
+            filename = f'histogram.joint.{output_name}.{this_mask}.{across_waves_base_filename}.{image_filetype}'
             filepath = os.path.join(across_waves_directory, filename)
             print(f'Creating and saving {filepath}')
             hfig.savefig(filepath)
 
             # Save the spatial distributions
             sfig.tight_layout()
-            filename = f'spatial.joint.{output_name}.{this_mask}.{across_waves_base_filename}.png'
+            filename = f'spatial.joint.{output_name}.{this_mask}.{across_waves_base_filename}.{image_filetype}'
             filepath = os.path.join(across_waves_directory, filename)
             print(f'Creating and saving {filepath}')
             sfig.savefig(filepath)
 
         # Save the emission plots
         efig.tight_layout()
-        filename = f'emission.joint.{this_mask}.{across_waves_base_filename}.png'
+        filename = f'emission.joint.{this_mask}.{across_waves_base_filename}.{image_filetype}'
         filepath = os.path.join(across_waves_directory, filename)
         print(f'Creating and saving {filepath}')
         efig.savefig(filepath)
@@ -900,28 +922,28 @@ if 'gang_by_simulation_and_wave' in plots:
         # Save the histograms
         this_mask = 'combined'
         hfig.tight_layout()
-        filename = f'histogram.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+        filename = f'histogram.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.{image_filetype}'
         filepath = os.path.join(across_waves_study_directory, filename)
         print(f'Creating and saving {filepath}')
         hfig.savefig(filepath)
 
         # Save the mask RGB
         kfig.tight_layout()
-        filename = f'mask_rgb.joint.{this_mask}.{across_waves_study_base_filename}.png'
+        filename = f'mask_rgb.joint.{this_mask}.{across_waves_study_base_filename}.{image_filetype}'
         filepath = os.path.join(across_waves_study_directory, filename)
         print(f'Creating and saving {filepath}')
         kfig.savefig(filepath)
 
         # Save the probability distributions
         pfig.tight_layout()
-        filename = f'probability.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+        filename = f'probability.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.{image_filetype}'
         filepath = os.path.join(across_waves_study_directory, filename)
         print(f'Creating and saving {filepath}')
         pfig.savefig(filepath)
 
         # Save the scaled value RGB
         #vfig.tight_layout()
-        #filename = f'scaled_value.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.png'
+        #filename = f'scaled_value.joint.{output_name}.{this_mask}.{across_waves_study_base_filename}.{image_filetype}'
         #filepath = os.path.join(across_waves_study_directory, filename)
         #print(f'Creating and saving {filepath}')
         #vfig.savefig(filepath)
@@ -929,12 +951,9 @@ if 'gang_by_simulation_and_wave' in plots:
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
 if 'histogram2d' in plots:
-
-# Plots per single AIA channel and simulation
-if 'individual' in plots:
     nrows = len(waves) - 1
     row_size = 5
-    ncols = len(waves
+    ncols = len(waves)
     col_size = 7
     figsize = (ncols*col_size, nrows*row_size)
 
@@ -943,7 +962,6 @@ if 'individual' in plots:
         variable_name = df['variable_name'][output_name]
 
         for this_mask in ('none', 'combined'):
-
 
             plt.close('all')
             hfig, hax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True, sharey=True)
@@ -960,7 +978,7 @@ if 'individual' in plots:
                 output1 = load_fit_parameters(directory, base_filename)
 
                 # Load in the data for the y axis
-                for wave2 in waves:
+                for iwave2, wave2 in enumerate(waves):
                     if wave1 == wave2:
                         pass
                     else:                
@@ -971,14 +989,31 @@ if 'individual' in plots:
                         masks2 = load_masks(directory, base_filename)
 
                         # wave2 - load in the fit parameters
-                        outputs2 = load_fit_parameters(directory, base_filename)
+                        output2 = load_fit_parameters(directory, base_filename)
 
                         # Create the joint mask
                         jmask = np.logical_or(masks1[this_mask], masks2[this_mask])
 
                         # Mask the data with the joint mask
-                        c1 = compressify(outputs1[:, :, ion], jmask))
-                        c2 = compressify(outputs2[:, :, ion], jmask))
+                        c1 = compressify(output1[:, :, ion], jmask)
+                        c2 = compressify(output2[:, :, ion], jmask)
+
+                        # Construct the plot title and the x, y labels
+                        super_title = f"{study_type} simulations\n"
+                        description = f'{output_name}, {wave1} vs. {wave2} (mask={this_mask})' + "\n"
+                        mask_info = mask_plotting_information(jmask)
+                        title = f"{super_title}{description}{mask_info}"
+                        xy_names = [wave1, wave2]
 
                         # Make the histogram
-                        hax[iwave1, iwave2] = make_histogram2d(hax[iwave1, iwave2], c1, c2)
+                        hax[iwave1, iwave2] = plot_histogram2d(hax[iwave1, iwave2], c1, c2, xy_names, title)
+
+            # Construct the filepath and save the plot
+            b = [study_type, ds.original_datatype]
+            across_waves_directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+            across_waves_base_filename = f"{observation_model_name}_{study_type}_{window}.{power_type}"
+            hfig.tight_layout()
+            filename = f'histogram2d.{output_name}.{this_mask}.{across_waves_base_filename}.{image_filetype}'
+            filepath = os.path.join(across_waves_directory, filename)
+            print(f'Creating and saving {filepath}')
+            hfig.savefig(filepath)
