@@ -118,7 +118,7 @@ def plot_spatial_distribution(ax, data, output_name, title):
     if output_name == 'alpha_0':
         cmap = cm.Dark2_r
         im = ax.imshow(data, origin='lower', cmap=cmap,
-                       norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
+                       norm=colors.Normalize(vmin=0.0, vmax=8.0, clip=False))
         im.cmap.set_over('lemonchiffon')
     elif "err_" in output_name:
         cmap = cm.plasma
