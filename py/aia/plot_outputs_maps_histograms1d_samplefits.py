@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Plot maps and histograms of result
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
 parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
 parser.add_argument('-p', '--plots', help='comma separated list of plot types ("individual", "gang_by_wave", "gang_by_simulation_and_wave"', type=str)
-parser.add_argument('-o', '-image_filetype', help='output image file type', type=str, default='png')
+parser.add_argument('-o', '--image_filetype', help='output image file type', type=str, default='png')
 args = parser.parse_args()
 
 # AIA channels to consider
@@ -64,12 +64,12 @@ def plot_histogram2d(ax, c1, c2, bins, variable_names, title):
     Creates a two-dimensional histogram plot
     """
     # Create and return the plot
-    h = ax.hist2d(c1, c2, bins=bins, cmap=cm.viridis)
+    h = ax.hist2d(c1, c2, bins=bins, cmap=cm.viridis, range=[[0, 8], [0, 8]], density=True)
     ax.set_xlabel(variable_names[0])
     ax.set_ylabel(variable_names[1])
     ax.set_title(title)
     ax.grid(linestyle=":")
-    ax.plot([0,0], [8, 8], color='red', label='equality')
+    ax.plot([0, 8], [0, 8], color='red', label='equality')
     ax.legend()
     return ax
 
@@ -951,11 +951,14 @@ if 'gang_by_simulation_and_wave' in plots:
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
 if 'histogram2d' in plots:
-    nrows = len(waves) - 1
+    nrows = len(waves)
     row_size = 5
     ncols = len(waves)
     col_size = 7
     figsize = (ncols*col_size, nrows*row_size)
+
+    # Output names
+    output_names = get_output_names_hack(study_type, ds, observation_model_name, window, power_type, wave='335')
 
     for ion, output_name in enumerate(output_names):  # Go through the variables
         print(f'Generating plots for {output_name}.')
@@ -999,14 +1002,14 @@ if 'histogram2d' in plots:
                         c2 = compressify(output2[:, :, ion], jmask)
 
                         # Construct the plot title and the x, y labels
-                        super_title = f"{study_type} simulations\n"
-                        description = f'{output_name}, {wave1} vs. {wave2} (mask={this_mask})' + "\n"
+                        super_title = make_super_title(study_type, f"{wave1} vs. {wave2}")
+                        description = f'{variable_name}, (mask={this_mask})' + "\n"
                         mask_info = mask_plotting_information(jmask)
                         title = f"{super_title}{description}{mask_info}"
                         xy_names = [wave1, wave2]
 
                         # Make the histogram
-                        hax[iwave1, iwave2] = plot_histogram2d(hax[iwave1, iwave2], c1, c2, xy_names, title)
+                        hax[iwave1, iwave2] = plot_histogram2d(hax[iwave1, iwave2], c1, c2, [bins, bins], xy_names, title)
 
             # Construct the filepath and save the plot
             b = [study_type, ds.original_datatype]
