@@ -216,30 +216,38 @@ def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, vari
 
 
 # Helper function
-def mask_plotting_information(bad_fit_mask, fitable_mask, excluded_color=None):
-    # Number of pixels
-    n_pixels = bad_fit_mask.size
+def mask_plotting_information(masks, this_mask):
+    # Where the bad fits are
+    bad_fit = masks['bad_fit']
+
+    # This selection assumes that ALL pixels are fitable
+    if this_mask == 'none':
+        fitable = masks['none']
+
+    # This selection assumes that we want numbers only where we have determined
+    # where the power spetrum is deemed fitable.
+    if this_mask == 'combined':
+        fitable = masks['fitable']
+
+    # Number of pixels in the data
+    n_pixels = masks['none'].size
 
     # Number of locations (pixels) where a fit is possible.  True indicates
     # where a fit is NOT possible.
-    n_fitable = np.sum(~fitable_mask)
-    n_fitable_string = "$N_{f}=${:n}".format(n_fitable)
+    n_fitable = np.sum(~fitable)
 
     # Where the bad fits are in the fitable portion of the mask
-    mask_bad_fits_where_fitable = np.logical_or(bad_fit_mask, fitable_mask) - fitable_mask
+    mask_bad_fits_where_fitable = np.logical_or(bad_fit, fitable) - fitable
     n_bad_fits_where_fitable = np.sum(mask_bad_fits_where_fitable)
-    n_bad_fits_where_fitable_string = "$N_{b}=${:n}".format(n_bad_fits_where_fitable)
 
     # What percentage of the pixels are fitable?
     percent_fitable_string = "{:.1f}$\%$".format(100 * n_fitable / n_pixels)
 
     # What percentage of the fitable pixels are actually fit?
     percent_fit_string = "{:.1f}$\%$".format(100 * (n_fitable - n_bad_fits_where_fitable) / n_fitable)
-    
-    if excluded_color is None:
-        mask_info = f"{percent_fitable_string} fitable, {percent_fit_string} of those were fit"
-    else:
-        mask_info = f"{percent_fitable_string} fitable, {percent_fit_string} of those were fit"
+
+    mask_info = f"{percent_fitable_string} fitable, {percent_fit_string} passed fit criteria"
+
     return mask_info
 
 
@@ -425,7 +433,7 @@ if study_type == 'verify_fitting' and 'gang_by_index' in plots:
                 # Make the title
                 super_title = make_super_title(study_type, wave)
                 description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 vax[this_row, this_col] = plot_histogram(vax[this_row, this_col], compressed, bins,
@@ -537,7 +545,7 @@ if 'individual' in plots:
         for this_mask in mask_list:
             description = f'{this_mask} mask' + "\n"
             mask = np.transpose(masks[this_mask])
-            mask_info = mask_plotting_information(mask, excluded_color=excluded_color)
+            mask_info = mask_plotting_information(masks, this_mask)
             plt.close('all')
             fig, ax = plt.subplots()
             im = ax.imshow(mask, origin='lower', cmap=cm.Greys)
@@ -556,7 +564,7 @@ if 'individual' in plots:
         for this_mask in ('none', 'combined'):
             description = f'total emission (mask={this_mask})' + "\n"
             data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
-            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+            mask_info = mask_plotting_information(masks, this_mask)
 
             # Spatial distribution
             plt.close('all')
@@ -590,7 +598,7 @@ if 'individual' in plots:
 
             # Histograms
             description = f"histogram of emission (mask={this_mask})" + "\n"
-            mask_info = mask_plotting_information(data.mask)
+            mask_info = mask_plotting_information(masks, this_mask)
             plt.close('all')
             fig, ax = plt.subplots()
             h = ax.hist(compressed, bins=bins)
@@ -628,7 +636,7 @@ if 'individual' in plots:
 
                 # Create the title of the plot
                 description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 # Create the histogram plot
@@ -645,7 +653,7 @@ if 'individual' in plots:
                 # Spatial distribution
                 # Create the title of the plot
                 description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 plt.close('all')
@@ -785,7 +793,7 @@ if 'gang_by_wave' in plots:
 
                 # Create the title of the plot
                 description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 # Create the histogram plot
@@ -794,7 +802,7 @@ if 'gang_by_wave' in plots:
                 # Spatial distribution
                 # Create the title of the plot
                 description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 # Create the spatial distribution plot
@@ -815,7 +823,7 @@ if 'gang_by_wave' in plots:
                     total_intensity = np.transpose(np.sum(emission, axis=2))
                     data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
                     description = f'total emission (mask={this_mask})' + "\n"
-                    mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                    mask_info = mask_plotting_information(masks, this_mask)
                     title = f"{super_title}{description}{mask_info}"
                     im, eax[this_row, this_col] = plot_emission(eax[this_row, this_col], data, title, intensity_cmap)
                     efig.colorbar(im, ax=eax[this_row, this_col], label="total emission")
