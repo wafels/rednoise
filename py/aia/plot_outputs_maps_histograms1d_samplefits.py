@@ -216,15 +216,30 @@ def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, vari
 
 
 # Helper function
-def mask_plotting_information(m, excluded_color=None):
-    n_samples = m.size
-    n_excluded = np.sum(m)
-    n_good = n_samples - n_excluded
-    percent_excluded_string = "{:.1f}$\%$".format(100 * n_excluded / n_samples)
+def mask_plotting_information(bad_fit_mask, fitable_mask, excluded_color=None):
+    # Number of pixels
+    n_pixels = bad_fit_mask.size
+
+    # Number of locations (pixels) where a fit is possible.  True indicates
+    # where a fit is NOT possible.
+    n_fitable = np.sum(~fitable_mask)
+    n_fitable_string = "$N_{f}=${:n}".format(n_fitable)
+
+    # Where the bad fits are in the fitable portion of the mask
+    mask_bad_fits_where_fitable = np.logical_or(bad_fit_mask, fitable_mask) - fitable_mask
+    n_bad_fits_where_fitable = np.sum(mask_bad_fits_where_fitable)
+    n_bad_fits_where_fitable_string = "$N_{b}=${:n}".format(n_bad_fits_where_fitable)
+
+    # What percentage of the pixels are fitable?
+    percent_fitable_string = "{:.1f}$\%$".format(100 * n_fitable / n_pixels)
+
+    # What percentage of the fitable pixels are actually fit?
+    percent_fit_string = "{:.1f}$\%$".format(100 * (n_fitable - n_bad_fits_where_fitable) / n_fitable)
+    
     if excluded_color is None:
-        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded, {n_good} included"
+        mask_info = f"{percent_fitable_string} fitable, {percent_fit_string} of those were fit"
     else:
-        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded (in {excluded_color}), {n_good} included"
+        mask_info = f"{percent_fitable_string} fitable, {percent_fit_string} of those were fit"
     return mask_info
 
 
@@ -242,7 +257,18 @@ def load_masks(directory, base_filename):
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
         masks[tm] = (np.load(filepath))['arr_0']
+
+    # A mask that has no pixels masked out
     masks['none'] = np.zeros_like(masks['combined'])
+
+    # The mask that shows where a fit is judged to be possible
+    masks['fitable'] = masks['intensity']
+
+    # The mask that shows where a fit is bad.
+    masks['bad_fit'] = np.zeros_like(masks['combined'])
+    for tm in ("finiteness", "bounds", "fitness"):
+        masks['bad_fit'] = np.logical_or(masks['bad_fit'], masks[tm])
+
     return masks
 
 
