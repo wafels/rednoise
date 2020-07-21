@@ -280,6 +280,16 @@ def load_masks(directory, base_filename):
     return masks
 
 
+def create_joint_masks(masks1, masks2):
+    """
+    Take two mask dictionaries and combine them
+    """
+    jmask = dict()
+    for tm in list(masks1.keys()):
+        jmask[tm] = np.logical_or(masks1[tm], masks2[tm])
+    return jmask
+
+
 def get_directory(ds, study_type, wave, original_datatype=None):
     if original_datatype is None:
         b = [study_type, ds.original_datatype, wave]
@@ -1029,7 +1039,8 @@ if 'histogram2d' in plots:
                         output2 = load_fit_parameters(directory, base_filename)
 
                         # Create the joint mask
-                        jmask = np.logical_or(masks1[this_mask], masks2[this_mask])
+                        jmasks = create_joint_masks(masks1, masks2)
+                        jmask = jmasks[this_mask]
 
                         # Mask the data with the joint mask
                         c1 = compressify(output1[:, :, ion], jmask)
@@ -1038,7 +1049,7 @@ if 'histogram2d' in plots:
                         # Construct the plot title and the x, y labels
                         super_title = make_super_title(study_type, f"{wave1} vs. {wave2}")
                         description = f'{variable_name}, (mask={this_mask})' + "\n"
-                        mask_info = mask_plotting_information(jmask)
+                        mask_info = mask_plotting_information(jmask, this_mask)
                         title = f"{super_title}{description}{mask_info}"
                         xy_names = [wave1, wave2]
 
