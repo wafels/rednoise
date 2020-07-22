@@ -35,7 +35,7 @@ study_type = study_types[0]
 
 # Plot information details
 rc('text', usetex=True)  # Use LaTeX
-font = {'size': 18}
+font = {'size': 12}
 rc('font', **font)
 
 # Which model to look at
@@ -161,7 +161,7 @@ def plot_emission(ax, data, title, intensity_cmap):
     """
     Creates an emission plot
     """
-    norm = ImageNormalize(stretch=AsinhStretch(0.01), vmin=data.min(), vmax=data.max())
+    norm = ImageNormalize(stretch=AsinhStretch(0.001), vmin=data.min(), vmax=data.max())
     im = ax.imshow(data, origin='lower', cmap=intensity_cmap, norm=norm)
     im.cmap.set_bad(excluded_color)
     ax.set_xlabel('solar X')
@@ -237,16 +237,18 @@ def mask_plotting_information(masks, this_mask):
     n_fitable = np.sum(~fitable)
 
     # Where the bad fits are in the fitable portion of the mask
-    mask_bad_fits_where_fitable = np.logical_or(bad_fit, fitable) - fitable
+    mask_bad_fits_where_fitable = np.logical_or(bad_fit, fitable) ^ fitable
     n_bad_fits_where_fitable = np.sum(mask_bad_fits_where_fitable)
 
     # What percentage of the pixels are fitable?
-    percent_fitable_string = "{:.1f}$\%$".format(100 * n_fitable / n_pixels)
+    pf = "$p_{F}=$"
+    percent_fitable_string = "{:s}{:.1f}$\%$".format(pf, 100 * n_fitable / n_pixels)
 
     # What percentage of the fitable pixels are actually fit?
-    percent_fit_string = "{:.1f}$\%$".format(100 * (n_fitable - n_bad_fits_where_fitable) / n_fitable)
+    pg = "$p_{G}=$"
+    percent_fit_string = "{:s}{:.1f}$\%$".format(pg, 100 * (n_fitable - n_bad_fits_where_fitable) / n_fitable)
 
-    mask_info = f"{percent_fitable_string} fitable, {percent_fit_string} passed fit criteria"
+    mask_info = f"{percent_fitable_string}, {percent_fit_string}"
 
     return mask_info
 
@@ -572,14 +574,18 @@ if 'individual' in plots:
         # Plot the intensity with and without the combined mask
         masks['none'] = np.zeros_like(masks['combined'])
         for this_mask in ('none', 'combined'):
-            description = f'total emission (mask={this_mask})' + "\n"
+            if this_mask == 'none':
+                description = f'total emission' + "\n"
+                mask_info = ''
+            else:
+                description = f'total emission (mask={this_mask})' + "\n"
+                mask_info = mask_plotting_information(masks, this_mask)
             data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
-            mask_info = mask_plotting_information(masks, this_mask)
 
             # Spatial distribution
             plt.close('all')
             fig, ax = plt.subplots()
-            norm = ImageNormalize(stretch=AsinhStretch(0.01), vmin=data.min(), vmax=data.max())
+            norm = ImageNormalize(stretch=AsinhStretch(0.001), vmin=data.min(), vmax=data.max())
             im = ax.imshow(data, origin='lower', cmap=intensity_cmap, norm=norm)
             im.cmap.set_bad(excluded_color)
             ax.set_xlabel('solar X')
@@ -832,9 +838,12 @@ if 'gang_by_wave' in plots:
                         intensity_cmap = plt.get_cmap('gray')
                     total_intensity = np.transpose(np.sum(emission, axis=2))
                     data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
-                    description = f'total emission (mask={this_mask})' + "\n"
-                    mask_info = mask_plotting_information(masks, this_mask)
-                    title = f"{super_title}{description}{mask_info}"
+                    if this_mask == 'none':
+                        title = f"{super_title}total emission"
+                    else:
+                        description = f'total emission (mask={this_mask})' + "\n"
+                        mask_info = mask_plotting_information(masks, this_mask)
+                        title = f"{super_title}{description}{mask_info}"
                     im, eax[this_row, this_col] = plot_emission(eax[this_row, this_col], data, title, intensity_cmap)
                     efig.colorbar(im, ax=eax[this_row, this_col], label="total emission")
 
