@@ -35,7 +35,7 @@ study_type = study_types[0]
 
 # Plot information details
 rc('text', usetex=True)  # Use LaTeX
-font = {'size': 18}
+font = {'size': 14}
 rc('font', **font)
 
 # Which model to look at
@@ -368,7 +368,7 @@ if study_type == 'verify_fitting' and 'gang_by_index' in plots:
         variable_name = df['variable_name'][output_name]
 
         # Iterate over the the masks
-        for this_mask in ('none', 'combined'):
+        for this_mask in ('combined', 'none'):
 
             plt.close('all')
             vfig, vax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)
@@ -527,7 +527,7 @@ if 'individual' in plots:
         ###########################
         # Plot the intensity with and without the combined mask
         masks['none'] = np.zeros_like(masks['combined'])
-        for this_mask in ('none', 'combined'):
+        for this_mask in ('combined', 'none'):
             description = f'total emission (mask={this_mask})' + "\n"
             data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
             mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
@@ -588,7 +588,7 @@ if 'individual' in plots:
         # Plot the results of the fitting
         for i, output_name in enumerate(output_names):
             print(f'Plotting {output_name}')
-            for this_mask in ('none', 'combined'):
+            for this_mask in ('combined', 'none'):
                 print(f'         mask={this_mask}')
                 # Transpose because the data is the wrong way around
                 data = np.transpose(np.ma.array(outputs[:, :, i], mask=masks[this_mask]))
@@ -674,7 +674,7 @@ if 'gang_by_wave' in plots:
     across_waves_base_filename = f"{observation_model_name}_{study_type}_{window}.{power_type}"
 
     # Create the figures and save them
-    for this_mask in ('none', 'combined'):  # Go through the masks we are interested in
+    for this_mask in ('combined', 'none'):  # Go through the masks we are interested in
         print(f'mask={this_mask}')
 
         # Spatial emission figures
@@ -957,11 +957,14 @@ if 'histogram2d' in plots:
     col_size = 7
     figsize = (ncols*col_size, nrows*row_size)
 
+    # Output names
+    output_names = get_output_names_hack(study_type, ds, observation_model_name, window, power_type, wave='335')
+
     for ion, output_name in enumerate(output_names):  # Go through the variables
         print(f'Generating plots for {output_name}.')
         variable_name = df['variable_name'][output_name]
 
-        for this_mask in ('none', 'combined'):
+        for this_mask in ('combined', 'none'):
 
             plt.close('all')
             hfig, hax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True, sharey=True)
@@ -1006,7 +1009,7 @@ if 'histogram2d' in plots:
                         xy_names = [wave1, wave2]
 
                         # Make the histogram
-                        hax[iwave1, iwave2] = plot_histogram2d(hax[iwave1, iwave2], c1, c2, xy_names, title)
+                        hax[iwave1, iwave2] = plot_histogram2d(hax[iwave1, iwave2], c1, c2, [bins, bins], xy_names, title)
 
             # Construct the filepath and save the plot
             b = [study_type, ds.original_datatype]
