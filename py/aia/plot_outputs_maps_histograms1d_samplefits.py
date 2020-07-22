@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Plot maps and histograms of result
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
 parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
 parser.add_argument('-p', '--plots', help='comma separated list of plot types ("individual", "gang_by_wave", "gang_by_simulation_and_wave"', type=str)
-parser.add_argument('-o', '-image_filetype', help='output image file type', type=str, default='png')
+parser.add_argument('-o', '--image_filetype', help='output image file type', type=str, default='png')
 args = parser.parse_args()
 
 # AIA channels to consider
@@ -35,7 +35,7 @@ study_type = study_types[0]
 
 # Plot information details
 rc('text', usetex=True)  # Use LaTeX
-font = {'size': 14}
+font = {'size': 12}
 rc('font', **font)
 
 # Which model to look at
@@ -64,12 +64,12 @@ def plot_histogram2d(ax, c1, c2, bins, variable_names, title):
     Creates a two-dimensional histogram plot
     """
     # Create and return the plot
-    h = ax.hist2d(c1, c2, bins=bins, cmap=cm.viridis)
+    h = ax.hist2d(c1, c2, bins=bins, cmap=cm.viridis, range=[[0, 8], [0, 8]], density=True)
     ax.set_xlabel(variable_names[0])
     ax.set_ylabel(variable_names[1])
     ax.set_title(title)
     ax.grid(linestyle=":")
-    ax.plot([0,0], [8, 8], color='red', label='equality')
+    ax.plot([0, 8], [0, 8], color='red', label='equality')
     ax.legend()
     return ax
 
@@ -140,7 +140,7 @@ def plot_spatial_distribution(ax, data, output_name, title):
     if output_name == 'alpha_0':
         cmap = cm.Dark2_r
         im = ax.imshow(data, origin='lower', cmap=cmap,
-                       norm=colors.Normalize(vmin=0.0, vmax=4.0, clip=False))
+                       norm=colors.Normalize(vmin=0.0, vmax=8.0, clip=False))
         im.cmap.set_over('lemonchiffon')
     elif "err_" in output_name:
         cmap = cm.plasma
@@ -161,7 +161,7 @@ def plot_emission(ax, data, title, intensity_cmap):
     """
     Creates an emission plot
     """
-    norm = ImageNormalize(stretch=AsinhStretch(0.01), vmin=data.min(), vmax=data.max())
+    norm = ImageNormalize(stretch=AsinhStretch(0.001), vmin=data.min(), vmax=data.max())
     im = ax.imshow(data, origin='lower', cmap=intensity_cmap, norm=norm)
     im.cmap.set_bad(excluded_color)
     ax.set_xlabel('solar X')
@@ -216,15 +216,40 @@ def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, vari
 
 
 # Helper function
-def mask_plotting_information(m, excluded_color=None):
-    n_samples = m.size
-    n_excluded = np.sum(m)
-    n_good = n_samples - n_excluded
-    percent_excluded_string = "{:.1f}$\%$".format(100 * n_excluded / n_samples)
-    if excluded_color is None:
-        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded, {n_good} included"
-    else:
-        mask_info = f"{n_samples} pixels, {n_excluded} [{percent_excluded_string}] excluded (in {excluded_color}), {n_good} included"
+def mask_plotting_information(masks, this_mask):
+    # Where the bad fits are
+    bad_fit = masks['bad_fit']
+
+    # This selection assumes that ALL pixels are fitable
+    if this_mask == 'none':
+        fitable = masks['none']
+
+    # This selection assumes that we want numbers only where we have determined
+    # where the power spetrum is deemed fitable.
+    if this_mask == 'combined':
+        fitable = masks['fitable']
+
+    # Number of pixels in the data
+    n_pixels = masks['none'].size
+
+    # Number of locations (pixels) where a fit is possible.  True indicates
+    # where a fit is NOT possible.
+    n_fitable = np.sum(~fitable)
+
+    # Where the bad fits are in the fitable portion of the mask
+    mask_bad_fits_where_fitable = np.logical_or(bad_fit, fitable) ^ fitable
+    n_bad_fits_where_fitable = np.sum(mask_bad_fits_where_fitable)
+
+    # What percentage of the pixels are fitable?
+    pf = "$p_{F}=$"
+    percent_fitable_string = "{:s}{:.1f}$\%$".format(pf, 100 * n_fitable / n_pixels)
+
+    # What percentage of the fitable pixels are actually fit?
+    pg = "$p_{G}=$"
+    percent_fit_string = "{:s}{:.1f}$\%$".format(pg, 100 * (n_fitable - n_bad_fits_where_fitable) / n_fitable)
+
+    mask_info = f"{percent_fitable_string}, {percent_fit_string}"
+
     return mask_info
 
 
@@ -242,8 +267,29 @@ def load_masks(directory, base_filename):
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
         masks[tm] = (np.load(filepath))['arr_0']
+
+    # A mask that has no pixels masked out
     masks['none'] = np.zeros_like(masks['combined'])
+
+    # The mask that shows where a fit is judged to be possible
+    masks['fitable'] = masks['intensity']
+
+    # The mask that shows where a fit is bad.
+    masks['bad_fit'] = np.zeros_like(masks['combined'])
+    for tm in ("finiteness", "bounds", "fitness"):
+        masks['bad_fit'] = np.logical_or(masks['bad_fit'], masks[tm])
+
     return masks
+
+
+def create_joint_masks(masks1, masks2):
+    """
+    Take two mask dictionaries and combine them
+    """
+    jmask = dict()
+    for tm in list(masks1.keys()):
+        jmask[tm] = np.logical_or(masks1[tm], masks2[tm])
+    return jmask
 
 
 def get_directory(ds, study_type, wave, original_datatype=None):
@@ -399,7 +445,7 @@ if study_type == 'verify_fitting' and 'gang_by_index' in plots:
                 # Make the title
                 super_title = make_super_title(study_type, wave)
                 description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 vax[this_row, this_col] = plot_histogram(vax[this_row, this_col], compressed, bins,
@@ -511,7 +557,7 @@ if 'individual' in plots:
         for this_mask in mask_list:
             description = f'{this_mask} mask' + "\n"
             mask = np.transpose(masks[this_mask])
-            mask_info = mask_plotting_information(mask, excluded_color=excluded_color)
+            mask_info = mask_plotting_information(masks, this_mask)
             plt.close('all')
             fig, ax = plt.subplots()
             im = ax.imshow(mask, origin='lower', cmap=cm.Greys)
@@ -527,15 +573,19 @@ if 'individual' in plots:
         ###########################
         # Plot the intensity with and without the combined mask
         masks['none'] = np.zeros_like(masks['combined'])
-        for this_mask in ('combined', 'none'):
-            description = f'total emission (mask={this_mask})' + "\n"
+        for this_mask in ('none', 'combined'):
+            if this_mask == 'none':
+                description = f'total emission' + "\n"
+                mask_info = ''
+            else:
+                description = f'total emission (mask={this_mask})' + "\n"
+                mask_info = mask_plotting_information(masks, this_mask)
             data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
-            mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
 
             # Spatial distribution
             plt.close('all')
             fig, ax = plt.subplots()
-            norm = ImageNormalize(stretch=AsinhStretch(0.01), vmin=data.min(), vmax=data.max())
+            norm = ImageNormalize(stretch=AsinhStretch(0.001), vmin=data.min(), vmax=data.max())
             im = ax.imshow(data, origin='lower', cmap=intensity_cmap, norm=norm)
             im.cmap.set_bad(excluded_color)
             ax.set_xlabel('solar X')
@@ -564,7 +614,7 @@ if 'individual' in plots:
 
             # Histograms
             description = f"histogram of emission (mask={this_mask})" + "\n"
-            mask_info = mask_plotting_information(data.mask)
+            mask_info = mask_plotting_information(masks, this_mask)
             plt.close('all')
             fig, ax = plt.subplots()
             h = ax.hist(compressed, bins=bins)
@@ -602,7 +652,7 @@ if 'individual' in plots:
 
                 # Create the title of the plot
                 description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 # Create the histogram plot
@@ -619,7 +669,7 @@ if 'individual' in plots:
                 # Spatial distribution
                 # Create the title of the plot
                 description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 plt.close('all')
@@ -759,7 +809,7 @@ if 'gang_by_wave' in plots:
 
                 # Create the title of the plot
                 description = f"histogram of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 # Create the histogram plot
@@ -768,7 +818,7 @@ if 'gang_by_wave' in plots:
                 # Spatial distribution
                 # Create the title of the plot
                 description = f"spatial distribution of {variable_name} (mask={this_mask})" + "\n"
-                mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
+                mask_info = mask_plotting_information(masks, this_mask)
                 title = f"{super_title}{description}{mask_info}"
 
                 # Create the spatial distribution plot
@@ -788,9 +838,12 @@ if 'gang_by_wave' in plots:
                         intensity_cmap = plt.get_cmap('gray')
                     total_intensity = np.transpose(np.sum(emission, axis=2))
                     data = np.ma.array(total_intensity, mask=np.transpose(masks[this_mask]))
-                    description = f'total emission (mask={this_mask})' + "\n"
-                    mask_info = mask_plotting_information(data.mask, excluded_color=excluded_color)
-                    title = f"{super_title}{description}{mask_info}"
+                    if this_mask == 'none':
+                        title = f"{super_title}total emission"
+                    else:
+                        description = f'total emission (mask={this_mask})' + "\n"
+                        mask_info = mask_plotting_information(masks, this_mask)
+                        title = f"{super_title}{description}{mask_info}"
                     im, eax[this_row, this_col] = plot_emission(eax[this_row, this_col], data, title, intensity_cmap)
                     efig.colorbar(im, ax=eax[this_row, this_col], label="total emission")
 
@@ -951,7 +1004,7 @@ if 'gang_by_simulation_and_wave' in plots:
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
 if 'histogram2d' in plots:
-    nrows = len(waves) - 1
+    nrows = len(waves)
     row_size = 5
     ncols = len(waves)
     col_size = 7
@@ -995,16 +1048,17 @@ if 'histogram2d' in plots:
                         output2 = load_fit_parameters(directory, base_filename)
 
                         # Create the joint mask
-                        jmask = np.logical_or(masks1[this_mask], masks2[this_mask])
+                        jmasks = create_joint_masks(masks1, masks2)
+                        jmask = jmasks[this_mask]
 
                         # Mask the data with the joint mask
                         c1 = compressify(output1[:, :, ion], jmask)
                         c2 = compressify(output2[:, :, ion], jmask)
 
                         # Construct the plot title and the x, y labels
-                        super_title = f"{study_type} simulations\n"
-                        description = f'{output_name}, {wave1} vs. {wave2} (mask={this_mask})' + "\n"
-                        mask_info = mask_plotting_information(jmask)
+                        super_title = make_super_title(study_type, f"{wave1} vs. {wave2}")
+                        description = f'{variable_name}, (mask={this_mask})' + "\n"
+                        mask_info = mask_plotting_information(jmask, this_mask)
                         title = f"{super_title}{description}{mask_info}"
                         xy_names = [wave1, wave2]
 
