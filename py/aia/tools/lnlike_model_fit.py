@@ -107,7 +107,21 @@ def prob_this_rchi2_or_larger(rchi2, m, nu):
 
 
 #
-# What value of rchi2 gives rise to a given probability level?
+# Probability of getting this value of reduced chi-squared or smaller (based on Eq. 18)
+#
+def prob_this_rchi2_or_smaller(rchi2, m, nu):
+    """
+    :param rchi2: reduced chi-squared value
+    :param m: number of spectra considered
+    :param nu:  degrees of freedom
+    :return:
+    """
+    return 1 - prob_this_rchi2_or_larger(rchi2, m, nu)
+
+
+#
+# What value of rchi2 gives rise to a given probability level as calculated by Eq. 18?
+# This function is the inverse of the function "prob_this_rchi2_or_larger".
 #
 def rchi2_given_prob(p, m, nu):
     a = (nu / 2.0) * np.float64(m) / (3.0 + np.float64(m))
