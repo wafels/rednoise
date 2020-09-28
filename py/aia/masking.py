@@ -22,7 +22,22 @@ class Fitness:
     def is_good(self, p=(0.025, 0.975)):
         """
         Tests the probability that the reduced-chi squared value is
-        within the bounds given by p
+        within the bounds given by p.
+
+        This uses a function which calculates the probability that a
+        reduced chi-squared value exceeds a certain value.  Consider the default values
+        p=(0.025, 0.975).  The value "0.975" means calculate the reduced chi-squared value for
+        which there is a 97.5% chance that the actual value (rchi2) is above that level.  This must
+        be a smaller value so that more of the probability distribution lies to the right of this
+        value.
+
+        Conversely, the value "0.025" means calculate the reduced chi-squared value for
+        which there is a 2.5% chance that the actual value (rchi2) is above that level.  This must
+        be a larger value so that more of the probability distribution lies to the left of this
+        value.
+
+        The actual measured value of rchi2 must lie between these limits in order for it to pass
+        this test.  When this happens, the method returns True.  It returns False otherwise.
 
         Parameters
         ----------
@@ -30,9 +45,14 @@ class Fitness:
 
         Returns
         -------
-        Returns True if the reduced chi-squared value lies within
-        the specified probability limits
+        Returns True if the reduced chi-squared value lies within the specified probability limits.
         """
+        if p[1] <= p[0]:
+            raise ValueError(' The elements of "p" must be strictly monotonic.')
+        if p[0] < 0.0:
+            raise ValueError(' The first element of "p" must be greater than or equal to zero.')
+        if p[1] > 1.0:
+            raise ValueError(' The last element of "p" must be less than or equal to 1.')
         rchi2_gt_low_limit = self._rchi2 > self._rchi2limit(p[1])
         rchi2_lt_high_limit = self._rchi2 < self._rchi2limit(p[0])
         return rchi2_gt_low_limit * rchi2_lt_high_limit
