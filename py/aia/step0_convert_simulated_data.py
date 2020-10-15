@@ -58,13 +58,25 @@ for wave in ds.waves:
     filepath = os.path.join(directory, filename)
     hdulist = fits.open(filepath)
     # The data needs to be re-ordered for use by the following analyses
+
     sda = np.swapaxes(hdulist[0].data, 0, 2)  # check this! 
     hdulist.close()
+
+    # Take a subsection in time
+    if ds.time_range[0] is None:
+        start_index = 0
+    else:
+        start_index = ds.time_range[0]
+    if ds.time_range[1] is None:
+        end_index = sda.shape[2] - 1
+    else:
+        end_index = ds.time_range[1]
+    nt = end_index - start_index + 1
 
     #
     # Output the data in the format required
     #
-    time_in_seconds = dsim.cadence.to(u.s).value * np.arange(0, sda.shape[2])
+    time_in_seconds = dsim.cadence.to(u.s).value * np.arange(0, nt)
 
     # Let's simplify the output directory compared to what was done previously.
     # Since the output is intended to be that from a step1 process, let's
@@ -88,9 +100,7 @@ for wave in ds.waves:
 
     # Save the data
     print('Saving data to ' + output_filepath)
-    np.savez(output_filepath, sda, time_in_seconds)
-
-
+    np.savez(output_filepath, sda[:, :, start_index:end_index], time_in_seconds)
 
 
 """

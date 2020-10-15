@@ -85,7 +85,7 @@ if study_type in list(sim_name.keys()):
 
     conversion_style = 'simple'
     # Where the original data is, typically FITS or sav files
-    dataroot = os.path.expanduser('~/Data/ts/')
+    dataroot = os.path.expanduser('~/Data/ts/bradshaw_simulations_original_format_as_fits/')
     # Where the output data will be stored.
     output_root = os.path.expanduser('~/web/ts/output')
     corename = study_type
@@ -94,14 +94,21 @@ if study_type in list(sim_name.keys()):
     # A function that calculates the data filename
     def source_filename(study_type, w):
         if study_type == 'bv_simulation_low_fn':
-            filename = 'low_fn_AIA_{:s}_noisy.fits'
+            # filename = 'low_fn_AIA_{:s}_noisy.fits'
+            filename = 'bradshaw_low_fn_frames_{:s}.fits'
         elif study_type == 'bv_simulation_intermediate_fn':
-            filename = 'AIA_{:s}_noisy.fits'
+            # filename = 'AIA_{:s}_noisy.fits'
+            filename = 'bradshaw_inter_fn_frames_{:s}.fits'
         elif study_type == 'bv_simulation_high_fn':
-            filename = 'high_fn_AIA_{:s}_noisy.fits'
+            # filename = 'high_fn_AIA_{:s}_noisy.fits'
+            filename = 'bradshaw_high_fn_frames_{:s}.fits'
         return filename.format(w)
     # All the wavelengths
     waves = ['94', '131', '171', '193', '211', '335']
+
+    # Time range.  time_range[0] with value None means '0', time_range[1]
+    # with value None means the last time.
+    time_range = [50, None]
 
 ###############################################################################
 # Simulation of power spectra.
