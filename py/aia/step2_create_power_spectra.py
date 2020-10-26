@@ -101,7 +101,7 @@ for study_type in study_types:
             # Create a dummy time series object to get some frequency
             # information
             t = dt * np.arange(0, nt)
-            tsdummy = TimeSeries(t * u.s, t)
+            tsdummy = TimeSeries(t, t)
 
             # Positive frequencies
             pfrequencies = tsdummy.FFTPowerSpectrum.frequencies.pfrequencies

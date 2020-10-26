@@ -134,8 +134,11 @@ if 'verify_fitting' in study_type:
     waves = [wave]
 
     # Bradshaw & Viall frequencies
-    df = 0.000196078431372549 - 9.80392156862745e-05
-    pfrequencies = 9.80392156862745e-05 + df * np.arange(424)
+    nf = 649
+    f0 = 6.41519117e-05
+    f1 = 0.0001283
+    df = f1 - f0
+    pfrequencies = f0 + df * np.arange(nf)
     nx = 256
     ny = 256
     alpha = int(wave)/100

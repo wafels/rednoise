@@ -58,6 +58,21 @@ bv_ordered_waves = OrderedDict([('94', "094"),
                                 ('171', '171'),
                                 ('131', '131')])
 
+def xscale(oname):
+    if oname == 'alpha_0':
+        s = 'linear'
+    else:
+        s = 'symlog'
+    return s
+
+def yscale(oname):
+    if oname == 'alpha_0':
+        s = 'linear'
+    else:
+        s = 'symlog'
+    return s
+
+
 
 def plot_histogram2d(ax, c1, c2, bins, variable_names, title):
     """
@@ -74,7 +89,7 @@ def plot_histogram2d(ax, c1, c2, bins, variable_names, title):
     return ax
 
 
-def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=True):
+def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=True, yscale='symlog', xscale='symlog'):
     """
     Creates a histogram plot.
 
@@ -96,6 +111,8 @@ def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=T
     ax.set_ylabel('number')
     ax.set_title(title)
     ax.grid(linestyle=":")
+    ax.set_yscale(yscale)
+    ax.set_xscale(xscale)
 
     if show_statistics:
         # Get the summary statistics
@@ -122,7 +139,7 @@ def plot_histogram(ax, compressed, bins, variable_name, title, show_statistics=T
     return ax
 
 
-def plot_spatial_distribution(ax, data, output_name, title):
+def plot_spatial_distribution(ax, data, output_name, title, vmax=4.0):
     """
     Creates a spatial distribution plot.
 
@@ -140,15 +157,16 @@ def plot_spatial_distribution(ax, data, output_name, title):
     if output_name == 'alpha_0':
         cmap = cm.Dark2_r
         im = ax.imshow(data, origin='lower', cmap=cmap,
-                       norm=colors.Normalize(vmin=0.0, vmax=8.0, clip=False))
+                       norm=colors.Normalize(vmin=0.0, vmax=vmax, clip=False))
         im.cmap.set_over('lemonchiffon')
     elif "err_" in output_name:
         cmap = cm.plasma
         im = ax.imshow(data, origin='lower', cmap=cmap,
-                       norm=colors.LogNorm(vmin=compressed.min(), vmax=compressed.max()))
+                       norm=colors.Normalize(vmin=data.min(), vmax=data.max()))
     else:
         cmap = cm.plasma
-        im = ax.imshow(data, origin='lower', cmap=cmap)
+        im = ax.imshow(data, origin='lower', cmap=cmap,
+                       norm=colors.SymLogNorm(1.0, vmin=data.min(), vmax=data.max()))
     im.cmap.set_bad(excluded_color)
     ax.set_xlabel('solar X')
     ax.set_ylabel('solar Y')
@@ -225,9 +243,11 @@ def mask_plotting_information(masks, this_mask):
         fitable = masks['none']
 
     # This selection assumes that we want numbers only where we have determined
-    # where the power spetrum is deemed fitable.
-    if this_mask == 'combined':
+    # where the power spectrum is deemed fitable.
+    elif this_mask == 'combined':
         fitable = masks['fitable']
+    else:
+        fitable = masks[this_mask]
 
     # Number of pixels in the data
     n_pixels = masks['none'].size
@@ -449,7 +469,7 @@ if study_type == 'verify_fitting' and 'gang_by_index' in plots:
                 title = f"{super_title}{description}{mask_info}"
 
                 vax[this_row, this_col] = plot_histogram(vax[this_row, this_col], compressed, bins,
-                                                         variable_name, title, show_statistics=True)
+                                                         variable_name, title, show_statistics=True, xscale=xscale(output_name), yscale=yscale(output_name))
 
             # The save directory and base filenames for plots that are not specific to a particular
             # wave (i.e., AIA channel)
@@ -536,13 +556,7 @@ if 'individual' in plots:
             emission = np.ones_like(observed)
 
         # Load in the mask data
-        mask_list = ("finiteness", "bounds", "fitness", "intensity", "combined")
-        masks = dict()
-        for this_mask in mask_list:
-            filename = f'{base_filename}.{this_mask}.step4.npz'
-            filepath = os.path.join(directory, filename)
-            print(f'Loading {filepath}')
-            masks[this_mask] = (np.load(filepath))['arr_0']
+        masks = load_masks(directory, base_filename)
 
         # Calculate a brightness mask
         total_intensity = np.transpose(np.sum(emission, axis=2))
@@ -554,8 +568,8 @@ if 'individual' in plots:
 
         ###########################
         # Plot the masks
-        for this_mask in mask_list:
-            description = f'{this_mask} mask' + "\n"
+        for this_mask in list(masks.keys()):
+            description = f'{this_mask.replace("_", " ")} mask' + "\n"
             mask = np.transpose(masks[this_mask])
             mask_info = mask_plotting_information(masks, this_mask)
             plt.close('all')
@@ -573,10 +587,10 @@ if 'individual' in plots:
         ###########################
         # Plot the intensity with and without the combined mask
         masks['none'] = np.zeros_like(masks['combined'])
-        for this_mask in ('none', 'combined'):
+        for this_mask in ('none', 'combined',):
             if this_mask == 'none':
                 description = f'total emission' + "\n"
-                mask_info = ''
+                mask_info = 'all pixels'
             else:
                 description = f'total emission (mask={this_mask})' + "\n"
                 mask_info = mask_plotting_information(masks, this_mask)
@@ -591,6 +605,9 @@ if 'individual' in plots:
             ax.set_xlabel('solar X')
             ax.set_ylabel('solar Y')
             ax.set_title("{:s}{:s}{:s}".format(super_title, description, mask_info))
+            print(super_title)
+            print(description)
+            print(mask_info)
             ax.grid(linestyle=":")
             fig.colorbar(im, ax=ax, label="total emission")
             filename = f'spatial.emission_{this_mask}.{base_filename}.{image_filetype}'
@@ -632,6 +649,7 @@ if 'individual' in plots:
             ax.legend()
             filename = f'histogram.emission.{this_mask}.{base_filename}.{image_filetype}'
             filepath = os.path.join(directory, filename)
+            plt.tight_layout()
             plt.savefig(filepath)
 
         ###########################
@@ -658,12 +676,13 @@ if 'individual' in plots:
                 # Create the histogram plot
                 plt.close('all')
                 fig, ax = plt.subplots()
-                ax = plot_histogram(ax, compressed, bins, variable_name, title)
+                ax = plot_histogram(ax, compressed, bins, variable_name, title, yscale=yscale(output_name), xscale=xscale(output_name))
 
                 # Create the filepath the plot will be saved to, and save it
                 filename = f'histogram.{output_name}.{this_mask}.{base_filename}.{image_filetype}'
                 filepath = os.path.join(directory, filename)
                 print(f'Creating and saving {filepath}')
+                plt.tight_layout()
                 plt.savefig(filepath)
 
                 # Spatial distribution
@@ -680,6 +699,7 @@ if 'individual' in plots:
                 # Create the filepath the plot will be saved to, and save it
                 filename = f'spatial.{output_name}.{this_mask}.{base_filename}.{image_filetype}'
                 filepath = os.path.join(directory, filename)
+                plt.tight_layout()
                 plt.savefig(filepath)
 
         ###########################
@@ -813,7 +833,7 @@ if 'gang_by_wave' in plots:
                 title = f"{super_title}{description}{mask_info}"
 
                 # Create the histogram plot
-                hax[this_row, this_col] = plot_histogram(hax[this_row, this_col], compressed, bins, variable_name, title)
+                hax[this_row, this_col] = plot_histogram(hax[this_row, this_col], compressed, bins, variable_name, title, xscale=xscale(output_name), yscale=yscale(output_name))
 
                 # Spatial distribution
                 # Create the title of the plot

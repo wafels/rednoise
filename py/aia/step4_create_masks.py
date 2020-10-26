@@ -125,7 +125,7 @@ for study_type in study_types:
         for i in range(0, nx):
             for j in range(0, ny):
                 fitness = Fitness(observed[i, j, :], mfits[i, j, :], 3)
-                fitness_mask[i, j] = not fitness.is_good()
+                fitness_mask[i, j] = not fitness.is_good(p=(0.0015,0.9985))
 
 
         # Load in the original time series data to create an intensity mask
@@ -138,6 +138,7 @@ for study_type in study_types:
             # Calculate a brightness mask
             total_intensity = np.sum(emission, axis=2)
             noise_level = noise_level_estimate(total_intensity, ((0, 0), (10, 10)))
+            noise_level = 10.0**-5
             if (wave, study_type) in (('94', 'bv_simulation_low_fn'), ('335', 'bv_simulation_low_fn'),('94', 'bv_simulation_intermediate_fn'), ('335', 'bv_simulation_intermediate_fn') ):
                 alf = 1.0
             else:
