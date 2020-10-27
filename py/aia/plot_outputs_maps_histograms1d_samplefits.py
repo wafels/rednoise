@@ -932,7 +932,7 @@ if 'gang_by_simulation_and_wave' in plots:
 
             super_title = f"{wave} simulations\n"
 
-            for_histograms = dict()
+            for_joint_histograms = dict()
             for ist, study_type in enumerate(study_types):
                 print(f'Loading study type {study_type}.')
 
@@ -972,7 +972,7 @@ if 'gang_by_simulation_and_wave' in plots:
                 # Create the data used for the histograms
                 compressed = data.flatten().compressed()
                 compressed = compressed[np.isfinite(compressed)]
-                for_histograms[study_type] = compressed
+                for_joint_histograms[study_type] = compressed
 
             # Create the plot of the overlaid masks as a single RGB image
             description = f"locations of included fits from each simulation overlaid as RGB triple"
@@ -985,12 +985,12 @@ if 'gang_by_simulation_and_wave' in plots:
             # Create the plot of the overlaid histograms
             description = f"histograms of {variable_name} for each simulation"
             title = f"{super_title}{description}"
-            hax[this_row, this_col] = plot_overlay_histograms(hax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title)
+            hax[this_row, this_col] = plot_overlay_histograms(hax[this_row, this_col], for_joint_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title)
 
             # Create the plot of the overlaid probability distributions
             description = f"probability distributions for {variable_name} for each simulation"
             title = f"{super_title}{description}"
-            pax[this_row, this_col] = plot_overlay_histograms(pax[this_row, this_col], for_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title, probability=True)
+            pax[this_row, this_col] = plot_overlay_histograms(pax[this_row, this_col], for_joint_histograms, bins, study_type_colors, study_type_labels, study_types, variable_name, title, probability=True)
 
         # Save the histograms
         this_mask = 'combined'
