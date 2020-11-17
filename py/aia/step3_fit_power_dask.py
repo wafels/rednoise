@@ -53,9 +53,9 @@ else:
 normalize_frequencies = True
 
 # Divide by the initial power?
-divide_by_initial_power = True
+divide_by_initial_power = False
 
-# Define the observation model
+# Define the observation modell
 this_model = SelectModel('pl_c')
 observation_model = this_model.observation_model
 scipy_optimize_options = this_model.scipy_optimize_options
@@ -94,10 +94,12 @@ def dask_fit_fourier_pl_c(power_spectrum):
     loglike = PSDLogLikelihood(ps.freq, ps.power, observation_model, m=ps.m)
     # Parameter estimation object
     fm = "L-BFGS-B"
+    fm = "Nelder-Mead"
     parameter_estimate = PSDParEst(ps, fitmethod=fm, max_post=False)
 
     # Estimate the starting parameters
-    ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 10), ar=(0, 5), br=(-50, -1))
+    br = (-100, -1)
+    ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 10), ar=(0, 5), br=br)
     return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
                                   scipy_optimize_options=scipy_optimize_options)
 
