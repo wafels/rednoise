@@ -30,9 +30,9 @@ wave = '94'
 #wave = '335'
 
 
-#study_type = "verify_fitting"
+study_type = "verify_fitting"
 #wave = '000'
-#wave = '050'
+wave = '050'
 #wave = '100'
 #wave = '150'
 #wave = '200'
@@ -144,6 +144,8 @@ if 'verify_fitting' in study_type:
     alpha = int(wave)/100
     amplitude = 284220259296.4687  # 284220259296.4687 maximum over all BV data
     white_noise = 2.7307259040496703e-10  # 2.7307259040496703e-10 minimum over all BV data
+    amplitude =  397383.2603254347
+    white_noise = 9.43832683541423e-30
     true_parameters = [amplitude, alpha, white_noise]
     simulation_model = SelectModel('pl_c').observation_model
 
