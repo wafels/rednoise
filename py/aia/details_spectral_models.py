@@ -1,5 +1,11 @@
+import numpy as np
 
+from astropy import units as u
+from astropy.units import Quantity, UnitsError
+from astropy.modeling.core import (Fittable1DModel, Fittable2DModel)
+from astropy.modeling.parameters import Parameter, InputParameterError
 from astropy.modeling import models
+
 
 class Const1DAsExponential(Fittable1DModel):
     """
@@ -42,8 +48,7 @@ class Const1DAsExponential(Fittable1DModel):
         plt.show()
     """
 
-    amplitude = Parameter(default=1)
-    linear = True
+    amplitude = Parameter(default=0)
 
     @staticmethod
     def evaluate(x, amplitude):
@@ -62,14 +67,12 @@ class Const1DAsExponential(Fittable1DModel):
             return Quantity(x, unit=amplitude.unit, copy=False)
         return x
 
-
     @staticmethod
     def fit_deriv(x, amplitude):
         """One dimensional Constant model derivative with respect to parameters"""
 
-        d_amplitude = amplitude*np.exp(ampliftude) * np.ones_like(x)
+        d_amplitude = np.exp(amplitude) * np.ones_like(x)
         return [d_amplitude]
-
 
     @property
     def input_units(self):
@@ -77,10 +80,6 @@ class Const1DAsExponential(Fittable1DModel):
 
     def _parameter_units_for_data_units(self, inputs_unit, outputs_unit):
         return {'amplitude': outputs_unit[self.outputs[0]]}
-
-
-
-
 
 
 class SelectModel:
@@ -121,8 +120,8 @@ class SelectModel:
             # fix x_0 of power law component
             power_law.x_0.fixed = True
 
-            # Fix the constant of the power law component
-            power_law.???
+            # Fix the amplitude of the power law component
+            power_law.amplitude.fixed = True
 
             # Amplitude of the power law as an exponential
             amplitude_as_exponential = models.Const1DAsExponential()
@@ -136,7 +135,7 @@ class SelectModel:
 
             # Create the model
             self.observation_model = amplitude_as_exponential*power_law + constant
-            self.observation_model.name = 'pl_c2'
+            self.observation_model.name = 'pl_c_as_exponentials'
         else:
             raise ValueError('Model not known')
 
