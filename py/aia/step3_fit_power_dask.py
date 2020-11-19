@@ -55,8 +55,9 @@ normalize_frequencies = True
 # Divide by the initial power?
 divide_by_initial_power = False
 
-# Define the observation modell
+# Define the observation model
 this_model = SelectModel('pl_c')
+this_model = SelectModel('pl_c_as_exponentials')
 observation_model = this_model.observation_model
 scipy_optimize_options = this_model.scipy_optimize_options
 
@@ -94,14 +95,18 @@ def dask_fit_fourier_pl_c(power_spectrum):
     loglike = PSDLogLikelihood(ps.freq, ps.power, observation_model, m=ps.m)
     # Parameter estimation object
     fm = "L-BFGS-B"
-    fm = "Nelder-Mead"
     parameter_estimate = PSDParEst(ps, fitmethod=fm, max_post=False)
 
     # Estimate the starting parameters
     br = (-100, -1)
     ipe = InitialParameterEstimatePlC(ps.freq, ps.power, ir=(0, 10), ar=(0, 5), br=br)
-    return parameter_estimate.fit(loglike, [ipe.amplitude, ipe.index, ipe.background],
-                                  scipy_optimize_options=scipy_optimize_options)
+    if observation_model.name == 'pl_c':
+        best_guess = [ipe.amplitude, ipe.index, ipe.background]
+    elif observation_model.name == 'pl_c_as_exponentials':
+        best_guess = [np.log(ipe.amplitude), ipe.index, np.log(ipe.background)]
+    else:
+        raise ValueError
+    return parameter_estimate.fit(loglike, best_guess, scipy_optimize_options=scipy_optimize_options)
 
 
 if __name__ == '__main__':
