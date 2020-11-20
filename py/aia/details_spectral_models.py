@@ -124,12 +124,12 @@ class SelectModel:
             power_law.amplitude.fixed = True
 
             # Amplitude of the power law as an exponential
-            amplitude_as_exponential = models.Const1DAsExponential()
+            amplitude_as_exponential = Const1DAsExponential()
             amplitude_as_exponential.amplitude.min = -100
             amplitude_as_exponential.amplitude.max = None
 
             # Constant component
-            constant = models.Const1DAsExponential()
+            constant = Const1DAsExponential()
             constant.amplitude.min = -100
             constant.amplitude.max = None
 

@@ -12,17 +12,19 @@ from tools.statistics import noise_level_estimate
 parser = argparse.ArgumentParser(description='Create masks for the results from one or more channels.')
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
 parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
-parser.add_argument('-m', '--multiply', help='multiplication factor for the noise level', type=float)
+parser.add_argument('-f', '--factor', help='multiplication factor for the noise level', type=float, default=1.0)
 parser.add_argument('-a', '--absolute', help='absolute noise level', type=float)
+parser.add_argument('-m', '--model', help='model to consider', type=str, default='pl_c')
+
 
 args = parser.parse_args()
 waves = [item for item in args.waves.split(',')]
 study_types = [item for item in args.study.split(',')]
-multiply = args.multiply
+factor = args.factor
 absolute = args.absolute
 
 # Which model to look at
-observation_model_name = 'pl_c'
+observation_model_name = args.model
 window = 'hanning'
 power_type = 'absolute'
 
@@ -152,7 +154,7 @@ for study_type in study_types:
             if (wave, study_type) in (('94', 'bv_simulation_low_fn'), ('335', 'bv_simulation_low_fn'),('94', 'bv_simulation_intermediate_fn'), ('335', 'bv_simulation_intermediate_fn') ):
                 alf = 1.0
             else:
-                alf = multiply
+                alf = factor
 
             # Calculate the intensity mask
             intensity_mask = IntensityMask(total_intensity, absolute_level=alf*noise_level).mask
