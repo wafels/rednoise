@@ -35,7 +35,7 @@ def most_probable_power_law_index(f, I, m, n):
 
 class InitialParameterEstimatePlC(object):
     def __init__(self, f, p, ir=None, ar=None, br=None,
-                 bayes_search=(0, np.linspace(0, 20, 100))):
+                 bayes_search=(0, np.linspace(0, 4, 100))):
         """
         Estimate of three parameters of the power law + constant observation model - the amplitude,
         the power law index, and the background value.
@@ -77,6 +77,7 @@ class InitialParameterEstimatePlC(object):
         observed_power = self.p[self.ar[0]:self.ar[1]]
         observed_freqs = self.f[self.ar[0]:self.ar[1]] ** self._index
         self._amplitude = np.exp(np.mean(np.log(observed_power*observed_freqs)))
+        self._amplitude = self.p[0]
 
         # Use the high frequency part of the spectrum to estimate the constant value.
         self._background = np.exp(np.mean(np.log(self.p[self.br[0]:self.br[1]])))
