@@ -151,3 +151,73 @@ class OldSchoolInitialParameterEstimatePlC(object):
     @property
     def background(self):
         return self._background
+
+
+class InitialParameterEstimateSmoothPlC(object):
+    def __init__(self, f, p, ir=None, ar=None, br=None,
+                 bayes_search=(0, np.linspace(0, 20, 100))):
+        """
+
+        Parameters
+        ----------
+        f :
+            Positive frequencies of the power law spectrum
+
+        p :
+            Power at the frequencies
+
+        ir :
+
+
+        ar :
+
+
+        br :
+
+
+        bayes_search : ~tuple
+
+
+        """
+        self.f = f
+        self.p = p
+        self.ir = ir
+        self.ar = ar
+        self.br = br
+        self.bayes_search = bayes_search
+
+        # The bit in-between the low and high end of the spectrum to estimate the power law index.
+        self._index = most_probable_power_law_index(self.f[self.ir[0]:self.ir[1]]/self.f[ir[0]],
+                                                    self.p[self.ir[0]:self.ir[1]],
+                                                    bayes_search[0], bayes_search[1])
+
+        # Use the low-frequency end to estimate the amplitude, normalizing for the first frequency
+        observed_power = self.p[self.ar[0]:self.ar[1]]
+        observed_freqs = self.f[self.ar[0]:self.ar[1]] ** self._index
+        self._amplitude = np.exp(np.mean(np.log(observed_power*observed_freqs)))
+
+        # Use the high frequency part of the spectrum to estimate the constant value.
+        self._background = np.exp(np.mean(np.log(self.p[self.br[0]:self.br[1]])))
+
+        # Get the middle of the range in log space as an estimate for where the break is
+        self._x_break = np.exp(0.5*(np.log(np.min(self.f)) + np.log(np.max(self.f))))
+
+    @property
+    def amplitude(self):
+        return self._amplitude
+
+    @property
+    def x_break(self):
+        return self._x_break
+
+    @property
+    def alpha_1(self):
+        return self._index
+
+    @property
+    def alpha_2(self):
+        return self._index
+
+    @property
+    def background(self):
+        return self._background

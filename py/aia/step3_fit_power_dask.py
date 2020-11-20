@@ -14,7 +14,7 @@ from stingray.modeling import PSDParEst
 
 import astropy.units as u
 from astropy.time import Time
-from spectral_model_parameter_estimators import InitialParameterEstimatePlC, OldSchoolInitialParameterEstimatePlC
+from spectral_model_parameter_estimators import InitialParameterEstimatePlC, InitialParameterEstimateSmoothPlC
 from details_spectral_models import SelectModel
 import details_study as ds
 
@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser(description='Fit a model to Fourier power spect
 parser.add_argument('-w', '--waves', help='comma separated list of channels', type=str)
 parser.add_argument('-s', '--study', help='comma separated list of study types', type=str)
 parser.add_argument('-n', '--n_workers', help='number of workers', type=int)
+parser.add_argument('-m', '--model', help='model to fit the power spectra', type=str)
 args = parser.parse_args()
 
 # Data to analyze
@@ -34,6 +35,9 @@ study_types = [item for item in args.study.split(',')]
 
 # Number of workers
 n_workers = args.n_workers
+
+# Model name
+selected_model = args.model
 
 # Type of power spectrum
 power_type = 'absolute'
@@ -56,8 +60,7 @@ normalize_frequencies = True
 divide_by_initial_power = False
 
 # Define the observation model
-this_model = SelectModel('pl_c')
-this_model = SelectModel('pl_c_as_exponentials')
+this_model = SelectModel(selected_model)
 observation_model = this_model.observation_model
 scipy_optimize_options = this_model.scipy_optimize_options
 
@@ -106,6 +109,41 @@ def dask_fit_fourier_pl_c(power_spectrum):
         best_guess = [np.log(ipe.amplitude), ipe.index, np.log(ipe.background)]
     else:
         raise ValueError
+    return parameter_estimate.fit(loglike, best_guess, scipy_optimize_options=scipy_optimize_options)
+
+
+def dask_fit_fourier_smoothpl_c(power_spectrum):
+    """
+    Fits the smoothly broken power law + constant observation model
+
+    Parameters
+    ----------
+    power_spectrum : ~tuple
+        The first entry corresponds to the positive frequencies of the power spectrum.
+        The second entry corresponds to the Fourier power at those frequencies
+
+    Return
+    ------
+    A parameter estimation object - see the Stingray docs.
+
+    """
+    # Make a Powerspectrum object
+    ps = Powerspectrum()
+    ps.freq = power_spectrum[0]
+    ps.power = power_spectrum[1]
+    ps.df = ps.freq[1] - ps.freq[0]
+    ps.m = 1
+
+    # Define the log-likelihood of the data given the model
+    loglike = PSDLogLikelihood(ps.freq, ps.power, observation_model, m=ps.m)
+    # Parameter estimation object
+    fm = "L-BFGS-B"
+    parameter_estimate = PSDParEst(ps, fitmethod=fm, max_post=False)
+
+    # Estimate the starting parameters
+    br = (-100, -1)
+    ipe = InitialParameterEstimateSmoothPlC(ps.freq, ps.power, ir=(0, 10), ar=(0, 5), br=br)
+    best_guess = [ipe.amplitude, ipe.x_break, ipe.alpha_1, ipe.alpha_2, ipe.delta]
     return parameter_estimate.fit(loglike, best_guess, scipy_optimize_options=scipy_optimize_options)
 
 
@@ -210,7 +248,8 @@ if __name__ == '__main__':
             print('Saving ' + filepath)
             np.savez(filepath, [x0, x1, y0, y1], normalize_frequencies, divide_by_initial_power)
 
-            # Create a list the names of the output in the same order that they appear in the outputs
+            # Create a list the names of the output in the same order that they appear in the
+            # outputs
             output_names = list()
             param_names = observation_model.param_names
             fixed = observation_model.fixed

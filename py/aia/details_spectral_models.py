@@ -136,6 +136,15 @@ class SelectModel:
             # Create the model
             self.observation_model = amplitude_as_exponential*power_law + constant
             self.observation_model.name = 'pl_c_as_exponentials'
+        elif model_type.lower() == 'smoothlybroken_c':
+            power_law = models.SmoothlyBrokenPowerLaw1D()
+
+            # Constant component
+            constant = models.Const1D()
+            constant.amplitude.min = 0.0
+            constant.amplitude.max = None
+
+            self.observation_model = power_law + constant
         else:
             raise ValueError('Model not known')
 
