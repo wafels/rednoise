@@ -652,6 +652,41 @@ if 'individual' in plots:
             plt.tight_layout()
             plt.savefig(filepath)
 
+            ########################################
+            # Summary plots of all the spectra
+            # Create a masked 3d-spectral array
+            observed_spectra_mask = np.broadcast_to(this_mask, observed.shape)
+            observed_masked = np.ma.array(observed, mask=observed_spectra_mask)
+
+            # Get the summary statistics
+            log10_observed_mean = np.log10(observed_masked).mean(axis=(0, 1))
+            log10_observed_median = np.log10(observed_masked).median(axis=(0, 1))
+            log10_observed_std = np.log10(observed_masked).std(axis=(0, 1))
+
+            # Create the title of the plot
+            description = f"Summary of observed spectra (mask={this_mask})" + "\n"
+            mask_info = mask_plotting_information(masks, this_mask)
+            title = f"{super_title}{description}{mask_info}"
+
+            # Create the plot
+            fig, ax = plt.subplots()
+            ax.plot(freq, log10_observed_mean, label='mean')
+            ax.plot(freq, log10_observed_mean + log10_observed_std, label='mean + std')
+            ax.plot(freq, log10_observed_mean - log10_observed_std, label='mean - std')
+            ax.plot(freq, log10_observed_median, label='median')
+            ax.set_xscale("log")
+            ax.set_xlabel('frequency')
+            ax.set_ylabel('power')
+            ax.set_title(title)
+            ax.legend()
+
+            # Create the filepath the plot will be saved to, and save it
+            filename = f'observed_summary.{this_mask}.{base_filename}.{image_filetype}'
+            filepath = os.path.join(directory, filename)
+            plt.tight_layout()
+            plt.savefig(filepath)
+
+
         ###########################
         # Plot the results of the fitting
         for i, output_name in enumerate(output_names):
