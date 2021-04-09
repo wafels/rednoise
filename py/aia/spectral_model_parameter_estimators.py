@@ -156,7 +156,7 @@ class OldSchoolInitialParameterEstimatePlC(object):
 
 class InitialParameterEstimateSmoothPlC(object):
     def __init__(self, f, p, ir=None, ar=None, br=None,
-                 bayes_search=(0, np.linspace(0, 20, 100))):
+                 bayes_search=(0, np.linspace(0, 4, 100))):
         """
 
         Parameters
@@ -222,3 +222,74 @@ class InitialParameterEstimateSmoothPlC(object):
     @property
     def background(self):
         return self._background
+
+
+
+class InitialParameterEstimateLogParabolaC(object):
+    def __init__(self, f, p, ir=None, ar=None, br=None,
+                 bayes_search=(0, np.linspace(0, 4, 100))):
+        """
+        Estimate of three parameters of the power law + constant observation model - the amplitude,
+        the power law index, and the background value.
+
+        Parameters
+        ----------
+        f :
+            Positive frequencies of the power law spectrum
+
+        p :
+            Power at the frequencies
+
+        ir :
+
+
+        ar :
+
+
+        br :
+
+
+        bayes_search : ~tuple
+
+
+        """
+        self.f = f
+        self.p = p
+        self.ir = ir
+        self.ar = ar
+        self.br = br
+        self.bayes_search = bayes_search
+
+        # The bit in-between the low and high end of the spectrum to estimate the power law index.
+        self._index = most_probable_power_law_index(self.f[self.ir[0]:self.ir[1]]/self.f[ir[0]],
+                                                    self.p[self.ir[0]:self.ir[1]],
+                                                    bayes_search[0], bayes_search[1])
+
+        # Use the low-frequency end to estimate the amplitude, normalizing for the first frequency
+        #observed_power = self.p[self.ar[0]:self.ar[1]]
+        #observed_freqs = self.f[self.ar[0]:self.ar[1]] ** self._index
+        #self._amplitude = np.exp(np.mean(np.log(observed_power*observed_freqs)))
+        self._amplitude = self.p[0]
+
+        # Use the high frequency part of the spectrum to estimate the constant value.
+        self._background = np.exp(np.mean(np.log(self.p[self.br[0]:self.br[1]])))
+
+        # Just set a default value for the bending value
+        self._beta = 0.0
+
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def amplitude(self):
+        return self._amplitude
+
+    @property
+    def beta(self):
+        return self._beta
+
+    @property
+    def background(self):
+        return self._background
+

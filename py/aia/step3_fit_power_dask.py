@@ -14,7 +14,7 @@ from stingray.modeling import PSDParEst
 
 import astropy.units as u
 from astropy.time import Time
-from spectral_model_parameter_estimators import InitialParameterEstimatePlC, InitialParameterEstimateSmoothPlC
+from spectral_model_parameter_estimators import InitialParameterEstimatePlC, InitialParameterEstimateSmoothPlC, InitialParameterEstimateLogParabolaC
 from details_spectral_models import SelectModel
 import details_study as ds
 
@@ -146,8 +146,49 @@ def dask_fit_fourier_smoothpl_c(power_spectrum):
     best_guess = [ipe.amplitude, ipe.x_break, ipe.alpha_1, ipe.alpha_2, ipe.delta]
     return parameter_estimate.fit(loglike, best_guess, scipy_optimize_options=scipy_optimize_options)
 
+def dask_fit_fourier_logparabola_c(power_spectrum):
+    """
+    Fits the log parabola plus constant model
+
+    Parameters
+    ----------
+    power_spectrum : ~tuple
+        The first entry corresponds to the positive frequencies of the power spectrum.
+        The second entry corresponds to the Fourier power at those frequencies
+
+    Return
+    ------
+    A parameter estimation object - see the Stingray docs.
+
+    """
+    # Make a Powerspectrum object
+    ps = Powerspectrum()
+    ps.freq = power_spectrum[0]
+    ps.power = power_spectrum[1]
+    ps.df = ps.freq[1] - ps.freq[0]
+    ps.m = 1
+
+    # Define the log-likelihood of the data given the model
+    loglike = PSDLogLikelihood(ps.freq, ps.power, observation_model, m=ps.m)
+    # Parameter estimation object
+    fm = "L-BFGS-B"
+    parameter_estimate = PSDParEst(ps, fitmethod=fm, max_post=False)
+
+    # Estimate the starting parameters
+    ipe = InitialParameterEstimateLogParabolaC(ps.freq, ps.power, ir=(0, 10), ar=(0, 5), br=(-100, -1))
+    best_guess = [ipe.amplitude, ipe.alpha, ipe.beta, ipe.background]
+    return parameter_estimate.fit(loglike, best_guess, scipy_optimize_options=scipy_optimize_options)
+
+
+# Collect all the fit functions
+dask_fitters = {"pl_c":dask_fit_fourier_pl_c,
+                "logparabola_c": dask_fit_fourier_logparabola_c}
+
 
 if __name__ == '__main__':
+    # Pick the function we are using to fit the data
+    dask_fitter = dask_fitters[selected_model]
+
     # Now do the fitting
     cluster = LocalCluster(n_workers=n_workers)
     for study_type in study_types:
@@ -200,7 +241,7 @@ if __name__ == '__main__':
             print(f'...started Dask processing at {t_start}')
 
             # Do the model fits
-            results = client.map(dask_fit_fourier_pl_c, powers)
+            results = client.map(dask_fitter, powers)
             z = client.gather(results)
 
             # Get the end time and calculate the time taken
