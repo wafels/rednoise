@@ -260,6 +260,12 @@ def mask_plotting_information(masks, this_mask):
     mask_bad_fits_where_fitable = np.logical_or(bad_fit, fitable) ^ fitable
     n_bad_fits_where_fitable = np.sum(mask_bad_fits_where_fitable)
 
+    # What percentage of the pixels are not masked?
+    p_not_masked = "$p_{" + this_mask + "}=$"
+    percent_not_masked_string = "{:s}{:.1f}$\%$".format(p_not_masked, 100 * n_fitable / n_pixels)
+
+    mask_info = f"{percent_not_masked_string}"
+
     # What percentage of the pixels are fitable?
     pf = "$p_{F}=$"
     percent_fitable_string = "{:s}{:.1f}$\%$".format(pf, 100 * n_fitable / n_pixels)
@@ -268,7 +274,11 @@ def mask_plotting_information(masks, this_mask):
     pg = "$p_{G}=$"
     percent_fit_string = "{:s}{:.1f}$\%$".format(pg, 100 * (n_fitable - n_bad_fits_where_fitable) / n_fitable)
 
-    mask_info = f"{percent_fitable_string}, {percent_fit_string}"
+    # What percentage of all the pixels are explicitly requested by the passed in mask name?
+    #pmaskname = "$p_{" + mask_name + "}=$"
+    #percent_maskname_string = "{:s}{:.1f}$\%$".format(pmaskname, 100 * n_fitable / n_pixels)
+
+    #mask_info = f"{percent_fitable_string}, {percent_fit_string}"
 
     return mask_info
 
@@ -354,6 +364,10 @@ def load_fit_parameter_output_names(directory, base_filename):
     with open(filepath) as f:
         output_names = [line.rstrip() for line in f]
     return output_names
+
+
+def load_observed_spectra(directory, base_filename):
+
 
 
 def load_time_lag_data(study_type):
@@ -541,6 +555,7 @@ if 'individual' in plots:
         filepath = os.path.join(directory, filename)
         print(f'Loading {filepath}')
         observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
+        pfrequencies = np.load(filepath)['arr_1']
         if divide_by_initial_power:
             for i in range(0, observed.shape[0]):
                 for j in range(0, observed.shape[1]):
@@ -655,13 +670,16 @@ if 'individual' in plots:
             ########################################
             # Summary plots of all the spectra
             # Create a masked 3d-spectral array
-            observed_spectra_mask = np.broadcast_to(this_mask, observed.shape)
+        for this_mask in ("none", "intensity", "combined"): 
+            observed_spectra_mask = np.zeros_like(observed, dtype=np.bool)
+            for jjj in range(0, observed.shape[2]):
+                observed_spectra_mask[:, :, jjj] = masks[this_mask]
             observed_masked = np.ma.array(observed, mask=observed_spectra_mask)
 
             # Get the summary statistics
-            log10_observed_mean = np.log10(observed_masked).mean(axis=(0, 1))
-            log10_observed_median = np.log10(observed_masked).median(axis=(0, 1))
-            log10_observed_std = np.log10(observed_masked).std(axis=(0, 1))
+            log10_observed_mean = np.mean(np.log10(observed_masked), axis=(0, 1))
+            log10_observed_median = np.median(np.log10(observed_masked), axis=(0, 1))
+            log10_observed_std = np.std(np.log10(observed_masked), axis=(0, 1))
 
             # Create the title of the plot
             description = f"Summary of observed spectra (mask={this_mask})" + "\n"
@@ -670,14 +688,15 @@ if 'individual' in plots:
 
             # Create the plot
             fig, ax = plt.subplots()
-            ax.plot(freq, log10_observed_mean, label='mean')
-            ax.plot(freq, log10_observed_mean + log10_observed_std, label='mean + std')
-            ax.plot(freq, log10_observed_mean - log10_observed_std, label='mean - std')
-            ax.plot(freq, log10_observed_median, label='median')
+            ax.plot(pfrequencies, log10_observed_mean, label='mean')
+            ax.plot(pfrequencies, log10_observed_mean + log10_observed_std, label='mean + std')
+            ax.plot(pfrequencies, log10_observed_mean - log10_observed_std, label='mean - std')
+            ax.plot(pfrequencies, log10_observed_median, label='median')
             ax.set_xscale("log")
-            ax.set_xlabel('frequency')
-            ax.set_ylabel('power')
+            ax.set_xlabel('frequency (Hz)')
+            ax.set_ylabel('power (normalized)')
             ax.set_title(title)
+            ax.grid('on', linestyle=':')
             ax.legend()
 
             # Create the filepath the plot will be saved to, and save it
@@ -960,6 +979,7 @@ if 'gang_by_simulation_and_wave' in plots:
         pfig, pax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Probability distribution figures
         kfig, kax = plt.subplots(nrows, ncols, figsize=figsize)  # Joint mask images
         vfig, vax = plt.subplots(nrows, ncols, figsize=figsize)  # Scaled value images
+        mfig, mmax = plt.subplots(nrows, ncols, figsize=figsize)  # Mean power spectra
         for iwave, wave in enumerate(waves):
             print(f'Loading wave {wave}.')
             this_row = iwave // ncols
@@ -1055,6 +1075,9 @@ if 'gang_by_simulation_and_wave' in plots:
         #filepath = os.path.join(across_waves_study_directory, filename)
         #print(f'Creating and saving {filepath}')
         #vfig.savefig(filepath)
+
+        # Plot the average power spectra
+
 
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
