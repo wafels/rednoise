@@ -233,6 +233,33 @@ def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, vari
     return ax
 
 
+# Overlay histograms
+def plot_overlay_spectra(ax, for_overlay_spectra, for_overlay_pfrequencies, study_types, title):
+    """
+
+    ax:
+    results:
+    bins:
+    colors:
+    keys:
+    :return:
+    """
+
+    # For each study
+    for study_type in study_types:
+        spectrum = for_overlay_spectra[study_type]
+        pfrequencies = for_overlay_pfrequencies[study_type]
+        ax.plot(pfrequencies, spectrum, label='incomplete label')
+
+    ax.set_xlabel('frequency (Hz)')
+    ax.set_ylabel('normalized power')
+    ax.set_title(title)
+    ax.grid(linestyle=":")
+    ax.legend()
+
+    return ax
+
+
 # Helper function
 def mask_plotting_information(masks, this_mask):
     # Where the bad fits are
@@ -366,8 +393,24 @@ def load_fit_parameter_output_names(directory, base_filename):
     return output_names
 
 
-def load_observed_spectra(directory, base_filename):
+def load_observed_spectra(directory, filename, subsection, divide_by_initial_power):
+    filepath = os.path.join(directory, filename)
+    observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
+    pfrequencies = np.load(filepath)['arr_1']
+    if divide_by_initial_power:
+        for i in range(0, observed.shape[0]):
+            for j in range(0, observed.shape[1]):
+                observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
+    return observed, pfrequencies
 
+
+def load_analysis_details(directory, filename):
+    filepath = os.path.join(directory, filename)
+    print(f'Loading {filepath}')
+    subsection = np.load(filepath)['arr_0']
+    normalize_frequencies = np.all(np.load(filepath)['arr_1'])
+    divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
+    return subsection, normalize_frequencies, divide_by_initial_power
 
 
 def load_time_lag_data(study_type):
@@ -543,23 +586,14 @@ if 'individual' in plots:
         freq = np.load(filepath)['arr_1']
 
         # Load in the analysis details
-        filename = f'{base_filename}.analysis.step3.npz'
-        filepath = os.path.join(directory, filename)
-        print(f'Loading {filepath}')
-        subsection = np.load(filepath)['arr_0']
-        normalize_frequencies = np.all(np.load(filepath)['arr_1'])
-        divide_by_initial_power = np.all(np.load(filepath)['arr_2'])
+        subsection, normalize_frequencies, divide_by_initial_power = load_analysis_details(directory,
+                                                                                           f'{base_filename}.analysis.step3.npz')
 
         # Load in the observed fourier power data
-        filename = f'{study_type}_{wave}_{window}.{power_type}.step2.npz'
-        filepath = os.path.join(directory, filename)
-        print(f'Loading {filepath}')
-        observed = (np.load(filepath)['arr_0'])[subsection[0]:subsection[1], subsection[2]:subsection[3], :]
-        pfrequencies = np.load(filepath)['arr_1']
-        if divide_by_initial_power:
-            for i in range(0, observed.shape[0]):
-                for j in range(0, observed.shape[1]):
-                    observed[i, j, :] = observed[i, j, :] / observed[i, j, 0]
+        observed, pfrequencies = load_observed_spectra(directory,
+                                                       f'{study_type}_{wave}_{window}.{power_type}.step2.npz',
+                                                       subsection,
+                                                       divide_by_initial_power)
 
         # Load in the original time series data
         if "verify_fitting" not in study_type:
@@ -704,7 +738,6 @@ if 'individual' in plots:
             filepath = os.path.join(directory, filename)
             plt.tight_layout()
             plt.savefig(filepath)
-
 
         ###########################
         # Plot the results of the fitting
@@ -979,7 +1012,6 @@ if 'gang_by_simulation_and_wave' in plots:
         pfig, pax = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)  # Probability distribution figures
         kfig, kax = plt.subplots(nrows, ncols, figsize=figsize)  # Joint mask images
         vfig, vax = plt.subplots(nrows, ncols, figsize=figsize)  # Scaled value images
-        mfig, mmax = plt.subplots(nrows, ncols, figsize=figsize)  # Mean power spectra
         for iwave, wave in enumerate(waves):
             print(f'Loading wave {wave}.')
             this_row = iwave // ncols
@@ -1076,8 +1108,34 @@ if 'gang_by_simulation_and_wave' in plots:
         #print(f'Creating and saving {filepath}')
         #vfig.savefig(filepath)
 
-        # Plot the average power spectra
+    # Plot the average power spectra
+    # Load in the observed fourier power data
+    # Load in the analysis details
+    mfig, mmax = plt.subplots(nrows, ncols, figsize=figsize)
+    for iwave, wave in enumerate(waves):
+        print(f'Loading wave {wave}.')
+        this_row = iwave // ncols
+        this_col = iwave - this_row * ncols
 
+        super_title = f"{wave} simulations\n"
+
+        for_joint_histograms = dict()
+        for ist, study_type in enumerate(study_types):
+            print(f'Loading study type {study_type}.')
+
+            base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
+            subsection, normalize_frequencies, divide_by_initial_power = load_analysis_details(directory,
+                                                                                               f'{base_filename}.analysis.step3.npz')
+
+            # Load in the observed fourier power data
+            observed, pfrequencies = load_observed_spectra(directory,
+                                                           f'{study_type}_{wave}_{window}.{power_type}.step2.npz',
+                                                           subsection,
+                                                           divide_by_initial_power)
+
+        description = f"probability distributions for {variable_name} for each simulation"
+        title = f"{super_title}{description}"
+        mmax[this_row, this_col] = plot_overlay_spectra(mmax[this_row, this_col], for_overlay_spectra, for_overlay_pfrequencies,)
 
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
