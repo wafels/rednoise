@@ -234,7 +234,7 @@ def plot_overlay_histograms(ax, results, bins, colors, labels, study_types, vari
 
 
 # Overlay histograms
-def plot_overlay_spectra(ax, for_overlay_spectra, for_overlay_pfrequencies, study_types, title):
+def plot_overlay_spectra(ax, for_overlay_spectra, for_overlay_pfrequencies, study_types, title, xlabel, ylabel, study_type_colors, study_type_labels):
     """
 
     ax:
@@ -249,10 +249,10 @@ def plot_overlay_spectra(ax, for_overlay_spectra, for_overlay_pfrequencies, stud
     for study_type in study_types:
         spectrum = for_overlay_spectra[study_type]
         pfrequencies = for_overlay_pfrequencies[study_type]
-        ax.plot(pfrequencies, spectrum, label='incomplete label')
+        ax.plot(pfrequencies, spectrum, label=study_type_labels[study_type], color=study_type_colors[study_type])
 
-    ax.set_xlabel('frequency (Hz)')
-    ax.set_ylabel('normalized power')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.grid(linestyle=":")
     ax.legend()
@@ -309,6 +309,23 @@ def mask_plotting_information(masks, this_mask):
 
     return mask_info
 
+
+def summary_spectra(observed, mask):
+    """
+    Calculates summary spectra from the observed spectra and a given mask
+    """
+    observed_spectra_mask = np.zeros_like(observed, dtype=np.bool)
+    for jjj in range(0, observed.shape[2]):
+        observed_spectra_mask[:, :, jjj] = mask
+    observed_masked = np.ma.array(observed, mask=observed_spectra_mask)
+
+    # Get the summary statistics
+    log10_observed_mean = np.mean(np.log10(observed_masked), axis=(0, 1))
+    log10_observed_median = np.median(np.log10(observed_masked), axis=(0, 1))
+    log10_observed_std = np.std(np.log10(observed_masked), axis=(0, 1))
+
+    # Return the summary statistics
+    return log10_observed_mean, log10_observed_median, log10_observed_std
 
 def load_masks(directory, base_filename):
     """
@@ -704,16 +721,8 @@ if 'individual' in plots:
             ########################################
             # Summary plots of all the spectra
             # Create a masked 3d-spectral array
-        for this_mask in ("none", "intensity", "combined"): 
-            observed_spectra_mask = np.zeros_like(observed, dtype=np.bool)
-            for jjj in range(0, observed.shape[2]):
-                observed_spectra_mask[:, :, jjj] = masks[this_mask]
-            observed_masked = np.ma.array(observed, mask=observed_spectra_mask)
-
-            # Get the summary statistics
-            log10_observed_mean = np.mean(np.log10(observed_masked), axis=(0, 1))
-            log10_observed_median = np.median(np.log10(observed_masked), axis=(0, 1))
-            log10_observed_std = np.std(np.log10(observed_masked), axis=(0, 1))
+        for this_mask in ("none", "intensity", "combined"):
+            log10_observed_mean, log10_observed_median, log10_observed_std = summary_spectra(observed, masks[this_mask])
 
             # Create the title of the plot
             description = f"Summary of observed spectra (mask={this_mask})" + "\n"
@@ -1112,30 +1121,49 @@ if 'gang_by_simulation_and_wave' in plots:
     # Load in the observed fourier power data
     # Load in the analysis details
     mfig, mmax = plt.subplots(nrows, ncols, figsize=figsize)
-    for iwave, wave in enumerate(waves):
-        print(f'Loading wave {wave}.')
-        this_row = iwave // ncols
-        this_col = iwave - this_row * ncols
+    for this_mask in ("none", "intensity", "combined"):
 
-        super_title = f"{wave} simulations\n"
+        for iwave, wave in enumerate(waves):
+            print(f'Loading wave {wave}.')
+            this_row = iwave // ncols
+            this_col = iwave - this_row * ncols
 
-        for_joint_histograms = dict()
-        for ist, study_type in enumerate(study_types):
-            print(f'Loading study type {study_type}.')
+            super_title = f"{wave} simulations\n"
 
-            base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
-            subsection, normalize_frequencies, divide_by_initial_power = load_analysis_details(directory,
-                                                                                               f'{base_filename}.analysis.step3.npz')
+            for_overlay_spectra = dict()
+            for_overlay_pfrequencies = dict()
+            for ist, study_type in enumerate(study_types):
+                print(f'Loading study type {study_type}.')
 
-            # Load in the observed fourier power data
-            observed, pfrequencies = load_observed_spectra(directory,
-                                                           f'{study_type}_{wave}_{window}.{power_type}.step2.npz',
-                                                           subsection,
-                                                           divide_by_initial_power)
+                base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
+                subsection, normalize_frequencies, divide_by_initial_power = load_analysis_details(directory,
+                                                                                                   f'{base_filename}.analysis.step3.npz')
 
-        description = f"probability distributions for {variable_name} for each simulation"
-        title = f"{super_title}{description}"
-        mmax[this_row, this_col] = plot_overlay_spectra(mmax[this_row, this_col], for_overlay_spectra, for_overlay_pfrequencies,)
+                # Load in the observed fourier power data
+                observed, pfrequencies = load_observed_spectra(directory,
+                                                               f'{study_type}_{wave}_{window}.{power_type}.step2.npz',
+                                                               subsection,
+                                                               divide_by_initial_power)
+                log10_observed_mean, log10_observed_median, log10_observed_std = summary_spectra(observed, masks[this_mask])
+                # Create the mean spectrum
+                for_overlay_spectra[study_type] = log10_observed_mean
+                for_overlay_pfrequencies[study_type] = pfrequencies
+
+            description = f"mean spectra"
+            title = f"{super_title}{description}"
+            xlabel = 'frequencies (Hz)'
+            ylabel = 'mean log10 normalized power'
+            mmax[this_row, this_col] = plot_overlay_spectra(mmax[this_row, this_col],
+                                                            for_overlay_spectra,
+                                                            for_overlay_pfrequencies,
+                                                            title, xlabel, ylabel, study_type_colors, study_type_labels)
+
+    # Save the mean spectra
+    mfig.tight_layout()
+    filename = f'mean_spectra.joint.{this_mask}.{across_waves_study_base_filename}.{image_filetype}'
+    filepath = os.path.join(across_waves_study_directory, filename)
+    print(f'Creating and saving {filepath}')
+    mfig.savefig(filepath)
 
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
@@ -1173,7 +1201,7 @@ if 'histogram2d' in plots:
                 for iwave2, wave2 in enumerate(waves):
                     if wave1 == wave2:
                         pass
-                    else:                
+                    else:
                         # wave2 - load in the masks
                         b = [study_type, ds.original_datatype, wave2]
                         directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
