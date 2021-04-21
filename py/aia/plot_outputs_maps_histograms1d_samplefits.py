@@ -253,6 +253,7 @@ def plot_overlay_spectra(ax, for_overlay_spectra, for_overlay_pfrequencies, stud
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
+    ax.set_xscale('log')
     ax.set_title(title)
     ax.grid(linestyle=":")
     ax.legend()
@@ -1117,11 +1118,36 @@ if 'gang_by_simulation_and_wave' in plots:
         #print(f'Creating and saving {filepath}')
         #vfig.savefig(filepath)
 
+# Gang plots by AIA channel and overplot results from different simulations
+if 'mean_spectra_gang_by_simulation_and_wave' in plots:
+    nrows = 2
+    row_size = 5
+    ncols = 3
+    col_size = 7
+    figsize = (ncols * col_size, nrows * row_size)
+
+    study_type_colors = dict()
+    study_type_colors['bv_simulation_low_fn'] = 'red'
+    study_type_colors['bv_simulation_intermediate_fn'] = 'green'
+    study_type_colors['bv_simulation_high_fn'] = 'blue'
+
+    # Labels that will appear in the legend in the plot
+    study_type_labels = dict()
+    study_type_labels['bv_simulation_low_fn'] = 'low frequency'
+    study_type_labels['bv_simulation_intermediate_fn'] = 'intermediate frequency'
+    study_type_labels['bv_simulation_high_fn'] = 'high frequency'
+
+    # The save directory and base filenames for plots that are not specific to a particular
+    # wave or study type (i.e., AIA channel)
+    across_waves_study_directory = (ds.roots)["project_data"]
+    across_waves_study_base_filename = f"{observation_model_name}_{window}.{power_type}"
+
     # Plot the average power spectra
     # Load in the observed fourier power data
     # Load in the analysis details
-    mfig, mmax = plt.subplots(nrows, ncols, figsize=figsize)
     for this_mask in ("none", "intensity", "combined"):
+        plt.close('all')
+        mfig, mmax = plt.subplots(nrows, ncols, figsize=figsize)
 
         for iwave, wave in enumerate(waves):
             print(f'Loading wave {wave}.')
@@ -1135,9 +1161,18 @@ if 'gang_by_simulation_and_wave' in plots:
             for ist, study_type in enumerate(study_types):
                 print(f'Loading study type {study_type}.')
 
+                # branch location
+                b = [study_type, ds.original_datatype, wave]
+
+                # Location of the project data
+                directory = ds.datalocationtools.save_location_calculator(ds.roots, b)["project_data"]
+
                 base_filename = f"{observation_model_name}_{study_type}_{wave}_{window}.{power_type}"
                 subsection, normalize_frequencies, divide_by_initial_power = load_analysis_details(directory,
                                                                                                    f'{base_filename}.analysis.step3.npz')
+
+                # Load in the mask data
+                masks = load_masks(directory, base_filename)
 
                 # Load in the observed fourier power data
                 observed, pfrequencies = load_observed_spectra(directory,
@@ -1156,14 +1191,15 @@ if 'gang_by_simulation_and_wave' in plots:
             mmax[this_row, this_col] = plot_overlay_spectra(mmax[this_row, this_col],
                                                             for_overlay_spectra,
                                                             for_overlay_pfrequencies,
+                                                            study_types,
                                                             title, xlabel, ylabel, study_type_colors, study_type_labels)
 
-    # Save the mean spectra
-    mfig.tight_layout()
-    filename = f'mean_spectra.joint.{this_mask}.{across_waves_study_base_filename}.{image_filetype}'
-    filepath = os.path.join(across_waves_study_directory, filename)
-    print(f'Creating and saving {filepath}')
-    mfig.savefig(filepath)
+        # Save the mean spectra
+        mfig.tight_layout()
+        filename = f'mean_spectra.joint.{this_mask}.{across_waves_study_base_filename}.{image_filetype}'
+        filepath = os.path.join(across_waves_study_directory, filename)
+        print(f'Creating and saving {filepath}')
+        mfig.savefig(filepath)
 
 
 # Create 2d histograms of the value of an output in one AIA channel versus another AIA channel
